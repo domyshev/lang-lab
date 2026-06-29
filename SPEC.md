@@ -1,20 +1,57 @@
 # Specification
 
+
+
+Detailed application requirements: [docs/APP_REQUIREMENTS.md](docs/APP_REQUIREMENTS.md)
+
 ## Project Goal
 
 Build a small but complete educational crossword game for practicing foreign vocabulary. The initial learning direction is Russian clues to English or Spanish answers.
 
 The project should be small enough to complete within the challenge timeframe, but complete enough to demonstrate planning, implementation, testing, documentation, and iteration with AI-assisted development.
 
+## Supported Languages
+
+The first version supports Russian, Spanish, and English.
+
+The application architecture should allow more languages later. The core concept is based on language-independent ideas: source language, target language, clue, answer, word set, puzzle, and attempt. It should not depend on assumptions that only work for Russian, Spanish, or English.
+
 ## Game Rules
 
-1. A player selects or creates a simple user profile.
-2. The player selects a word set.
-3. The application generates a crossword from words in that set.
-4. Each crossword clue is shown in Russian.
-5. The player fills crossword cells with the foreign-language answer.
-6. The game validates the filled answers.
-7. The game records the attempt result in the player's history.
+1. A player enters the application and chooses a display name.
+2. The player can type a custom name or choose one of five generated names.
+3. The player selects a word set.
+4. The application generates a crossword from words in that set.
+5. Each crossword clue is shown in Russian for the MVP learning direction.
+6. The player fills crossword cells with the English or Spanish answer.
+7. The game validates the filled answers.
+8. The game records the attempt result in local browser history.
+
+## Player Name Flow
+
+When a player opens the application, the first screen asks for a display name.
+
+The player can:
+
+- enter a custom name manually;
+- choose one name from a generated list;
+- refresh the generated list.
+
+Generated names use this format:
+
+```text
+FunnyAdjective-Surname
+```
+
+Examples:
+
+- `Curious-Webster`
+- `Brave-Nebrija`
+- `Sparkly-Cervantes`
+
+The generated list contains five different names at a time. The "Refresh list" button regenerates the five suggestions.
+
+Surnames come from a planned local JSON file containing 100 known contributors to language development, linguistics, literacy, dictionaries, English learning, or Spanish learning. Detailed requirements for this file are described in [docs/APP_REQUIREMENTS.md](docs/APP_REQUIREMENTS.md).
 
 ## Word Set Format
 
@@ -51,20 +88,22 @@ Only `word` and `clue` are required for the first implementation. Metadata field
 
 ### In Scope for MVP
 
-- TypeScript React frontend using MUI.
-- Go backend API.
-- SQLite database.
-- Simple user profile creation by unique username.
-- No passwords or complex authorization.
-- Store users, word sets, crossword attempts, and attempt results.
+- TypeScript React application using MUI.
+- Browser-only persistence through `localStorage`.
+- Simple local profile creation by display name.
+- Five generated name suggestions on entry.
+- "Refresh list" action for generated names.
+- A planned local JSON file with 100 contributor records for name generation.
+- Store local users, word sets, crossword attempts, and attempt results.
 - Generate playable crossword puzzles from a selected word set.
 - Support Russian clues and English or Spanish answers.
 - Support importing custom JSON word sets.
-- Show a player's attempt history.
+- Show a player's attempt history in the same browser.
 
 ### Out of Scope for MVP
 
 - Secure authentication.
+- Shared online accounts.
 - Multiplayer sessions.
 - Real-time collaboration.
 - Advanced spaced repetition.
@@ -76,15 +115,18 @@ Only `word` and `clue` are required for the first implementation. Metadata field
 
 ### Users
 
-- A user can create a profile with a unique username.
-- A user can select an existing profile.
-- The app stores game attempts under the selected profile.
+- A user can create a local profile with a display name.
+- A user can select an existing local profile.
+- A user can choose from five generated name suggestions.
+- A user can refresh generated name suggestions.
+- Generated names must be unique within a single generated list.
+- The app stores game attempts under the selected local profile.
 
 ### Word Sets
 
 - The app includes at least one predefined word set.
 - A user can import a JSON word set.
-- The backend validates imported JSON before storing it.
+- The app validates imported JSON before storing it.
 - Invalid JSON should produce a clear error message.
 
 ### Crossword Generation
@@ -102,21 +144,29 @@ Only `word` and `clue` are required for the first implementation. Metadata field
 
 ### History
 
-- A player can view previous attempts.
+- A player can view previous attempts from the same browser.
 - History includes date, word set, language, score, and completion status.
+
+### Local Persistence
+
+- The app stores profiles, imported word sets, puzzle attempts, and history in `localStorage`.
+- The app should handle missing, empty, or malformed stored data gracefully.
+- The app should keep predefined data separate from user-imported data.
 
 ## Acceptance Criteria
 
-- A new user can create a profile with a unique username.
+- A new user can create a local profile with a custom display name.
+- The user can choose one of five generated names.
+- The user can refresh the generated name list.
+- Generated names use contributor surnames from the planned local JSON file.
 - The user can start a crossword from a predefined word set.
 - The user can complete and submit the crossword.
-- The result is saved to SQLite.
+- The result is saved to `localStorage`.
 - The user can see the saved attempt in history.
 - A custom JSON word set can be imported and used for a new crossword.
-- The frontend is implemented in TypeScript and React with MUI components.
-- The backend is implemented in Go.
+- The application is implemented in TypeScript and React with MUI components.
 - The project includes `README.md`, `SPEC.md`, `ARCHITECTURE.md`, and `RETROSPECTIVE.md`.
 
 ## Bonus Goal
 
-If feasible, provide a /GitDocs-friendly playable demo. If GitDocs supports only static hosting, the static demo may run without the Go backend, while the full local version uses the backend and SQLite.
+If feasible, provide a /GitDocs-friendly playable demo. A static browser app is well suited for this because someone should be able to open a link and play without cloning the repository, installing dependencies, or running a local process.

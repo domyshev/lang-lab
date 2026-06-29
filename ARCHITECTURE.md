@@ -1,99 +1,139 @@
 # Architecture
 
+
+
+Detailed application requirements: [docs/APP_REQUIREMENTS.md](docs/APP_REQUIREMENTS.md)
+
 ## Technology Stack
 
-- Frontend: TypeScript, React, MUI
-- Backend: Go
-- Database: SQLite
-- Data exchange format: JSON
+- Application: TypeScript, React, MUI
+- Runtime: browser
+- Persistence: browser `localStorage`
+- Data format: JSON
 - Repository target: 
-- Optional delivery target: /GitDocs or  Pages for a playable demo
+- Optional delivery target: /GitDocs or  Pages for a playable static demo
 
 ## Architecture Overview
 
-The intended MVP architecture is a browser application backed by a small Go API service.
+The intended MVP architecture is a static browser application.
 
 ```text
-React + TypeScript + MUI frontend
-        |
-        | HTTP JSON API
-        v
-Go backend service
+React + TypeScript + MUI application
         |
         v
-SQLite database
+Browser state and localStorage
+        |
+        v
+Bundled JSON assets and user-imported JSON word sets
 ```
 
-The frontend owns the interactive crossword experience: profile selection, word set import flow, crossword grid UI, answer entry, submission, and history screens.
+The application owns the interactive crossword experience: profile selection, generated name suggestions, word set import flow, crossword grid UI, answer entry, submission, and history screens.
 
-The backend owns persistent data and game-related operations: user profiles, stored word sets, crossword generation, attempt recording, and history retrieval.
-
-SQLite is used because it is simple, local, easy to back up, and enough for the first version of this project.
+`localStorage` stores user-created data on the current device and browser. This keeps the MVP simple and makes the application easier to deliver as a static playable demo.
 
 ## Main Components
 
-### Frontend
+### Application Shell
 
-The frontend will be a React application written in TypeScript. MUI will provide the UI component library for forms, buttons, layout, dialogs, tables, and common application controls.
+The application shell provides the main layout, current profile state, navigation between views, and common UI structure. It should use MUI components for consistent controls and layout.
 
-Planned screens:
+### Profile Onboarding
 
-- profile selection and creation;
-- word set list;
-- JSON word set import;
-- crossword gameplay;
-- attempt result;
-- player history.
+The first screen asks the user to enter a display name or choose a generated one.
 
-### Backend
+Generated names combine:
 
-The backend will be a Go service exposing a JSON API.
+- a funny adjective;
+- a hyphen;
+- the surname of a known contributor to languages, linguistics, dictionaries, literacy, English learning, or Spanish learning.
 
-Planned responsibilities:
+The screen shows five generated names at a time. A "Refresh list" button regenerates the suggestions.
 
-- validate and create user profiles;
-- store and list word sets;
-- validate imported JSON word sets;
-- generate crossword puzzle layouts;
-- validate submitted attempts;
-- store attempt history;
-- serve history data.
+### Contributor Name Seeds
 
-### Database
+Contributor data is planned as a local JSON asset. The detailed content requirement is described in [docs/APP_REQUIREMENTS.md](docs/APP_REQUIREMENTS.md).
 
-SQLite will store the application state. The initial model is expected to include:
+The contributor list contains 100 records. Each record contains:
 
-- users;
-- word sets;
-- words;
+- `firstName`;
+- `lastName`;
+- `birthYear`;
+- `contribution.ru`;
+- `contribution.es`;
+- `contribution.en`;
+- `wikipediaUrl`.
+
+Contribution descriptions should be compact and capped at 255 characters per language so they can fit in tooltips, dialogs, or profile-name explanation UI later.
+
+### Word Set Manager
+
+The word set manager loads predefined word sets and allows users to import custom JSON word sets. Imported data is validated before it is stored in `localStorage`.
+
+### Crossword Generator
+
+The crossword generator creates a grid from selected word set entries. It should attempt valid word intersections and produce a playable puzzle even when only a subset of words can be placed.
+
+### Gameplay View
+
+The gameplay view renders the crossword, clue list, answer cells, validation controls, and result state. MUI should be used for the surrounding interface, while the crossword grid can use custom layout logic where needed.
+
+### History View
+
+The history view reads saved attempts from `localStorage` and displays previous results for the selected local profile.
+
+### Storage Adapter
+
+A small storage adapter should wrap `localStorage` access. This keeps serialization, parsing, versioning, default values, and malformed-data recovery in one place.
+
+## Local Storage Model
+
+The exact keys may change during implementation, but the model should include:
+
+- profiles;
+- selected profile;
+- imported word sets;
 - crossword attempts;
-- attempt answers or summary results.
+- attempt summaries;
+- storage schema version.
 
-The schema may evolve during implementation, but the first version should remain intentionally small.
+Stored records should include enough data to show history even if a word set changes later.
+
+## Language Model
+
+The first version supports Russian, Spanish, and English.
+
+The architecture should not hard-code game concepts to one specific language. Data should be modeled around:
+
+- source language;
+- target language;
+- clue;
+- answer;
+- localized labels;
+- localized descriptions.
+
+This allows the same structure to support additional languages in the future. The application concept focuses on general language-learning mechanics instead of rules that only apply to one language pair.
 
 ## Major Design Decisions
 
-### Simple Profiles Instead of Full Authentication
+### Static Browser App
 
-The MVP does not need secure authentication. A user profile is identified by a unique username. This keeps the project focused on game mechanics and learning flow.
+The MVP is a static browser app to keep the challenge scope manageable and make a one-click /GitDocs demo more realistic.
+
+### Local Profiles Instead of Full Authentication
+
+The MVP does not need secure authentication. A profile is identified by a local display name. This keeps the project focused on game mechanics and learning flow.
+
+### localStorage for Persistence
+
+`localStorage` is enough for the first version because the app stores small amounts of local data: profiles, imported word sets, attempts, and history. A storage adapter should isolate direct `localStorage` usage from UI components.
 
 ### JSON Word Sets
 
 JSON is a good fit for word sets because it is strict, easy to validate, easy for AI tools to generate, and flexible enough to support future metadata such as tags, language, difficulty, examples, and parts of speech.
 
-### Go and SQLite Backend
-
-The backend uses Go for a small, typed, easy-to-run service. SQLite avoids additional infrastructure during the MVP and keeps local development simple.
-
-### TypeScript, React, and MUI Frontend
+### TypeScript, React, and MUI
 
 TypeScript and React provide a practical browser application stack. MUI gives the project a ready-made component system, reducing time spent on low-level UI primitives and helping the app feel complete sooner.
-
-### /GitDocs Deployment Consideration
-
-If the organization's GitDocs setup supports only static hosting, it can host only the frontend or a static demo. The full version with Go and SQLite requires a running backend service and persistent storage.
-
-For the MVP, the most straightforward deployable shape is one Go service that serves both the API and built frontend assets, with SQLite stored in a persistent data directory.
 
 ## AI Tooling Used
 
