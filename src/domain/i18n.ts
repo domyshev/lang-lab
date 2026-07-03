@@ -9,6 +9,7 @@ type I18nKey =
   | 'history'
   | 'interfaceLanguage'
   | 'targetLanguage'
+  | 'assistant'
   | 'importSection'
   | 'importCards'
   | 'startLearning'
@@ -27,7 +28,13 @@ type I18nKey =
   | 'crossword'
   | 'multipleChoice'
   | 'missingLetters'
-  | 'missingWord';
+  | 'missingWord'
+  | 'submit'
+  | 'next'
+  | 'correctAnswer'
+  | 'correctAnswers'
+  | 'correct'
+  | 'incorrect';
 
 const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
   en: {
@@ -39,6 +46,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     history: 'History',
     interfaceLanguage: 'Interface',
     targetLanguage: 'Target',
+    assistant: 'Character',
     importSection: 'Import',
     importCards: 'Import cards',
     startLearning: 'Start learning',
@@ -58,6 +66,12 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     multipleChoice: 'Question with 3 answers',
     missingLetters: 'Missing letters',
     missingWord: 'Missing word in sentence',
+    submit: 'Submit',
+    next: 'Next',
+    correctAnswer: 'Correct answer',
+    correctAnswers: 'Correct answers',
+    correct: 'Correct',
+    incorrect: 'Incorrect',
   },
   ru: {
     appName: 'Language Crossword Lab',
@@ -68,6 +82,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     history: 'История',
     interfaceLanguage: 'Интерфейс',
     targetLanguage: 'Цель',
+    assistant: 'Персонаж',
     importSection: 'Импорт',
     importCards: 'Импорт карточек',
     startLearning: 'Начать учиться',
@@ -87,6 +102,12 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     multipleChoice: 'Вопрос с 3 вариантами',
     missingLetters: 'Пропущенные буквы',
     missingWord: 'Пропущенное слово',
+    submit: 'Отправить',
+    next: 'Следующий',
+    correctAnswer: 'Правильный ответ',
+    correctAnswers: 'Правильные ответы',
+    correct: 'Верно',
+    incorrect: 'Неверно',
   },
   es: {
     appName: 'Language Crossword Lab',
@@ -97,6 +118,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     history: 'Historial',
     interfaceLanguage: 'Interfaz',
     targetLanguage: 'Objetivo',
+    assistant: 'Personaje',
     importSection: 'Importar',
     importCards: 'Importar tarjetas',
     startLearning: 'Empezar',
@@ -116,6 +138,12 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     multipleChoice: 'Pregunta con 3 respuestas',
     missingLetters: 'Letras que faltan',
     missingWord: 'Palabra que falta',
+    submit: 'Enviar',
+    next: 'Siguiente',
+    correctAnswer: 'Respuesta correcta',
+    correctAnswers: 'Respuestas correctas',
+    correct: 'Correctas',
+    incorrect: 'Incorrectas',
   },
 };
 

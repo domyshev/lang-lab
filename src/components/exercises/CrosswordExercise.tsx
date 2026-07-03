@@ -54,10 +54,10 @@ export function CrosswordExercise({
           sx={{
             display: 'grid',
             gap: 0.5,
-            gridTemplateColumns: `repeat(${cols.length}, 36px)`,
-            overflowX: 'auto',
-            width: 'max-content',
-            maxWidth: '100%',
+            gridTemplateColumns: `repeat(${cols.length}, minmax(0, 1fr))`,
+            maxWidth: `min(100%, ${cols.length * 38}px)`,
+            width: '100%',
+            mx: 'auto',
           }}
         >
           {rows.flatMap((row) =>
@@ -124,16 +124,19 @@ const letterCellStyles = {
   display: 'inline-flex',
   fontSize: 20,
   fontWeight: 800,
-  height: 36,
+  aspectRatio: '1 / 1',
+  height: 'auto',
   justifyContent: 'center',
   lineHeight: 1,
+  minWidth: 0,
   p: 0,
   textAlign: 'center',
   textTransform: 'lowercase',
-  width: 36,
+  width: '100%',
 };
 
 const emptyCellStyles = {
-  height: 36,
-  width: 36,
+  aspectRatio: '1 / 1',
+  minWidth: 0,
+  width: '100%',
 };

@@ -31,7 +31,6 @@ import {
   createCardSnapshot,
   getTranslationHints,
 } from './domain/cards';
-import { buildCoachComment } from './domain/coach';
 import { CrosswordPuzzle, createCrossword } from './domain/crossword';
 import {
   ExerciseAttempt,
@@ -119,10 +118,6 @@ export function App() {
     () => shuffleCards(eligibleCards, generationSeed),
     [eligibleCards, generationSeed],
   );
-  const targetAttempts = attempts.filter(
-    (attempt) => attempt.targetLanguage === targetLanguage,
-  );
-  const latestTargetAttempt = targetAttempts[targetAttempts.length - 1];
   const lastSavedAttempt =
     attempts.find((attempt) => attempt.id === lastSavedAttemptId) ?? null;
 
@@ -173,12 +168,11 @@ export function App() {
     };
   }, [randomizedEligibleCards, selectedExerciseType, targetLanguage]);
 
-  const coachFallback = latestTargetAttempt?.coachComment ?? getCoachFallback();
-
   function savePromptAttempt(
     exerciseType: Exclude<ExerciseType, 'crossword'>,
     prompt: ExercisePrompt,
     answer: string,
+    options: { advance?: boolean } = {},
   ) {
     const isCorrect =
       normalizeAnswer(answer) === normalizeAnswer(prompt.expectedAnswer);
@@ -190,6 +184,7 @@ export function App() {
       correctness: { [prompt.cardId]: isCorrect },
       hintsUsed: { [prompt.cardId]: 0 },
       cardIds: [prompt.cardId],
+      advance: options.advance ?? true,
     });
   }
 
@@ -227,6 +222,7 @@ export function App() {
       correctness,
       hintsUsed,
       cardIds: puzzle.entries.map((entry) => entry.cardId),
+      advance: true,
     });
   }
 
@@ -237,25 +233,17 @@ export function App() {
     correctness: Record<string, boolean>;
     hintsUsed: Record<string, number>;
     cardIds: string[];
+    advance: boolean;
   }) {
     if (!selectedTheme) {
       return;
     }
 
     const now = new Date().toISOString();
-    const correctCount = Object.values(input.correctness).filter(Boolean).length;
-    const totalCount = Object.keys(input.correctness).length;
     const weightedScore = calculateWeightedScore({
       correctness: input.correctness,
       cardStats,
       targetLanguage,
-    });
-    const coachComment = buildCoachComment({
-      interfaceLanguage,
-      targetLanguage,
-      cardStats,
-      correctCount,
-      totalCount,
     });
     const attempt: ExerciseAttempt = {
       id: createId('attempt'),
@@ -272,13 +260,14 @@ export function App() {
       correctness: input.correctness,
       hintsUsed: input.hintsUsed,
       weightedScore,
-      coachComment,
     };
 
     dispatch(saveAttempt(attempt));
     dispatch(recordAttemptStats(attempt));
     setLastSavedAttemptId(attempt.id);
-    setGenerationSeed((seed) => seed + 1);
+    if (input.advance) {
+      setGenerationSeed((seed) => seed + 1);
+    }
   }
 
   function renderMainContent() {
@@ -328,10 +317,17 @@ export function App() {
           alignItems: 'start',
         }}
       >
-        <CoachPanel comment={coachFallback} />
+        <CoachPanel />
         <Stack spacing={3}>
           {renderExercise()}
-          {lastSavedAttempt && <AttemptSummary attempt={lastSavedAttempt} />}
+          {lastSavedAttempt && (
+            <AttemptSummary
+              attempt={lastSavedAttempt}
+              cardStats={cardStats}
+              interfaceLanguage={interfaceLanguage}
+              targetLanguage={targetLanguage}
+            />
+          )}
           <Button
             variant="outlined"
             onClick={() => setIsExerciseStarted(false)}
@@ -466,10 +462,17 @@ export function App() {
     if (exercisePreview.type === 'missingLetters') {
       return (
         <MissingLettersExercise
+          interfaceLanguage={interfaceLanguage}
           prompt={exercisePreview.prompt}
           onAnswer={(answer) =>
-            savePromptAttempt('missingLetters', exercisePreview.prompt, answer)
+            savePromptAttempt('missingLetters', exercisePreview.prompt, answer, {
+              advance: false,
+            })
           }
+          onNext={() => {
+            setLastSavedAttemptId(null);
+            setGenerationSeed((seed) => seed + 1);
+          }}
         />
       );
     }
@@ -535,18 +538,6 @@ export function App() {
     );
   }
 
-  function getCoachFallback(): string {
-    if (interfaceLanguage === 'ru') {
-      return 'Выбери тему и упражнение. Я буду смотреть не только на правильность, но и на слабые карточки.';
-    }
-
-    if (interfaceLanguage === 'es') {
-      return 'Elige un tema y un ejercicio. Revisaré precisión y tarjetas débiles.';
-    }
-
-    return 'Choose a theme and a drill. I will track accuracy and weak cards.';
-  }
-
   return (
     <AppShell activeSection={activeSection} onNavigate={setActiveSection}>
       {renderMainContent()}
@@ -554,26 +545,62 @@ export function App() {
   );
 }
 
-function AttemptSummary({ attempt }: { attempt: ExerciseAttempt }) {
-  const correctCount = Object.values(attempt.correctness).filter(Boolean).length;
-  const totalCount = Object.keys(attempt.correctness).length;
+function AttemptSummary({
+  attempt,
+  cardStats,
+  interfaceLanguage,
+  targetLanguage,
+}: {
+  attempt: ExerciseAttempt;
+  cardStats: RootState['stats']['cardStats'];
+  interfaceLanguage: RootState['app']['interfaceLanguage'];
+  targetLanguage: RootState['app']['targetLanguage'];
+}) {
+  const expectedAnswers = attempt.prompts.map((prompt) => prompt.expectedAnswer);
+  const relevantStats = attempt.cardSnapshots
+    .map((card) =>
+      cardStats.find(
+        (stat) =>
+          stat.cardId === card.id && stat.targetLanguage === targetLanguage,
+      ),
+    )
+    .filter((stat): stat is RootState['stats']['cardStats'][number] =>
+      Boolean(stat),
+    );
+  const correctCount = relevantStats.reduce(
+    (sum, stat) => sum + stat.correct,
+    0,
+  );
+  const incorrectCount = relevantStats.reduce(
+    (sum, stat) => sum + stat.incorrect,
+    0,
+  );
 
   return (
     <Paper sx={{ p: 2, borderLeft: '4px solid', borderColor: 'primary.main' }}>
       <Stack spacing={1}>
-        <Typography variant="overline">Latest result</Typography>
+        <Typography variant="overline">
+          {expectedAnswers.length === 1
+            ? t(interfaceLanguage, 'correctAnswer')
+            : t(interfaceLanguage, 'correctAnswers')}
+        </Typography>
+        <Typography fontWeight={800}>{expectedAnswers.join(' / ')}</Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          <Chip label={`${correctCount}/${totalCount} direct`} size="small" />
-          <Chip
-            label={`${attempt.weightedScore ?? 0}% weighted`}
-            size="small"
-            color={(attempt.weightedScore ?? 0) >= 70 ? 'success' : 'warning'}
-          />
-          <Chip label={attempt.exerciseType} size="small" variant="outlined" />
+          {correctCount > 0 && (
+            <Chip
+              label={`${t(interfaceLanguage, 'correct')}: ${correctCount}`}
+              size="small"
+              color="success"
+            />
+          )}
+          {incorrectCount > 0 && (
+            <Chip
+              label={`${t(interfaceLanguage, 'incorrect')}: ${incorrectCount}`}
+              size="small"
+              color="error"
+            />
+          )}
         </Stack>
-        {attempt.coachComment && (
-          <Typography color="text.secondary">{attempt.coachComment}</Typography>
-        )}
       </Stack>
     </Paper>
   );

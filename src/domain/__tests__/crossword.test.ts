@@ -79,4 +79,32 @@ describe('createCrossword', () => {
     expect(result.mode).toBe('phrase');
     expect(result.entries[0].answer).toBe('I would like a ticket');
   });
+
+  it('prefers a real word crossword when a theme also contains phrases', () => {
+    const result = createCrossword({
+      cards: [
+        card('phrase', 'I would like a ticket'),
+        card('1', 'train'),
+        card('2', 'rain'),
+        card('3', 'tire'),
+      ],
+      targetLanguage: 'en',
+    });
+
+    expect(result.mode).toBe('words');
+    expect(result.entries.map((entry) => entry.answer)).not.toContain(
+      'I would like a ticket',
+    );
+    expect(result.entries.length).toBeGreaterThan(1);
+  });
+
+  it('skips words that cannot connect to the crossword grid', () => {
+    const result = createCrossword({
+      cards: [card('1', 'abc'), card('2', 'def'), card('3', 'jkl')],
+      targetLanguage: 'en',
+    });
+
+    expect(result.entries).toHaveLength(1);
+    expect(result.cells.every((cell) => cell.entryIds.length === 1)).toBe(true);
+  });
 });

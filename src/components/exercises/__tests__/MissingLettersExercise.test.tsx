@@ -7,9 +7,11 @@ describe('MissingLettersExercise', () => {
   it('fills missing letters directly inside the word cells', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();
+    const onNext = vi.fn();
 
     render(
       <MissingLettersExercise
+        interfaceLanguage="ru"
         prompt={{
           cardId: 'vehicle',
           prompt: 'ru: транспортное средство',
@@ -18,6 +20,7 @@ describe('MissingLettersExercise', () => {
           translationHints: [{ language: 'ru', value: 'транспортное средство' }],
         }}
         onAnswer={onAnswer}
+        onNext={onNext}
       />,
     );
 
@@ -29,8 +32,13 @@ describe('MissingLettersExercise', () => {
     await user.type(missingLetterInputs[0], 'e');
     await user.type(missingLetterInputs[1], 'i');
     await user.type(missingLetterInputs[2], 'l');
-    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.click(screen.getByRole('button', { name: 'Отправить' }));
 
     expect(onAnswer).toHaveBeenCalledWith('vehicle');
+    expect(missingLetterInputs[0]).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Следующий' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Следующий' }));
+    expect(onNext).toHaveBeenCalledOnce();
   });
 });

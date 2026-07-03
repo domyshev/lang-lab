@@ -1,26 +1,41 @@
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MissingLettersPrompt } from '../../domain/exercises';
+import { t } from '../../domain/i18n';
+import { SupportedLanguage } from '../../domain/languages';
 
 export function MissingLettersExercise({
+  interfaceLanguage,
+  onNext,
   prompt,
   onAnswer,
 }: {
+  interfaceLanguage: SupportedLanguage;
   prompt: MissingLettersPrompt;
   onAnswer: (answer: string) => void;
+  onNext: () => void;
 }) {
   const [letters, setLetters] = useState<Record<number, string>>({});
+  const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
   const maskedCharacters = prompt.maskedAnswer.split('');
   const answer = maskedCharacters
     .map((character, index) =>
       character === '_' ? (letters[index] ?? '') : character,
     )
     .join('');
+  const isSubmitted = submittedAnswer !== null;
+
+  useEffect(() => {
+    setLetters({});
+    setSubmittedAnswer(null);
+  }, [prompt.cardId, prompt.maskedAnswer]);
 
   return (
     <Paper sx={{ p: 2 }}>
       <Stack spacing={2}>
-        <Typography variant="h6">Missing letters</Typography>
+        <Typography variant="h6">
+          {t(interfaceLanguage, 'missingLetters')}
+        </Typography>
         <Typography>{prompt.prompt}</Typography>
         {prompt.definitionHint && <Typography>{prompt.definitionHint}</Typography>}
         <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
@@ -30,6 +45,7 @@ export function MissingLettersExercise({
                 key={index}
                 component="input"
                 aria-label={`Missing letter ${index + 1}`}
+                disabled={isSubmitted}
                 value={letters[index] ?? ''}
                 onChange={(event) =>
                   setLetters((current) => ({
@@ -46,8 +62,19 @@ export function MissingLettersExercise({
             ),
           )}
         </Stack>
-        <Button variant="contained" onClick={() => onAnswer(answer)}>
-          Submit
+        <Button
+          variant="contained"
+          onClick={() => {
+            if (isSubmitted) {
+              onNext();
+              return;
+            }
+
+            setSubmittedAnswer(answer);
+            onAnswer(answer);
+          }}
+        >
+          {isSubmitted ? t(interfaceLanguage, 'next') : t(interfaceLanguage, 'submit')}
         </Button>
       </Stack>
     </Paper>
@@ -69,4 +96,9 @@ const letterCellStyles = {
   textAlign: 'center',
   textTransform: 'lowercase',
   width: 38,
+  '&:disabled': {
+    color: 'text.primary',
+    opacity: 1,
+    WebkitTextFillColor: 'currentColor',
+  },
 };

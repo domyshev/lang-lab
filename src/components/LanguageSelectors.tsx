@@ -11,6 +11,11 @@ import {
 import type { SelectChangeEvent } from '@mui/material/Select';
 import { useDispatch, useSelector } from 'react-redux';
 import {
+  AssistantId,
+  assistantCharacters,
+  defaultAssistantId,
+} from '../domain/assistants';
+import {
   languageFlags,
   languageLabels,
   SupportedLanguage,
@@ -18,6 +23,7 @@ import {
 } from '../domain/languages';
 import { t } from '../domain/i18n';
 import {
+  setAssistantId,
   setInterfaceLanguage,
   setTargetLanguage,
 } from '../store/appSlice';
@@ -25,8 +31,12 @@ import { AppDispatch, RootState } from '../store/store';
 
 export function LanguageSelectors() {
   const dispatch = useDispatch<AppDispatch>();
+  const assistantLabelId = useId();
   const interfaceLabelId = useId();
   const targetLabelId = useId();
+  const assistantId = useSelector(
+    (state: RootState) => state.app.assistantId ?? defaultAssistantId,
+  );
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
@@ -50,6 +60,26 @@ export function LanguageSelectors() {
       spacing={1.5}
       sx={{ width: { xs: '100%', md: 'auto' } }}
     >
+      <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 170 } }}>
+        <InputLabel id={assistantLabelId}>
+          {t(interfaceLanguage, 'assistant')}
+        </InputLabel>
+        <Select
+          labelId={assistantLabelId}
+          label={t(interfaceLanguage, 'assistant')}
+          value={assistantId}
+          onChange={(event: SelectChangeEvent<AssistantId>) =>
+            dispatch(setAssistantId(event.target.value as AssistantId))
+          }
+        >
+          {assistantCharacters.map((assistant) => (
+            <MenuItem key={assistant.id} value={assistant.id}>
+              {assistant.label}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
       <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 170 } }}>
         <InputLabel id={interfaceLabelId}>
           {t(interfaceLanguage, 'interfaceLanguage')}

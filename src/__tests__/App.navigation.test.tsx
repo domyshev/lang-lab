@@ -78,4 +78,39 @@ describe('App navigation', () => {
     await user.click(allWordsTopic);
     expect(screen.getByText('worth it')).toBeInTheDocument();
   });
+
+  it('keeps missing letters on the answered word and shows the correct answer result', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+
+    expect(screen.getByRole('heading', { name: 'Пропущенные буквы' })).toBeInTheDocument();
+
+    const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
+    await user.type(missingLetterInputs[0], 'x');
+    await user.type(missingLetterInputs[1], 'x');
+    await user.type(missingLetterInputs[2], 'x');
+    await user.click(screen.getByRole('button', { name: 'Отправить' }));
+
+    expect(screen.getByText('Правильный ответ')).toBeInTheDocument();
+    expect(screen.getByText('worth it')).toBeInTheDocument();
+    expect(screen.queryByText(/direct/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/weighted/)).not.toBeInTheDocument();
+    expect(screen.queryByText('missingLetters')).not.toBeInTheDocument();
+    expect(screen.getByText('Неверно: 1')).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Точность: .*Слабые карточки/),
+    ).not.toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: 'Следующий' })).toBeInTheDocument();
+    expect(missingLetterInputs[0]).toBeDisabled();
+  });
+
+  it('shows assistant character settings in the header', () => {
+    renderApp();
+
+    expect(screen.getByLabelText('Персонаж')).toBeInTheDocument();
+  });
 });

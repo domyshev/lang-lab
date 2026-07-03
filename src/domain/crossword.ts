@@ -45,6 +45,17 @@ export function createCrossword(input: {
     .filter((item): item is { card: LanguageCard; answer: string } =>
       Boolean(item.answer),
     );
+  const wordItems = eligible
+    .filter((item) => !isPhraseValue(item.answer))
+    .sort(
+      (left, right) =>
+        getConnectivityScore(right, eligible) -
+        getConnectivityScore(left, eligible),
+    );
+
+  if (wordItems.length >= 2) {
+    return buildPuzzle('words', placeWordEntries(wordItems, input.targetLanguage));
+  }
 
   const phrase = eligible.find((item) => isPhraseValue(item.answer));
   if (phrase) {
@@ -60,36 +71,47 @@ export function createCrossword(input: {
     ]);
   }
 
-  const entries = eligible.slice(0, 6).reduce<CrosswordEntry[]>(
-    (currentEntries, item, index) => {
-      if (index === 0) {
-        return [
-          createEntry({
-            card: item.card,
-            answer: item.answer,
-            targetLanguage: input.targetLanguage,
-            row: 0,
-            col: 0,
-            direction: 'across',
-          }),
-        ];
-      }
+  return buildPuzzle('words', placeWordEntries(wordItems, input.targetLanguage));
+}
 
-      return [
-        ...currentEntries,
-        placeEntry({
-          existingEntries: currentEntries,
+function placeWordEntries(
+  items: Array<{ card: LanguageCard; answer: string }>,
+  targetLanguage: SupportedLanguage,
+): CrosswordEntry[] {
+  const entries: CrosswordEntry[] = [];
+
+  items.forEach((item) => {
+    if (entries.length >= 6) {
+      return;
+    }
+
+    if (entries.length === 0) {
+      entries.push(
+        createEntry({
           card: item.card,
           answer: item.answer,
-          targetLanguage: input.targetLanguage,
-          fallbackIndex: index,
+          targetLanguage,
+          row: 0,
+          col: 0,
+          direction: 'across',
         }),
-      ];
-    },
-    [],
-  );
+      );
+      return;
+    }
 
-  return buildPuzzle('words', entries);
+    const placedEntry = placeEntry({
+      existingEntries: entries,
+      card: item.card,
+      answer: item.answer,
+      targetLanguage,
+    });
+
+    if (placedEntry) {
+      entries.push(placedEntry);
+    }
+  });
+
+  return entries;
 }
 
 function placeEntry(input: {
@@ -97,13 +119,14 @@ function placeEntry(input: {
   card: LanguageCard;
   answer: string;
   targetLanguage: SupportedLanguage;
-  fallbackIndex: number;
-}): CrosswordEntry {
+}): CrosswordEntry | undefined {
   const existingCells = getEntryCells(input.existingEntries);
   const candidates: Array<{
     row: number;
     col: number;
     direction: CrosswordEntry['direction'];
+    intersections: number;
+    area: number;
   }> = input.existingEntries.flatMap((entry) =>
     entry.answer.split('').flatMap((existingLetter, existingIndex) =>
       input.answer.split('').flatMap((newLetter, newIndex) => {
@@ -125,41 +148,39 @@ function placeEntry(input: {
           direction === 'down' ? existingRow - newIndex : existingRow;
         const col =
           direction === 'across' ? existingCol - newIndex : existingCol;
+        const placement = getPlacementScore({
+          answer: input.answer,
+          direction,
+          existingCells,
+          row,
+          col,
+        });
 
-        return [{ row, col, direction }];
+        return placement ? [{ row, col, direction, ...placement }] : [];
       }),
     ),
   );
 
-  const candidate = candidates.find((item) =>
-    canPlaceWord({
-      answer: input.answer,
-      direction: item.direction,
-      existingCells,
-      row: item.row,
-      col: item.col,
-    }),
+  const candidate = candidates.sort(
+    (left, right) =>
+      right.intersections - left.intersections ||
+      left.area - right.area ||
+      Math.abs(left.row) + Math.abs(left.col) -
+        (Math.abs(right.row) + Math.abs(right.col)),
   );
 
-  if (candidate) {
+  if (candidate[0]) {
     return createEntry({
       card: input.card,
       answer: input.answer,
       targetLanguage: input.targetLanguage,
-      row: candidate.row,
-      col: candidate.col,
-      direction: candidate.direction,
+      row: candidate[0].row,
+      col: candidate[0].col,
+      direction: candidate[0].direction,
     });
   }
 
-  return createEntry({
-    card: input.card,
-    answer: input.answer,
-    targetLanguage: input.targetLanguage,
-    row: input.fallbackIndex * 2,
-    col: 0,
-    direction: input.fallbackIndex % 2 === 0 ? 'across' : 'down',
-  });
+  return undefined;
 }
 
 function createEntry(input: {
@@ -182,16 +203,16 @@ function createEntry(input: {
   };
 }
 
-function canPlaceWord(input: {
+function getPlacementScore(input: {
   answer: string;
   direction: CrosswordEntry['direction'];
   existingCells: Map<string, CrosswordCell>;
   row: number;
   col: number;
-}): boolean {
+}): { intersections: number; area: number } | undefined {
   let intersections = 0;
 
-  return input.answer.split('').every((letter, index) => {
+  const canPlace = input.answer.split('').every((letter, index) => {
     const row = input.direction === 'down' ? input.row + index : input.row;
     const col = input.direction === 'across' ? input.col + index : input.col;
     const existingCell = input.existingCells.get(toCellKey(row, col));
@@ -206,7 +227,28 @@ function canPlaceWord(input: {
 
     intersections += 1;
     return true;
-  }) && intersections > 0;
+  });
+
+  if (!canPlace || intersections === 0) {
+    return undefined;
+  }
+
+  const bounds = getBounds([
+    ...Array.from(input.existingCells.values()),
+    ...input.answer.split('').map((letter, index) => ({
+      row: input.direction === 'down' ? input.row + index : input.row,
+      col: input.direction === 'across' ? input.col + index : input.col,
+      solution: letter,
+      entryIds: [],
+    })),
+  ]);
+
+  return {
+    intersections,
+    area:
+      (bounds.maxRow - bounds.minRow + 1) *
+      (bounds.maxCol - bounds.minCol + 1),
+  };
 }
 
 function buildPuzzle(
@@ -267,6 +309,31 @@ function getBounds(cells: CrosswordCell[]): CrosswordBounds {
 
 function lettersMatch(left: string, right: string): boolean {
   return left.toLocaleLowerCase() === right.toLocaleLowerCase();
+}
+
+function getConnectivityScore(
+  item: { answer: string },
+  allItems: Array<{ answer: string }>,
+): number {
+  return allItems
+    .filter((other) => other.answer !== item.answer)
+    .reduce(
+      (sum, other) => sum + countSharedLetters(item.answer, other.answer),
+      0,
+    );
+}
+
+function countSharedLetters(left: string, right: string): number {
+  const leftLetters = new Set(normalizeLetters(left));
+  return normalizeLetters(right).filter((letter) => leftLetters.has(letter))
+    .length;
+}
+
+function normalizeLetters(value: string): string[] {
+  return value
+    .toLocaleLowerCase()
+    .split('')
+    .filter((letter) => /[\p{L}]/u.test(letter));
 }
 
 function toCellKey(row: number, col: number): string {
