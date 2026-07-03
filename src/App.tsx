@@ -5,6 +5,11 @@ import {
   Box,
   Button,
   Chip,
+  Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControl,
   InputLabel,
   LinearProgress,
@@ -68,6 +73,11 @@ export function App() {
   const [lastSavedAttemptId, setLastSavedAttemptId] = useState<string | null>(
     null,
   );
+  const [
+    lastAnsweredMissingLettersCardId,
+    setLastAnsweredMissingLettersCardId,
+  ] = useState<string | null>(null);
+  const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
 
   const cards = useSelector((state: RootState) => state.cards.cards);
   const themes = useSelector((state: RootState) => state.themes.themes);
@@ -149,9 +159,21 @@ export function App() {
     }
 
     if (selectedExerciseType === 'missingLetters') {
+      const missingLettersCards =
+        lastAnsweredMissingLettersCardId && randomizedEligibleCards.length > 1
+          ? [
+              ...randomizedEligibleCards.filter(
+                (card) => card.id !== lastAnsweredMissingLettersCardId,
+              ),
+              ...randomizedEligibleCards.filter(
+                (card) => card.id === lastAnsweredMissingLettersCardId,
+              ),
+            ]
+          : randomizedEligibleCards;
+
       return {
         type: 'missingLetters',
-        prompt: randomizedEligibleCards
+        prompt: missingLettersCards
           .map((card) => createMissingLettersPrompt({ card, targetLanguage }))
           .find((prompt): prompt is ExercisePrompt & { maskedAnswer: string } =>
             Boolean(prompt),
@@ -167,7 +189,12 @@ export function App() {
           Boolean(prompt),
         ),
     };
-  }, [randomizedEligibleCards, selectedExerciseType, targetLanguage]);
+  }, [
+    lastAnsweredMissingLettersCardId,
+    randomizedEligibleCards,
+    selectedExerciseType,
+    targetLanguage,
+  ]);
 
   function savePromptAttempt(
     exerciseType: Exclude<ExerciseType, 'crossword'>,
@@ -314,7 +341,7 @@ export function App() {
         sx={{
           display: 'grid',
           gap: 3,
-          gridTemplateColumns: { xs: '1fr', lg: '280px minmax(0, 1fr)' },
+          gridTemplateColumns: { xs: '1fr', lg: '140px minmax(0, 1fr)' },
           alignItems: 'start',
         }}
       >
@@ -326,17 +353,31 @@ export function App() {
               attempt={lastSavedAttempt}
               cardStats={cardStats}
               interfaceLanguage={interfaceLanguage}
+              showExpectedAnswers={lastSavedAttempt.exerciseType !== 'missingLetters'}
               targetLanguage={targetLanguage}
             />
           )}
           <Button
             variant="outlined"
-            onClick={() => setIsExerciseStarted(false)}
+            color="error"
+            onClick={() => setIsFinishDialogOpen(true)}
             sx={{ alignSelf: 'flex-start' }}
           >
-            {t(interfaceLanguage, 'chooseExercise')}
+            {t(interfaceLanguage, 'finishExercise')}
           </Button>
         </Stack>
+        <FinishExerciseDialog
+          interfaceLanguage={interfaceLanguage}
+          onCancel={() => setIsFinishDialogOpen(false)}
+          onConfirm={() => {
+            setIsFinishDialogOpen(false);
+            setIsExerciseStarted(false);
+            setLastSavedAttemptId(null);
+            setLastAnsweredMissingLettersCardId(null);
+            setGenerationSeed((seed) => seed + 1);
+          }}
+          open={isFinishDialogOpen}
+        />
       </Box>
     );
   }
@@ -351,6 +392,7 @@ export function App() {
     const handleThemeChange = (event: SelectChangeEvent<string>) => {
       dispatch(selectTheme(event.target.value));
       setIsExerciseStarted(false);
+      setLastAnsweredMissingLettersCardId(null);
       setGenerationSeed((seed) => seed + 1);
     };
 
@@ -383,6 +425,7 @@ export function App() {
             onPick={(exerciseType) => {
               setSelectedExerciseType(exerciseType);
               setIsExerciseStarted(false);
+              setLastAnsweredMissingLettersCardId(null);
               setGenerationSeed((seed) => seed + 1);
             }}
           />
@@ -399,6 +442,7 @@ export function App() {
             size="large"
             onClick={() => {
               setIsExerciseStarted(true);
+              setLastAnsweredMissingLettersCardId(null);
               setGenerationSeed((seed) => seed + 1);
             }}
             disabled={!canStart}
@@ -473,6 +517,7 @@ export function App() {
       const missingLettersPrompt = exercisePreview.prompt;
       return (
         <MissingLettersExercise
+          key={`${missingLettersPrompt.cardId}:${generationSeed}`}
           interfaceLanguage={interfaceLanguage}
           prompt={missingLettersPrompt}
           onAnswer={(answer) =>
@@ -481,6 +526,7 @@ export function App() {
             })
           }
           onNext={() => {
+            setLastAnsweredMissingLettersCardId(missingLettersPrompt.cardId);
             setLastSavedAttemptId(null);
             setGenerationSeed((seed) => seed + 1);
           }}
@@ -560,11 +606,13 @@ function AttemptSummary({
   attempt,
   cardStats,
   interfaceLanguage,
+  showExpectedAnswers,
   targetLanguage,
 }: {
   attempt: ExerciseAttempt;
   cardStats: RootState['stats']['cardStats'];
   interfaceLanguage: RootState['app']['interfaceLanguage'];
+  showExpectedAnswers: boolean;
   targetLanguage: RootState['app']['targetLanguage'];
 }) {
   const expectedAnswers = attempt.prompts.map((prompt) => prompt.expectedAnswer);
@@ -586,22 +634,41 @@ function AttemptSummary({
     (sum, stat) => sum + stat.incorrect,
     0,
   );
+  const isAttemptCorrect = Object.values(attempt.correctness).every(Boolean);
 
   return (
     <Paper sx={{ p: 2, borderLeft: '4px solid', borderColor: 'primary.main' }}>
-      <Stack spacing={1}>
+      <Stack spacing={1.5}>
+        {showExpectedAnswers && (
+          <>
+            <Typography variant="overline">
+              {expectedAnswers.length === 1
+                ? t(interfaceLanguage, 'correctAnswer')
+                : t(interfaceLanguage, 'correctAnswers')}
+            </Typography>
+            <Typography fontWeight={800}>{expectedAnswers.join(' / ')}</Typography>
+            <Chip
+              label={t(
+                interfaceLanguage,
+                isAttemptCorrect ? 'correct' : 'incorrect',
+              )}
+              size="small"
+              color={isAttemptCorrect ? 'success' : 'error'}
+              sx={{ alignSelf: 'flex-start' }}
+            />
+            <Divider />
+          </>
+        )}
         <Typography variant="overline">
-          {expectedAnswers.length === 1
-            ? t(interfaceLanguage, 'correctAnswer')
-            : t(interfaceLanguage, 'correctAnswers')}
+          {t(interfaceLanguage, 'resultStats')}
         </Typography>
-        <Typography fontWeight={800}>{expectedAnswers.join(' / ')}</Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           {correctCount > 0 && (
             <Chip
               label={`${t(interfaceLanguage, 'correct')}: ${correctCount}`}
               size="small"
               color="success"
+              variant="outlined"
             />
           )}
           {incorrectCount > 0 && (
@@ -609,11 +676,55 @@ function AttemptSummary({
               label={`${t(interfaceLanguage, 'incorrect')}: ${incorrectCount}`}
               size="small"
               color="error"
+              variant="outlined"
             />
           )}
         </Stack>
       </Stack>
     </Paper>
+  );
+}
+
+function FinishExerciseDialog({
+  interfaceLanguage,
+  onCancel,
+  onConfirm,
+  open,
+}: {
+  interfaceLanguage: RootState['app']['interfaceLanguage'];
+  onCancel: () => void;
+  onConfirm: () => void;
+  open: boolean;
+}) {
+  return (
+    <Dialog
+      open={open}
+      onClose={onCancel}
+      PaperProps={{
+        sx: {
+          border: '2px solid',
+          borderColor: 'primary.main',
+          borderRadius: 2,
+          boxShadow: '0 20px 50px rgba(32, 48, 21, 0.22)',
+          maxWidth: 420,
+        },
+      }}
+    >
+      <DialogTitle sx={{ fontWeight: 900 }}>
+        {t(interfaceLanguage, 'finishExercise')}
+      </DialogTitle>
+      <DialogContent>
+        <Typography>{t(interfaceLanguage, 'finishExerciseNotice')}</Typography>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button color="success" variant="contained" onClick={onCancel}>
+          {t(interfaceLanguage, 'cancel')}
+        </Button>
+        <Button color="error" variant="contained" onClick={onConfirm}>
+          {t(interfaceLanguage, 'confirm')}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }
 

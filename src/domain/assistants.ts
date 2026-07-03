@@ -1,4 +1,9 @@
-export type AssistantId = 'forestTutor' | 'kitchenSage' | 'starHero';
+export type AssistantId =
+  | 'studyTroll'
+  | 'trollMama'
+  | 'capeChampion'
+  | 'greenPower'
+  | 'webRunner';
 
 export interface AssistantCharacter {
   id: AssistantId;
@@ -6,9 +11,17 @@ export interface AssistantCharacter {
 }
 
 export const assistantCharacters: AssistantCharacter[] = [
-  { id: 'forestTutor', label: 'Forest Tutor' },
-  { id: 'kitchenSage', label: 'Kitchen Sage' },
-  { id: 'starHero', label: 'Star Hero' },
+  { id: 'studyTroll', label: 'Study Troll' },
+  { id: 'trollMama', label: 'Troll Mama' },
+  { id: 'capeChampion', label: 'Cape Champion' },
+  { id: 'greenPower', label: 'Green Power' },
+  { id: 'webRunner', label: 'Web Runner' },
 ];
 
-export const defaultAssistantId: AssistantId = 'forestTutor';
+export const defaultAssistantId: AssistantId = 'studyTroll';
+
+export function resolveAssistantId(value: unknown): AssistantId {
+  return assistantCharacters.some((assistant) => assistant.id === value)
+    ? (value as AssistantId)
+    : defaultAssistantId;
+}

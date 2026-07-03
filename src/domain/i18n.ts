@@ -31,10 +31,17 @@ type I18nKey =
   | 'missingWord'
   | 'submit'
   | 'next'
+  | 'finishExercise'
+  | 'finishExerciseNotice'
+  | 'cancel'
+  | 'confirm'
   | 'correctAnswer'
   | 'correctAnswers'
+  | 'resultStats'
+  | 'correctResult'
   | 'correct'
-  | 'incorrect';
+  | 'incorrect'
+  | 'selectedAssistant';
 
 const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
   en: {
@@ -68,10 +75,18 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     missingWord: 'Missing word in sentence',
     submit: 'Submit',
     next: 'Next',
+    finishExercise: 'Finish exercise',
+    finishExerciseNotice:
+      'Exercise results will be counted and the exercise will end.',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
     correctAnswer: 'Correct answer',
     correctAnswers: 'Correct answers',
+    resultStats: 'Statistics',
+    correctResult: 'Correct!',
     correct: 'Correct',
     incorrect: 'Incorrect',
+    selectedAssistant: 'Selected character',
   },
   ru: {
     appName: 'Language Crossword Lab',
@@ -104,10 +119,18 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     missingWord: 'Пропущенное слово',
     submit: 'Отправить',
     next: 'Следующий',
+    finishExercise: 'Закончить упражнение',
+    finishExerciseNotice:
+      'Результаты упражнения будут зачтены, а упражнение закончено.',
+    cancel: 'Отмена',
+    confirm: 'Подтвердить',
     correctAnswer: 'Правильный ответ',
     correctAnswers: 'Правильные ответы',
+    resultStats: 'Статистика',
+    correctResult: 'Правильно!',
     correct: 'Верно',
     incorrect: 'Неверно',
+    selectedAssistant: 'Выбранный персонаж',
   },
   es: {
     appName: 'Language Crossword Lab',
@@ -140,10 +163,18 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     missingWord: 'Palabra que falta',
     submit: 'Enviar',
     next: 'Siguiente',
+    finishExercise: 'Terminar ejercicio',
+    finishExerciseNotice:
+      'Los resultados del ejercicio se guardaran y el ejercicio terminara.',
+    cancel: 'Cancelar',
+    confirm: 'Confirmar',
     correctAnswer: 'Respuesta correcta',
     correctAnswers: 'Respuestas correctas',
+    resultStats: 'Estadisticas',
+    correctResult: 'Correcto!',
     correct: 'Correctas',
     incorrect: 'Incorrectas',
+    selectedAssistant: 'Personaje seleccionado',
   },
 };
 

@@ -14,6 +14,7 @@ import {
   AssistantId,
   assistantCharacters,
   defaultAssistantId,
+  resolveAssistantId,
 } from '../domain/assistants';
 import {
   languageFlags,
@@ -28,14 +29,15 @@ import {
   setTargetLanguage,
 } from '../store/appSlice';
 import { AppDispatch, RootState } from '../store/store';
+import { AssistantStickerIcon } from './assistantAssets';
 
 export function LanguageSelectors() {
   const dispatch = useDispatch<AppDispatch>();
   const assistantLabelId = useId();
   const interfaceLabelId = useId();
   const targetLabelId = useId();
-  const assistantId = useSelector(
-    (state: RootState) => state.app.assistantId ?? defaultAssistantId,
+  const assistantId = useSelector((state: RootState) =>
+    resolveAssistantId(state.app.assistantId ?? defaultAssistantId),
   );
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
@@ -60,7 +62,7 @@ export function LanguageSelectors() {
       spacing={1.5}
       sx={{ width: { xs: '100%', md: 'auto' } }}
     >
-      <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 170 } }}>
+      <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 86 } }}>
         <InputLabel id={assistantLabelId}>
           {t(interfaceLanguage, 'assistant')}
         </InputLabel>
@@ -71,10 +73,35 @@ export function LanguageSelectors() {
           onChange={(event: SelectChangeEvent<AssistantId>) =>
             dispatch(setAssistantId(event.target.value as AssistantId))
           }
+          renderValue={(value) => (
+            <AssistantStickerIcon
+              ariaLabel={t(interfaceLanguage, 'selectedAssistant')}
+              assistantId={value}
+              size={30}
+              sx={{ mx: 'auto' }}
+            />
+          )}
+          sx={{
+            '& .MuiSelect-select': {
+              alignItems: 'center',
+              display: 'flex',
+              justifyContent: 'center',
+              py: 0.25,
+            },
+          }}
         >
           {assistantCharacters.map((assistant) => (
-            <MenuItem key={assistant.id} value={assistant.id}>
-              {assistant.label}
+            <MenuItem
+              key={assistant.id}
+              aria-label={assistant.label}
+              value={assistant.id}
+              sx={{ justifyContent: 'center' }}
+            >
+              <AssistantStickerIcon
+                ariaLabel={assistant.label}
+                assistantId={assistant.id}
+                size={36}
+              />
             </MenuItem>
           ))}
         </Select>
