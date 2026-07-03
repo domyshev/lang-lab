@@ -31,6 +31,19 @@ function renderApp() {
               ru: 'оно того стоит',
               es: 'vale la pena',
             },
+            examples: {
+              en: [{ sentence: 'It is worth it today.', answer: 'worth it' }],
+            },
+            createdAt: now,
+            updatedAt: now,
+          },
+          {
+            id: 'card-airport',
+            translations: {
+              en: 'airport',
+              ru: 'аэропорт',
+              es: 'aeropuerto',
+            },
             createdAt: now,
             updatedAt: now,
           },
@@ -70,13 +83,14 @@ describe('App navigation', () => {
 
     const allWordsTopic = screen.getByRole('button', { name: /Все слова/ });
     expect(allWordsTopic).toBeInTheDocument();
-    expect(allWordsTopic).toHaveTextContent('1');
+    expect(allWordsTopic).toHaveTextContent('2');
     expect(
       screen.queryByRole('button', { name: 'В архив: Все слова' }),
     ).not.toBeInTheDocument();
 
     await user.click(allWordsTopic);
     expect(screen.getByText('worth it')).toBeInTheDocument();
+    expect(screen.getByText('airport')).toBeInTheDocument();
   });
 
   it('keeps missing letters on the answered word and shows the correct answer result', async () => {
@@ -95,7 +109,7 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Отправить' }));
 
     expect(screen.getByText('Правильный ответ')).toBeInTheDocument();
-    expect(screen.getByText('worth it')).toBeInTheDocument();
+    expect(screen.getByText('airport')).toBeInTheDocument();
     expect(screen.queryByText(/direct/)).not.toBeInTheDocument();
     expect(screen.queryByText(/weighted/)).not.toBeInTheDocument();
     expect(screen.queryByText('missingLetters')).not.toBeInTheDocument();
@@ -112,5 +126,15 @@ describe('App navigation', () => {
     renderApp();
 
     expect(screen.getByLabelText('Персонаж')).toBeInTheDocument();
+  });
+
+  it('uses phrases for missing word practice', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенное слово' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+
+    expect(screen.getByText('It is _____ today.')).toBeInTheDocument();
   });
 });

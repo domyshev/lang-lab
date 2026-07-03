@@ -51,8 +51,12 @@ describe('exercise generators', () => {
     expect(prompt.options).toContain('airport');
   });
 
-  it('creates missing letters prompt while preserving spaces', () => {
+  it('creates missing letters prompt only for single words', () => {
     const prompt = createMissingLettersPrompt({
+      card: baseCard,
+      targetLanguage: 'en',
+    });
+    const phrasePrompt = createMissingLettersPrompt({
       card: {
         ...baseCard,
         translations: { en: 'train station', ru: 'вокзал' },
@@ -60,18 +64,33 @@ describe('exercise generators', () => {
       targetLanguage: 'en',
     });
 
-    expect(prompt.expectedAnswer).toBe('train station');
-    expect(prompt.maskedAnswer).toContain(' ');
-    expect(prompt.maskedAnswer).toMatch(/_/);
+    expect(prompt?.expectedAnswer).toBe('airport');
+    expect(prompt?.maskedAnswer).toMatch(/_/);
+    expect(phrasePrompt).toBeUndefined();
   });
 
-  it('creates missing word prompt from examples', () => {
-    const prompt = createMissingWordPrompt({
+  it('creates missing word prompt only from phrase examples', () => {
+    const wordPrompt = createMissingWordPrompt({
       card: baseCard,
       targetLanguage: 'en',
     });
+    const phrasePrompt = createMissingWordPrompt({
+      card: {
+        ...baseCard,
+        id: 'phrase-card',
+        translations: {
+          en: 'worth it',
+          ru: 'оно того стоит',
+        },
+        examples: {
+          en: [{ sentence: 'It is worth it today.', answer: 'worth it' }],
+        },
+      },
+      targetLanguage: 'en',
+    });
 
-    expect(prompt?.sentenceWithGap).toBe('The _____ is busy today.');
-    expect(prompt?.expectedAnswer).toBe('airport');
+    expect(wordPrompt).toBeUndefined();
+    expect(phrasePrompt?.sentenceWithGap).toBe('It is _____ today.');
+    expect(phrasePrompt?.expectedAnswer).toBe('worth it');
   });
 });

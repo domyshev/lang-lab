@@ -5,6 +5,7 @@ import {
   getDefinitionHint,
   getTranslationHints,
   isCardEligibleForTarget,
+  isPhraseValue,
 } from './cards';
 import { SupportedLanguage } from './languages';
 
@@ -99,8 +100,12 @@ export function createMultipleChoicePrompt(input: {
 export function createMissingLettersPrompt(input: {
   card: LanguageCard;
   targetLanguage: SupportedLanguage;
-}): MissingLettersPrompt {
+}): MissingLettersPrompt | undefined {
   const base = createBasePrompt(input.card, input.targetLanguage);
+  if (isPhraseValue(base.expectedAnswer)) {
+    return undefined;
+  }
+
   return {
     ...base,
     maskedAnswer: maskAnswer(base.expectedAnswer),
@@ -112,6 +117,10 @@ export function createMissingWordPrompt(input: {
   targetLanguage: SupportedLanguage;
 }): MissingWordPrompt | undefined {
   const base = createBasePrompt(input.card, input.targetLanguage);
+  if (!isPhraseValue(base.expectedAnswer)) {
+    return undefined;
+  }
+
   const example = input.card.examples?.[input.targetLanguage]?.find((item) =>
     item.sentence.includes(item.answer),
   );

@@ -52,7 +52,7 @@ import { AppDispatch, RootState } from './store/store';
 type ExercisePreview =
   | { type: 'crossword'; puzzle: CrosswordPuzzle }
   | { type: 'multipleChoice'; prompt: ExercisePrompt & { options: string[] } }
-  | { type: 'missingLetters'; prompt: ExercisePrompt & { maskedAnswer: string } }
+  | { type: 'missingLetters'; prompt?: ExercisePrompt & { maskedAnswer: string } }
   | { type: 'missingWord'; prompt?: ExercisePrompt & { sentenceWithGap: string } };
 
 type SelectableTheme = Theme & { isAllWords?: boolean };
@@ -151,10 +151,11 @@ export function App() {
     if (selectedExerciseType === 'missingLetters') {
       return {
         type: 'missingLetters',
-        prompt: createMissingLettersPrompt({
-          card: firstCard,
-          targetLanguage,
-        }),
+        prompt: randomizedEligibleCards
+          .map((card) => createMissingLettersPrompt({ card, targetLanguage }))
+          .find((prompt): prompt is ExercisePrompt & { maskedAnswer: string } =>
+            Boolean(prompt),
+          ),
       };
     }
 
@@ -460,12 +461,22 @@ export function App() {
     }
 
     if (exercisePreview.type === 'missingLetters') {
+      if (!exercisePreview.prompt) {
+        return (
+          <Alert severity="info">
+            Missing letters practice needs single-word cards for the target
+            language.
+          </Alert>
+        );
+      }
+
+      const missingLettersPrompt = exercisePreview.prompt;
       return (
         <MissingLettersExercise
           interfaceLanguage={interfaceLanguage}
-          prompt={exercisePreview.prompt}
+          prompt={missingLettersPrompt}
           onAnswer={(answer) =>
-            savePromptAttempt('missingLetters', exercisePreview.prompt, answer, {
+            savePromptAttempt('missingLetters', missingLettersPrompt, answer, {
               advance: false,
             })
           }
