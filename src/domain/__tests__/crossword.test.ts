@@ -1,0 +1,82 @@
+import { describe, expect, it } from 'vitest';
+import { LanguageCard } from '../cards';
+import { createCrossword } from '../crossword';
+
+function card(id: string, answer: string): LanguageCard {
+  return {
+    id,
+    translations: {
+      en: answer,
+      ru: `ru-${answer}`,
+    },
+    createdAt: '2026-07-03T00:00:00.000Z',
+    updatedAt: '2026-07-03T00:00:00.000Z',
+  };
+}
+
+describe('createCrossword', () => {
+  it('uses up to six single-word cards', () => {
+    const result = createCrossword({
+      cards: [
+        card('1', 'airport'),
+        card('2', 'ticket'),
+        card('3', 'train'),
+        card('4', 'station'),
+        card('5', 'hotel'),
+        card('6', 'map'),
+        card('7', 'bus'),
+      ],
+      targetLanguage: 'en',
+    });
+
+    expect(result.entries).toHaveLength(6);
+    expect(result.mode).toBe('words');
+  });
+
+  it('places words on an intersecting crossword grid', () => {
+    const result = createCrossword({
+      cards: [
+        card('1', 'train'),
+        card('2', 'rain'),
+        card('3', 'tire'),
+        card('4', 'near'),
+      ],
+      targetLanguage: 'en',
+    });
+
+    const occupiedCells = result.entries.flatMap((entry) =>
+      entry.answer.split('').map((letter, index) => ({
+        cardId: entry.cardId,
+        key:
+          entry.direction === 'across'
+            ? `${entry.row}:${entry.col + index}`
+            : `${entry.row + index}:${entry.col}`,
+        letter,
+      })),
+    );
+    const intersections = occupiedCells.filter((cell, index) =>
+      occupiedCells.some(
+        (other, otherIndex) =>
+          otherIndex !== index &&
+          other.key === cell.key &&
+          other.cardId !== cell.cardId &&
+          other.letter.toLocaleLowerCase() === cell.letter.toLocaleLowerCase(),
+      ),
+    );
+
+    expect(intersections.length).toBeGreaterThan(0);
+    expect(result.cells.some((cell) => cell.entryIds.length > 1)).toBe(true);
+    expect(new Set(result.entries.map((entry) => entry.direction)).size).toBe(2);
+  });
+
+  it('uses only one phrase card for phrase mode', () => {
+    const result = createCrossword({
+      cards: [card('1', 'I would like a ticket'), card('2', 'airport')],
+      targetLanguage: 'en',
+    });
+
+    expect(result.entries).toHaveLength(1);
+    expect(result.mode).toBe('phrase');
+    expect(result.entries[0].answer).toBe('I would like a ticket');
+  });
+});

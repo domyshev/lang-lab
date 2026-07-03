@@ -1,58 +1,122 @@
 # Language Crossword Lab
 
-Language Crossword Lab is a small educational browser game for practicing foreign vocabulary through generated crosswords. The first target use case is learning English and Spanish words from Russian clues.
-
-The project is being built for the AI-Native Development Challenge. The goal is not only to produce a playable game, but also to document the full AI-assisted development lifecycle: requirements, planning, architecture, implementation, validation, and retrospective.
+Language Crossword Lab is a local browser app for building a personal language-learning practice set from JSON language cards. The learner imports cards, groups them into temporary themes, chooses a target language, and practices with generated drills.
 
 
 
-## Game Description
+## Current MVP
 
-Players solve crossword puzzles where each clue is written in Russian and each answer is a foreign-language word. For example:
+The implemented frontend uses:
 
-- clue: `кот`
-- answer: `cat` or `gato`
+- React, TypeScript, Vite, and MUI;
+- Redux Toolkit for application state;
+- Redux Persist and `localStorage` for browser persistence;
+- Vitest for domain-level tests.
 
-The game is intended to support predefined word sets and custom word sets uploaded as JSON files. These JSON files may be authored manually or generated in advance with AI tools.
+The current app supports:
 
-The first product direction is a static browser crossword generator:
+- separate interface language and target language selectors;
+- Russian, English, and Spanish language cards;
+- paste-based JSON import;
+- duplicate detection by any matching translation value;
+- safe merging of missing duplicate data;
+- pending duplicate records for conflicts;
+- learner-created themes that persist locally;
+- target-language scoped practice history;
+- per-card target-language statistics;
+- weighted exercise results;
+- a strict sports-coach assistant panel.
 
-- users create simple local profiles with a unique display name;
-- users can type their own name or choose from five generated names;
-- generated names combine a funny adjective and the surname of a known contributor to languages or language learning;
-- word sets can be stored and reused in the browser;
-- generated crossword attempts are recorded locally;
-- players can view their solving history on the same device and browser.
+## Learning Flow
 
-## Planned Technology Stack
+1. Import language cards as JSON.
+2. Create one or more themes.
+3. Add imported cards to a theme.
+4. Choose a target language.
+5. Start a generated exercise from the selected theme.
+6. Review the saved attempt in target-language history.
 
-- Application: TypeScript, React, MUI
-- Persistence: browser `localStorage`
-- Content format: JSON
-- Delivery target: local development first, with /GitDocs-friendly static delivery considered as a bonus
+Themes are intentionally lightweight and learner-owned. A learner can create many themes and keep them for later, but each exercise is generated from exactly one selected theme.
 
-## Current Status
+## Exercise Modes
 
-This repository is at the initial specification stage. No playable implementation exists yet.
+The MVP includes four exercise modes:
+
+- crossword;
+- question with three answer variants;
+- missing letters in a word or phrase;
+- missing word or phrase in a sentence.
+
+Crosswords are generated from a single theme. If a phrase is selected for a crossword, the crossword uses only that phrase. If the crossword uses single words, it includes up to six theme cards.
+
+## Language Card JSON
+
+Language cards are documented in [docs/LANGUAGE_CARD_FORMAT.md](docs/LANGUAGE_CARD_FORMAT.md).
+
+The app creates internal card ids. Imported JSON should not provide ids.
+
+Minimal example:
+
+```json
+[
+  {
+    "translations": {
+      "ru": "аэропорт",
+      "en": "airport",
+      "es": "aeropuerto"
+    },
+    "definitions": {
+      "en": "A place where airplanes take off, land, and passengers travel through."
+    },
+    "tags": ["travel"],
+    "difficulty": "easy"
+  }
+]
+```
+
+## Planned Vocabulary Capture Tool
+
+The product specification also includes a future vocabulary capture tool. A learner will paste free-form text, and the app will create a JSON document containing every extracted word and the input date. This data is intended to support detailed knowledge analytics later.
+
+Minimal planned capture shape:
+
+```json
+{
+  "inputDate": "2026-07-03",
+  "words": ["airport", "ticket", "train"]
+}
+```
 
 ## Setup
 
-Setup instructions will be added once the initial application structure is implemented.
+Install dependencies:
 
-Expected local development flow:
+```bash
+npm install
+```
 
-1. Install application dependencies.
-2. Start the React development environment.
-3. Open the local app in a browser.
+Start local development:
 
-## Run
+```bash
+npm run dev
+```
 
-Run instructions will be added once the implementation is available.
+Run tests:
 
-## Screenshots
+```bash
+npm test
+```
 
-Screenshots will be added after the first playable UI is implemented.
+Build production assets:
 
-## AI-Native Workflow
+```bash
+npm run build
+```
 
-This project is intentionally developed with AI assistance. Design decisions, implementation steps, validation results, and lessons learned will be captured in the repository documentation, especially in `RETROSPECTIVE.md`.
+## Documentation
+
+- [SPEC.md](SPEC.md) describes the product behavior.
+- [ARCHITECTURE.md](ARCHITECTURE.md) describes the implementation structure.
+- [docs/APP_REQUIREMENTS.md](docs/APP_REQUIREMENTS.md) captures detailed requirements.
+- [docs/LANGUAGE_CARD_FORMAT.md](docs/LANGUAGE_CARD_FORMAT.md) is the LLM-facing card authoring guide.
+- [RETROSPECTIVE.md](RETROSPECTIVE.md) records the AI-native development process.

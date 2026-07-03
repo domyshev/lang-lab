@@ -6,190 +6,212 @@ Detailed application requirements: [docs/APP_REQUIREMENTS.md](docs/APP_REQUIREME
 
 ## Project Goal
 
-Build a small but complete educational crossword game for practicing foreign vocabulary. The initial learning direction is Russian clues to English or Spanish answers.
+Build a small but complete browser language-learning game where learners create their own practice material from JSON language cards, organize cards into themes, and practice through generated exercises.
 
-The project should be small enough to complete within the challenge timeframe, but complete enough to demonstrate planning, implementation, testing, documentation, and iteration with AI-assisted development.
+The first implementation focuses on Russian, English, and Spanish. The architecture should remain language-card based rather than hard-coded to one source-target pair.
+
+## Core Concept
+
+The learner is both student and teacher.
+
+They can:
+
+- import language cards;
+- create many short-term themes;
+- add cards to themes;
+- choose a target language;
+- practice generated exercises;
+- review target-language history and statistics.
 
 ## Supported Languages
 
-The first version supports Russian, Spanish, and English.
+The first version supports:
 
-The application architecture should allow more languages later. The core concept is based on language-independent ideas: source language, target language, clue, answer, word set, puzzle, and attempt. It should not depend on assumptions that only work for Russian, Spanish, or English.
+- Russian;
+- English;
+- Spanish.
 
-## Game Rules
+The target language can be any supported language. A card is usable for a target language only when it has a target-language answer and enough hint data.
 
-1. A player enters the application and chooses a display name.
-2. The player can type a custom name or choose one of five generated names.
-3. The player selects a word set.
-4. The application generates a crossword from words in that set.
-5. Each crossword clue is shown in Russian for the MVP learning direction.
-6. The player fills crossword cells with the English or Spanish answer.
-7. The game validates the filled answers.
-8. The game records the attempt result in local browser history.
+## Language Settings
 
-## Player Name Flow
+The application has two separate language settings:
 
-When a player opens the application, the first screen asks for a display name.
+- interface language;
+- target language.
 
-The player can:
+The interface language controls UI text and coach comments. The target language controls exercises, history, and statistics.
 
-- enter a custom name manually;
-- choose one name from a generated list;
-- refresh the generated list.
+## Language Card Format
 
-Generated names use this format:
+A language card represents one learning unit: a word, phrase, or short expression.
 
-```text
-FunnyAdjective-Surname
-```
+Cards contain:
 
-Examples:
+- translations for at least two supported languages;
+- optional definitions;
+- optional example sentences;
+- optional tags;
+- optional difficulty.
 
-- `Curious-Webster`
-- `Brave-Nebrija`
-- `Sparkly-Cervantes`
+The app creates internal ids. Imported JSON does not need ids.
 
-The generated list contains five different names at a time. The "Refresh list" button regenerates the five suggestions.
+The LLM-facing card authoring guide is [docs/LANGUAGE_CARD_FORMAT.md](docs/LANGUAGE_CARD_FORMAT.md).
 
-Surnames come from a planned local JSON file containing 100 known contributors to language development, linguistics, literacy, dictionaries, English learning, or Spanish learning. Detailed requirements for this file are described in [docs/APP_REQUIREMENTS.md](docs/APP_REQUIREMENTS.md).
+## Import Rules
 
-## Word Set Format
+The app imports cards from pasted JSON.
 
-The MVP should support JSON word sets. A minimal item contains:
+Requirements:
 
-```json
-{
-  "word": "airport",
-  "clue": "аэропорт"
-}
-```
+- add valid cards;
+- keep importing valid records even when other records are invalid;
+- detect duplicates by any matching translation value;
+- safely merge missing duplicate information;
+- record safe merge history;
+- store conflicting duplicate records in pending duplicates;
+- persist all imported and duplicate-processing data locally.
 
-A fuller word set may include metadata:
+## Themes
 
-```json
-{
-  "title": "Basic travel words",
-  "sourceLanguage": "ru",
-  "targetLanguage": "en",
-  "items": [
-    {
-      "word": "airport",
-      "clue": "аэропорт",
-      "tags": ["travel"],
-      "difficulty": "easy"
-    }
-  ]
-}
-```
+Themes are learner-created card groups.
 
-Only `word` and `clue` are required for the first implementation. Metadata fields are useful for future filtering and learning analytics.
+Requirements:
+
+- a learner can create many themes;
+- themes persist locally;
+- a theme may contain words and phrases together;
+- each exercise is generated from exactly one selected theme;
+- when no themes exist, the app should guide directly into theme creation.
+
+Themes are intended as flexible short-term learning focus areas rather than permanent taxonomy.
+
+## Exercise Modes
+
+The MVP includes:
+
+1. Crossword.
+2. Question with three answer variants.
+3. Missing letters.
+4. Missing word or phrase in a sentence.
+
+All exercise modes use the same language cards and selected target language.
+
+## Crossword Rules
+
+Crosswords are generated from one theme.
+
+Rules:
+
+- if a crossword uses a phrase, it contains only that phrase;
+- if a crossword uses separate words, it contains up to six cards;
+- a crossword must not mix phrases and separate words;
+- generated order should be randomized and independent from previous history.
+
+## Hints
+
+For a target-language exercise:
+
+- translation hints come from the other available languages;
+- definition hints come only from the current target language.
+
+Example: if the target language is English, hints may include Russian and Spanish translations plus an English definition.
+
+## History And Statistics
+
+Every submitted exercise creates an attempt record.
+
+History is scoped by target language. When the target language is English, the learner sees English practice history. When it is Spanish or Russian, history changes to that target language.
+
+The app tracks:
+
+- per-card target-language accuracy;
+- per-card stability;
+- exercise-level weighted score;
+- submitted answers and correctness;
+- coach feedback for the attempt.
+
+The weighted exercise score should treat a new-card mistake less severely than another mistake on a card that has already been weak several times.
+
+## Coach Assistant
+
+The app includes a persistent strict sports-coach assistant.
+
+The coach should:
+
+- be visible as a character image;
+- use concise analytics-style feedback;
+- mention accuracy and weak cards;
+- avoid empty generic encouragement.
+
+The MVP uses deterministic local analytics. Future versions may use an LLM-backed coach.
 
 ## Vocabulary Capture Tool
 
-The game should include a tool that lets a player paste or type free-form text and turn it into a vocabulary capture JSON document. The tool extracts all words from the submitted text and stores them together with the date of the text submission.
+The game should include a future tool that turns free-form text into vocabulary JSON.
 
-A minimal vocabulary capture document contains:
+The tool should:
+
+- accept pasted or typed text;
+- extract all words from the text;
+- store the input date;
+- create a JSON document that can support later learning analytics.
+
+Minimal planned capture document:
 
 ```json
 {
-  "inputDate": "2026-06-29",
+  "inputDate": "2026-07-03",
   "words": ["airport", "ticket", "train"]
 }
 ```
 
-The first version may keep this data local, but the format should be designed so later versions can use it for detailed analytics of the player's vocabulary knowledge, learning history, repeated words, and gaps.
+This data should later help analyze a learner's vocabulary knowledge, repeated words, gaps, and learning progress.
 
 ## Scope
 
-### In Scope for MVP
+### In Scope For MVP
 
-- TypeScript React application using MUI.
-- Browser-only persistence through `localStorage`.
-- Simple local profile creation by display name.
-- Five generated name suggestions on entry.
-- "Refresh list" action for generated names.
-- A planned local JSON file with 100 contributor records for name generation.
-- Store local users, word sets, crossword attempts, and attempt results.
-- Generate playable crossword puzzles from a selected word set.
-- Support Russian clues and English or Spanish answers.
-- Support importing custom JSON word sets.
-- Support creating vocabulary capture JSON from text entered by a player.
-- Show a player's attempt history in the same browser.
+- TypeScript React application with MUI.
+- Redux Toolkit application state.
+- Redux Persist over `localStorage`.
+- JSON language card import.
+- Duplicate detection, safe merge, and pending duplicates.
+- Learner-created persistent themes.
+- Target and interface language settings.
+- Four exercise modes.
+- Target-language scoped history.
+- Per-card statistics.
+- Weighted exercise score.
+- Strict sports-coach assistant.
 
-### Out of Scope for MVP
+### Out Of Scope For MVP
 
-- Secure authentication.
-- Shared online accounts.
-- Multiplayer sessions.
-- Real-time collaboration.
-- Advanced spaced repetition.
-- Full learning analytics dashboard.
-- AI generation inside the app.
-- Mobile-native application.
+- backend services;
+- secure authentication;
+- shared accounts;
+- in-app LLM card generation;
+- backend AI duplicate review;
+- arcade modules such as slalom, racing, or snowball games;
+- full analytics dashboard;
+- mobile-native app.
 
-## Functional Requirements
-
-### Users
-
-- A user can create a local profile with a display name.
-- A user can select an existing local profile.
-- A user can choose from five generated name suggestions.
-- A user can refresh generated name suggestions.
-- Generated names must be unique within a single generated list.
-- The app stores game attempts under the selected local profile.
-
-### Word Sets
-
-- The app includes at least one predefined word set.
-- A user can import a JSON word set.
-- The app validates imported JSON before storing it.
-- Invalid JSON should produce a clear error message.
-
-### Vocabulary Capture
-
-- A user can enter or paste free-form text into a vocabulary capture tool.
-- The app extracts all words from the submitted text.
-- The app creates a JSON document containing the extracted words and the input date.
-- Vocabulary capture data should be stored in a structure that can support future detailed learning analytics.
-
-### Crossword Generation
-
-- The app generates a crossword from available words in a word set.
-- The generated crossword should place words on a grid with valid intersections where possible.
-- If not all words can be placed, the app should still generate a playable puzzle from the placed subset and report the number of included words.
-
-### Gameplay
-
-- The player can type answers into crossword cells.
-- The player can submit the puzzle for validation.
-- The app shows correct and incorrect answers after submission.
-- The app records the attempt result.
-
-### History
-
-- A player can view previous attempts from the same browser.
-- History includes date, word set, language, score, and completion status.
-
-### Local Persistence
-
-- The app stores profiles, imported word sets, puzzle attempts, and history in `localStorage`.
-- The app should handle missing, empty, or malformed stored data gracefully.
-- The app should keep predefined data separate from user-imported data.
+Arcade modules can be added later as separate modules that reuse the same card, theme, attempt, and statistics model.
 
 ## Acceptance Criteria
 
-- A new user can create a local profile with a custom display name.
-- The user can choose one of five generated names.
-- The user can refresh the generated name list.
-- Generated names use contributor surnames from the planned local JSON file.
-- The user can start a crossword from a predefined word set.
-- The user can complete and submit the crossword.
-- The result is saved to `localStorage`.
-- The user can see the saved attempt in history.
-- A custom JSON word set can be imported and used for a new crossword.
-- The application is implemented in TypeScript and React with MUI components.
-- The project includes `README.md`, `SPEC.md`, `ARCHITECTURE.md`, and `RETROSPECTIVE.md`.
-
-## Bonus Goal
-
-If feasible, provide a /GitDocs-friendly playable demo. A static browser app is well suited for this because someone should be able to open a link and play without cloning the repository, installing dependencies, or running a local process.
+- A learner can import valid language-card JSON.
+- Invalid import records do not block valid records.
+- Duplicate cards are detected by any translation match.
+- Safe duplicate data is merged and recorded.
+- Conflicting duplicates are persisted as pending.
+- A learner can create and persist multiple themes.
+- A learner can add cards to a selected theme.
+- A learner can switch target language.
+- Exercises use only cards eligible for the current target language.
+- The learner can submit each MVP exercise type.
+- Submitted attempts are saved to `localStorage`.
+- History is filtered by target language.
+- Card statistics update after submitted attempts.
+- The coach assistant is visible and uses statistics-aware feedback.
+- Tests and production build pass.

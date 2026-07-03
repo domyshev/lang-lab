@@ -4,113 +4,207 @@ Challenge requirements: [../TASK_REQUIREMENTS.md](../TASK_REQUIREMENTS.md)
 
 ## Product Summary
 
-Language Crossword Lab is a static browser game for learning vocabulary through generated crosswords. It starts with Russian clues and English or Spanish answers, while keeping the data model open to more languages later.
+Language Crossword Lab is a local browser app for self-directed vocabulary practice. A learner imports language cards, creates themes, and generates exercises from a selected theme.
 
-The application is implemented with TypeScript, React, and MUI. User data is stored locally in the browser with `localStorage`.
+The learner acts as both student and teacher: they choose the source material, import cards, create short-term themes, and practice the target language that matters now.
 
 ## Supported Languages
 
 The first version supports:
 
-- Russian;
-- Spanish;
-- English.
+- Russian (`ru`);
+- English (`en`);
+- Spanish (`es`).
 
-The application should be designed around general language-learning concepts rather than language-specific assumptions. Core data entities should use source language, target language, clue, answer, localized labels, and localized descriptions so more languages can be added later.
+Language support is modeled through language cards rather than fixed source-target pairs.
 
-## Entry Flow and Player Names
+## Language Settings
 
-When the user enters the application, they must choose a display name before starting a game.
+The app must keep two independent language settings:
 
-The entry screen supports two paths:
+- interface language;
+- target language.
 
-- manual name entry;
-- generated name selection.
+The target language controls exercise answers, history filtering, and statistics. If the target language is English, the learner practices English and sees English-target history. If the target language changes to Spanish or Russian, history and statistics are shown for that target language only.
 
-The generated-name list shows five different options at a time. A "Refresh list" button regenerates the five suggestions.
+The interface language controls UI copy and coach feedback. A learner may study English while keeping the interface in Russian, or may switch the interface to the target language for extra exposure.
 
-Generated names use the format:
+## Language Cards
 
-```text
-FunnyAdjective-Surname
-```
+A language card is one learning unit. It can be:
 
-The adjective should be light and playful. The surname should come from a curated contributor list connected to languages, linguistics, dictionaries, literacy, English learning, or Spanish learning.
+- a single word;
+- a phrase;
+- a short expression.
 
-## Contributor List Requirement
+Cards must include translations for at least two supported languages. Definitions are optional. Example sentences are optional and are used by missing-word exercises.
 
-A future project JSON file should contain 100 people who made notable contributions to the development of languages, language education, English learning, Spanish learning, linguistics, lexicography, translation, literacy, or language standardization.
+The app creates internal ids. Imported JSON should not require or depend on user-authored ids.
 
-This task records the requirement only. The 100-person JSON file is not created at this documentation stage.
+The card authoring format is documented in [LANGUAGE_CARD_FORMAT.md](LANGUAGE_CARD_FORMAT.md).
 
-Each contributor record should contain:
+## Import Requirements
 
-```json
-{
-  "firstName": "Noah",
-  "lastName": "Webster",
-  "birthYear": 1758,
-  "contribution": {
-    "ru": "Краткое описание вклада на русском языке.",
-    "es": "Breve descripción de la contribución en español.",
-    "en": "Short contribution description in English."
-  },
-  "wikipediaUrl": "https://en.wikipedia.org/wiki/Noah_Webster"
-}
-```
+The MVP imports language cards through a pasteable JSON field.
 
-Requirements for the contributor JSON file:
+Requirements:
 
-- exactly 100 contributor records;
-- each record includes first name and surname;
-- each record includes birth year;
-- each record includes a short contribution description in Russian, Spanish, and English;
-- each localized contribution description is no longer than 255 characters;
-- each record includes a Wikipedia page URL;
-- surnames should be suitable for generated names;
-- the list should include contributors relevant to English and Spanish when possible, while also allowing broader language-learning contributors.
+- accept a JSON array of cards;
+- validate each record without stopping the whole import;
+- add valid non-duplicate cards;
+- detect duplicates by matching any translation value in any supported language;
+- safely merge missing fields from duplicates;
+- record safe merge history with added field names;
+- store conflicting duplicates in pending duplicates;
+- persist cards, merge history, and pending duplicates in `localStorage`.
 
-## Word Sets
+If an incoming duplicate contains both safe missing information and conflicting information, the safe information should still be merged, while the conflicting duplicate remains pending for later review.
 
-Word sets are JSON documents. The minimum word item contains:
+Future backend work may use an AI agent to review pending duplicates and add dictionary entries.
 
-```json
-{
-  "word": "airport",
-  "clue": "аэропорт"
-}
-```
+## Themes
 
-Recommended word set metadata:
+Themes are learner-created groups of card ids.
 
-- title;
-- source language;
+Requirements:
+
+- a learner can create many themes;
+- themes persist locally;
+- themes are not deleted automatically;
+- a theme may contain words and phrases at the same time;
+- each exercise is generated from exactly one selected theme;
+- when there are no themes, the app should lead directly into theme creation.
+
+Themes are important for short learning periods such as a few days or weeks. They should remain available, but they are not meant to be a strict permanent taxonomy.
+
+## Exercise Types
+
+The MVP includes:
+
+- crossword;
+- question with three answer variants;
+- missing letters in words or phrases;
+- missing word or phrase in sentences.
+
+All exercise types use the same language-card data.
+
+## Exercise Eligibility
+
+A card is eligible for a target language when:
+
+- it has a translation in the target language;
+- it has at least one hint source.
+
+Hint sources are:
+
+- translations in the other available supported languages;
+- a definition in the same language as the target language.
+
+Translations used as hints must come from languages other than the current target language. Definitions used as hints must come only from the current target language.
+
+## Crossword Requirements
+
+Crosswords are generated from one theme.
+
+Rules:
+
+- a phrase crossword contains only one phrase;
+- a word crossword contains up to six words;
+- a crossword must not mix a phrase with separate words;
+- exercise generation should be randomized and should not depend on previous exercise history.
+
+The current grid may be simple in the MVP, but the data model should allow a stronger crossword layout engine later.
+
+## Attempt History
+
+Every submitted exercise should create an attempt history record.
+
+History records include:
+
+- exercise type;
 - target language;
-- tags;
-- difficulty.
+- theme id;
+- card snapshots;
+- prompts;
+- submitted answers;
+- correctness per card;
+- weighted score;
+- coach comment;
+- timestamps.
 
-## Crossword Play
+History must be scoped by target language in the UI.
 
-The user selects a word set and starts a generated crossword. The crossword presents clues and answer cells. The user fills the cells and submits the puzzle for validation.
+## Statistics
 
-The application shows:
+The app tracks statistics at two levels:
 
-- correct answers;
-- incorrect answers;
-- score;
-- completion status.
+- per-card statistics;
+- per-exercise attempt results.
 
-## Local Persistence
+Per-card statistics are scoped by card and target language. They include accuracy, attempts, correct and incorrect counts, recent mistakes, hints used, and stability.
 
-The application stores local data in `localStorage`.
+Exercise results are scoped to one generated attempt. The weighted score should account for whether missed cards are new or already known weak cards. A mistake on a new card should affect the score less severely than repeating a mistake on a card with a weak history.
 
-Stored data should include:
+## Coach Assistant
 
-- local profiles;
-- selected profile;
-- imported word sets;
-- crossword attempts;
-- attempt summaries;
-- storage schema version.
+The app should include a persistent coach assistant with a strict sports-analytics tone.
 
-The application should handle empty, missing, or malformed stored data gracefully.
+The coach should:
+
+- appear as a visual character;
+- stay visible during learning;
+- provide progress-aware feedback;
+- mention accuracy and weak cards;
+- avoid generic empty praise.
+
+Future versions may connect this assistant to deeper analytics or an LLM. The MVP can use deterministic feedback based on local statistics.
+
+## Vocabulary Capture Tool
+
+The product should include a future tool that lets a learner paste or type free-form text and create vocabulary JSON from it.
+
+The tool should:
+
+- extract all words from the submitted text;
+- store the input date;
+- preserve the extracted words in a JSON shape suitable for later analytics.
+
+Minimal planned output:
+
+```json
+{
+  "inputDate": "2026-07-03",
+  "words": ["airport", "ticket", "train"]
+}
+```
+
+The first implementation may keep this as a documented requirement. Later versions can connect captured vocabulary to card generation, knowledge analytics, repeated-word detection, and gap analysis.
+
+## Persistence
+
+The MVP stores local state in browser `localStorage` through Redux Persist.
+
+Persisted state includes:
+
+- language settings;
+- imported language cards;
+- duplicate history;
+- pending duplicates;
+- themes;
+- exercise attempts;
+- card statistics.
+
+The app should handle empty storage and restored persisted state gracefully.
+
+## Out Of Scope For MVP
+
+- secure authentication;
+- shared online accounts;
+- multiplayer;
+- backend duplicate resolution;
+- in-app LLM generation;
+- slalom, racing, snowball, or other arcade modules;
+- full analytics dashboard;
+- mobile-native app.
+
+Arcade-style modules can be added later as separate modules that reuse the same language-card, theme, attempt, and statistics data.
