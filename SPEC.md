@@ -84,6 +84,21 @@ A fuller word set may include metadata:
 
 Only `word` and `clue` are required for the first implementation. Metadata fields are useful for future filtering and learning analytics.
 
+## Vocabulary Capture Tool
+
+The game should include a tool that lets a player paste or type free-form text and turn it into a vocabulary capture JSON document. The tool extracts all words from the submitted text and stores them together with the date of the text submission.
+
+A minimal vocabulary capture document contains:
+
+```json
+{
+  "inputDate": "2026-06-29",
+  "words": ["airport", "ticket", "train"]
+}
+```
+
+The first version may keep this data local, but the format should be designed so later versions can use it for detailed analytics of the player's vocabulary knowledge, learning history, repeated words, and gaps.
+
 ## Scope
 
 ### In Scope for MVP
@@ -98,6 +113,7 @@ Only `word` and `clue` are required for the first implementation. Metadata field
 - Generate playable crossword puzzles from a selected word set.
 - Support Russian clues and English or Spanish answers.
 - Support importing custom JSON word sets.
+- Support creating vocabulary capture JSON from text entered by a player.
 - Show a player's attempt history in the same browser.
 
 ### Out of Scope for MVP
@@ -128,6 +144,13 @@ Only `word` and `clue` are required for the first implementation. Metadata field
 - A user can import a JSON word set.
 - The app validates imported JSON before storing it.
 - Invalid JSON should produce a clear error message.
+
+### Vocabulary Capture
+
+- A user can enter or paste free-form text into a vocabulary capture tool.
+- The app extracts all words from the submitted text.
+- The app creates a JSON document containing the extracted words and the input date.
+- Vocabulary capture data should be stored in a structure that can support future detailed learning analytics.
 
 ### Crossword Generation
 
