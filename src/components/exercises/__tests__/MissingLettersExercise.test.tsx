@@ -82,4 +82,33 @@ describe('MissingLettersExercise', () => {
     expect(screen.getByLabelText('Правильный ответ: airport')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
   });
+
+  it('flashes a warning and does not submit an incomplete answer', async () => {
+    const user = userEvent.setup();
+    const onAnswer = vi.fn();
+
+    render(
+      <MissingLettersExercise
+        interfaceLanguage="ru"
+        prompt={{
+          cardId: 'vehicle',
+          prompt: 'ru: транспортное средство',
+          expectedAnswer: 'vehicle',
+          maskedAnswer: 'v_h_c_e',
+          translationHints: [{ language: 'ru', value: 'транспортное средство' }],
+        }}
+        onAnswer={onAnswer}
+        onNext={vi.fn()}
+      />,
+    );
+
+    const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
+    await user.type(missingLetterInputs[0], 'e');
+    await user.click(screen.getByRole('button', { name: 'Отправить' }));
+
+    expect(onAnswer).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Заполните все пропуски')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Неверно' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Отправить' })).toBeInTheDocument();
+  });
 });

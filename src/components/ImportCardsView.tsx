@@ -21,17 +21,30 @@ import {
   ImportResult,
   ImportSummary,
 } from '../domain/importCards';
-import { t } from '../domain/i18n';
+import {
+  formatImportedFile,
+  formatStoredCardCount,
+  t,
+} from '../domain/i18n';
 import { applyImportResult } from '../store/cardsSlice';
 import { AppDispatch, RootState } from '../store/store';
+import languageCardFormatUrl from '../../docs/LANGUAGE_CARD_FORMAT.md?url';
 
-const summaryLabels: Array<{ key: keyof ImportSummary; label: string }> = [
-  { key: 'added', label: 'Added' },
-  { key: 'safeMerged', label: 'Safe merged' },
-  { key: 'pendingDuplicates', label: 'Pending duplicates' },
-  { key: 'invalid', label: 'Invalid' },
-  { key: 'skipped', label: 'Skipped' },
-];
+const summaryLabels = [
+  { key: 'added', labelKey: 'importAdded' },
+  { key: 'safeMerged', labelKey: 'importSafeMerged' },
+  { key: 'pendingDuplicates', labelKey: 'importPendingDuplicates' },
+  { key: 'invalid', labelKey: 'importInvalid' },
+  { key: 'skipped', labelKey: 'importSkipped' },
+] as const satisfies Array<{
+  key: keyof ImportSummary;
+  labelKey:
+    | 'importAdded'
+    | 'importSafeMerged'
+    | 'importPendingDuplicates'
+    | 'importInvalid'
+    | 'importSkipped';
+}>;
 
 export function ImportCardsView() {
   const dispatch = useDispatch<AppDispatch>();
@@ -73,7 +86,7 @@ export function ImportCardsView() {
       importCardsFromText(text);
     } catch {
       setSelectedFileName(null);
-      setFileError('Could not read this file.');
+      setFileError(t(interfaceLanguage, 'couldNotReadFile'));
     }
   };
 
@@ -90,8 +103,18 @@ export function ImportCardsView() {
             {t(interfaceLanguage, 'importCards')}
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-            Load a JSON file or paste a JSON array of language cards.
+            {t(interfaceLanguage, 'importDescription')}
           </Typography>
+          <Button
+            component="a"
+            download="LANGUAGE_CARD_FORMAT.md"
+            href={languageCardFormatUrl}
+            size="small"
+            variant="text"
+            sx={{ mt: 1, px: 0 }}
+          >
+            {t(interfaceLanguage, 'downloadCardFormat')}
+          </Button>
         </Box>
 
         <Accordion defaultExpanded disableGutters>
@@ -118,8 +141,8 @@ export function ImportCardsView() {
               </Button>
               <Typography color="text.secondary" variant="body2">
                 {selectedFileName
-                  ? `${selectedFileName} imported`
-                  : `${cards.length} cards currently stored`}
+                  ? formatImportedFile(interfaceLanguage, selectedFileName)
+                  : formatStoredCardCount(interfaceLanguage, cards.length)}
               </Typography>
             </Stack>
           </AccordionDetails>
@@ -162,7 +185,7 @@ export function ImportCardsView() {
                 disabled={!pastedJson.trim()}
                 sx={{ alignSelf: 'flex-start' }}
               >
-                Import
+                {t(interfaceLanguage, 'importAction')}
               </Button>
             </Stack>
           </AccordionDetails>
@@ -177,7 +200,9 @@ export function ImportCardsView() {
               {summaryLabels.map((item) => (
                 <Chip
                   key={item.key}
-                  label={`${item.label}: ${lastResult.summary[item.key]}`}
+                  label={`${t(interfaceLanguage, item.labelKey)}: ${
+                    lastResult.summary[item.key]
+                  }`}
                   color={
                     item.key === 'invalid' && lastResult.summary.invalid > 0
                       ? 'error'
@@ -201,11 +226,12 @@ export function ImportCardsView() {
               <Alert severity="warning">
                 <Stack spacing={0.5}>
                   <Typography fontWeight={700}>
-                    Some records could not be imported.
+                    {t(interfaceLanguage, 'recordsCouldNotBeImported')}
                   </Typography>
                   {recordErrors.map((record) => (
                     <Typography key={`${record.index}-${record.reason}`}>
-                      Row {record.index + 1}: {record.reason}
+                      {t(interfaceLanguage, 'row')} {record.index + 1}:{' '}
+                      {record.reason}
                     </Typography>
                   ))}
                 </Stack>

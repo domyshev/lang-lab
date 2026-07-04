@@ -3,6 +3,7 @@ import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
+import { IncompleteAnswerWarning } from '../IncompleteAnswerWarning';
 import { MissingLettersPrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
@@ -20,12 +21,17 @@ export function MissingLettersExercise({
 }) {
   const [letters, setLetters] = useState<Record<number, string>>({});
   const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
+  const [warningPulse, setWarningPulse] = useState(0);
+  const [isWarningVisible, setIsWarningVisible] = useState(false);
   const maskedCharacters = prompt.maskedAnswer.split('');
   const answer = maskedCharacters
     .map((character, index) =>
       character === '_' ? (letters[index] ?? '') : character,
     )
     .join('');
+  const isAnswerComplete = maskedCharacters.every(
+    (character, index) => character !== '_' || Boolean(letters[index]?.trim()),
+  );
   const isSubmitted = submittedAnswer !== null;
   const isCorrect =
     submittedAnswer !== null &&
@@ -35,7 +41,20 @@ export function MissingLettersExercise({
   useEffect(() => {
     setLetters({});
     setSubmittedAnswer(null);
+    setIsWarningVisible(false);
   }, [prompt.cardId, prompt.maskedAnswer]);
+
+  useEffect(() => {
+    if (!isWarningVisible) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsWarningVisible(false);
+    }, 1100);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isWarningVisible, warningPulse]);
 
   return (
     <Paper sx={{ p: 2 }}>
@@ -45,35 +64,42 @@ export function MissingLettersExercise({
         </Typography>
         <Typography>{prompt.prompt}</Typography>
         {prompt.definitionHint && <Typography>{prompt.definitionHint}</Typography>}
-        <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-          {maskedCharacters.map((character, index) =>
-            character === '_' ? (
-              <Box
-                key={index}
-                component="input"
-                aria-label={`Missing letter ${index + 1}`}
-                disabled={isSubmitted}
-                style={getLetterCellInlineStyle(resultTone)}
-                value={letters[index] ?? ''}
-                onChange={(event) =>
-                  setLetters((current) => ({
-                    ...current,
-                    [index]: event.target.value.slice(-1),
-                  }))
-                }
-                sx={letterCellStyles}
-              />
-            ) : (
-              <Box
-                key={index}
-                component="span"
-                style={getLetterCellInlineStyle(resultTone)}
-                sx={letterCellStyles}
-              >
-                {character}
-              </Box>
-            ),
-          )}
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+            {maskedCharacters.map((character, index) =>
+              character === '_' ? (
+                <Box
+                  key={index}
+                  component="input"
+                  aria-label={`Missing letter ${index + 1}`}
+                  disabled={isSubmitted}
+                  style={getLetterCellInlineStyle(resultTone)}
+                  value={letters[index] ?? ''}
+                  onChange={(event) =>
+                    setLetters((current) => ({
+                      ...current,
+                      [index]: event.target.value.slice(-1),
+                    }))
+                  }
+                  sx={letterCellStyles}
+                />
+              ) : (
+                <Box
+                  key={index}
+                  component="span"
+                  style={getLetterCellInlineStyle(resultTone)}
+                  sx={letterCellStyles}
+                >
+                  {character}
+                </Box>
+              ),
+            )}
+          </Stack>
+          <IncompleteAnswerWarning
+            label={t(interfaceLanguage, 'fillAllGapsWarning')}
+            pulseKey={warningPulse}
+            visible={isWarningVisible}
+          />
         </Stack>
         {isSubmitted && !isCorrect && (
           <Stack spacing={0.75}>
@@ -116,6 +142,12 @@ export function MissingLettersExercise({
           onClick={() => {
             if (isSubmitted) {
               onNext();
+              return;
+            }
+
+            if (!isAnswerComplete) {
+              setWarningPulse((value) => value + 1);
+              setIsWarningVisible(true);
               return;
             }
 

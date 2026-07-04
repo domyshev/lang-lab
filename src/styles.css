@@ -53,3 +53,27 @@ body {
     opacity: 1;
   }
 }
+
+.missingInputWarning {
+  animation: missing-warning-flash 1.05s ease-in-out 1;
+}
+
+@keyframes missing-warning-flash {
+  0%,
+  33%,
+  68%,
+  100% {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+
+  8%,
+  24%,
+  43%,
+  59%,
+  78%,
+  94% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

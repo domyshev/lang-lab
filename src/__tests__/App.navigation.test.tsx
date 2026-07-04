@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
@@ -34,6 +34,7 @@ function renderApp() {
             examples: {
               en: [{ sentence: 'It is worth it today.', answer: 'worth it' }],
             },
+            difficulty: 'easy' as const,
             createdAt: now,
             updatedAt: now,
           },
@@ -57,6 +58,26 @@ function renderApp() {
             createdAt: now,
             updatedAt: now,
           },
+          {
+            id: 'card-impede',
+            translations: {
+              en: 'impede',
+              ru: 'препятствовать',
+              es: 'impedir',
+            },
+            createdAt: now,
+            updatedAt: now,
+          },
+          {
+            id: 'card-meditation',
+            translations: {
+              en: 'meditation',
+              ru: 'медитация',
+              es: 'meditacion',
+            },
+            createdAt: now,
+            updatedAt: now,
+          },
         ],
         duplicateProcessingHistory: [],
         pendingDuplicates: [],
@@ -74,10 +95,36 @@ function renderApp() {
 }
 
 describe('App navigation', () => {
+  it('loads bundled vocabulary cards into an empty browser store', async () => {
+    const store = configureStore({
+      reducer: {
+        app: appReducer,
+        attempts: attemptsReducer,
+        cards: cardsReducer,
+        stats: statsReducer,
+        themes: themesReducer,
+      },
+    });
+
+    render(
+      <Provider store={store}>
+        <App />
+      </Provider>,
+    );
+
+    await waitFor(() => {
+      expect(store.getState().cards.cards).toHaveLength(138);
+    });
+
+    expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
+  });
+
   it('starts in Russian and shows a simple game setup tab before starting', () => {
     renderApp();
 
     expect(screen.getByRole('tab', { name: 'Игра' })).toBeInTheDocument();
+    expect(screen.getByText('Language Lab')).toBeInTheDocument();
+    expect(screen.queryByText('Language Crossword Lab')).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Карточки' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Статистика' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Импорт' })).toBeInTheDocument();
@@ -93,15 +140,24 @@ describe('App navigation', () => {
 
     const allWordsTopic = screen.getByRole('button', { name: /Все слова/ });
     expect(allWordsTopic).toBeInTheDocument();
-    expect(allWordsTopic).toHaveTextContent('3');
+    expect(allWordsTopic).toHaveTextContent('5');
     expect(
       screen.queryByRole('button', { name: 'В архив: Все слова' }),
     ).not.toBeInTheDocument();
 
     await user.click(allWordsTopic);
+    expect(screen.getByText('1 тема')).toBeInTheDocument();
+    expect(screen.getAllByText('5 карточек').length).toBeGreaterThan(0);
+    expect(screen.getByText('Целевой ответ: 🇬🇧 Английский')).toBeInTheDocument();
+    expect(screen.queryByText('1 topics')).not.toBeInTheDocument();
+    expect(screen.queryByText('5 cards')).not.toBeInTheDocument();
+    expect(screen.queryByText('Target answer: 🇬🇧 English')).not.toBeInTheDocument();
     expect(screen.getByText('worth it')).toBeInTheDocument();
     expect(screen.getByText('airport')).toBeInTheDocument();
     expect(screen.getByText('vehicle')).toBeInTheDocument();
+    expect(screen.getByText('impede')).toBeInTheDocument();
+    expect(screen.getByText('meditation')).toBeInTheDocument();
+    expect(screen.queryByText('easy')).not.toBeInTheDocument();
   });
 
   it('keeps missing letters on the answered word and shows the correct answer result', async () => {
@@ -112,24 +168,23 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Начать' }));
 
     expect(screen.getByRole('heading', { name: 'Пропущенные буквы' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Мысль персонажа')).toBeInTheDocument();
     const firstPrompt = getVisibleMissingLettersPrompt();
 
-    const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
-    await user.type(missingLetterInputs[0], 'x');
-    await user.type(missingLetterInputs[1], 'x');
-    await user.type(missingLetterInputs[2], 'x');
-    await user.click(screen.getByRole('button', { name: 'Отправить' }));
+    const missingLetterInputs = await answerMissingLettersWrong(user);
 
     expect(screen.getByText('Правильный ответ')).toBeInTheDocument();
     expect(
       screen.getByLabelText(`Правильный ответ: ${firstPrompt.answer}`),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
-    expect(screen.getAllByText('Статистика')).toHaveLength(2);
+    expect(screen.getByText('Статистика по слову')).toBeInTheDocument();
     expect(screen.queryByText(/direct/)).not.toBeInTheDocument();
     expect(screen.queryByText(/weighted/)).not.toBeInTheDocument();
     expect(screen.queryByText('missingLetters')).not.toBeInTheDocument();
-    expect(screen.getByText('Неверно: 1')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText('Статистика по слову: Верно 0, Неверно 1'),
+    ).toBeInTheDocument();
     expect(
       screen.queryByText(/Точность: .*Слабые карточки/),
     ).not.toBeInTheDocument();
@@ -146,6 +201,24 @@ describe('App navigation', () => {
     expect(screen.getAllByLabelText(/Missing letter/)[0]).not.toBeDisabled();
   });
 
+  it('does not repeat missing letters cards until the topic has more coverage', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+
+    const answered = new Set<string>();
+    for (let index = 0; index < 3; index += 1) {
+      const prompt = getVisibleMissingLettersPrompt();
+      answered.add(prompt.answer);
+      await answerMissingLettersWrong(user);
+      await user.click(screen.getByRole('button', { name: 'Неверно' }));
+    }
+
+    expect(answered.size).toBe(3);
+  });
+
   it('shows assistant character settings in the header', () => {
     renderApp();
 
@@ -160,6 +233,7 @@ describe('App navigation', () => {
 
     await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
     await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await answerMissingLettersWrong(user);
 
     expect(
       screen.queryByRole('button', { name: 'Выберите упражнение' }),
@@ -170,6 +244,7 @@ describe('App navigation', () => {
     expect(
       screen.getByText('Результаты упражнения будут зачтены, а упражнение закончено.'),
     ).toBeInTheDocument();
+    expect(screen.getByText('Отвечено слов: 1')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Отмена' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Подтвердить' })).toBeInTheDocument();
 
@@ -182,6 +257,51 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
 
     expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
+  });
+
+  it('shows localized result formulas in statistics', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+
+    await answerMissingLettersWrong(user);
+    await user.click(screen.getByRole('button', { name: 'Неверно' }));
+    await answerMissingLettersWrong(user);
+
+    await user.click(screen.getByRole('tab', { name: 'Статистика' }));
+
+    expect(screen.getByRole('heading', { name: 'Результаты' })).toBeInTheDocument();
+    expect(
+      screen.getByLabelText('Всего пройдено упражнений: 1'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByLabelText('Всего отвечено вопросов: 2 = 0 + 2').length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText('Верно: 0').length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText('Неверно: 2').length).toBeGreaterThan(0);
+
+    const attemptCards = screen.getAllByTestId('history-attempt-card');
+    expect(attemptCards).toHaveLength(1);
+    expect(attemptCards[0]).toHaveTextContent('Пропущенные буквы');
+    expect(
+      within(attemptCards[0]).getByLabelText(
+        'Всего отвечено вопросов: 2 = 0 + 2',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(attemptCards[0]).queryByText('Всего отвечено вопросов: 2'),
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      within(attemptCards[0]).getByRole('button', {
+        name: /Пропущенные буквы/,
+      }),
+    );
+
+    expect(screen.getByText('Детали упражнения')).toBeInTheDocument();
+    expect(screen.getAllByText('Ваш ответ:').length).toBeGreaterThan(0);
   });
 
   it('uses phrases for missing word practice', async () => {
@@ -199,6 +319,8 @@ function getVisibleMissingLettersPrompt(): { answer: string; prompt: RegExp } {
   const prompts = [
     { answer: 'airport', prompt: /аэропорт/ },
     { answer: 'vehicle', prompt: /транспортное средство/ },
+    { answer: 'impede', prompt: /препятствовать/ },
+    { answer: 'meditation', prompt: /медитация/ },
   ];
   const visiblePrompt = prompts.find((item) => screen.queryByText(item.prompt));
 
@@ -207,4 +329,17 @@ function getVisibleMissingLettersPrompt(): { answer: string; prompt: RegExp } {
   }
 
   return visiblePrompt;
+}
+
+async function answerMissingLettersWrong(
+  user: ReturnType<typeof userEvent.setup>,
+) {
+  const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
+  for (const input of missingLetterInputs) {
+    await user.clear(input);
+    await user.type(input, 'x');
+  }
+  await user.click(screen.getByRole('button', { name: 'Отправить' }));
+
+  return missingLetterInputs;
 }

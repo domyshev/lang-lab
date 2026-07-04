@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Alert,
@@ -12,7 +12,6 @@ import {
   DialogTitle,
   FormControl,
   InputLabel,
-  LinearProgress,
   MenuItem,
   Paper,
   Select,
@@ -25,6 +24,8 @@ import { CoachPanel } from './components/CoachPanel';
 import { ExercisePicker } from './components/ExercisePicker';
 import { HistoryView } from './components/HistoryView';
 import { ImportCardsView } from './components/ImportCardsView';
+import { SplitWordStatsChip } from './components/SplitWordStatsChip';
+import { CountMetric, StatsFormula } from './components/StatsFormula';
 import { ThemeDetailView } from './components/ThemeDetailView';
 import { ThemeListView } from './components/ThemeListView';
 import { CrosswordExercise } from './components/exercises/CrosswordExercise';
@@ -37,6 +38,7 @@ import {
   getTranslationHints,
 } from './domain/cards';
 import { CrosswordPuzzle, createCrossword } from './domain/crossword';
+import { defaultVocabularyJson } from './domain/defaultVocabulary';
 import {
   ExerciseAttempt,
   ExercisePrompt,
@@ -46,10 +48,13 @@ import {
   createMultipleChoicePrompt,
   getEligibleCardsForTarget,
 } from './domain/exercises';
-import { t } from './domain/i18n';
-import { languageFlags, languageLabels } from './domain/languages';
+import { summarizeExerciseHistory } from './domain/exerciseHistory';
+import { importLanguageCards } from './domain/importCards';
+import { getLanguageDisplayName, t } from './domain/i18n';
+import { languageFlags } from './domain/languages';
 import { ALL_WORDS_THEME_ID, Theme } from './domain/themes';
 import { saveAttempt } from './store/attemptsSlice';
+import { applyImportResult } from './store/cardsSlice';
 import { recordAttemptStats } from './store/statsSlice';
 import { selectTheme } from './store/themesSlice';
 import { AppDispatch, RootState } from './store/store';
@@ -64,6 +69,7 @@ type SelectableTheme = Theme & { isAllWords?: boolean };
 
 export function App() {
   const dispatch = useDispatch<AppDispatch>();
+  const hasSeededDefaultVocabulary = useRef(false);
   const [activeSection, setActiveSection] =
     useState<AppShellSection>('game');
   const [selectedExerciseType, setSelectedExerciseType] =
@@ -74,9 +80,14 @@ export function App() {
     null,
   );
   const [
-    lastAnsweredMissingLettersCardId,
-    setLastAnsweredMissingLettersCardId,
-  ] = useState<string | null>(null);
+    answeredMissingLettersCardIds,
+    setAnsweredMissingLettersCardIds,
+  ] = useState<string[]>([]);
+  const [currentExerciseAnsweredCount, setCurrentExerciseAnsweredCount] =
+    useState(0);
+  const [currentExerciseSessionId, setCurrentExerciseSessionId] = useState(() =>
+    createId('exercise-session'),
+  );
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
 
   const cards = useSelector((state: RootState) => state.cards.cards);
@@ -131,6 +142,23 @@ export function App() {
   const lastSavedAttempt =
     attempts.find((attempt) => attempt.id === lastSavedAttemptId) ?? null;
 
+  useEffect(() => {
+    if (hasSeededDefaultVocabulary.current || cards.length > 0) {
+      return;
+    }
+
+    hasSeededDefaultVocabulary.current = true;
+    const result = importLanguageCards({
+      existingCards: [],
+      pastedJson: defaultVocabularyJson,
+      now: new Date().toISOString(),
+    });
+
+    if (result.cards.length > 0) {
+      dispatch(applyImportResult(result));
+    }
+  }, [cards.length, dispatch]);
+
   const exercisePreview = useMemo<ExercisePreview | null>(() => {
     const firstCard = randomizedEligibleCards[0];
     if (!firstCard) {
@@ -159,25 +187,24 @@ export function App() {
     }
 
     if (selectedExerciseType === 'missingLetters') {
-      const missingLettersCards =
-        lastAnsweredMissingLettersCardId && randomizedEligibleCards.length > 1
-          ? [
-              ...randomizedEligibleCards.filter(
-                (card) => card.id !== lastAnsweredMissingLettersCardId,
-              ),
-              ...randomizedEligibleCards.filter(
-                (card) => card.id === lastAnsweredMissingLettersCardId,
-              ),
-            ]
-          : randomizedEligibleCards;
+      const missingLettersPrompts = randomizedEligibleCards
+        .map((card) => createMissingLettersPrompt({ card, targetLanguage }))
+        .filter((prompt): prompt is ExercisePrompt & { maskedAnswer: string } =>
+          Boolean(prompt),
+        );
+      const lastAnsweredCardId =
+        answeredMissingLettersCardIds[answeredMissingLettersCardIds.length - 1];
+      const blockedCardIds =
+        answeredMissingLettersCardIds.length >= missingLettersPrompts.length
+          ? [lastAnsweredCardId]
+          : answeredMissingLettersCardIds;
 
       return {
         type: 'missingLetters',
-        prompt: missingLettersCards
-          .map((card) => createMissingLettersPrompt({ card, targetLanguage }))
-          .find((prompt): prompt is ExercisePrompt & { maskedAnswer: string } =>
-            Boolean(prompt),
-          ),
+        prompt:
+          missingLettersPrompts.find(
+            (prompt) => !blockedCardIds.includes(prompt.cardId),
+          ) ?? missingLettersPrompts[0],
       };
     }
 
@@ -190,7 +217,7 @@ export function App() {
         ),
     };
   }, [
-    lastAnsweredMissingLettersCardId,
+    answeredMissingLettersCardIds,
     randomizedEligibleCards,
     selectedExerciseType,
     targetLanguage,
@@ -275,6 +302,7 @@ export function App() {
     });
     const attempt: ExerciseAttempt = {
       id: createId('attempt'),
+      exerciseSessionId: currentExerciseSessionId,
       exerciseType: input.exerciseType,
       themeId: selectedTheme.id,
       targetLanguage,
@@ -293,6 +321,7 @@ export function App() {
     dispatch(saveAttempt(attempt));
     dispatch(recordAttemptStats(attempt));
     setLastSavedAttemptId(attempt.id);
+    setCurrentExerciseAnsweredCount((count) => count + input.cardIds.length);
     if (input.advance) {
       setGenerationSeed((seed) => seed + 1);
     }
@@ -341,11 +370,11 @@ export function App() {
         sx={{
           display: 'grid',
           gap: 3,
-          gridTemplateColumns: { xs: '1fr', lg: '140px minmax(0, 1fr)' },
+          gridTemplateColumns: { xs: '1fr', lg: '330px minmax(0, 1fr)' },
           alignItems: 'start',
         }}
       >
-        <CoachPanel />
+        <CoachPanel thoughtSeed={generationSeed + currentExerciseAnsweredCount} />
         <Stack spacing={3}>
           {renderExercise()}
           {lastSavedAttempt && (
@@ -373,9 +402,12 @@ export function App() {
             setIsFinishDialogOpen(false);
             setIsExerciseStarted(false);
             setLastSavedAttemptId(null);
-            setLastAnsweredMissingLettersCardId(null);
+            setAnsweredMissingLettersCardIds([]);
+            setCurrentExerciseAnsweredCount(0);
+            setCurrentExerciseSessionId(createId('exercise-session'));
             setGenerationSeed((seed) => seed + 1);
           }}
+          answeredCount={currentExerciseAnsweredCount}
           open={isFinishDialogOpen}
         />
       </Box>
@@ -392,7 +424,9 @@ export function App() {
     const handleThemeChange = (event: SelectChangeEvent<string>) => {
       dispatch(selectTheme(event.target.value));
       setIsExerciseStarted(false);
-      setLastAnsweredMissingLettersCardId(null);
+      setAnsweredMissingLettersCardIds([]);
+      setCurrentExerciseAnsweredCount(0);
+      setCurrentExerciseSessionId(createId('exercise-session'));
       setGenerationSeed((seed) => seed + 1);
     };
 
@@ -425,7 +459,9 @@ export function App() {
             onPick={(exerciseType) => {
               setSelectedExerciseType(exerciseType);
               setIsExerciseStarted(false);
-              setLastAnsweredMissingLettersCardId(null);
+              setAnsweredMissingLettersCardIds([]);
+              setCurrentExerciseAnsweredCount(0);
+              setCurrentExerciseSessionId(createId('exercise-session'));
               setGenerationSeed((seed) => seed + 1);
             }}
           />
@@ -442,7 +478,10 @@ export function App() {
             size="large"
             onClick={() => {
               setIsExerciseStarted(true);
-              setLastAnsweredMissingLettersCardId(null);
+              setAnsweredMissingLettersCardIds([]);
+              setCurrentExerciseAnsweredCount(0);
+              setLastSavedAttemptId(null);
+              setCurrentExerciseSessionId(createId('exercise-session'));
               setGenerationSeed((seed) => seed + 1);
             }}
             disabled={!canStart}
@@ -465,7 +504,8 @@ export function App() {
     if (eligibleCards.length === 0) {
       return (
         <Alert severity="warning">
-          This theme has no cards for {languageLabels[targetLanguage]} yet.
+          This theme has no cards for{' '}
+          {getLanguageDisplayName(interfaceLanguage, targetLanguage)} yet.
         </Alert>
       );
     }
@@ -526,7 +566,10 @@ export function App() {
             })
           }
           onNext={() => {
-            setLastAnsweredMissingLettersCardId(missingLettersPrompt.cardId);
+            setAnsweredMissingLettersCardIds((cardIds) => [
+              ...cardIds.filter((cardId) => cardId !== missingLettersPrompt.cardId),
+              missingLettersPrompt.cardId,
+            ]);
             setLastSavedAttemptId(null);
             setGenerationSeed((seed) => seed + 1);
           }}
@@ -555,39 +598,42 @@ export function App() {
   }
 
   function TargetStatsPanel() {
-    const stats = cardStats.filter(
-      (stat) => stat.targetLanguage === targetLanguage,
+    const targetAttempts = attempts.filter(
+      (attempt) => attempt.targetLanguage === targetLanguage,
     );
-    const practiced = stats.length;
-    const averageAccuracy =
-      practiced === 0
-        ? 0
-        : Math.round(
-            (stats.reduce((sum, stat) => sum + stat.accuracy, 0) /
-              practiced) *
-              100,
-          );
-    const weak = stats.filter((stat) => stat.stability === 'weak').length;
+    const targetSummaries = summarizeExerciseHistory(targetAttempts);
+    const totalAnswered = targetAttempts.reduce(
+      (sum, attempt) => sum + Object.keys(attempt.correctness).length,
+      0,
+    );
+    const correct = targetAttempts.reduce(
+      (sum, attempt) =>
+        sum + Object.values(attempt.correctness).filter(Boolean).length,
+      0,
+    );
+    const incorrect = totalAnswered - correct;
 
     return (
       <Paper sx={{ p: 2 }}>
         <Stack spacing={1.5}>
           <Typography variant="overline">
-            {languageFlags[targetLanguage]} {languageLabels[targetLanguage]}
+            {languageFlags[targetLanguage]}{' '}
+            {getLanguageDisplayName(interfaceLanguage, targetLanguage)}
           </Typography>
-          <Typography variant="h6">Accuracy</Typography>
-          <LinearProgress
-            variant="determinate"
-            value={averageAccuracy}
-            sx={{ height: 8, borderRadius: 1 }}
-          />
+          <Typography variant="h6" component="h2">
+            {t(interfaceLanguage, 'resultsTitle')}
+          </Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Chip label={`${averageAccuracy}% average`} size="small" />
-            <Chip label={`${practiced} practiced`} size="small" />
-            <Chip
-              label={`${weak} weak`}
-              size="small"
-              color={weak > 0 ? 'warning' : 'default'}
+            <CountMetric
+              label={t(interfaceLanguage, 'totalExercises')}
+              value={targetSummaries.length}
+            />
+            <StatsFormula
+              correct={correct}
+              incorrect={incorrect}
+              interfaceLanguage={interfaceLanguage}
+              total={totalAnswered}
+              totalLabel={t(interfaceLanguage, 'totalAnsweredQuestions')}
             />
           </Stack>
         </Stack>
@@ -660,24 +706,39 @@ function AttemptSummary({
           </>
         )}
         <Typography variant="overline">
-          {t(interfaceLanguage, 'resultStats')}
+          {t(
+            interfaceLanguage,
+            attempt.exerciseType === 'missingLetters'
+              ? 'wordStats'
+              : 'resultStats',
+          )}
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {correctCount > 0 && (
-            <Chip
-              label={`${t(interfaceLanguage, 'correct')}: ${correctCount}`}
-              size="small"
-              color="success"
-              variant="outlined"
+          {attempt.exerciseType === 'missingLetters' ? (
+            <SplitWordStatsChip
+              correct={correctCount}
+              incorrect={incorrectCount}
+              interfaceLanguage={interfaceLanguage}
             />
-          )}
-          {incorrectCount > 0 && (
-            <Chip
-              label={`${t(interfaceLanguage, 'incorrect')}: ${incorrectCount}`}
-              size="small"
-              color="error"
-              variant="outlined"
-            />
+          ) : (
+            <>
+              {correctCount > 0 && (
+                <Chip
+                  label={`${t(interfaceLanguage, 'correct')}: ${correctCount}`}
+                  size="small"
+                  color="success"
+                  variant="outlined"
+                />
+              )}
+              {incorrectCount > 0 && (
+                <Chip
+                  label={`${t(interfaceLanguage, 'incorrect')}: ${incorrectCount}`}
+                  size="small"
+                  color="error"
+                  variant="outlined"
+                />
+              )}
+            </>
           )}
         </Stack>
       </Stack>
@@ -686,11 +747,13 @@ function AttemptSummary({
 }
 
 function FinishExerciseDialog({
+  answeredCount,
   interfaceLanguage,
   onCancel,
   onConfirm,
   open,
 }: {
+  answeredCount: number;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   onCancel: () => void;
   onConfirm: () => void;
@@ -715,6 +778,9 @@ function FinishExerciseDialog({
       </DialogTitle>
       <DialogContent>
         <Typography>{t(interfaceLanguage, 'finishExerciseNotice')}</Typography>
+        <Typography sx={{ mt: 2 }}>
+          {t(interfaceLanguage, 'answeredWords')}: {answeredCount}
+        </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button color="success" variant="contained" onClick={onCancel}>

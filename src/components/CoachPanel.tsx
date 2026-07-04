@@ -1,19 +1,26 @@
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { defaultAssistantId, resolveAssistantId } from '../domain/assistants';
+import { getCoachThought } from '../domain/coachThoughts';
+import { t } from '../domain/i18n';
 import { RootState } from '../store/store';
 import { AssistantStickerIcon } from './assistantAssets';
 
-export function CoachPanel() {
+export function CoachPanel({ thoughtSeed }: { thoughtSeed: number }) {
   const assistantId = useSelector((state: RootState) =>
     resolveAssistantId(state.app.assistantId ?? defaultAssistantId),
   );
+  const interfaceLanguage = useSelector(
+    (state: RootState) => state.app.interfaceLanguage,
+  );
+  const thought = getCoachThought(interfaceLanguage, thoughtSeed);
 
   return (
     <Box
       sx={{
         alignItems: 'flex-start',
         display: 'flex',
+        gap: 1.5,
         justifyContent: 'flex-start',
         minHeight: { xs: 96, lg: 132 },
         pl: { xs: 0, lg: 1 },
@@ -28,6 +35,36 @@ export function CoachPanel() {
         size={118}
         sx={{ height: { xs: 90, lg: 118 }, width: { xs: 90, lg: 118 } }}
       />
+      <Box
+        aria-label={t(interfaceLanguage, 'coachThought')}
+        sx={{
+          bgcolor: 'background.paper',
+          border: '1px solid rgba(32, 48, 21, 0.18)',
+          borderRadius: 2,
+          boxShadow: '0 10px 22px rgba(32, 48, 21, 0.1)',
+          maxWidth: 190,
+          mt: 0.5,
+          px: 1.5,
+          py: 1,
+          position: 'relative',
+          '&::before': {
+            bgcolor: 'background.paper',
+            borderBottom: '1px solid rgba(32, 48, 21, 0.18)',
+            borderLeft: '1px solid rgba(32, 48, 21, 0.18)',
+            content: '""',
+            height: 12,
+            left: -7,
+            position: 'absolute',
+            top: 24,
+            transform: 'rotate(45deg)',
+            width: 12,
+          },
+        }}
+      >
+        <Typography variant="body2" sx={{ fontWeight: 800, lineHeight: 1.35 }}>
+          {thought}
+        </Typography>
+      </Box>
     </Box>
   );
 }

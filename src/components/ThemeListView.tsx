@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { ALL_WORDS_THEME_ID } from '../domain/themes';
-import { t } from '../domain/i18n';
+import { formatCardCount, formatTopicCount, t } from '../domain/i18n';
 import { addTheme, archiveTheme, selectTheme } from '../store/themesSlice';
 import { AppDispatch, RootState } from '../store/store';
 
@@ -66,7 +66,7 @@ export function ThemeListView() {
               {t(interfaceLanguage, 'cards')}
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-              {visibleThemes.length + 1} topics
+              {formatTopicCount(interfaceLanguage, visibleThemes.length + 1)}
             </Typography>
           </Box>
           <Button
@@ -110,6 +110,7 @@ export function ThemeListView() {
           <ThemeTile
             name={t(interfaceLanguage, 'allWords')}
             cardCount={cards.length}
+            interfaceLanguage={interfaceLanguage}
             selected={
               selectedThemeId === ALL_WORDS_THEME_ID || !selectedThemeId
             }
@@ -121,6 +122,7 @@ export function ThemeListView() {
               key={theme.id}
               name={theme.name}
               cardCount={theme.cardIds.length}
+              interfaceLanguage={interfaceLanguage}
               selected={theme.id === selectedThemeId}
               onArchive={() =>
                 dispatch(
@@ -141,12 +143,14 @@ export function ThemeListView() {
 
 function ThemeTile({
   cardCount,
+  interfaceLanguage,
   name,
   onArchive,
   onSelect,
   selected,
 }: {
   cardCount: number;
+  interfaceLanguage: RootState['app']['interfaceLanguage'];
   name: string;
   onArchive?: () => void;
   onSelect: () => void;
@@ -182,7 +186,7 @@ function ThemeTile({
             {name}
           </Typography>
           <Chip
-            label={formatCardCount(cardCount)}
+            label={formatCardCount(interfaceLanguage, cardCount)}
             size="small"
             variant="outlined"
             sx={{ mt: 1 }}
@@ -190,7 +194,7 @@ function ThemeTile({
         </Box>
 
         {onArchive && (
-          <Tooltip title="Archive">
+          <Tooltip title={t(interfaceLanguage, 'archive')}>
             <IconButton
               aria-label={`В архив: ${name}`}
               onClick={onArchive}
@@ -211,8 +215,4 @@ function createThemeId(): string {
   }
 
   return `theme-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
-function formatCardCount(value: number): string {
-  return `${value} ${value === 1 ? 'card' : 'cards'}`;
 }

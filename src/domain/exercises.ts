@@ -25,6 +25,7 @@ export interface ExercisePrompt {
 
 export interface ExerciseAttempt {
   id: string;
+  exerciseSessionId?: string;
   exerciseType: ExerciseType;
   themeId: string;
   targetLanguage: SupportedLanguage;

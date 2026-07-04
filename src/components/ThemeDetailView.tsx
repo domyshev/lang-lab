@@ -21,10 +21,13 @@ import type { SelectChangeEvent } from '@mui/material/Select';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCardAnswer, LanguageCard } from '../domain/cards';
 import { ALL_WORDS_THEME_ID } from '../domain/themes';
-import { t } from '../domain/i18n';
+import {
+  formatCardCount,
+  getLanguageDisplayName,
+  t,
+} from '../domain/i18n';
 import {
   languageFlags,
-  languageLabels,
   supportedLanguages,
   SupportedLanguage,
 } from '../domain/languages';
@@ -63,7 +66,7 @@ export function ThemeDetailView() {
   if (!selectedTheme) {
     return (
       <Paper sx={{ p: { xs: 2, md: 3 } }}>
-        <Alert severity="info">Select a theme to manage its cards.</Alert>
+        <Alert severity="info">{t(interfaceLanguage, 'selectThemeToManage')}</Alert>
       </Paper>
     );
   }
@@ -108,12 +111,13 @@ export function ThemeDetailView() {
               {selectedTheme.name}
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-              Target answer: {languageFlags[targetLanguage]}{' '}
-              {languageLabels[targetLanguage]}
+              {t(interfaceLanguage, 'targetAnswerLabel')}:{' '}
+              {languageFlags[targetLanguage]}{' '}
+              {getLanguageDisplayName(interfaceLanguage, targetLanguage)}
             </Typography>
           </Box>
           <Chip
-            label={`${themeCards.length} cards`}
+            label={formatCardCount(interfaceLanguage, themeCards.length)}
             color="primary"
             variant="outlined"
           />
@@ -139,7 +143,7 @@ export function ThemeDetailView() {
               >
                 {availableCards.map((card) => (
                   <MenuItem key={card.id} value={card.id}>
-                    {getCardLabel(card, targetLanguage)}
+                    {getCardLabel(card, targetLanguage, interfaceLanguage)}
                   </MenuItem>
                 ))}
               </Select>
@@ -157,11 +161,15 @@ export function ThemeDetailView() {
         )}
 
         {!isAllWordsSelected && cards.length === 0 && (
-          <Alert severity="info">Import cards before adding them to a theme.</Alert>
+          <Alert severity="info">
+            {t(interfaceLanguage, 'importCardsBeforeTheme')}
+          </Alert>
         )}
 
         {!isAllWordsSelected && cards.length > 0 && availableCards.length === 0 && (
-          <Alert severity="success">All imported cards are in this theme.</Alert>
+          <Alert severity="success">
+            {t(interfaceLanguage, 'allImportedCardsInTheme')}
+          </Alert>
         )}
 
         <Divider />
@@ -169,13 +177,17 @@ export function ThemeDetailView() {
         {themeCards.length === 0 ? (
           <Typography color="text.secondary">
             {isAllWordsSelected
-              ? 'Import cards to fill this list.'
-              : 'Add imported cards to start this theme.'}
+              ? t(interfaceLanguage, 'importCardsToFillList')
+              : t(interfaceLanguage, 'addImportedCardsToStartTheme')}
           </Typography>
         ) : (
           <List disablePadding>
             {themeCards.map((card) => {
-              const answer = getDisplayAnswer(card, targetLanguage);
+              const answer = getDisplayAnswer(
+                card,
+                targetLanguage,
+                interfaceLanguage,
+              );
 
               return (
                 <ListItem
@@ -191,18 +203,14 @@ export function ThemeDetailView() {
                     primary={answer.text}
                     secondary={
                       answer.isFallback
-                        ? 'Fallback translation shown'
-                        : `${languageLabels[targetLanguage]} answer`
+                        ? t(interfaceLanguage, 'fallbackTranslationShown')
+                        : `${getLanguageDisplayName(
+                            interfaceLanguage,
+                            targetLanguage,
+                          )} ${t(interfaceLanguage, 'targetLanguageAnswer')}`
                     }
                     primaryTypographyProps={{ fontWeight: 700 }}
                   />
-                  {card.difficulty && (
-                    <Chip
-                      label={card.difficulty}
-                      size="small"
-                      variant="outlined"
-                    />
-                  )}
                 </ListItem>
               );
             })}
@@ -216,14 +224,16 @@ export function ThemeDetailView() {
 function getCardLabel(
   card: LanguageCard,
   targetLanguage: SupportedLanguage,
+  interfaceLanguage: SupportedLanguage,
 ): string {
-  const answer = getDisplayAnswer(card, targetLanguage);
+  const answer = getDisplayAnswer(card, targetLanguage, interfaceLanguage);
   return answer.text;
 }
 
 function getDisplayAnswer(
   card: LanguageCard,
   targetLanguage: SupportedLanguage,
+  interfaceLanguage: SupportedLanguage = 'en',
 ): { text: string; isFallback: boolean } {
   const targetAnswer = getCardAnswer(card, targetLanguage);
   if (targetAnswer) {
@@ -234,11 +244,14 @@ function getDisplayAnswer(
     const fallback = card.translations[language];
     if (fallback) {
       return {
-        text: `${languageLabels[language]}: ${fallback}`,
+        text: `${getLanguageDisplayName(interfaceLanguage, language)}: ${fallback}`,
         isFallback: true,
       };
     }
   }
 
-  return { text: 'No translation available', isFallback: true };
+  return {
+    text: t(interfaceLanguage, 'noTranslationAvailable'),
+    isFallback: true,
+  };
 }

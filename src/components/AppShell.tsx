@@ -6,11 +6,11 @@ import {
   Tab,
   Tabs,
   Toolbar,
-  Typography,
 } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { t } from '../domain/i18n';
 import { RootState } from '../store/store';
+import { AppLogo } from './AppLogo';
 import { LanguageSelectors } from './LanguageSelectors';
 
 export type AppShellSection = 'game' | 'cards' | 'statistics' | 'import';
@@ -50,13 +50,7 @@ export function AppShell({
             flexDirection: { xs: 'column', md: 'row' },
           }}
         >
-          <Typography
-            variant="h5"
-            component="h1"
-            sx={{ fontWeight: 900, lineHeight: 1.1, whiteSpace: 'nowrap' }}
-          >
-            {t(interfaceLanguage, 'appName')}
-          </Typography>
+          <AppLogo interfaceLanguage={interfaceLanguage} />
 
           <Tabs
             value={activeSection}
