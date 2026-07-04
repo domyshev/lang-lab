@@ -69,7 +69,7 @@ describe('exercise generators', () => {
     expect(phrasePrompt).toBeUndefined();
   });
 
-  it('creates missing word prompt only from phrase examples', () => {
+  it('creates missing word prompt from phrase examples', () => {
     const wordPrompt = createMissingWordPrompt({
       card: baseCard,
       targetLanguage: 'en',
@@ -92,5 +92,24 @@ describe('exercise generators', () => {
     expect(wordPrompt).toBeUndefined();
     expect(phrasePrompt?.sentenceWithGap).toBe('It is _____ today.');
     expect(phrasePrompt?.expectedAnswer).toBe('worth it');
+  });
+
+  it('creates a standalone missing word gap for phrase cards without examples', () => {
+    const prompt = createMissingWordPrompt({
+      card: {
+        ...baseCard,
+        id: 'fallback-phrase-card',
+        translations: {
+          en: 'look forward',
+          ru: 'с нетерпением ждать',
+          es: 'esperar con ganas',
+        },
+        examples: undefined,
+      },
+      targetLanguage: 'en',
+    });
+
+    expect(prompt?.sentenceWithGap).toBe('_____');
+    expect(prompt?.expectedAnswer).toBe('look forward');
   });
 });

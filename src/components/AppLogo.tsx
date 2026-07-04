@@ -4,20 +4,27 @@ import { SupportedLanguage } from '../domain/languages';
 
 export function AppLogo({
   interfaceLanguage,
+  onClick,
 }: {
   interfaceLanguage: SupportedLanguage;
+  onClick?: () => void;
 }) {
   return (
     <Box
       aria-label={t(interfaceLanguage, 'appName')}
-      component="h1"
+      component="button"
+      onClick={onClick}
+      type="button"
       sx={{
         alignItems: 'center',
+        appearance: 'none',
         bgcolor: '#f7ffe5',
         border: '1px solid rgba(32, 48, 21, 0.16)',
         borderRadius: 2,
         boxShadow: '0 8px 18px rgba(32, 48, 21, 0.08)',
+        cursor: 'pointer',
         display: 'inline-flex',
+        font: 'inherit',
         gap: 1,
         lineHeight: 1,
         m: 0,
@@ -25,15 +32,21 @@ export function AppLogo({
         px: 1,
         py: 0.65,
         position: 'relative',
+        textAlign: 'left',
+        userSelect: 'none',
         whiteSpace: 'nowrap',
+        '&:focus-visible': {
+          outline: '3px solid rgba(32, 48, 21, 0.32)',
+          outlineOffset: 2,
+        },
         '&::after': {
           bgcolor: 'rgba(156, 202, 86, 0.22)',
           borderRadius: '999px',
           content: '""',
-          height: 28,
+          height: 16,
           position: 'absolute',
           right: -8,
-          top: -8,
+          top: -3,
           width: 54,
         },
       }}

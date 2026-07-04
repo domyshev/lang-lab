@@ -20,6 +20,7 @@ export function CountMetric({
       alignItems="center"
       flexWrap="wrap"
       useFlexGap
+      sx={{ width: '100%' }}
     >
       <MetricLabel>{label}:</MetricLabel>
       <MetricChip ariaLabel={`${label} ${value}`} label={value} tone="total" />
@@ -51,6 +52,7 @@ export function StatsFormula({
       alignItems="center"
       flexWrap="wrap"
       useFlexGap
+      sx={{ width: '100%' }}
     >
       <MetricLabel>{totalLabel}:</MetricLabel>
       <MetricChip

@@ -18,12 +18,14 @@ export type AppShellSection = 'game' | 'cards' | 'statistics' | 'import';
 interface AppShellProps {
   activeSection?: AppShellSection;
   children: ReactNode;
+  onLogoClick?: () => void;
   onNavigate?: (section: AppShellSection) => void;
 }
 
 export function AppShell({
   activeSection = 'game',
   children,
+  onLogoClick,
   onNavigate,
 }: AppShellProps) {
   const interfaceLanguage = useSelector(
@@ -50,7 +52,10 @@ export function AppShell({
             flexDirection: { xs: 'column', md: 'row' },
           }}
         >
-          <AppLogo interfaceLanguage={interfaceLanguage} />
+          <AppLogo
+            interfaceLanguage={interfaceLanguage}
+            onClick={onLogoClick}
+          />
 
           <Tabs
             value={activeSection}

@@ -8,9 +8,6 @@ import {
   Divider,
   FormControl,
   InputLabel,
-  List,
-  ListItem,
-  ListItemText,
   MenuItem,
   Paper,
   Select,
@@ -19,7 +16,7 @@ import {
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import { useDispatch, useSelector } from 'react-redux';
-import { getCardAnswer, LanguageCard } from '../domain/cards';
+import { getCardAnswer, isPhraseValue, LanguageCard } from '../domain/cards';
 import { ALL_WORDS_THEME_ID } from '../domain/themes';
 import {
   formatCardCount,
@@ -33,6 +30,7 @@ import {
 } from '../domain/languages';
 import { addCardToTheme } from '../store/themesSlice';
 import { AppDispatch, RootState } from '../store/store';
+import { SplitWordStatsChip } from './SplitWordStatsChip';
 
 export function ThemeDetailView() {
   const dispatch = useDispatch<AppDispatch>();
@@ -46,6 +44,7 @@ export function ThemeDetailView() {
     (state: RootState) => state.app.interfaceLanguage,
   );
   const themes = useSelector((state: RootState) => state.themes.themes);
+  const cardStats = useSelector((state: RootState) => state.stats.cardStats);
   const selectedThemeId = useSelector(
     (state: RootState) => state.themes.selectedThemeId,
   );
@@ -181,43 +180,103 @@ export function ThemeDetailView() {
               : t(interfaceLanguage, 'addImportedCardsToStartTheme')}
           </Typography>
         ) : (
-          <List disablePadding>
+          <Stack spacing={1.25}>
             {themeCards.map((card) => {
               const answer = getDisplayAnswer(
                 card,
                 targetLanguage,
                 interfaceLanguage,
               );
+              const isPhrase = isPhraseCard(card, targetLanguage);
+              const stats = cardStats.find(
+                (item) =>
+                  item.cardId === card.id &&
+                  item.targetLanguage === targetLanguage,
+              );
+              const statsLabel = t(
+                interfaceLanguage,
+                isPhrase ? 'phraseStats' : 'wordStats',
+              );
 
               return (
-                <ListItem
+                <Box
+                  data-testid="theme-card-item"
                   key={card.id}
-                  disableGutters
                   sx={{
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    py: 1.5,
+                    border: '1px solid rgba(32, 48, 21, 0.14)',
+                    borderLeft: '4px solid',
+                    borderLeftColor: 'primary.main',
+                    borderRadius: 1,
+                    p: 1.5,
                   }}
                 >
-                  <ListItemText
-                    primary={answer.text}
-                    secondary={
-                      answer.isFallback
-                        ? t(interfaceLanguage, 'fallbackTranslationShown')
-                        : `${getLanguageDisplayName(
+                  <Stack spacing={1}>
+                    <Stack
+                      direction={{ xs: 'column', sm: 'row' }}
+                      spacing={1}
+                      alignItems={{ xs: 'flex-start', sm: 'center' }}
+                      justifyContent="space-between"
+                    >
+                      <Box>
+                        <Typography fontWeight={800}>{answer.text}</Typography>
+                        <Typography color="text.secondary" variant="body2">
+                          {answer.isFallback
+                            ? t(interfaceLanguage, 'fallbackTranslationShown')
+                            : `${getLanguageDisplayName(
+                                interfaceLanguage,
+                                targetLanguage,
+                              )} ${t(interfaceLanguage, 'targetLanguageAnswer')}`}
+                        </Typography>
+                      </Box>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
+                      >
+                        <Chip
+                          label={t(
                             interfaceLanguage,
-                            targetLanguage,
-                          )} ${t(interfaceLanguage, 'targetLanguageAnswer')}`
-                    }
-                    primaryTypographyProps={{ fontWeight: 700 }}
-                  />
-                </ListItem>
+                            isPhrase ? 'phraseLabel' : 'wordLabel',
+                          )}
+                          size="small"
+                          variant="outlined"
+                          sx={{
+                            borderColor: 'rgba(32, 48, 21, 0.28)',
+                            color: '#203015',
+                            fontWeight: 800,
+                          }}
+                        />
+                        <SplitWordStatsChip
+                          correct={stats?.correct ?? 0}
+                          incorrect={stats?.incorrect ?? 0}
+                          interfaceLanguage={interfaceLanguage}
+                          statsLabel={statsLabel}
+                        />
+                      </Stack>
+                    </Stack>
+                  </Stack>
+                </Box>
               );
             })}
-          </List>
+          </Stack>
         )}
       </Stack>
     </Paper>
+  );
+}
+
+function isPhraseCard(
+  card: LanguageCard,
+  targetLanguage: SupportedLanguage,
+): boolean {
+  const targetAnswer = getCardAnswer(card, targetLanguage);
+  if (targetAnswer) {
+    return isPhraseValue(targetAnswer);
+  }
+
+  return Object.values(card.translations).some(
+    (translation) => translation && isPhraseValue(translation),
   );
 }
 

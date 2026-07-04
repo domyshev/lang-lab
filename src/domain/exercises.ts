@@ -126,14 +126,12 @@ export function createMissingWordPrompt(input: {
     item.sentence.includes(item.answer),
   );
 
-  if (!example) {
-    return undefined;
-  }
-
   return {
     ...base,
-    sentenceWithGap: example.sentence.replace(example.answer, '_____'),
-    expectedAnswer: example.answer,
+    sentenceWithGap: example
+      ? example.sentence.replace(example.answer, '_____')
+      : '_____',
+    expectedAnswer: example?.answer ?? base.expectedAnswer,
   };
 }
 

@@ -39,6 +39,24 @@ function renderApp() {
             updatedAt: now,
           },
           {
+            id: 'card-look-forward',
+            translations: {
+              en: 'look forward',
+              ru: 'с нетерпением ждать',
+              es: 'esperar con ganas',
+            },
+            examples: {
+              en: [
+                {
+                  sentence: 'I look forward to tomorrow.',
+                  answer: 'look forward',
+                },
+              ],
+            },
+            createdAt: now,
+            updatedAt: now,
+          },
+          {
             id: 'card-airport',
             translations: {
               en: 'airport',
@@ -140,24 +158,31 @@ describe('App navigation', () => {
 
     const allWordsTopic = screen.getByRole('button', { name: /Все слова/ });
     expect(allWordsTopic).toBeInTheDocument();
-    expect(allWordsTopic).toHaveTextContent('5');
+    expect(allWordsTopic).toHaveTextContent('6');
     expect(
       screen.queryByRole('button', { name: 'В архив: Все слова' }),
     ).not.toBeInTheDocument();
 
     await user.click(allWordsTopic);
     expect(screen.getByText('1 тема')).toBeInTheDocument();
-    expect(screen.getAllByText('5 карточек').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('6 карточек').length).toBeGreaterThan(0);
     expect(screen.getByText('Целевой ответ: 🇬🇧 Английский')).toBeInTheDocument();
     expect(screen.queryByText('1 topics')).not.toBeInTheDocument();
     expect(screen.queryByText('5 cards')).not.toBeInTheDocument();
     expect(screen.queryByText('Target answer: 🇬🇧 English')).not.toBeInTheDocument();
     expect(screen.getByText('worth it')).toBeInTheDocument();
+    expect(screen.getByText('look forward')).toBeInTheDocument();
     expect(screen.getByText('airport')).toBeInTheDocument();
     expect(screen.getByText('vehicle')).toBeInTheDocument();
     expect(screen.getByText('impede')).toBeInTheDocument();
     expect(screen.getByText('meditation')).toBeInTheDocument();
     expect(screen.queryByText('easy')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Фраза').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Слово').length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('theme-card-item')).toHaveLength(6);
+    expect(
+      screen.getAllByLabelText('Статистика по слову: Верно 0, Неверно 0').length,
+    ).toBeGreaterThan(0);
   });
 
   it('keeps missing letters on the answered word and shows the correct answer result', async () => {
@@ -266,6 +291,28 @@ describe('App navigation', () => {
     expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
   });
 
+  it('returns to the main game screen through the logo and confirms an active exercise close', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('tab', { name: 'Карточки' }));
+    await user.click(screen.getByRole('button', { name: 'Language Lab' }));
+
+    expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    expect(screen.getByRole('heading', { name: 'Пропущенные буквы' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Language Lab' }));
+    expect(
+      screen.getByText('Результаты упражнения будут зачтены, а упражнение закончено.'),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
+
+    expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
+  });
+
   it('shows localized result formulas in statistics', async () => {
     const user = userEvent.setup();
     renderApp();
@@ -318,9 +365,36 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Пропущенное слово' }));
     await user.click(screen.getByRole('button', { name: 'Начать' }));
 
-    expect(screen.getByText('It is')).toBeInTheDocument();
-    expect(screen.getByText('today.')).toBeInTheDocument();
-    expect(screen.getAllByLabelText(/Missing word letter/)).toHaveLength(7);
+    expect(screen.queryByText(/I need to remember/)).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText(/Missing word letter/).length).toBeGreaterThan(0);
+  });
+
+  it('does not repeat missing word cards inside the same exercise session', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенное слово' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+
+    const firstPromptText = getVisibleMissingWordSentence();
+    await answerMissingWordWrong(user);
+    await user.click(screen.getByRole('button', { name: 'Неверно' }));
+
+    expect(getVisibleMissingWordSentence()).not.toBe(firstPromptText);
+  });
+
+  it('shows word statistics after a multiple choice answer', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Вопрос с 3 вариантами' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await user.click(screen.getAllByTestId('multiple-choice-option')[0]);
+
+    expect(screen.getByText('Статистика по слову')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/Статистика по слову: Верно \d, Неверно \d/),
+    ).toBeInTheDocument();
   });
 });
 
@@ -351,4 +425,24 @@ async function answerMissingLettersWrong(
   await user.click(screen.getByRole('button', { name: 'Отправить' }));
 
   return missingLetterInputs;
+}
+
+function getVisibleMissingWordSentence(): string {
+  if (screen.queryByText('It is')) {
+    return 'It is worth it today.';
+  }
+
+  if (screen.queryByText('I')) {
+    return 'I look forward to tomorrow.';
+  }
+
+  throw new Error('Missing word sentence is not visible.');
+}
+
+async function answerMissingWordWrong(user: ReturnType<typeof userEvent.setup>) {
+  const inputs = screen.getAllByLabelText(/Missing word letter/);
+  for (const input of inputs) {
+    await user.type(input, 'x');
+  }
+  await user.click(screen.getByRole('button', { name: 'Отправить' }));
 }

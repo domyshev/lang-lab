@@ -13,7 +13,7 @@ export function CoachPanel({ thoughtSeed }: { thoughtSeed: number }) {
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
-  const thought = getCoachThought(interfaceLanguage, thoughtSeed);
+  const thought = getCoachThought(interfaceLanguage, thoughtSeed, assistantId);
 
   return (
     <Box

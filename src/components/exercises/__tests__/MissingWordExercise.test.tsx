@@ -109,6 +109,29 @@ describe('MissingWordExercise', () => {
     expect(screen.queryByText('Правильный ответ')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
   });
+
+  it('does not show an artificial sentence when a phrase has no example', () => {
+    render(
+      <Provider store={createStore()}>
+        <MissingWordExercise
+          prompt={{
+            cardId: 'look-forward',
+            prompt: 'ru: с нетерпением ждать',
+            expectedAnswer: 'look forward',
+            sentenceWithGap: '_____',
+            translationHints: [
+              { language: 'ru', value: 'с нетерпением ждать' },
+            ],
+          }}
+          onAnswer={vi.fn()}
+          onNext={vi.fn()}
+        />
+      </Provider>,
+    );
+
+    expect(screen.queryByText(/I need to remember/)).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText(/Missing word letter/)).toHaveLength(11);
+  });
 });
 
 function createStore() {

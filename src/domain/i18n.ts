@@ -52,6 +52,9 @@ type I18nKey =
   | 'resultStats'
   | 'wordStats'
   | 'phraseStats'
+  | 'wordLabel'
+  | 'phraseLabel'
+  | 'noMoreCardsInExercise'
   | 'correctResult'
   | 'correct'
   | 'incorrect'
@@ -131,6 +134,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     resultStats: 'Statistics',
     wordStats: 'Word statistics',
     phraseStats: 'Phrase statistics',
+    wordLabel: 'Word',
+    phraseLabel: 'Phrase',
+    noMoreCardsInExercise: 'No more cards in this exercise.',
     correctResult: 'Correct!',
     correct: 'Correct',
     incorrect: 'Incorrect',
@@ -210,6 +216,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     resultStats: 'Статистика',
     wordStats: 'Статистика по слову',
     phraseStats: 'Статистика по фразе',
+    wordLabel: 'Слово',
+    phraseLabel: 'Фраза',
+    noMoreCardsInExercise: 'Карточки для этого упражнения закончились.',
     correctResult: 'Правильно!',
     correct: 'Верно',
     incorrect: 'Неверно',
@@ -289,6 +298,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     resultStats: 'Estadisticas',
     wordStats: 'Estadisticas de la palabra',
     phraseStats: 'Estadisticas de la frase',
+    wordLabel: 'Palabra',
+    phraseLabel: 'Frase',
+    noMoreCardsInExercise: 'No quedan tarjetas en este ejercicio.',
     correctResult: 'Correcto!',
     correct: 'Correctas',
     incorrect: 'Incorrectas',

@@ -9,17 +9,20 @@ export function SplitWordStatsChip({
   correct,
   incorrect,
   interfaceLanguage,
+  statsLabel,
 }: {
   correct: number;
   incorrect: number;
   interfaceLanguage: SupportedLanguage;
+  statsLabel?: string;
 }) {
   const correctLabel = t(interfaceLanguage, 'correct');
   const incorrectLabel = t(interfaceLanguage, 'incorrect');
+  const label = statsLabel ?? t(interfaceLanguage, 'wordStats');
 
   return (
     <Box
-      aria-label={`${t(interfaceLanguage, 'wordStats')}: ${correctLabel} ${correct}, ${incorrectLabel} ${incorrect}`}
+      aria-label={`${label}: ${correctLabel} ${correct}, ${incorrectLabel} ${incorrect}`}
       role="group"
       sx={{
         alignItems: 'stretch',

@@ -83,12 +83,18 @@ export function App() {
     answeredMissingLettersCardIds,
     setAnsweredMissingLettersCardIds,
   ] = useState<string[]>([]);
+  const [answeredMissingWordCardIds, setAnsweredMissingWordCardIds] = useState<
+    string[]
+  >([]);
   const [currentExerciseAnsweredCount, setCurrentExerciseAnsweredCount] =
     useState(0);
   const [currentExerciseSessionId, setCurrentExerciseSessionId] = useState(() =>
     createId('exercise-session'),
   );
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
+  const [finishDialogIntent, setFinishDialogIntent] = useState<
+    'finish' | 'home' | null
+  >(null);
 
   const cards = useSelector((state: RootState) => state.cards.cards);
   const themes = useSelector((state: RootState) => state.themes.themes);
@@ -208,20 +214,64 @@ export function App() {
       };
     }
 
+    const missingWordPrompts = randomizedEligibleCards
+      .map((card) => createMissingWordPrompt({ card, targetLanguage }))
+      .filter((prompt): prompt is ExercisePrompt & { sentenceWithGap: string } =>
+        Boolean(prompt),
+      );
+
     return {
       type: 'missingWord',
-      prompt: randomizedEligibleCards
-        .map((card) => createMissingWordPrompt({ card, targetLanguage }))
-        .find((prompt): prompt is ExercisePrompt & { sentenceWithGap: string } =>
-          Boolean(prompt),
-        ),
+      prompt: missingWordPrompts.find(
+        (prompt) => !answeredMissingWordCardIds.includes(prompt.cardId),
+      ),
     };
   }, [
     answeredMissingLettersCardIds,
+    answeredMissingWordCardIds,
     randomizedEligibleCards,
     selectedExerciseType,
     targetLanguage,
   ]);
+
+  function resetExerciseState() {
+    setIsExerciseStarted(false);
+    setLastSavedAttemptId(null);
+    setAnsweredMissingLettersCardIds([]);
+    setAnsweredMissingWordCardIds([]);
+    setCurrentExerciseAnsweredCount(0);
+    setCurrentExerciseSessionId(createId('exercise-session'));
+    setGenerationSeed((seed) => seed + 1);
+  }
+
+  function openFinishDialog(intent: 'finish' | 'home') {
+    setFinishDialogIntent(intent);
+    setIsFinishDialogOpen(true);
+  }
+
+  function handleFinishDialogCancel() {
+    setFinishDialogIntent(null);
+    setIsFinishDialogOpen(false);
+  }
+
+  function handleFinishDialogConfirm() {
+    const shouldGoHome = finishDialogIntent === 'home';
+    setFinishDialogIntent(null);
+    setIsFinishDialogOpen(false);
+    resetExerciseState();
+    if (shouldGoHome) {
+      setActiveSection('game');
+    }
+  }
+
+  function handleLogoClick() {
+    if (isExerciseStarted) {
+      openFinishDialog('home');
+      return;
+    }
+
+    setActiveSection('game');
+  }
 
   function savePromptAttempt(
     exerciseType: Exclude<ExerciseType, 'crossword'>,
@@ -378,7 +428,7 @@ export function App() {
           <Button
             variant="outlined"
             color="error"
-            onClick={() => setIsFinishDialogOpen(true)}
+            onClick={() => openFinishDialog('finish')}
             sx={{
               alignSelf: { xs: 'flex-start', sm: 'center' },
               flexShrink: 0,
@@ -396,23 +446,16 @@ export function App() {
             interfaceLanguage={interfaceLanguage}
             showExpectedAnswers={
               lastSavedAttempt.exerciseType !== 'missingLetters' &&
-              lastSavedAttempt.exerciseType !== 'missingWord'
+              lastSavedAttempt.exerciseType !== 'missingWord' &&
+              lastSavedAttempt.exerciseType !== 'multipleChoice'
             }
             targetLanguage={targetLanguage}
           />
         )}
         <FinishExerciseDialog
           interfaceLanguage={interfaceLanguage}
-          onCancel={() => setIsFinishDialogOpen(false)}
-          onConfirm={() => {
-            setIsFinishDialogOpen(false);
-            setIsExerciseStarted(false);
-            setLastSavedAttemptId(null);
-            setAnsweredMissingLettersCardIds([]);
-            setCurrentExerciseAnsweredCount(0);
-            setCurrentExerciseSessionId(createId('exercise-session'));
-            setGenerationSeed((seed) => seed + 1);
-          }}
+          onCancel={handleFinishDialogCancel}
+          onConfirm={handleFinishDialogConfirm}
           answeredCount={currentExerciseAnsweredCount}
           open={isFinishDialogOpen}
         />
@@ -429,11 +472,7 @@ export function App() {
 
     const handleThemeChange = (event: SelectChangeEvent<string>) => {
       dispatch(selectTheme(event.target.value));
-      setIsExerciseStarted(false);
-      setAnsweredMissingLettersCardIds([]);
-      setCurrentExerciseAnsweredCount(0);
-      setCurrentExerciseSessionId(createId('exercise-session'));
-      setGenerationSeed((seed) => seed + 1);
+      resetExerciseState();
     };
 
     return (
@@ -464,11 +503,7 @@ export function App() {
             selectedExerciseType={selectedExerciseType}
             onPick={(exerciseType) => {
               setSelectedExerciseType(exerciseType);
-              setIsExerciseStarted(false);
-              setAnsweredMissingLettersCardIds([]);
-              setCurrentExerciseAnsweredCount(0);
-              setCurrentExerciseSessionId(createId('exercise-session'));
-              setGenerationSeed((seed) => seed + 1);
+              resetExerciseState();
             }}
           />
 
@@ -485,6 +520,7 @@ export function App() {
             onClick={() => {
               setIsExerciseStarted(true);
               setAnsweredMissingLettersCardIds([]);
+              setAnsweredMissingWordCardIds([]);
               setCurrentExerciseAnsweredCount(0);
               setLastSavedAttemptId(null);
               setCurrentExerciseSessionId(createId('exercise-session'));
@@ -542,10 +578,18 @@ export function App() {
     if (exercisePreview.type === 'multipleChoice') {
       return (
         <MultipleChoiceExercise
+          key={`${exercisePreview.prompt.cardId}:${generationSeed}`}
+          interfaceLanguage={interfaceLanguage}
           prompt={exercisePreview.prompt}
           onAnswer={(answer) =>
-            savePromptAttempt('multipleChoice', exercisePreview.prompt, answer)
+            savePromptAttempt('multipleChoice', exercisePreview.prompt, answer, {
+              advance: false,
+            })
           }
+          onNext={() => {
+            setLastSavedAttemptId(null);
+            setGenerationSeed((seed) => seed + 1);
+          }}
         />
       );
     }
@@ -586,8 +630,7 @@ export function App() {
     if (!exercisePreview.prompt) {
       return (
         <Alert severity="info">
-          Missing word practice needs an example sentence for the target
-          language.
+          {t(interfaceLanguage, 'noMoreCardsInExercise')}
         </Alert>
       );
     }
@@ -595,6 +638,7 @@ export function App() {
     const missingWordPrompt = exercisePreview.prompt;
     return (
       <MissingWordExercise
+        key={`${missingWordPrompt.cardId}:${generationSeed}`}
         prompt={missingWordPrompt}
         onAnswer={(answer) =>
           savePromptAttempt('missingWord', missingWordPrompt, answer, {
@@ -602,6 +646,10 @@ export function App() {
           })
         }
         onNext={() => {
+          setAnsweredMissingWordCardIds((cardIds) => [
+            ...cardIds.filter((cardId) => cardId !== missingWordPrompt.cardId),
+            missingWordPrompt.cardId,
+          ]);
           setLastSavedAttemptId(null);
           setGenerationSeed((seed) => seed + 1);
         }}
@@ -635,7 +683,7 @@ export function App() {
           <Typography variant="h6" component="h2">
             {t(interfaceLanguage, 'resultsTitle')}
           </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          <Stack spacing={2.25}>
             <CountMetric
               label={t(interfaceLanguage, 'totalExercises')}
               value={targetSummaries.length}
@@ -654,7 +702,11 @@ export function App() {
   }
 
   return (
-    <AppShell activeSection={activeSection} onNavigate={setActiveSection}>
+    <AppShell
+      activeSection={activeSection}
+      onLogoClick={handleLogoClick}
+      onNavigate={setActiveSection}
+    >
       {renderMainContent()}
     </AppShell>
   );
@@ -693,6 +745,16 @@ function AttemptSummary({
     0,
   );
   const isAttemptCorrect = Object.values(attempt.correctness).every(Boolean);
+  const usesSplitStats =
+    attempt.exerciseType === 'missingLetters' ||
+    attempt.exerciseType === 'missingWord' ||
+    attempt.exerciseType === 'multipleChoice';
+  const statsLabel =
+    attempt.exerciseType === 'missingWord'
+      ? t(interfaceLanguage, 'phraseStats')
+      : usesSplitStats
+        ? t(interfaceLanguage, 'wordStats')
+        : t(interfaceLanguage, 'resultStats');
 
   return (
     <Paper sx={{ p: 2, borderLeft: '4px solid', borderColor: 'primary.main' }}>
@@ -718,22 +780,15 @@ function AttemptSummary({
           </>
         )}
         <Typography variant="overline">
-          {t(
-            interfaceLanguage,
-            attempt.exerciseType === 'missingLetters'
-              ? 'wordStats'
-              : attempt.exerciseType === 'missingWord'
-                ? 'phraseStats'
-              : 'resultStats',
-          )}
+          {statsLabel}
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {attempt.exerciseType === 'missingLetters' ||
-          attempt.exerciseType === 'missingWord' ? (
+          {usesSplitStats ? (
             <SplitWordStatsChip
               correct={correctCount}
               incorrect={incorrectCount}
               interfaceLanguage={interfaceLanguage}
+              statsLabel={statsLabel}
             />
           ) : (
             <>
