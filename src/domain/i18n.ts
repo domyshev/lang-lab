@@ -51,6 +51,7 @@ type I18nKey =
   | 'totalAnsweredQuestions'
   | 'resultStats'
   | 'wordStats'
+  | 'phraseStats'
   | 'correctResult'
   | 'correct'
   | 'incorrect'
@@ -129,6 +130,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     totalAnsweredQuestions: 'Questions answered',
     resultStats: 'Statistics',
     wordStats: 'Word statistics',
+    phraseStats: 'Phrase statistics',
     correctResult: 'Correct!',
     correct: 'Correct',
     incorrect: 'Incorrect',
@@ -207,6 +209,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     totalAnsweredQuestions: 'Всего отвечено вопросов',
     resultStats: 'Статистика',
     wordStats: 'Статистика по слову',
+    phraseStats: 'Статистика по фразе',
     correctResult: 'Правильно!',
     correct: 'Верно',
     incorrect: 'Неверно',
@@ -285,6 +288,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     totalAnsweredQuestions: 'Preguntas respondidas',
     resultStats: 'Estadisticas',
     wordStats: 'Estadisticas de la palabra',
+    phraseStats: 'Estadisticas de la frase',
     correctResult: 'Correcto!',
     correct: 'Correctas',
     incorrect: 'Incorrectas',

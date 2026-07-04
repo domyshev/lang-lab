@@ -366,35 +366,41 @@ export function App() {
     }
 
     return (
-      <Box
-        sx={{
-          display: 'grid',
-          gap: 3,
-          gridTemplateColumns: { xs: '1fr', lg: '330px minmax(0, 1fr)' },
-          alignItems: 'start',
-        }}
-      >
-        <CoachPanel thoughtSeed={generationSeed + currentExerciseAnsweredCount} />
-        <Stack spacing={3}>
-          {renderExercise()}
-          {lastSavedAttempt && (
-            <AttemptSummary
-              attempt={lastSavedAttempt}
-              cardStats={cardStats}
-              interfaceLanguage={interfaceLanguage}
-              showExpectedAnswers={lastSavedAttempt.exerciseType !== 'missingLetters'}
-              targetLanguage={targetLanguage}
-            />
-          )}
+      <Stack spacing={3}>
+        <Stack
+          data-testid="exercise-toolbar"
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={2}
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          justifyContent="space-between"
+        >
+          <CoachPanel thoughtSeed={generationSeed + currentExerciseAnsweredCount} />
           <Button
             variant="outlined"
             color="error"
             onClick={() => setIsFinishDialogOpen(true)}
-            sx={{ alignSelf: 'flex-start' }}
+            sx={{
+              alignSelf: { xs: 'flex-start', sm: 'center' },
+              flexShrink: 0,
+              ml: { sm: 'auto' },
+            }}
           >
             {t(interfaceLanguage, 'finishExercise')}
           </Button>
         </Stack>
+        {renderExercise()}
+        {lastSavedAttempt && (
+          <AttemptSummary
+            attempt={lastSavedAttempt}
+            cardStats={cardStats}
+            interfaceLanguage={interfaceLanguage}
+            showExpectedAnswers={
+              lastSavedAttempt.exerciseType !== 'missingLetters' &&
+              lastSavedAttempt.exerciseType !== 'missingWord'
+            }
+            targetLanguage={targetLanguage}
+          />
+        )}
         <FinishExerciseDialog
           interfaceLanguage={interfaceLanguage}
           onCancel={() => setIsFinishDialogOpen(false)}
@@ -410,7 +416,7 @@ export function App() {
           answeredCount={currentExerciseAnsweredCount}
           open={isFinishDialogOpen}
         />
-      </Box>
+      </Stack>
     );
   }
 
@@ -591,8 +597,14 @@ export function App() {
       <MissingWordExercise
         prompt={missingWordPrompt}
         onAnswer={(answer) =>
-          savePromptAttempt('missingWord', missingWordPrompt, answer)
+          savePromptAttempt('missingWord', missingWordPrompt, answer, {
+            advance: false,
+          })
         }
+        onNext={() => {
+          setLastSavedAttemptId(null);
+          setGenerationSeed((seed) => seed + 1);
+        }}
       />
     );
   }
@@ -710,11 +722,14 @@ function AttemptSummary({
             interfaceLanguage,
             attempt.exerciseType === 'missingLetters'
               ? 'wordStats'
+              : attempt.exerciseType === 'missingWord'
+                ? 'phraseStats'
               : 'resultStats',
           )}
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {attempt.exerciseType === 'missingLetters' ? (
+          {attempt.exerciseType === 'missingLetters' ||
+          attempt.exerciseType === 'missingWord' ? (
             <SplitWordStatsChip
               correct={correctCount}
               incorrect={incorrectCount}

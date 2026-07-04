@@ -22,10 +22,8 @@ export function CoachPanel({ thoughtSeed }: { thoughtSeed: number }) {
         display: 'flex',
         gap: 1.5,
         justifyContent: 'flex-start',
-        minHeight: { xs: 96, lg: 132 },
-        pl: { xs: 0, lg: 1 },
-        position: { lg: 'sticky' },
-        top: { lg: 92 },
+        minHeight: { xs: 96, md: 118 },
+        minWidth: 0,
       }}
     >
       <AssistantStickerIcon

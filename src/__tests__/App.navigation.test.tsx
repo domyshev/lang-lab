@@ -235,11 +235,18 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Начать' }));
     await answerMissingLettersWrong(user);
 
+    const toolbar = screen.getByTestId('exercise-toolbar');
+    expect(within(toolbar).getByLabelText('Мысль персонажа')).toBeInTheDocument();
+    expect(
+      within(toolbar).getByRole('button', { name: 'Закончить упражнение' }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Выберите упражнение' }),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Закончить упражнение' }));
+    await user.click(
+      within(toolbar).getByRole('button', { name: 'Закончить упражнение' }),
+    );
 
     expect(
       screen.getByText('Результаты упражнения будут зачтены, а упражнение закончено.'),
@@ -311,7 +318,9 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Пропущенное слово' }));
     await user.click(screen.getByRole('button', { name: 'Начать' }));
 
-    expect(screen.getByText('It is _____ today.')).toBeInTheDocument();
+    expect(screen.getByText('It is')).toBeInTheDocument();
+    expect(screen.getByText('today.')).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/Missing word letter/)).toHaveLength(7);
   });
 });
 
