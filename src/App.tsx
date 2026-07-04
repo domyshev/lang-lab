@@ -86,6 +86,8 @@ export function App() {
   const [answeredMissingWordCardIds, setAnsweredMissingWordCardIds] = useState<
     string[]
   >([]);
+  const [answeredMultipleChoiceCardIds, setAnsweredMultipleChoiceCardIds] =
+    useState<string[]>([]);
   const [currentExerciseAnsweredCount, setCurrentExerciseAnsweredCount] =
     useState(0);
   const [currentExerciseSessionId, setCurrentExerciseSessionId] = useState(() =>
@@ -182,11 +184,30 @@ export function App() {
     }
 
     if (selectedExerciseType === 'multipleChoice') {
+      const lastAnsweredCardId =
+        answeredMultipleChoiceCardIds[answeredMultipleChoiceCardIds.length - 1];
+      const blockedCardIds =
+        answeredMultipleChoiceCardIds.length >= randomizedEligibleCards.length
+          ? [lastAnsweredCardId]
+          : answeredMultipleChoiceCardIds;
+      const activeCard =
+        randomizedEligibleCards.find(
+          (card) => !blockedCardIds.includes(card.id),
+        ) ?? firstCard;
+      const freshDistractorCards = randomizedEligibleCards.filter(
+        (card) =>
+          card.id !== activeCard.id && !blockedCardIds.includes(card.id),
+      );
+      const fallbackDistractorCards = randomizedEligibleCards.filter(
+        (card) =>
+          card.id !== activeCard.id && blockedCardIds.includes(card.id),
+      );
+
       return {
         type: 'multipleChoice',
         prompt: createMultipleChoicePrompt({
-          card: firstCard,
-          distractorCards: randomizedEligibleCards.slice(1),
+          card: activeCard,
+          distractorCards: [...freshDistractorCards, ...fallbackDistractorCards],
           targetLanguage,
         }),
       };
@@ -229,6 +250,7 @@ export function App() {
   }, [
     answeredMissingLettersCardIds,
     answeredMissingWordCardIds,
+    answeredMultipleChoiceCardIds,
     randomizedEligibleCards,
     selectedExerciseType,
     targetLanguage,
@@ -239,6 +261,7 @@ export function App() {
     setLastSavedAttemptId(null);
     setAnsweredMissingLettersCardIds([]);
     setAnsweredMissingWordCardIds([]);
+    setAnsweredMultipleChoiceCardIds([]);
     setCurrentExerciseAnsweredCount(0);
     setCurrentExerciseSessionId(createId('exercise-session'));
     setGenerationSeed((seed) => seed + 1);
@@ -521,6 +544,7 @@ export function App() {
               setIsExerciseStarted(true);
               setAnsweredMissingLettersCardIds([]);
               setAnsweredMissingWordCardIds([]);
+              setAnsweredMultipleChoiceCardIds([]);
               setCurrentExerciseAnsweredCount(0);
               setLastSavedAttemptId(null);
               setCurrentExerciseSessionId(createId('exercise-session'));
@@ -587,6 +611,12 @@ export function App() {
             })
           }
           onNext={() => {
+            setAnsweredMultipleChoiceCardIds((cardIds) => [
+              ...cardIds.filter(
+                (cardId) => cardId !== exercisePreview.prompt.cardId,
+              ),
+              exercisePreview.prompt.cardId,
+            ]);
             setLastSavedAttemptId(null);
             setGenerationSeed((seed) => seed + 1);
           }}

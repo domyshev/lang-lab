@@ -15,7 +15,7 @@ const prompt = {
 };
 
 describe('MultipleChoiceExercise', () => {
-  it('shows answer options as a vertical colored stack and keeps result before next', async () => {
+  it('shows white answer options and marks the selected result before next', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();
     const onNext = vi.fn();
@@ -31,13 +31,22 @@ describe('MultipleChoiceExercise', () => {
 
     const options = screen.getByTestId('multiple-choice-options');
     expect(options).toHaveStyle({ flexDirection: 'column' });
-    expect(within(options).getAllByRole('button')).toHaveLength(3);
+    const optionButtons = within(options).getAllByRole('button');
+    expect(optionButtons).toHaveLength(3);
+    optionButtons.forEach((button) => {
+      expect(button).toHaveStyle({ backgroundColor: 'rgb(255, 255, 255)' });
+    });
 
     await user.click(screen.getByRole('button', { name: 'train' }));
 
     expect(onAnswer).toHaveBeenCalledWith('train');
-    expect(screen.getByText('Правильный ответ')).toBeInTheDocument();
-    expect(screen.getByLabelText('Правильный ответ: airport')).toBeInTheDocument();
+    expect(screen.queryByText('Правильный ответ')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'train' })).toHaveStyle({
+      backgroundColor: 'rgb(253, 235, 238)',
+    });
+    expect(screen.getByRole('button', { name: 'airport' })).toHaveStyle({
+      backgroundColor: 'rgb(235, 247, 225)',
+    });
     expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Неверно' }));
@@ -61,6 +70,12 @@ describe('MultipleChoiceExercise', () => {
 
     expect(onAnswer).toHaveBeenCalledWith('airport');
     expect(screen.queryByText('Правильный ответ')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'airport' })).toHaveStyle({
+      backgroundColor: 'rgb(235, 247, 225)',
+    });
+    expect(screen.getByRole('button', { name: 'train' })).not.toHaveStyle({
+      backgroundColor: 'rgb(253, 235, 238)',
+    });
     expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
   });
 });

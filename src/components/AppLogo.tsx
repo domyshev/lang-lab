@@ -32,6 +32,8 @@ export function AppLogo({
         px: 1,
         py: 0.65,
         position: 'relative',
+        alignSelf: 'center',
+        mt: { xs: 2.5, md: 0 },
         textAlign: 'left',
         userSelect: 'none',
         whiteSpace: 'nowrap',
@@ -39,18 +41,26 @@ export function AppLogo({
           outline: '3px solid rgba(32, 48, 21, 0.32)',
           outlineOffset: 2,
         },
-        '&::after': {
+      }}
+    >
+      <Box
+        aria-hidden="true"
+        data-testid="app-logo-leaf"
+        sx={{
           bgcolor: 'rgba(156, 202, 86, 0.22)',
-          borderRadius: '999px',
-          content: '""',
+          borderBottomLeftRadius: '999px',
+          borderBottomRightRadius: '999px',
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: '999px',
+          clipPath: 'polygon(0 0, 100% 0, 100% 100%, 18% 100%)',
           height: 16,
           position: 'absolute',
           right: -8,
           top: -3,
-          width: 54,
-        },
-      }}
-    >
+          width: 58,
+          zIndex: 0,
+        }}
+      />
       <Box
         aria-hidden="true"
         sx={{
@@ -62,7 +72,9 @@ export function AppLogo({
           gap: 0.25,
           gridTemplateColumns: 'repeat(2, 18px)',
           p: 0.4,
+          position: 'relative',
           transform: 'rotate(-3deg)',
+          zIndex: 1,
         }}
       >
         {['A', 'Ñ', 'Я', 'B'].map((letter) => (

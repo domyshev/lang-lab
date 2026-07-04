@@ -396,6 +396,23 @@ describe('App navigation', () => {
       screen.getByLabelText(/Статистика по слову: Верно \d, Неверно \d/),
     ).toBeInTheDocument();
   });
+
+  it('generates a new multiple choice triple after each answered card', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Вопрос с 3 вариантами' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+
+    const firstTriple = getMultipleChoiceOptionText();
+    await user.click(screen.getAllByTestId('multiple-choice-option')[0]);
+    await user.click(
+      screen.queryByRole('button', { name: 'Правильно!' }) ??
+        screen.getByRole('button', { name: 'Неверно' }),
+    );
+
+    expect(getMultipleChoiceOptionText()).not.toEqual(firstTriple);
+  });
 });
 
 function getVisibleMissingLettersPrompt(): { answer: string; prompt: RegExp } {
@@ -445,4 +462,10 @@ async function answerMissingWordWrong(user: ReturnType<typeof userEvent.setup>) 
     await user.type(input, 'x');
   }
   await user.click(screen.getByRole('button', { name: 'Отправить' }));
+}
+
+function getMultipleChoiceOptionText(): string[] {
+  return screen
+    .getAllByTestId('multiple-choice-option')
+    .map((option) => option.textContent ?? '');
 }

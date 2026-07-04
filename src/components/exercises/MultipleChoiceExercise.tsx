@@ -1,7 +1,6 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
-import { Box, Button, Paper, Stack, Typography } from '@mui/material';
-import type { CSSProperties } from 'react';
+import { Button, Paper, Stack, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { MultipleChoicePrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
@@ -40,7 +39,7 @@ export function MultipleChoiceExercise({
           spacing={1}
           sx={{ alignItems: 'stretch', maxWidth: 420 }}
         >
-          {prompt.options.map((option, index) => (
+          {prompt.options.map((option) => (
             <Button
               data-testid="multiple-choice-option"
               disabled={isSubmitted}
@@ -62,7 +61,6 @@ export function MultipleChoiceExercise({
                   opacity: 1,
                 },
                 ...getOptionStyles({
-                  index,
                   isCorrectOption: option === prompt.expectedAnswer,
                   isSelected: option === selectedAnswer,
                   isSubmitted,
@@ -73,37 +71,6 @@ export function MultipleChoiceExercise({
             </Button>
           ))}
         </Stack>
-        {isSubmitted && !isCorrect && (
-          <Stack spacing={0.75}>
-            <Typography variant="overline">
-              {t(interfaceLanguage, 'correctAnswer')}
-            </Typography>
-            <Stack
-              aria-label={`${t(interfaceLanguage, 'correctAnswer')}: ${
-                prompt.expectedAnswer
-              }`}
-              direction="row"
-              spacing={0.75}
-              flexWrap="wrap"
-              useFlexGap
-            >
-              {prompt.expectedAnswer.split('').map((character, index) =>
-                character.trim() === '' ? (
-                  <AnswerSpace key={`correct-space-${index}`} />
-                ) : (
-                  <Box
-                    key={`correct-${character}-${index}`}
-                    component="span"
-                    style={getLetterCellInlineStyle('correct')}
-                    sx={letterCellStyles}
-                  >
-                    {character}
-                  </Box>
-                ),
-              )}
-            </Stack>
-          </Stack>
-        )}
         {isSubmitted && (
           <Button
             variant="contained"
@@ -139,33 +106,23 @@ export function MultipleChoiceExercise({
   );
 }
 
-const idleOptionPalettes = [
-  { bgcolor: '#eef7db', borderColor: '#97c65a', color: '#203015' },
-  { bgcolor: '#eaf5ff', borderColor: '#7ab7d8', color: '#163040' },
-  { bgcolor: '#fff2dc', borderColor: '#d9aa58', color: '#3d2a0d' },
-];
-
 function getOptionStyles({
-  index,
   isCorrectOption,
   isSelected,
   isSubmitted,
 }: {
-  index: number;
   isCorrectOption: boolean;
   isSelected: boolean;
   isSubmitted: boolean;
 }) {
   if (!isSubmitted) {
-    const palette = idleOptionPalettes[index % idleOptionPalettes.length];
     return {
-      bgcolor: palette.bgcolor,
-      borderColor: palette.borderColor,
-      color: palette.color,
+      bgcolor: '#ffffff',
+      borderColor: 'divider',
+      color: 'text.primary',
       '&:hover': {
-        bgcolor: palette.bgcolor,
-        borderColor: palette.borderColor,
-        filter: 'brightness(0.98)',
+        bgcolor: '#ffffff',
+        borderColor: '#97c65a',
       },
     };
   }
@@ -196,48 +153,5 @@ function getOptionStyles({
     color: 'text.secondary',
     opacity: 1,
     WebkitTextFillColor: '#757575',
-  };
-}
-
-function AnswerSpace() {
-  return (
-    <Box
-      aria-hidden="true"
-      component="span"
-      sx={{ display: 'inline-flex', height: 38, width: 10 }}
-    />
-  );
-}
-
-const letterCellStyles = {
-  alignItems: 'center',
-  bgcolor: 'background.paper',
-  border: '1px solid',
-  borderColor: 'divider',
-  borderRadius: 1,
-  display: 'inline-flex',
-  fontSize: 22,
-  fontWeight: 800,
-  height: 38,
-  justifyContent: 'center',
-  lineHeight: 1,
-  textAlign: 'center',
-  textTransform: 'lowercase',
-  width: 38,
-};
-
-function getLetterCellInlineStyle(
-  resultTone: 'correct' | 'incorrect' | null,
-): CSSProperties | undefined {
-  if (!resultTone) {
-    return undefined;
-  }
-
-  return {
-    backgroundColor:
-      resultTone === 'correct' ? 'rgb(235, 247, 225)' : 'rgb(253, 235, 238)',
-    borderColor: resultTone === 'correct' ? '#8fc773' : '#f2a7b4',
-    color: 'rgb(117, 117, 117)',
-    WebkitTextFillColor: 'rgb(117, 117, 117)',
   };
 }

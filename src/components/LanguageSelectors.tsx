@@ -58,15 +58,21 @@ export function LanguageSelectors() {
 
   return (
     <Stack
-      direction={{ xs: 'column', sm: 'row' }}
-      spacing={1.5}
-      sx={{ width: { xs: '100%', md: 'auto' } }}
+      direction="row"
+      flexWrap="wrap"
+      spacing={1}
+      useFlexGap
+      sx={{
+        alignItems: 'center',
+        width: { xs: '100%', md: 'auto' },
+      }}
     >
-      <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 86 } }}>
+      <FormControl size="small" sx={{ minWidth: 86 }}>
         <InputLabel id={assistantLabelId}>
           {t(interfaceLanguage, 'assistant')}
         </InputLabel>
         <Select
+          data-testid="assistant-select"
           labelId={assistantLabelId}
           label={t(interfaceLanguage, 'assistant')}
           value={assistantId}
@@ -82,11 +88,12 @@ export function LanguageSelectors() {
             />
           )}
           sx={{
+            ...compactSelectSx,
             '& .MuiSelect-select': {
+              ...compactSelectSx['& .MuiSelect-select'],
               alignItems: 'center',
               display: 'flex',
               justifyContent: 'center',
-              py: 0.25,
             },
           }}
         >
@@ -107,11 +114,12 @@ export function LanguageSelectors() {
         </Select>
       </FormControl>
 
-      <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 170 } }}>
+      <FormControl size="small" sx={{ minWidth: { xs: 138, sm: 150 } }}>
         <InputLabel id={interfaceLabelId}>
           {t(interfaceLanguage, 'interfaceLanguage')}
         </InputLabel>
         <Select
+          data-testid="interface-language-select"
           labelId={interfaceLabelId}
           label={t(interfaceLanguage, 'interfaceLanguage')}
           value={interfaceLanguage}
@@ -119,6 +127,7 @@ export function LanguageSelectors() {
           renderValue={(value) => (
             <LanguageLabel language={value as SupportedLanguage} />
           )}
+          sx={compactSelectSx}
         >
           {supportedLanguages.map((language) => (
             <MenuItem key={language} value={language}>
@@ -128,11 +137,12 @@ export function LanguageSelectors() {
         </Select>
       </FormControl>
 
-      <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 170 } }}>
+      <FormControl size="small" sx={{ minWidth: { xs: 118, sm: 138 } }}>
         <InputLabel id={targetLabelId}>
           {t(interfaceLanguage, 'targetLanguage')}
         </InputLabel>
         <Select
+          data-testid="target-language-select"
           labelId={targetLabelId}
           label={t(interfaceLanguage, 'targetLanguage')}
           value={targetLanguage}
@@ -140,6 +150,7 @@ export function LanguageSelectors() {
           renderValue={(value) => (
             <LanguageLabel language={value as SupportedLanguage} />
           )}
+          sx={compactSelectSx}
         >
           {supportedLanguages.map((language) => (
             <MenuItem key={language} value={language}>
@@ -152,6 +163,16 @@ export function LanguageSelectors() {
   );
 }
 
+const compactSelectSx = {
+  height: 34,
+  '& .MuiSelect-select': {
+    alignItems: 'center',
+    display: 'flex',
+    minHeight: 'unset',
+    py: 0.25,
+  },
+};
+
 function LanguageLabel({ language }: { language: SupportedLanguage }) {
   return (
     <Stack
@@ -161,10 +182,10 @@ function LanguageLabel({ language }: { language: SupportedLanguage }) {
       alignItems="center"
       sx={{ minWidth: 0 }}
     >
-      <Box component="span" aria-hidden="true" sx={{ fontSize: 20 }}>
+      <Box component="span" aria-hidden="true" sx={{ fontSize: 18 }}>
         {languageFlags[language]}
       </Box>
-      <Typography component="span" noWrap>
+      <Typography component="span" noWrap sx={{ fontSize: 14 }}>
         {languageLabels[language]}
       </Typography>
     </Stack>

@@ -45,10 +45,10 @@ export function AppShell({
       >
         <Toolbar
           sx={{
-            alignItems: { xs: 'stretch', md: 'center' },
-            gap: 2,
-            minHeight: { xs: 120, md: 72 },
-            py: { xs: 1.5, md: 0 },
+            alignItems: { xs: 'flex-start', md: 'center' },
+            gap: { xs: 1.25, md: 2 },
+            minHeight: { xs: 'auto', md: 70 },
+            py: { xs: 1, md: 0 },
             flexDirection: { xs: 'column', md: 'row' },
           }}
         >
@@ -64,6 +64,7 @@ export function AppShell({
             variant="scrollable"
             scrollButtons="auto"
             sx={{
+              alignSelf: { xs: 'stretch', md: 'auto' },
               minHeight: 44,
               maxWidth: { xs: '100%', md: 520 },
               '& .MuiTab-root': {
