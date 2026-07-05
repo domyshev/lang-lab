@@ -71,11 +71,11 @@ export function AppLogo({
         viewBox="0 0 64 28"
         sx={{
           display: 'block',
-          height: 22,
+          height: 17.6,
           position: 'absolute',
-          right: -10,
-          top: 1,
-          width: 56,
+          right: -8,
+          top: 3,
+          width: 44.8,
           zIndex: 0,
         }}
       >

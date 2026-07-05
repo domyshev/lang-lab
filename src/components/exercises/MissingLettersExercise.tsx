@@ -237,6 +237,7 @@ const letterCellStyles = {
   border: '1px solid',
   borderColor: 'divider',
   borderRadius: 1,
+  color: '#5f6b57',
   display: 'inline-flex',
   fontSize: 22,
   fontWeight: 800,
@@ -255,8 +256,8 @@ const letterCellStyles = {
 
 const typedLetterCellStyles = {
   ...letterCellStyles,
-  color: '#5f6b57',
-  WebkitTextFillColor: '#5f6b57',
+  color: '#203015',
+  WebkitTextFillColor: '#203015',
 };
 
 function getLetterCellInlineStyle(

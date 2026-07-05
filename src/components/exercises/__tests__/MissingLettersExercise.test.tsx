@@ -28,9 +28,10 @@ describe('MissingLettersExercise', () => {
 
     const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
     expect(missingLetterInputs).toHaveLength(3);
+    expect(screen.getByText('v')).toHaveStyle({ color: 'rgb(95, 107, 87)' });
 
     await user.type(missingLetterInputs[0], 'e');
-    expect(missingLetterInputs[0]).toHaveStyle({ color: 'rgb(95, 107, 87)' });
+    expect(missingLetterInputs[0]).toHaveStyle({ color: 'rgb(32, 48, 21)' });
     await user.type(missingLetterInputs[1], 'i');
     await user.type(missingLetterInputs[2], 'l');
     await user.click(screen.getByRole('button', { name: 'Отправить' }));

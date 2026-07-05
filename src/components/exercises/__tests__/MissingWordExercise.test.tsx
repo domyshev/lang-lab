@@ -197,7 +197,8 @@ describe('MissingWordExercise', () => {
 
     const inputs = screen.getAllByLabelText(/Missing word letter/);
     await user.type(inputs[0], 'o');
-    expect(inputs[0]).toHaveStyle({ color: 'rgb(95, 107, 87)' });
+    expect(screen.getByText('w')).toHaveStyle({ color: 'rgb(95, 107, 87)' });
+    expect(inputs[0]).toHaveStyle({ color: 'rgb(32, 48, 21)' });
     await user.type(inputs[1], 't');
     await user.type(inputs[2], 't{enter}');
 
