@@ -18,20 +18,17 @@ export function CountMetric({
     <Stack
       aria-label={`${label}: ${value}`}
       data-test={`${dataTestPrefix}__root`}
-      direction="row"
-      spacing={0.75}
-      alignItems="center"
-      flexWrap="wrap"
-      useFlexGap
-      sx={{ width: '100%' }}
+      sx={metricGridStyles}
     >
       <MetricLabel dataTest={`${dataTestPrefix}__label`}>{label}:</MetricLabel>
-      <MetricChip
-        ariaLabel={`${label} ${value}`}
-        dataTest={`${dataTestPrefix}__value_chip`}
-        label={value}
-        tone="total"
-      />
+      <Box data-test={`${dataTestPrefix}__value_group`}>
+        <MetricChip
+          ariaLabel={`${label} ${value}`}
+          dataTest={`${dataTestPrefix}__value_chip`}
+          label={value}
+          tone="total"
+        />
+      </Box>
     </Stack>
   );
 }
@@ -55,50 +52,83 @@ export function StatsFormula({
 }) {
   const correctLabel = t(interfaceLanguage, 'correct');
   const incorrectLabel = t(interfaceLanguage, 'incorrect');
+  const hasOnlyCorrect = correct > 0 && incorrect === 0;
+  const hasOnlyIncorrect = incorrect > 0 && correct === 0;
+  const isSingleSided = hasOnlyCorrect || hasOnlyIncorrect;
+  const ariaLabel = isSingleSided
+    ? `${totalLabel}: ${hasOnlyCorrect ? correctLabel : incorrectLabel} ${
+        hasOnlyCorrect ? correct : incorrect
+      }`
+    : `${totalLabel}: ${total} = ${correct} + ${incorrect}`;
 
   return (
     <Stack
-      aria-label={`${totalLabel}: ${total} = ${correct} + ${incorrect}`}
+      aria-label={ariaLabel}
       data-test={`${dataTestPrefix}__root`}
-      direction="row"
-      spacing={0.75}
-      alignItems="center"
-      flexWrap="wrap"
-      useFlexGap
-      sx={{ width: '100%' }}
+      sx={showLabel ? metricGridStyles : formulaRowStyles}
     >
       {showLabel && (
         <MetricLabel dataTest={`${dataTestPrefix}__label`}>
           {totalLabel}:
         </MetricLabel>
       )}
-      <MetricChip
-        ariaLabel={`${totalLabel}: ${total}`}
-        dataTest={`${dataTestPrefix}__total_chip`}
-        label={total}
-        tone="total"
-        tooltip={t(interfaceLanguage, 'totalAnsweredTooltip')}
-      />
-      <FormulaIcon dataTest={`${dataTestPrefix}__equals_icon`} label="=">
-        <DragHandleRoundedIcon fontSize="inherit" />
-      </FormulaIcon>
-      <MetricChip
-        ariaLabel={`${correctLabel}: ${correct}`}
-        dataTest={`${dataTestPrefix}__correct_chip`}
-        label={correct}
-        tone="correct"
-        tooltip={t(interfaceLanguage, 'correctAnsweredTooltip')}
-      />
-      <FormulaIcon dataTest={`${dataTestPrefix}__plus_icon`} label="+">
-        <AddRoundedIcon fontSize="inherit" />
-      </FormulaIcon>
-      <MetricChip
-        ariaLabel={`${incorrectLabel}: ${incorrect}`}
-        dataTest={`${dataTestPrefix}__incorrect_chip`}
-        label={incorrect}
-        tone="incorrect"
-        tooltip={t(interfaceLanguage, 'incorrectAnsweredTooltip')}
-      />
+      <Stack
+        data-test={`${dataTestPrefix}__value_group`}
+        direction="row"
+        spacing={0.75}
+        alignItems="center"
+        flexWrap="wrap"
+        useFlexGap
+      >
+        {isSingleSided ? (
+          <MetricChip
+            ariaLabel={`${hasOnlyCorrect ? correctLabel : incorrectLabel}: ${
+              hasOnlyCorrect ? correct : incorrect
+            }`}
+            dataTest={`${dataTestPrefix}__${
+              hasOnlyCorrect ? 'correct' : 'incorrect'
+            }_chip`}
+            label={hasOnlyCorrect ? correct : incorrect}
+            tone={hasOnlyCorrect ? 'correct' : 'incorrect'}
+            tooltip={t(
+              interfaceLanguage,
+              hasOnlyCorrect
+                ? 'correctAnsweredTooltip'
+                : 'incorrectAnsweredTooltip',
+            )}
+          />
+        ) : (
+          <>
+            <MetricChip
+              ariaLabel={`${totalLabel}: ${total}`}
+              dataTest={`${dataTestPrefix}__total_chip`}
+              label={total}
+              tone="total"
+              tooltip={t(interfaceLanguage, 'totalAnsweredTooltip')}
+            />
+            <FormulaIcon dataTest={`${dataTestPrefix}__equals_icon`} label="=">
+              <DragHandleRoundedIcon fontSize="inherit" />
+            </FormulaIcon>
+            <MetricChip
+              ariaLabel={`${correctLabel}: ${correct}`}
+              dataTest={`${dataTestPrefix}__correct_chip`}
+              label={correct}
+              tone="correct"
+              tooltip={t(interfaceLanguage, 'correctAnsweredTooltip')}
+            />
+            <FormulaIcon dataTest={`${dataTestPrefix}__plus_icon`} label="+">
+              <AddRoundedIcon fontSize="inherit" />
+            </FormulaIcon>
+            <MetricChip
+              ariaLabel={`${incorrectLabel}: ${incorrect}`}
+              dataTest={`${dataTestPrefix}__incorrect_chip`}
+              label={incorrect}
+              tone="incorrect"
+              tooltip={t(interfaceLanguage, 'incorrectAnsweredTooltip')}
+            />
+          </>
+        )}
+      </Stack>
     </Stack>
   );
 }
@@ -197,6 +227,23 @@ const formulaChipBaseStyles = {
   '& .MuiChip-label': {
     px: 1.35,
   },
+};
+
+const metricGridStyles = {
+  alignItems: 'center',
+  columnGap: 0.75,
+  display: 'grid',
+  gridTemplateColumns: '220px minmax(0, 1fr)',
+  rowGap: 0.75,
+  width: '100%',
+};
+
+const formulaRowStyles = {
+  alignItems: 'center',
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: 0.75,
+  width: '100%',
 };
 
 const totalChipStyles = {

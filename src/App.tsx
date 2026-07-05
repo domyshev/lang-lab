@@ -564,7 +564,15 @@ export function App() {
   function renderMainContent() {
     if (activeSection === 'statistics') {
       return (
-        <Stack data-test="app__statistics_section" spacing={3}>
+        <Stack
+          data-test="app__statistics_section"
+          spacing={3}
+          sx={{
+            height: { xs: 'auto', md: 'calc(100vh - 118px)' },
+            minHeight: 0,
+            overflow: 'hidden',
+          }}
+        >
           <TargetStatsPanel />
           <HistoryView />
         </Stack>

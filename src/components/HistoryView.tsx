@@ -39,7 +39,11 @@ export function HistoryView() {
   );
 
   return (
-    <Stack data-test="history_view__root" spacing={1.5}>
+    <Stack
+      data-test="history_view__root"
+      spacing={1.5}
+      sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 }}
+    >
       {attemptSummaries.map((attempt) => (
         <AttemptHistoryCard
           key={attempt.id}

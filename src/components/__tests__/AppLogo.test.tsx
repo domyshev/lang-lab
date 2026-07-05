@@ -22,8 +22,8 @@ describe('AppLogo', () => {
     expect(visibleLeaf.tagName.toLowerCase()).toBe('svg');
     expect(visibleLeaf).toHaveAttribute('viewBox', '0 0 64 28');
     expect(visibleLeaf).toHaveStyle({
-      height: '17.6px',
-      width: '44.8px',
+      height: '15.84px',
+      width: '40.32px',
     });
     expect(screen.getByTestId('app_logo__tree_leaf_shape')).toHaveAttribute(
       'd',

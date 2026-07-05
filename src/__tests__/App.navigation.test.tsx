@@ -395,20 +395,26 @@ describe('App navigation', () => {
     expect(
       screen.getByLabelText('Всего пройдено упражнений: 1'),
     ).toBeInTheDocument();
-    expect(
-      screen.getAllByLabelText('Всего отвечено вопросов: 2 = 0 + 2').length,
-    ).toBeGreaterThan(0);
-    expect(screen.getAllByLabelText('Верно: 0').length).toBeGreaterThan(0);
+    expect(screen.queryByTestId('target_stats__answered_formula__total_chip')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('target_stats__answered_formula__equals_icon')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('target_stats__answered_formula__correct_chip')).not.toBeInTheDocument();
     expect(screen.getAllByLabelText('Неверно: 2').length).toBeGreaterThan(0);
+
+    expect(screen.getByTestId('app__statistics_section')).toHaveStyle({
+      overflow: 'hidden',
+    });
+    expect(screen.getByTestId('history_view__root')).toHaveStyle({
+      overflowY: 'auto',
+    });
 
     const attemptCards = getByDataTestPrefix('history_view__attempt_card__');
     expect(attemptCards).toHaveLength(1);
     expect(attemptCards[0]).toHaveTextContent('Пропущенные буквы');
     expect(
-      within(attemptCards[0]).getByLabelText(
-        'Всего отвечено вопросов: 2 = 0 + 2',
+      within(attemptCards[0]).queryByTestId(
+        /^history_view__attempt_formula__.*__total_chip$/,
       ),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(
       within(attemptCards[0]).queryByText('Всего отвечено вопросов: 2'),
     ).not.toBeInTheDocument();
