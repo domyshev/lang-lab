@@ -13,6 +13,8 @@ describe('AppLogo', () => {
     expect(logo).toHaveStyle({
       alignSelf: 'center',
       height: '52px',
+      minWidth: '250px',
+      paddingRight: '35px',
       userSelect: 'none',
     });
     expect(legacyLeaf).toHaveStyle({

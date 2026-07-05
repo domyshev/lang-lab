@@ -7,6 +7,7 @@ import {
   Chip,
   Paper,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { useMemo } from 'react';
@@ -48,6 +49,7 @@ export function HistoryView() {
         <AttemptHistoryCard
           key={attempt.id}
           attempt={attempt}
+          allAttempts={allAttempts}
           interfaceLanguage={interfaceLanguage}
         />
       ))}
@@ -63,9 +65,11 @@ export function HistoryView() {
 }
 
 function AttemptHistoryCard({
+  allAttempts,
   attempt,
   interfaceLanguage,
 }: {
+  allAttempts: RootState['attempts']['attempts'];
   attempt: ExerciseHistorySummary;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
 }) {
@@ -79,6 +83,11 @@ function AttemptHistoryCard({
       isCorrect: Boolean(savedAttempt.correctness[prompt.cardId]),
       options: getPromptOptions(prompt),
       prompt: prompt.prompt,
+      recentResults: getRecentCardResults({
+        attempts: allAttempts,
+        cardId: prompt.cardId,
+        targetLanguage: savedAttempt.targetLanguage,
+      }),
     })),
   );
 
@@ -159,26 +168,29 @@ function AttemptHistoryCard({
                   interfaceLanguage={interfaceLanguage}
                   isCorrect={row.isCorrect}
                   options={row.options}
+                  recentResults={row.recentResults}
                   type={row.exerciseType}
                 />
-                <Chip
-                  data-test={`history_view__detail_result_chip__${rowDomKey}`}
-                  label={t(
-                    interfaceLanguage,
-                    row.isCorrect ? 'correct' : 'incorrect',
-                  )}
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    alignSelf: 'flex-start',
-                    bgcolor: row.isCorrect
-                      ? 'rgb(235, 247, 225)'
-                      : 'rgb(253, 235, 238)',
-                    borderColor: row.isCorrect ? '#8fc773' : '#f2a7b4',
-                    color: '#111111',
-                    fontWeight: 800,
-                  }}
-                />
+                {row.exerciseType === 'multipleChoice' && (
+                  <Chip
+                    data-test={`history_view__detail_result_chip__${rowDomKey}`}
+                    label={t(
+                      interfaceLanguage,
+                      row.isCorrect ? 'correct' : 'incorrect',
+                    )}
+                    size="small"
+                    variant="outlined"
+                    sx={{
+                      alignSelf: 'flex-start',
+                      bgcolor: row.isCorrect
+                        ? 'rgb(235, 247, 225)'
+                        : 'rgb(253, 235, 238)',
+                      borderColor: row.isCorrect ? '#8fc773' : '#f2a7b4',
+                      color: '#111111',
+                      fontWeight: 800,
+                    }}
+                  />
+                )}
               </Stack>
             </Box>
             );
@@ -196,6 +208,7 @@ function HistoryAnswer({
   interfaceLanguage,
   isCorrect,
   options,
+  recentResults,
   type,
 }: {
   answer: string;
@@ -204,6 +217,7 @@ function HistoryAnswer({
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   isCorrect: boolean;
   options: string[];
+  recentResults: boolean[];
   type: ExerciseHistorySummary['exerciseType'];
 }) {
   if (type === 'multipleChoice') {
@@ -244,31 +258,78 @@ function HistoryAnswer({
   }
 
   if (isCorrect) {
+    const cells = (
+      <Box component="span" sx={{ display: 'inline-flex' }}>
+        <AnswerCells
+          ariaLabel={`${t(interfaceLanguage, 'correctAnswer')}: ${expectedAnswer}`}
+          dataTestPrefix={`${dataTestPrefix}__correct_cells`}
+          tone="correct"
+          value={expectedAnswer}
+        />
+      </Box>
+    );
+
     return (
-      <AnswerCells
-        ariaLabel={`${t(interfaceLanguage, 'correctAnswer')}: ${expectedAnswer}`}
-        dataTestPrefix={`${dataTestPrefix}__correct_cells`}
-        tone="correct"
-        value={expectedAnswer}
-      />
+      <Tooltip
+        arrow
+        title={
+          <Stack data-test={`${dataTestPrefix}__correct_tooltip`} spacing={0.5}>
+            <Typography sx={{ color: '#203015', fontSize: 13, fontWeight: 850 }}>
+              {t(interfaceLanguage, 'correctInputTooltip')}
+            </Typography>
+            {recentResults.slice(0, 10).map((result, index) => (
+              <Typography
+                data-test={`${dataTestPrefix}__recent_result__${index}`}
+                key={`${result}-${index}`}
+                sx={{ color: '#203015', fontSize: 12 }}
+              >
+                {index + 1}.{' '}
+                {t(interfaceLanguage, result ? 'correct' : 'incorrect')}
+              </Typography>
+            ))}
+          </Stack>
+        }
+        slotProps={{
+          tooltip: {
+            sx: {
+              bgcolor: '#ffffff',
+              border: '1px solid rgba(32, 48, 21, 0.14)',
+              boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
+              p: 1.25,
+            },
+          },
+          arrow: {
+            sx: {
+              color: '#ffffff',
+              '&:before': {
+                border: '1px solid rgba(32, 48, 21, 0.14)',
+              },
+            },
+          },
+        }}
+      >
+        {cells}
+      </Tooltip>
     );
   }
 
   return (
     <Stack data-test={`${dataTestPrefix}__answer_cells_stack`} spacing={0.75}>
       <AnswerCells
-        ariaLabel={`${t(interfaceLanguage, 'correctAnswer')}: ${expectedAnswer}`}
-        dataTestPrefix={`${dataTestPrefix}__correct_cells`}
-        tone="correct"
-        value={expectedAnswer}
-      />
-      <AnswerCells
         ariaLabel={`${t(interfaceLanguage, 'incorrectAnswer')}: ${
           answer || t(interfaceLanguage, 'noAnswer')
         }`}
         dataTestPrefix={`${dataTestPrefix}__incorrect_cells`}
+        expectedValue={expectedAnswer}
         tone="incorrect"
         value={answer || t(interfaceLanguage, 'noAnswer')}
+      />
+      <AnswerCells
+        ariaLabel={`${t(interfaceLanguage, 'correctAnswer')}: ${expectedAnswer}`}
+        dataTestPrefix={`${dataTestPrefix}__correct_cells`}
+        expectedValue={expectedAnswer}
+        tone="correct"
+        value={expectedAnswer}
       />
     </Stack>
   );
@@ -277,11 +338,13 @@ function HistoryAnswer({
 function AnswerCells({
   ariaLabel,
   dataTestPrefix,
+  expectedValue,
   tone,
   value,
 }: {
   ariaLabel: string;
   dataTestPrefix: string;
+  expectedValue?: string;
   tone: 'correct' | 'incorrect';
   value: string;
 }) {
@@ -324,6 +387,12 @@ function AnswerCells({
               height: 34,
               justifyContent: 'center',
               lineHeight: 1,
+              textDecorationLine:
+                tone === 'incorrect' &&
+                !areAnswerCharactersEqual(character, expectedValue?.[index] ?? '')
+                  ? 'line-through'
+                  : 'none',
+              textDecorationThickness: '2px',
               textTransform: 'lowercase',
               width: 34,
             }}
@@ -336,8 +405,41 @@ function AnswerCells({
   );
 }
 
+function areAnswerCharactersEqual(
+  answerCharacter: string,
+  expectedCharacter: string,
+) {
+  return (
+    answerCharacter.toLocaleLowerCase() === expectedCharacter.toLocaleLowerCase()
+  );
+}
+
 function getPromptOptions(prompt: ExercisePrompt): string[] {
   return (prompt as ExercisePrompt & { options?: string[] }).options ?? [];
+}
+
+function getRecentCardResults({
+  attempts,
+  cardId,
+  targetLanguage,
+}: {
+  attempts: RootState['attempts']['attempts'];
+  cardId: string;
+  targetLanguage: RootState['app']['targetLanguage'];
+}): boolean[] {
+  return [...attempts]
+    .filter(
+      (attempt) =>
+        attempt.targetLanguage === targetLanguage &&
+        Object.prototype.hasOwnProperty.call(attempt.correctness, cardId),
+    )
+    .sort(
+      (left, right) =>
+        Date.parse(right.completedAt ?? right.createdAt) -
+        Date.parse(left.completedAt ?? left.createdAt),
+    )
+    .slice(0, 10)
+    .map((attempt) => Boolean(attempt.correctness[cardId]));
 }
 
 function toDomKey(value: string): string {

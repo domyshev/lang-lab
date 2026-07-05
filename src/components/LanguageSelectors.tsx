@@ -210,60 +210,68 @@ export function LanguageSelectors() {
         </Select>
       </FormControl>
 
-      <FormControl
-        data-test="language_selectors__target_language_control"
-        size="small"
-        sx={{ minWidth: { xs: 118, sm: 138 } }}
+      <Stack
+        data-test="language_selectors__target_settings_group"
+        direction="row"
+        spacing={1}
+        alignItems="center"
+        sx={{ flexShrink: 0 }}
       >
-        <InputLabel
-          data-test="language_selectors__target_language_label"
-          id={targetLabelId}
+        <FormControl
+          data-test="language_selectors__target_language_control"
+          size="small"
+          sx={{ minWidth: { xs: 118, sm: 138 } }}
         >
-          {t(interfaceLanguage, 'targetLanguage')}
-        </InputLabel>
-        <Select
-          data-test="language_selectors__target_language_select"
-          labelId={targetLabelId}
-          label={t(interfaceLanguage, 'targetLanguage')}
-          value={targetLanguage}
-          onChange={handleTargetChange}
-          renderValue={(value) => (
-            <LanguageLabel
-              dataTestPrefix="language_selectors__target_language_selected"
-              language={value as SupportedLanguage}
-            />
-          )}
-          sx={compactSelectSx}
-        >
-          {supportedLanguages.map((language) => (
-            <MenuItem
-              data-test={`language_selectors__target_language_option__${language}`}
-              key={language}
-              value={language}
-            >
+          <InputLabel
+            data-test="language_selectors__target_language_label"
+            id={targetLabelId}
+          >
+            {t(interfaceLanguage, 'targetLanguage')}
+          </InputLabel>
+          <Select
+            data-test="language_selectors__target_language_select"
+            labelId={targetLabelId}
+            label={t(interfaceLanguage, 'targetLanguage')}
+            value={targetLanguage}
+            onChange={handleTargetChange}
+            renderValue={(value) => (
               <LanguageLabel
-                dataTestPrefix={`language_selectors__target_language_option_label__${language}`}
-                language={language}
+                dataTestPrefix="language_selectors__target_language_selected"
+                language={value as SupportedLanguage}
               />
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+            )}
+            sx={compactSelectSx}
+          >
+            {supportedLanguages.map((language) => (
+              <MenuItem
+                data-test={`language_selectors__target_language_option__${language}`}
+                key={language}
+                value={language}
+              >
+                <LanguageLabel
+                  dataTestPrefix={`language_selectors__target_language_option_label__${language}`}
+                  language={language}
+                />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-      <IconButton
-        aria-label={t(interfaceLanguage, 'practiceSettings')}
-        data-test="language_selectors__practice_settings_button"
-        onClick={(event) => setSettingsAnchor(event.currentTarget)}
-        sx={{
-          border: '1px solid rgba(32, 48, 21, 0.22)',
-          borderRadius: 1,
-          color: '#203015',
-          height: 34,
-          width: 34,
-        }}
-      >
-        <SettingsOutlinedIcon fontSize="small" />
-      </IconButton>
+        <IconButton
+          aria-label={t(interfaceLanguage, 'practiceSettings')}
+          data-test="language_selectors__practice_settings_button"
+          onClick={(event) => setSettingsAnchor(event.currentTarget)}
+          sx={{
+            border: '1px solid rgba(32, 48, 21, 0.22)',
+            borderRadius: 1,
+            color: '#203015',
+            height: 34,
+            width: 34,
+          }}
+        >
+          <SettingsOutlinedIcon fontSize="small" />
+        </IconButton>
+      </Stack>
       <Menu
         anchorEl={settingsAnchor}
         data-test="language_selectors__practice_settings_menu"

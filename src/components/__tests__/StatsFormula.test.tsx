@@ -52,5 +52,29 @@ describe('StatsFormula', () => {
     expect(screen.getByTestId('stats_grid_formula__root')).toHaveStyle({
       gridTemplateColumns: '220px minmax(0, 1fr)',
     });
+    expect(screen.getByTestId('stats_grid_formula__value_group')).toHaveStyle({
+      justifyContent: 'flex-start',
+    });
+  });
+
+  it('left-aligns the compact exercise formula under an exercise title', () => {
+    render(
+      <StatsFormula
+        correct={1}
+        dataTestPrefix="compact_exercise_formula"
+        incorrect={1}
+        interfaceLanguage="ru"
+        showLabel={false}
+        total={2}
+        totalLabel="Всего отвечено вопросов"
+      />,
+    );
+
+    expect(screen.getByTestId('compact_exercise_formula__root')).toHaveStyle({
+      alignItems: 'flex-start',
+    });
+    expect(screen.getByTestId('compact_exercise_formula__value_group')).toHaveStyle({
+      justifyContent: 'flex-start',
+    });
   });
 });

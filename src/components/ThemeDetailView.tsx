@@ -116,9 +116,19 @@ export function ThemeDetailView() {
   return (
     <Paper
       data-test={`theme_detail__panel__${selectedTheme.id}`}
-      sx={{ p: { xs: 2, md: 3 } }}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        maxHeight: { md: 'calc(100vh - 118px)' },
+        minHeight: 0,
+        p: { xs: 2, md: 3 },
+      }}
     >
-      <Stack data-test={`theme_detail__content__${selectedTheme.id}`} spacing={2.5}>
+      <Stack
+        data-test={`theme_detail__content__${selectedTheme.id}`}
+        spacing={2.5}
+        sx={{ flex: 1, minHeight: 0 }}
+      >
         <Stack
           data-test={`theme_detail__header__${selectedTheme.id}`}
           direction={{ xs: 'column', sm: 'row' }}
@@ -237,6 +247,12 @@ export function ThemeDetailView() {
           <Stack
             data-test={`theme_detail__cards_list__${selectedTheme.id}`}
             spacing={1.25}
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: 'auto',
+              pr: 0.5,
+            }}
           >
             {sortedThemeCards.map((card) => {
               const answer = getDisplayAnswer(

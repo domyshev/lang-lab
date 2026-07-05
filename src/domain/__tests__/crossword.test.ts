@@ -67,6 +67,7 @@ describe('createCrossword', () => {
     expect(intersections.length).toBeGreaterThan(0);
     expect(result.cells.some((cell) => cell.entryIds.length > 1)).toBe(true);
     expect(new Set(result.entries.map((entry) => entry.direction)).size).toBe(2);
+    expectParallelEntriesToHaveAir(result.entries);
   });
 
   it('uses only one phrase card for phrase mode', () => {
@@ -108,3 +109,36 @@ describe('createCrossword', () => {
     expect(result.cells.every((cell) => cell.entryIds.length === 1)).toBe(true);
   });
 });
+
+function expectParallelEntriesToHaveAir(
+  entries: ReturnType<typeof createCrossword>['entries'],
+) {
+  entries.forEach((entry, index) => {
+    entries.slice(index + 1).forEach((other) => {
+      if (entry.direction !== other.direction) {
+        return;
+      }
+
+      if (entry.direction === 'across') {
+        const rowGap = Math.abs(entry.row - other.row);
+        const spansOverlap =
+          entry.col <= other.col + other.answer.length - 1 &&
+          other.col <= entry.col + entry.answer.length - 1;
+
+        if (spansOverlap) {
+          expect(rowGap).toBeGreaterThanOrEqual(2);
+        }
+        return;
+      }
+
+      const colGap = Math.abs(entry.col - other.col);
+      const spansOverlap =
+        entry.row <= other.row + other.answer.length - 1 &&
+        other.row <= entry.row + entry.answer.length - 1;
+
+      if (spansOverlap) {
+        expect(colGap).toBeGreaterThanOrEqual(2);
+      }
+    });
+  });
+}

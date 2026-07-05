@@ -161,7 +161,7 @@ describe('App navigation', () => {
     expect(screen.queryByText('Language Crossword Lab')).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Карточки' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Статистика' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Агенты' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Агенты LLM' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
     expect(screen.queryByText('worth it')).not.toBeInTheDocument();
   });
@@ -170,19 +170,25 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('tab', { name: 'Агенты' }));
+    await user.click(screen.getByRole('tab', { name: 'Агенты LLM' }));
 
     expect(screen.queryByRole('tab', { name: 'Импорт' })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Агенты' })).toBeInTheDocument();
-    expect(screen.getByText(/свой ключ Open Router/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Агенты LLM' })).toBeInTheDocument();
+    expect(screen.getByTestId('agents_view__open_router_intro')).toHaveTextContent(
+      'Пользователь может добавить свой ключ Open Router, чтобы запускать агентские функции через свои лимиты.',
+    );
+    expect(screen.getByRole('link', { name: 'Open Router' })).toHaveAttribute(
+      'href',
+      'https://openrouter.ai/',
+    );
     expect(screen.getByText(/триальный ключ Open Router/i)).toBeInTheDocument();
     expect(screen.getByText(/анализировать статистику/i)).toBeInTheDocument();
     expect(screen.getByText(/создавать и добавлять словарный запас/i)).toBeInTheDocument();
     expect(
       screen.getByText(/агент не испортит ваши наработки/i),
     ).toBeInTheDocument();
-    expect(screen.getByText('Импорт из файла')).toBeInTheDocument();
-    expect(screen.getByText('Вставить JSON')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Ручной импорт карточек' })).toBeInTheDocument();
+    expect(screen.queryByText('Вставить JSON')).not.toBeInTheDocument();
   });
 
   it('collapses game help after the player acknowledges it and points back to the accordion', async () => {
@@ -205,6 +211,7 @@ describe('App navigation', () => {
     expect(screen.getByRole('button', { name: /Помощь/ })).toBeInTheDocument();
     expect(screen.queryByText(/лаборатория изучения языков/i)).not.toBeInTheDocument();
     expect(store.getState().app.isGameHelpCollapsed).toBe(true);
+    expect(store.getState().app.hasGameHelpCoachmarkBeenShown).toBe(true);
     expect(screen.getByTestId('game_help__coachmark_icon')).toBeInTheDocument();
     expect(
       screen.getByTestId('game_help__coachmark_item__return'),
@@ -236,6 +243,23 @@ describe('App navigation', () => {
     expect(
       screen.getByText(/лаборатория изучения языков/i),
     ).toBeInTheDocument();
+  });
+
+  it('does not show the help coachmark again after it was already shown once', async () => {
+    const user = userEvent.setup();
+    const store = renderApp({
+      app: {
+        hasGameHelpCoachmarkBeenShown: true,
+        isGameHelpCollapsed: false,
+      } as Partial<ReturnType<typeof appReducer>>,
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Понятно!' }));
+
+    expect(store.getState().app.isGameHelpCollapsed).toBe(true);
+    expect(store.getState().app.hasGameHelpCoachmarkBeenShown).toBe(true);
+    expect(screen.queryByTestId('game_help__coachmark_icon')).not.toBeInTheDocument();
+    expect(screen.queryByText(/помощь остается здесь/i)).not.toBeInTheDocument();
   });
 
   it('shows All words as a fixed cards topic without an archive action', async () => {
@@ -283,6 +307,9 @@ describe('App navigation', () => {
     expect(screen.getByRole('heading', { name: 'Пропущенные буквы' })).toBeInTheDocument();
     expect(screen.getByLabelText('Мысль персонажа')).toBeInTheDocument();
     const firstPrompt = getVisibleMissingLettersPrompt();
+    expect(
+      screen.getByLabelText('Статистика по слову: Верно 0, Неверно 0'),
+    ).toBeInTheDocument();
 
     const missingLetterInputs = await answerMissingLettersWrong(user);
 
@@ -299,6 +326,9 @@ describe('App navigation', () => {
       screen.getByLabelText('Статистика по слову: Верно 0, Неверно 1'),
     ).toBeInTheDocument();
     expect(
+      getByDataTestPrefix('attempt_summary__incorrect_answer_cells__'),
+    ).toHaveLength(0);
+    expect(
       screen.queryByText(/Точность: .*Слабые карточки/),
     ).not.toBeInTheDocument();
 
@@ -311,6 +341,9 @@ describe('App navigation', () => {
 
     const nextPrompt = getVisibleMissingLettersPrompt();
     expect(nextPrompt.answer).not.toBe(firstPrompt.answer);
+    expect(
+      screen.getByLabelText('Статистика по слову: Верно 0, Неверно 0'),
+    ).toBeInTheDocument();
     expect(screen.getAllByLabelText(/Missing letter/)[0]).not.toBeDisabled();
   });
 
@@ -346,6 +379,20 @@ describe('App navigation', () => {
     expect(getVisibleMissingLettersPrompt().answer).toBe(prompt.answer);
   });
 
+  it('keeps a correct missing letters result visible when submitted with Enter from the last cell', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+
+    const prompt = getVisibleMissingLettersPrompt();
+    await answerMissingLettersCorrectWithEnter(user, prompt.answer);
+
+    expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
+    expect(getVisibleMissingLettersPrompt().answer).toBe(prompt.answer);
+  });
+
   it('prioritizes a recently missed missing letters card without repeating it immediately', async () => {
     const user = userEvent.setup();
     const store = renderApp({
@@ -362,7 +409,13 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Начать' }));
 
     expect(getVisibleMissingLettersPrompt().answer).toBe('airport');
+    expect(
+      screen.getByLabelText('Статистика по слову: Верно 0, Неверно 1'),
+    ).toBeInTheDocument();
     await answerMissingLettersCorrect(user, 'airport');
+    expect(
+      screen.getByLabelText('Статистика по слову: Верно 1, Неверно 1'),
+    ).toBeInTheDocument();
     expect(store.getState().attempts.attempts).toHaveLength(2);
     expect(
       store.getState().attempts.attempts[1].correctness['card-airport'],
@@ -387,6 +440,38 @@ describe('App navigation', () => {
     ).toBeInTheDocument();
   });
 
+  it('keeps a correct missing letters result visible when the answer starts a cooldown streak', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      attempts: ['card-airport', 'card-vehicle', 'card-impede', 'card-meditation'].flatMap(
+        (cardId) => [
+          createStoredAttempt({
+            cardId,
+            completedAt: '2026-07-01T10:00:00.000Z',
+            isCorrect: true,
+          }),
+          createStoredAttempt({
+            cardId,
+            completedAt: '2026-07-02T10:00:00.000Z',
+            isCorrect: true,
+          }),
+        ],
+      ),
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+
+    const prompt = getVisibleMissingLettersPrompt();
+    await answerMissingLettersCorrect(user, prompt.answer);
+
+    expect(
+      screen.getByText('Это 3-й правильный ответ подряд по этой карточке.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
+    expect(getVisibleMissingLettersPrompt().answer).toBe(prompt.answer);
+  });
+
   it('shows assistant character settings in the header', () => {
     renderApp();
 
@@ -395,6 +480,18 @@ describe('App navigation', () => {
       screen.getByLabelText(/Моховой Смотритель: Замечает упрямые ошибки/),
     ).toBeInTheDocument();
     expect(screen.queryByText('Forest Tutor')).not.toBeInTheDocument();
+  });
+
+  it('closes an unanswered exercise without a finish confirmation dialog', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await user.click(screen.getByRole('button', { name: 'Закончить упражнение' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
   });
 
   it('finishes an active exercise through a styled confirmation dialog', async () => {
@@ -436,7 +533,7 @@ describe('App navigation', () => {
     expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
   });
 
-  it('returns to the main game screen through the logo and confirms an active exercise close', async () => {
+  it('returns to the main game screen through the logo without a dialog for an unanswered exercise', async () => {
     const user = userEvent.setup();
     renderApp();
 
@@ -450,11 +547,8 @@ describe('App navigation', () => {
     expect(screen.getByRole('heading', { name: 'Пропущенные буквы' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Language Lab' }));
-    expect(
-      screen.getByText('Результаты упражнения будут зачтены, а упражнение закончено.'),
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
 
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
   });
 
@@ -528,10 +622,25 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Начать' }));
 
     const firstPromptText = getVisibleMissingWordSentence();
+    expect(
+      screen.getByLabelText('Статистика по фразе: Верно 0, Неверно 0'),
+    ).toBeInTheDocument();
     await answerMissingWordWrong(user);
+
+    expect(screen.getByText('Статистика по фразе')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText('Статистика по фразе: Верно 0, Неверно 1'),
+    ).toBeInTheDocument();
+    expect(
+      getByDataTestPrefix('attempt_summary__incorrect_answer_cells__'),
+    ).toHaveLength(0);
+
     await user.click(screen.getByRole('button', { name: 'Неверно' }));
 
     expect(getVisibleMissingWordSentence()).not.toBe(firstPromptText);
+    expect(
+      screen.getByLabelText('Статистика по фразе: Верно 0, Неверно 0'),
+    ).toBeInTheDocument();
   });
 
   it('shows word statistics after a multiple choice answer', async () => {
@@ -606,6 +715,19 @@ async function answerMissingLettersCorrect(
     await user.type(input, answer[characterIndex]);
   }
   await user.click(screen.getByRole('button', { name: 'Отправить' }));
+}
+
+async function answerMissingLettersCorrectWithEnter(
+  user: ReturnType<typeof userEvent.setup>,
+  answer: string,
+) {
+  const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
+  for (const [inputIndex, input] of missingLetterInputs.entries()) {
+    const label = input.getAttribute('aria-label') ?? '';
+    const characterIndex = Number(label.replace(/\D/g, '')) - 1;
+    const suffix = inputIndex === missingLetterInputs.length - 1 ? '{enter}' : '';
+    await user.type(input, `${answer[characterIndex]}${suffix}`);
+  }
 }
 
 function getVisibleMissingWordSentence(): string {

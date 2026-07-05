@@ -28,6 +28,9 @@ describe('ThemeDetailView', () => {
       'theme_detail__card_kind_chip__card-worth-it',
     );
     expect(phraseChip.parentElement).toHaveStyle({ alignItems: 'center' });
+    expect(screen.getByTestId('theme_detail__cards_list__all-words')).toHaveStyle({
+      overflowY: 'auto',
+    });
   });
 });
 

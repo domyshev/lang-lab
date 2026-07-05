@@ -218,7 +218,12 @@ function getPlacementScore(input: {
     const existingCell = input.existingCells.get(toCellKey(row, col));
 
     if (!existingCell) {
-      return true;
+      return hasRequiredCrosswordAir({
+        col,
+        direction: input.direction,
+        existingCells: input.existingCells,
+        row,
+      });
     }
 
     if (!lettersMatch(existingCell.solution, letter)) {
@@ -229,7 +234,11 @@ function getPlacementScore(input: {
     return true;
   });
 
-  if (!canPlace || intersections === 0) {
+  if (
+    !canPlace ||
+    intersections === 0 ||
+    hasExistingCellBeforeOrAfterWord(input)
+  ) {
     return undefined;
   }
 
@@ -249,6 +258,47 @@ function getPlacementScore(input: {
       (bounds.maxRow - bounds.minRow + 1) *
       (bounds.maxCol - bounds.minCol + 1),
   };
+}
+
+function hasRequiredCrosswordAir(input: {
+  col: number;
+  direction: CrosswordEntry['direction'];
+  existingCells: Map<string, CrosswordCell>;
+  row: number;
+}): boolean {
+  const sideKeys =
+    input.direction === 'across'
+      ? [
+          toCellKey(input.row - 1, input.col),
+          toCellKey(input.row + 1, input.col),
+        ]
+      : [
+          toCellKey(input.row, input.col - 1),
+          toCellKey(input.row, input.col + 1),
+        ];
+
+  return sideKeys.every((key) => !input.existingCells.has(key));
+}
+
+function hasExistingCellBeforeOrAfterWord(input: {
+  answer: string;
+  direction: CrosswordEntry['direction'];
+  existingCells: Map<string, CrosswordCell>;
+  row: number;
+  col: number;
+}): boolean {
+  const beforeKey =
+    input.direction === 'across'
+      ? toCellKey(input.row, input.col - 1)
+      : toCellKey(input.row - 1, input.col);
+  const afterKey =
+    input.direction === 'across'
+      ? toCellKey(input.row, input.col + input.answer.length)
+      : toCellKey(input.row + input.answer.length, input.col);
+
+  return (
+    input.existingCells.has(beforeKey) || input.existingCells.has(afterKey)
+  );
 }
 
 function buildPuzzle(

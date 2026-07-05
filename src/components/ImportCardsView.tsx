@@ -1,23 +1,18 @@
 import { ChangeEvent, useState } from 'react';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import BarChartIcon from '@mui/icons-material/BarChart';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import FileUploadIcon from '@mui/icons-material/FileUpload';
 import HistoryIcon from '@mui/icons-material/History';
 import KeyIcon from '@mui/icons-material/Key';
 import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Alert,
   Box,
   Button,
   Chip,
   Divider,
+  Link,
   Paper,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
@@ -66,20 +61,37 @@ const agentCapabilityRows = [
   },
 ] as const;
 
+function getAgentCapabilityTone(key: (typeof agentCapabilityRows)[number]['key']) {
+  const tones = {
+    agentsAnalyzeStatsCapability: {
+      bg: '#e8f6fb',
+      border: 'rgba(37, 118, 150, 0.20)',
+      color: '#174e69',
+    },
+    agentsVocabularyCapability: {
+      bg: '#fff2cf',
+      border: 'rgba(138, 90, 18, 0.20)',
+      color: '#8a5a12',
+    },
+    agentsRollbackNotice: {
+      bg: '#f3edff',
+      border: 'rgba(111, 79, 166, 0.20)',
+      color: '#6f4fa6',
+    },
+  };
+
+  return tones[key];
+}
+
 export function ImportCardsView() {
   const dispatch = useDispatch<AppDispatch>();
   const cards = useSelector((state: RootState) => state.cards.cards);
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
-  const [pastedJson, setPastedJson] = useState('');
   const [lastResult, setLastResult] = useState<ImportResult | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
-
-  const handleImport = () => {
-    importCardsFromText(pastedJson);
-  };
 
   const importCardsFromText = (jsonText: string) => {
     const result = importLanguageCards({
@@ -116,7 +128,14 @@ export function ImportCardsView() {
     lastResult?.invalidRecords.filter((record) => record.index !== -1) ?? [];
 
   return (
-    <Paper data-test="import_cards__panel" sx={{ p: { xs: 2, md: 3 } }}>
+    <Paper
+      data-test="import_cards__panel"
+      sx={{
+        bgcolor: '#f9fdff',
+        border: '1px solid rgba(37, 118, 150, 0.16)',
+        p: { xs: 2, md: 3 },
+      }}
+    >
       <Stack data-test="import_cards__content" spacing={2.5}>
         <Box data-test="agents_view__header">
           <Typography
@@ -132,7 +151,21 @@ export function ImportCardsView() {
             data-test="agents_view__open_router_intro"
             sx={{ mt: 0.5 }}
           >
-            {t(interfaceLanguage, 'agentsOpenRouterIntro')}
+            {t(interfaceLanguage, 'agentsOpenRouterIntro')}{' '}
+            <Link
+              data-test="agents_view__open_router_link"
+              href="https://openrouter.ai/"
+              rel="noreferrer"
+              target="_blank"
+              sx={{
+                color: '#174e69',
+                fontWeight: 900,
+                textDecorationColor: 'rgba(23, 78, 105, 0.48)',
+              }}
+            >
+              Open Router
+            </Link>
+            {t(interfaceLanguage, 'agentsOpenRouterIntroSuffix')}
           </Typography>
         </Box>
 
@@ -142,8 +175,9 @@ export function ImportCardsView() {
           severity="info"
           sx={{
             alignItems: 'center',
-            bgcolor: '#f2f7e4',
-            border: '1px solid rgba(35, 50, 22, 0.12)',
+            bgcolor: '#eef8fc',
+            border: '1px solid rgba(37, 118, 150, 0.18)',
+            color: '#174e69',
           }}
         >
           {t(interfaceLanguage, 'agentsTrialKeyNotice')}
@@ -162,10 +196,10 @@ export function ImportCardsView() {
                 data-test="agents_view__capabilities_title_icon"
                 sx={{
                   alignItems: 'center',
-                  bgcolor: '#e4f2bf',
-                  border: '1px solid rgba(35, 50, 22, 0.14)',
+                  bgcolor: '#e8f6fb',
+                  border: '1px solid rgba(37, 118, 150, 0.20)',
                   borderRadius: '50%',
-                  color: '#203015',
+                  color: '#174e69',
                   display: 'inline-flex',
                   height: 32,
                   justifyContent: 'center',
@@ -191,8 +225,10 @@ export function ImportCardsView() {
                   spacing={1.25}
                   alignItems="flex-start"
                   sx={{
-                    border: '1px solid rgba(35, 50, 22, 0.10)',
+                    bgcolor: '#ffffff',
+                    border: '1px solid rgba(37, 118, 150, 0.14)',
                     borderRadius: 2,
+                    boxShadow: '0 8px 18px rgba(23, 78, 105, 0.06)',
                     p: 1.25,
                   }}
                 >
@@ -201,10 +237,10 @@ export function ImportCardsView() {
                     data-test={`agents_view__capability_icon__${row.key}`}
                     sx={{
                       alignItems: 'center',
-                      bgcolor: '#f2f7e4',
-                      border: '1px solid rgba(35, 50, 22, 0.12)',
+                      bgcolor: getAgentCapabilityTone(row.key).bg,
+                      border: `1px solid ${getAgentCapabilityTone(row.key).border}`,
                       borderRadius: 1.5,
-                      color: '#203015',
+                      color: getAgentCapabilityTone(row.key).color,
                       display: 'inline-flex',
                       flexShrink: 0,
                       height: 32,
@@ -242,111 +278,79 @@ export function ImportCardsView() {
           >
             {t(interfaceLanguage, 'importDescription')}
           </Typography>
-          <Button
+          <Link
             component="a"
             data-test="import_cards__download_format_link"
             download="LANGUAGE_CARD_FORMAT.md"
             href={languageCardFormatUrl}
-            size="small"
-            variant="text"
-            sx={{ mt: 1, px: 0 }}
+            sx={{
+              color: '#174e69',
+              display: 'inline-flex',
+              fontWeight: 850,
+              mt: 1,
+              textDecorationLine: 'underline',
+              textDecorationThickness: '1px',
+              textUnderlineOffset: '3px',
+              '&:hover': {
+                textDecorationLine: 'none',
+              },
+            }}
           >
             {t(interfaceLanguage, 'downloadCardFormat')}
-          </Button>
+          </Link>
         </Box>
 
-        <Accordion data-test="import_cards__file_accordion" defaultExpanded disableGutters>
-          <AccordionSummary
-            data-test="import_cards__file_summary"
-            expandIcon={<ExpandMoreIcon data-test="import_cards__file_expand_icon" />}
-          >
-            <Typography data-test="import_cards__file_title" fontWeight={800}>
-              {t(interfaceLanguage, 'fileImport')}
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails data-test="import_cards__file_details">
-            <Stack
-              data-test="import_cards__file_controls"
-              direction={{ xs: 'column', sm: 'row' }}
-              spacing={1.5}
-              alignItems={{ xs: 'stretch', sm: 'center' }}
-            >
-              <Button
-                component="label"
-                data-test="import_cards__choose_file_button"
-                variant="outlined"
-              >
-                {t(interfaceLanguage, 'chooseJsonFile')}
-                <input
-                  aria-label={t(interfaceLanguage, 'chooseJsonFile')}
-                  accept=".json,application/json"
-                  data-test="import_cards__file_input"
-                  hidden
-                  type="file"
-                  onChange={handleFileChange}
-                />
-              </Button>
-              <Typography
-                color="text.secondary"
-                data-test="import_cards__file_status"
-                variant="body2"
-              >
-                {selectedFileName
-                  ? formatImportedFile(interfaceLanguage, selectedFileName)
-                  : formatStoredCardCount(interfaceLanguage, cards.length)}
-              </Typography>
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
-
-        <Accordion
-          data-test="import_cards__paste_accordion"
-          disableGutters
-          slotProps={{ transition: { unmountOnExit: true } }}
+        <Paper
+          data-test="import_cards__file_panel"
+          variant="outlined"
+          sx={{
+            bgcolor: '#ffffff',
+            borderColor: 'rgba(37, 118, 150, 0.16)',
+            p: 2,
+          }}
         >
-          <AccordionSummary
-            data-test="import_cards__paste_summary"
-            expandIcon={<ExpandMoreIcon data-test="import_cards__paste_expand_icon" />}
+          <Stack
+            data-test="import_cards__file_controls"
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1.5}
+            alignItems={{ xs: 'stretch', sm: 'center' }}
           >
-            <Typography data-test="import_cards__paste_title" fontWeight={800}>
-              {t(interfaceLanguage, 'pasteJson')}
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails data-test="import_cards__paste_details">
-            <Stack data-test="import_cards__paste_form" spacing={2}>
-              <TextField
-                data-test="import_cards__json_textarea"
-                label={t(interfaceLanguage, 'cardsJson')}
-                value={pastedJson}
-                onChange={(event) => setPastedJson(event.target.value)}
-                placeholder={`[
-  {
-    "translations": {
-      "en": "apple",
-      "es": "manzana",
-      "ru": "yabloko"
-    },
-    "tags": ["food"],
-    "difficulty": "easy"
-  }
-]`}
-                multiline
-                minRows={12}
-                fullWidth
+            <Button
+              component="label"
+              data-test="import_cards__choose_file_button"
+              variant="outlined"
+              sx={{
+                bgcolor: '#eef8fc',
+                borderColor: 'rgba(37, 118, 150, 0.42)',
+                color: '#174e69',
+                fontWeight: 900,
+                '&:hover': {
+                  bgcolor: '#e8f6fb',
+                  borderColor: '#2f7d9b',
+                },
+              }}
+            >
+              {t(interfaceLanguage, 'chooseJsonFile')}
+              <input
+                aria-label={t(interfaceLanguage, 'chooseJsonFile')}
+                accept=".json,application/json"
+                data-test="import_cards__file_input"
+                hidden
+                type="file"
+                onChange={handleFileChange}
               />
-              <Button
-                data-test="import_cards__paste_import_button"
-                startIcon={<FileUploadIcon />}
-                variant="contained"
-                onClick={handleImport}
-                disabled={!pastedJson.trim()}
-                sx={{ alignSelf: 'flex-start' }}
-              >
-                {t(interfaceLanguage, 'importAction')}
-              </Button>
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
+            </Button>
+            <Typography
+              color="text.secondary"
+              data-test="import_cards__file_status"
+              variant="body2"
+            >
+              {selectedFileName
+                ? formatImportedFile(interfaceLanguage, selectedFileName)
+                : formatStoredCardCount(interfaceLanguage, cards.length)}
+            </Typography>
+          </Stack>
+        </Paper>
 
         {fileError && (
           <Alert data-test="import_cards__file_error_alert" severity="error">

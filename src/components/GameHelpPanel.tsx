@@ -21,15 +21,19 @@ import { t } from '../domain/i18n';
 import { SupportedLanguage } from '../domain/languages';
 
 interface GameHelpPanelProps {
+  hasCoachmarkBeenShown: boolean;
   interfaceLanguage: SupportedLanguage;
   isInitiallyCollapsed: boolean;
   onAcknowledge: () => void;
+  onCoachmarkShown: () => void;
 }
 
 export function GameHelpPanel({
+  hasCoachmarkBeenShown,
   interfaceLanguage,
   isInitiallyCollapsed,
   onAcknowledge,
+  onCoachmarkShown,
 }: GameHelpPanelProps) {
   const summaryRef = useRef<HTMLDivElement | null>(null);
   const [expanded, setExpanded] = useState(!isInitiallyCollapsed);
@@ -43,22 +47,32 @@ export function GameHelpPanel({
 
   const rows = [
     {
+      color: '#2f7d9b',
+      bg: '#e8f6fb',
       icon: <ScienceIcon fontSize="small" />,
       key: 'gameHelpLab' as const,
     },
     {
+      color: '#8a5a12',
+      bg: '#fff2cf',
       icon: <SportsEsportsIcon fontSize="small" />,
       key: 'gameHelpPlayer' as const,
     },
     {
+      color: '#6f4fa6',
+      bg: '#f3edff',
       icon: <EditNoteIcon fontSize="small" />,
       key: 'gameHelpVocabulary' as const,
     },
     {
+      color: '#1f6f62',
+      bg: '#e7f7f2',
       icon: <SchoolIcon fontSize="small" />,
       key: 'gameHelpTeacher' as const,
     },
     {
+      color: '#9b445c',
+      bg: '#fff0f4',
       icon: <AutoAwesomeIcon fontSize="small" />,
       key: 'gameHelpOwnTrainer' as const,
     },
@@ -67,7 +81,10 @@ export function GameHelpPanel({
   const handleGotIt = () => {
     setExpanded(false);
     onAcknowledge();
-    setIsCoachmarkOpen(true);
+    if (!hasCoachmarkBeenShown) {
+      onCoachmarkShown();
+      setIsCoachmarkOpen(true);
+    }
   };
 
   return (
@@ -82,12 +99,12 @@ export function GameHelpPanel({
           bgcolor: 'rgba(255, 255, 255, 0.92)',
           border: '1px solid',
           borderColor: isCoachmarkOpen
-            ? 'rgba(156, 202, 86, 0.80)'
-            : 'rgba(35, 50, 22, 0.12)',
+            ? 'rgba(37, 118, 150, 0.48)'
+            : 'rgba(37, 118, 150, 0.16)',
           borderRadius: '8px',
           boxShadow: isCoachmarkOpen
-            ? '0 0 0 5px rgba(156, 202, 86, 0.24), 0 16px 32px rgba(34, 45, 20, 0.12)'
-            : '0 10px 28px rgba(34, 45, 20, 0.08)',
+            ? '0 0 0 5px rgba(37, 118, 150, 0.16), 0 16px 32px rgba(23, 78, 105, 0.14)'
+            : '0 10px 28px rgba(23, 78, 105, 0.08)',
           maxWidth: 760,
           mx: 'auto',
           overflow: 'hidden',
@@ -112,10 +129,10 @@ export function GameHelpPanel({
             data-test="game_help__title_icon"
             sx={{
               alignItems: 'center',
-              bgcolor: '#e4f2bf',
-              border: '1px solid rgba(35, 50, 22, 0.14)',
+              bgcolor: '#e8f6fb',
+              border: '1px solid rgba(37, 118, 150, 0.20)',
               borderRadius: '50%',
-              color: '#203015',
+              color: '#174e69',
               display: 'inline-flex',
               height: 34,
               justifyContent: 'center',
@@ -144,16 +161,19 @@ export function GameHelpPanel({
                     data-test={`game_help__row_icon__${row.key}`}
                     sx={{
                       alignItems: 'center',
-                      bgcolor: '#f2f7e4',
-                      border: '1px solid rgba(35, 50, 22, 0.12)',
+                      bgcolor: row.bg,
+                      border: `1px solid ${row.color}26`,
                       borderRadius: 1.5,
-                      color: '#203015',
+                      color: row.color,
                       display: 'inline-flex',
                       flexShrink: 0,
-                      height: 32,
+                      height: 22,
                       justifyContent: 'center',
                       mt: 0.1,
-                      width: 32,
+                      width: 22,
+                      '& .MuiSvgIcon-root': {
+                        fontSize: 15,
+                      },
                     }}
                   >
                     {row.icon}
@@ -167,9 +187,22 @@ export function GameHelpPanel({
 
             <Button
               data-test="game_help__got_it_button"
-              variant="contained"
+              variant="outlined"
               onClick={handleGotIt}
-              sx={{ alignSelf: 'flex-start' }}
+              sx={{
+                alignSelf: 'flex-start',
+                bgcolor: '#f5fbff',
+                borderColor: 'rgba(37, 118, 150, 0.38)',
+                borderRadius: 2,
+                boxShadow: '0 8px 18px rgba(23, 78, 105, 0.12)',
+                color: '#174e69',
+                fontWeight: 900,
+                px: 2,
+                '&:hover': {
+                  bgcolor: '#e9f6fb',
+                  borderColor: 'rgba(37, 118, 150, 0.52)',
+                },
+              }}
             >
               {t(interfaceLanguage, 'gameHelpGotIt')}
             </Button>

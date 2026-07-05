@@ -35,7 +35,13 @@ export function AppShell({
   return (
     <Box
       data-test="app_shell__root"
-      sx={{ minHeight: '100vh', bgcolor: 'background.default' }}
+      sx={{
+        bgcolor: 'background.default',
+        height: '100dvh',
+        minHeight: '100vh',
+        overscrollBehaviorY: 'none',
+        overflowY: 'auto',
+      }}
     >
       <AppBar
         data-test="app_shell__app_bar"
@@ -45,22 +51,34 @@ export function AppShell({
           bgcolor: '#dcefb1',
           borderBottom: '1px solid rgba(32, 48, 21, 0.16)',
           color: '#203015',
+          overscrollBehaviorY: 'none',
         }}
       >
         <Toolbar
           data-test="app_shell__toolbar"
           sx={{
             alignItems: { xs: 'flex-start', md: 'center' },
-            gap: { xs: 1.25, md: 2 },
+            columnGap: { xs: 1.25, md: 2 },
+            rowGap: { xs: 1.25, md: 0 },
+            flexWrap: { xs: 'wrap', md: 'nowrap' },
             minHeight: { xs: 'auto', md: 70 },
-            py: { xs: 1, md: 0 },
-            flexDirection: { xs: 'column', md: 'row' },
+            py: { xs: 1.25, md: 0 },
           }}
         >
-          <AppLogo
-            interfaceLanguage={interfaceLanguage}
-            onClick={onLogoClick}
-          />
+          <Box
+            data-test="app_shell__logo_slot"
+            sx={{
+              display: 'flex',
+              flexBasis: { xs: '100%', md: 'auto' },
+              justifyContent: 'flex-start',
+              minWidth: 0,
+            }}
+          >
+            <AppLogo
+              interfaceLanguage={interfaceLanguage}
+              onClick={onLogoClick}
+            />
+          </Box>
 
           <Tabs
             data-test="app_shell__main_tabs"
@@ -111,7 +129,10 @@ export function AppShell({
             />
           </Tabs>
 
-          <Box data-test="app_shell__toolbar_spacer" sx={{ flexGrow: 1 }} />
+          <Box
+            data-test="app_shell__toolbar_spacer"
+            sx={{ display: { xs: 'none', md: 'block' }, flexGrow: 1 }}
+          />
           <LanguageSelectors />
         </Toolbar>
       </AppBar>

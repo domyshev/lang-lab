@@ -21,6 +21,7 @@ type I18nKey =
   | 'agentsSection'
   | 'agentsTitle'
   | 'agentsOpenRouterIntro'
+  | 'agentsOpenRouterIntroSuffix'
   | 'agentsTrialKeyNotice'
   | 'agentsCapabilitiesTitle'
   | 'agentsAnalyzeStatsCapability'
@@ -72,6 +73,7 @@ type I18nKey =
   | 'confirm'
   | 'correctAnswer'
   | 'correctAnswers'
+  | 'question'
   | 'incorrectAnswer'
   | 'exerciseDetails'
   | 'userAnswer'
@@ -112,7 +114,12 @@ type I18nKey =
   | 'noAttempts'
   | 'totalAnsweredTooltip'
   | 'correctAnsweredTooltip'
-  | 'incorrectAnsweredTooltip';
+  | 'incorrectAnsweredTooltip'
+  | 'correctInputTooltip'
+  | 'crosswordWordsDescription'
+  | 'crosswordPhraseDescription'
+  | 'crosswordThemeLabel'
+  | 'submitCrossword';
 
 const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
   en: {
@@ -133,10 +140,12 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     recentMistakeRepeatFrequency: 'Mistake repeat frequency',
     newCardMixFrequency: 'New word mix-in',
     frequencyPercent: 'Frequency percent',
-    agentsSection: 'Agents',
-    agentsTitle: 'Agents',
+    agentsSection: 'Agents LLM',
+    agentsTitle: 'Agents LLM',
     agentsOpenRouterIntro:
-      'You can add your own Open Router key to run agent features through your own quota.',
+      'You can add your own',
+    agentsOpenRouterIntroSuffix:
+      ' key to run agent features through your own quota.',
     agentsTrialKeyNotice:
       'A default trial Open Router key is available with a limited quota. When the quota is reached, Agents features will be unavailable until you enter your own key.',
     agentsCapabilitiesTitle: 'What agents can help with',
@@ -144,8 +153,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsVocabularyCapability: 'Create and add vocabulary.',
     agentsRollbackNotice:
       'Everything created by agents will be marked as agent-created, and the agent work history will keep a matching record so changes can be rolled back. No worries, the agent will not spoil your work :)',
-    importCards: 'Import cards',
-    importDescription: 'Load a JSON file or paste a JSON array of language cards.',
+    importCards: 'Manual card import',
+    importDescription:
+      'You can also prepare data for your learning lab with an external LLM agent and upload it here in our format. Just download the requirements and give them to your agent.',
     downloadCardFormat: 'Download agent JSON requirements',
     startLearning: 'Start learning',
     start: 'Start',
@@ -196,6 +206,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     confirm: 'Confirm',
     correctAnswer: 'Correct answer',
     correctAnswers: 'Correct answers',
+    question: 'Question',
     incorrectAnswer: 'Incorrect answer',
     exerciseDetails: 'Exercise details',
     userAnswer: 'Your answer',
@@ -237,6 +248,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     totalAnsweredTooltip: 'Total number of answered questions in this exercise.',
     correctAnsweredTooltip: 'Number of questions answered correctly.',
     incorrectAnsweredTooltip: 'Number of questions answered incorrectly.',
+    correctInputTooltip: 'The input was completed correctly.',
+    crosswordWordsDescription: 'Up to 6 words from the selected theme',
+    crosswordPhraseDescription: 'Single phrase challenge',
+    crosswordThemeLabel: 'Theme',
+    submitCrossword: 'Submit crossword',
   },
   ru: {
     appName: 'Language Lab',
@@ -256,10 +272,12 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     recentMistakeRepeatFrequency: 'Частота повторов ошибок',
     newCardMixFrequency: 'Примешивание новых слов',
     frequencyPercent: 'Процент появления',
-    agentsSection: 'Агенты',
-    agentsTitle: 'Агенты',
+    agentsSection: 'Агенты LLM',
+    agentsTitle: 'Агенты LLM',
     agentsOpenRouterIntro:
-      'Пользователь может добавить свой ключ Open Router, чтобы запускать агентские функции через свои лимиты.',
+      'Пользователь может добавить свой ключ',
+    agentsOpenRouterIntroSuffix:
+      ', чтобы запускать агентские функции через свои лимиты.',
     agentsTrialKeyNotice:
       'По умолчанию доступен триальный ключ Open Router с ограниченным лимитом. Когда лимит будет достигнут, функции Агенты станут недоступны до ввода своего ключа.',
     agentsCapabilitiesTitle: 'Что позволяют агенты',
@@ -267,9 +285,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsVocabularyCapability: 'Создавать и добавлять словарный запас.',
     agentsRollbackNotice:
       'Все, что создано агентами в приложении, будет помечено как созданное агентами, а в истории работы агента появится соответствующая запись. Это позволит откатить внесенные изменения. Не переживайте, агент не испортит ваши наработки :)',
-    importCards: 'Импорт карточек',
+    importCards: 'Ручной импорт карточек',
     importDescription:
-      'Загрузите JSON-файл или вставьте JSON-массив языковых карточек.',
+      'Вы можете также подготовить данные для своей учебной лаборатории через внешнего LLM агента и загрузить их здесь в нашем формате. Просто скачайте требования и передайте их вашему агенту.',
     downloadCardFormat: 'Скачать требования к JSON для агентов',
     startLearning: 'Начать учиться',
     start: 'Начать',
@@ -321,6 +339,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     confirm: 'Подтвердить',
     correctAnswer: 'Правильный ответ',
     correctAnswers: 'Правильные ответы',
+    question: 'Вопрос',
     incorrectAnswer: 'Неверный ответ',
     exerciseDetails: 'Детали упражнения',
     userAnswer: 'Ваш ответ',
@@ -362,6 +381,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     totalAnsweredTooltip: 'Общее количество отвеченных вопросов в упражнении.',
     correctAnsweredTooltip: 'Количество вопросов, отвеченных верно.',
     incorrectAnsweredTooltip: 'Количество вопросов, отвеченных неверно.',
+    correctInputTooltip: 'Ввод был выполнен верно.',
+    crosswordWordsDescription: 'До 6 слов из выбранной темы',
+    crosswordPhraseDescription: 'Задание с одной фразой',
+    crosswordThemeLabel: 'Тема',
+    submitCrossword: 'Отправить кроссворд',
   },
   es: {
     appName: 'Language Lab',
@@ -381,10 +405,12 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     recentMistakeRepeatFrequency: 'Frecuencia de repeticion de errores',
     newCardMixFrequency: 'Mezcla de palabras nuevas',
     frequencyPercent: 'Porcentaje de frecuencia',
-    agentsSection: 'Agentes',
-    agentsTitle: 'Agentes',
+    agentsSection: 'Agentes LLM',
+    agentsTitle: 'Agentes LLM',
     agentsOpenRouterIntro:
-      'Puedes anadir tu propia clave de Open Router para ejecutar las funciones de agentes con tu propio limite.',
+      'Puedes anadir tu propia clave de',
+    agentsOpenRouterIntroSuffix:
+      ' para ejecutar las funciones de agentes con tu propio limite.',
     agentsTrialKeyNotice:
       'Hay una clave de prueba de Open Router por defecto con limite reducido. Cuando se alcance el limite, las funciones de Agentes no estaran disponibles hasta que introduzcas tu propia clave.',
     agentsCapabilitiesTitle: 'Que pueden hacer los agentes',
@@ -392,9 +418,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsVocabularyCapability: 'Crear y anadir vocabulario.',
     agentsRollbackNotice:
       'Todo lo creado por agentes se marcara como creado por agentes, y el historial de trabajo guardara un registro correspondiente para poder deshacer los cambios. No te preocupes, el agente no estropeara tu trabajo :)',
-    importCards: 'Importar tarjetas',
+    importCards: 'Importacion manual de tarjetas',
     importDescription:
-      'Carga un archivo JSON o pega un array JSON de tarjetas de idioma.',
+      'Tambien puedes preparar datos para tu laboratorio con un agente LLM externo y subirlos aqui en nuestro formato. Descarga los requisitos y daselos a tu agente.',
     downloadCardFormat: 'Descargar requisitos JSON para agentes',
     startLearning: 'Empezar',
     start: 'Empezar',
@@ -445,6 +471,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     confirm: 'Confirmar',
     correctAnswer: 'Respuesta correcta',
     correctAnswers: 'Respuestas correctas',
+    question: 'Pregunta',
     incorrectAnswer: 'Respuesta incorrecta',
     exerciseDetails: 'Detalles del ejercicio',
     userAnswer: 'Tu respuesta',
@@ -486,6 +513,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     totalAnsweredTooltip: 'Numero total de preguntas respondidas en este ejercicio.',
     correctAnsweredTooltip: 'Numero de preguntas respondidas correctamente.',
     incorrectAnsweredTooltip: 'Numero de preguntas respondidas incorrectamente.',
+    correctInputTooltip: 'La entrada se completo correctamente.',
+    crosswordWordsDescription: 'Hasta 6 palabras del tema elegido',
+    crosswordPhraseDescription: 'Reto de una sola frase',
+    crosswordThemeLabel: 'Tema',
+    submitCrossword: 'Enviar crucigrama',
   },
 };
 

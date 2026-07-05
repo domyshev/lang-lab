@@ -62,7 +62,7 @@ import {
 } from './domain/practiceOrdering';
 import { ALL_WORDS_THEME_ID, Theme } from './domain/themes';
 import { saveAttempt } from './store/attemptsSlice';
-import { acknowledgeGameHelp } from './store/appSlice';
+import { acknowledgeGameHelp, markGameHelpCoachmarkShown } from './store/appSlice';
 import { applyImportResult } from './store/cardsSlice';
 import { recordAttemptStats } from './store/statsSlice';
 import { selectTheme } from './store/themesSlice';
@@ -73,21 +73,31 @@ type ExercisePreview =
   | { type: 'multipleChoice'; prompt: ExercisePrompt & { options: string[] } }
   | {
       type: 'missingLetters';
-      prompt?: PracticePrompt<ExercisePrompt & { maskedAnswer: string }>;
+      prompt?: MissingLettersPracticePrompt;
     }
   | {
       type: 'missingWord';
-      prompt?: PracticePrompt<ExercisePrompt & { sentenceWithGap: string }>;
+      prompt?: MissingWordPracticePrompt;
     };
 
 type SelectableTheme = Theme & { isAllWords?: boolean };
 
-type ResultPromptHold = {
-  exerciseType: 'missingLetters' | 'missingWord';
-  practiceKey: string;
-};
-
 type PracticePrompt<T extends ExercisePrompt> = T & { practiceKey: string };
+type MissingLettersPracticePrompt = PracticePrompt<
+  ExercisePrompt & { maskedAnswer: string }
+>;
+type MissingWordPracticePrompt = PracticePrompt<
+  ExercisePrompt & { sentenceWithGap: string }
+>;
+type ResultPromptHold =
+  | {
+      exerciseType: 'missingLetters';
+      prompt: MissingLettersPracticePrompt;
+    }
+  | {
+      exerciseType: 'missingWord';
+      prompt: MissingWordPracticePrompt;
+    };
 
 export function App() {
   const dispatch = useDispatch<AppDispatch>();
@@ -137,6 +147,9 @@ export function App() {
   );
   const isGameHelpCollapsed = useSelector((state: RootState) =>
     Boolean(state.app.isGameHelpCollapsed),
+  );
+  const hasGameHelpCoachmarkBeenShown = useSelector((state: RootState) =>
+    Boolean(state.app.hasGameHelpCoachmarkBeenShown),
   );
   const practiceSettings = useSelector(
     (state: RootState) => state.app.practiceSettings,
@@ -318,9 +331,7 @@ export function App() {
         );
       const heldResultPrompt =
         resultPromptHold?.exerciseType === 'missingLetters'
-          ? missingLettersPrompts.find(
-              (prompt) => prompt.practiceKey === resultPromptHold.practiceKey,
-            )
+          ? resultPromptHold.prompt
           : undefined;
       const lastAnsweredCardId =
         answeredMissingLettersPromptKeys[
@@ -363,9 +374,7 @@ export function App() {
       );
     const heldResultPrompt =
       resultPromptHold?.exerciseType === 'missingWord'
-        ? missingWordPrompts.find(
-            (prompt) => prompt.practiceKey === resultPromptHold.practiceKey,
-          )
+        ? resultPromptHold.prompt
         : undefined;
     const lastAnsweredPromptKey =
       answeredMissingWordPromptKeys[answeredMissingWordPromptKeys.length - 1];
@@ -407,6 +416,14 @@ export function App() {
   }
 
   function openFinishDialog(intent: 'finish' | 'home') {
+    if (currentExerciseAnsweredCount === 0) {
+      resetExerciseState();
+      if (intent === 'home') {
+        setActiveSection('game');
+      }
+      return;
+    }
+
     setFinishDialogIntent(intent);
     setIsFinishDialogOpen(true);
   }
@@ -465,10 +482,17 @@ export function App() {
     prompt: ExercisePrompt;
   }) {
     if (exerciseType === 'missingLetters' || exerciseType === 'missingWord') {
-      setResultPromptHold({
-        exerciseType,
-        practiceKey: getPracticeKey(prompt),
-      });
+      if (exerciseType === 'missingLetters') {
+        setResultPromptHold({
+          exerciseType,
+          prompt: prompt as MissingLettersPracticePrompt,
+        });
+      } else {
+        setResultPromptHold({
+          exerciseType,
+          prompt: prompt as MissingWordPracticePrompt,
+        });
+      }
     }
 
     persistAttempt({
@@ -617,9 +641,11 @@ export function App() {
       return (
         <Stack data-test="app__game_setup_section" spacing={3}>
           <GameHelpPanel
+            hasCoachmarkBeenShown={hasGameHelpCoachmarkBeenShown}
             interfaceLanguage={interfaceLanguage}
             isInitiallyCollapsed={isGameHelpCollapsed}
             onAcknowledge={() => dispatch(acknowledgeGameHelp())}
+            onCoachmarkShown={() => dispatch(markGameHelpCoachmarkShown())}
           />
           <GameSetup />
         </Stack>
@@ -631,6 +657,7 @@ export function App() {
       attempts,
       interfaceLanguage,
     });
+    const currentPromptStats = getCurrentPromptStats();
 
     return (
       <Stack data-test="app__active_exercise_section" spacing={3}>
@@ -660,7 +687,16 @@ export function App() {
           </Button>
         </Stack>
         {renderExercise()}
-        {lastSavedAttempt && (
+        {currentPromptStats && (
+          <CurrentPromptStatsPanel
+            attempts={attempts}
+            exerciseType={currentPromptStats.exerciseType}
+            interfaceLanguage={interfaceLanguage}
+            prompt={currentPromptStats.prompt}
+            targetLanguage={targetLanguage}
+          />
+        )}
+        {lastSavedAttempt && !currentPromptStats && (
           <AttemptSummary
             attempt={lastSavedAttempt}
             cardStats={cardStats}
@@ -682,6 +718,33 @@ export function App() {
         />
       </Stack>
     );
+  }
+
+  function getCurrentPromptStats():
+    | {
+        exerciseType: 'missingLetters' | 'missingWord';
+        prompt: ExercisePrompt;
+      }
+    | null {
+    if (!exercisePreview) {
+      return null;
+    }
+
+    if (exercisePreview.type === 'missingLetters' && exercisePreview.prompt) {
+      return {
+        exerciseType: 'missingLetters',
+        prompt: exercisePreview.prompt,
+      };
+    }
+
+    if (exercisePreview.type === 'missingWord' && exercisePreview.prompt) {
+      return {
+        exerciseType: 'missingWord',
+        prompt: exercisePreview.prompt,
+      };
+    }
+
+    return null;
   }
 
   function GameSetup() {
@@ -804,7 +867,9 @@ export function App() {
     if (exercisePreview.type === 'crossword') {
       return (
         <CrosswordExercise
+          interfaceLanguage={interfaceLanguage}
           puzzle={exercisePreview.puzzle}
+          themeName={selectedTheme.name}
           onSubmit={(answers) =>
             saveCrosswordAttempt(exercisePreview.puzzle, answers)
           }
@@ -963,6 +1028,83 @@ export function App() {
     >
       {renderMainContent()}
     </AppShell>
+  );
+}
+
+function CurrentPromptStatsPanel({
+  attempts,
+  exerciseType,
+  interfaceLanguage,
+  prompt,
+  targetLanguage,
+}: {
+  attempts: RootState['attempts']['attempts'];
+  exerciseType: 'missingLetters' | 'missingWord';
+  interfaceLanguage: RootState['app']['interfaceLanguage'];
+  prompt: ExercisePrompt;
+  targetLanguage: RootState['app']['targetLanguage'];
+}) {
+  const statsLabel = t(
+    interfaceLanguage,
+    exerciseType === 'missingWord' ? 'phraseStats' : 'wordStats',
+  );
+  const stats = getPromptHistoryCounts({
+    attempts,
+    cardId: prompt.cardId,
+    targetLanguage,
+  });
+
+  return (
+    <Paper
+      data-test={`current_prompt_stats__panel__${prompt.cardId}`}
+      sx={{ p: 2, borderLeft: '4px solid', borderColor: 'primary.main' }}
+    >
+      <Stack data-test={`current_prompt_stats__content__${prompt.cardId}`} spacing={1}>
+        <Typography
+          data-test={`current_prompt_stats__label__${prompt.cardId}`}
+          variant="overline"
+        >
+          {statsLabel}
+        </Typography>
+        <SplitWordStatsChip
+          correct={stats.correct}
+          dataTestPrefix={`current_prompt_stats__split_stats__${prompt.cardId}`}
+          incorrect={stats.incorrect}
+          interfaceLanguage={interfaceLanguage}
+          statsLabel={statsLabel}
+        />
+      </Stack>
+    </Paper>
+  );
+}
+
+function getPromptHistoryCounts({
+  attempts,
+  cardId,
+  targetLanguage,
+}: {
+  attempts: RootState['attempts']['attempts'];
+  cardId: string;
+  targetLanguage: RootState['app']['targetLanguage'];
+}) {
+  return attempts.reduce(
+    (counts, attempt) => {
+      if (
+        attempt.targetLanguage !== targetLanguage ||
+        !Object.prototype.hasOwnProperty.call(attempt.correctness, cardId)
+      ) {
+        return counts;
+      }
+
+      if (attempt.correctness[cardId]) {
+        counts.correct += 1;
+      } else {
+        counts.incorrect += 1;
+      }
+
+      return counts;
+    },
+    { correct: 0, incorrect: 0 },
   );
 }
 
@@ -1234,11 +1376,4 @@ function getNextOccurrence(
   const occurrence = occurrenceCounts.get(cardId) ?? 0;
   occurrenceCounts.set(cardId, occurrence + 1);
   return occurrence;
-}
-
-function getPracticeKey(prompt: ExercisePrompt): string {
-  return (
-    (prompt as ExercisePrompt & { practiceKey?: string }).practiceKey ??
-    prompt.cardId
-  );
 }

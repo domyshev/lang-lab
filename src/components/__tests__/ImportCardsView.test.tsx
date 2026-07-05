@@ -37,14 +37,20 @@ function renderImportCardsView(interfaceLanguage: 'ru' | 'en' | 'es' = 'ru') {
 }
 
 describe('ImportCardsView', () => {
-  it('localizes the import helper text, stored count, action, and format link', async () => {
-    const user = userEvent.setup();
-
+  it('localizes the agents view, manual file import, and format link', () => {
     renderImportCardsView('ru');
 
+    expect(screen.getByRole('heading', { name: 'Агенты LLM' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Open Router' }),
+    ).toHaveAttribute('href', 'https://openrouter.ai/');
+    expect(screen.getByTestId('agents_view__open_router_intro')).toHaveTextContent(
+      'Пользователь может добавить свой ключ Open Router, чтобы запускать агентские функции через свои лимиты.',
+    );
+    expect(screen.getByRole('heading', { name: 'Ручной импорт карточек' })).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Загрузите JSON-файл или вставьте JSON-массив языковых карточек.',
+        'Вы можете также подготовить данные для своей учебной лаборатории через внешнего LLM агента и загрузить их здесь в нашем формате. Просто скачайте требования и передайте их вашему агенту.',
       ),
     ).toBeInTheDocument();
     expect(screen.getByText('Сейчас сохранено: 0 карточек')).toBeInTheDocument();
@@ -56,9 +62,16 @@ describe('ImportCardsView', () => {
       expect.stringContaining('LANGUAGE_CARD_FORMAT.md'),
     );
     expect(requirementsLink).toHaveAttribute('download');
-
-    await user.click(screen.getByRole('button', { name: 'Вставить JSON' }));
-    expect(screen.getByRole('button', { name: 'Импортировать' })).toBeInTheDocument();
+    expect(requirementsLink).toHaveStyle({
+      textDecorationLine: 'underline',
+    });
+    expect(screen.getByRole('button', { name: 'Выбрать JSON-файл' })).toHaveStyle({
+      backgroundColor: '#eef8fc',
+      borderColor: 'rgba(37, 118, 150, 0.42)',
+      color: '#174e69',
+    });
+    expect(screen.queryByRole('button', { name: 'Вставить JSON' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('JSON карточек')).not.toBeInTheDocument();
     expect(screen.queryByText('Load a JSON file or paste a JSON array of language cards.')).not.toBeInTheDocument();
     expect(screen.queryByText('0 cards currently stored')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Import' })).not.toBeInTheDocument();
@@ -87,8 +100,6 @@ describe('ImportCardsView', () => {
     });
     expect(screen.getByText('Добавлено: 1')).toBeInTheDocument();
     expect(screen.queryByLabelText('Cards JSON')).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Вставить JSON' }));
-    expect(screen.getByLabelText('JSON карточек')).toHaveValue('');
+    expect(screen.queryByRole('button', { name: 'Вставить JSON' })).not.toBeInTheDocument();
   });
 });

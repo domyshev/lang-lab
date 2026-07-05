@@ -52,14 +52,17 @@ export function StatsFormula({
 }) {
   const correctLabel = t(interfaceLanguage, 'correct');
   const incorrectLabel = t(interfaceLanguage, 'incorrect');
+  const hasNoAnswers = total === 0;
   const hasOnlyCorrect = correct > 0 && incorrect === 0;
   const hasOnlyIncorrect = incorrect > 0 && correct === 0;
   const isSingleSided = hasOnlyCorrect || hasOnlyIncorrect;
-  const ariaLabel = isSingleSided
-    ? `${totalLabel}: ${hasOnlyCorrect ? correctLabel : incorrectLabel} ${
-        hasOnlyCorrect ? correct : incorrect
-      }`
-    : `${totalLabel}: ${total} = ${correct} + ${incorrect}`;
+  const ariaLabel = hasNoAnswers
+    ? `${totalLabel}: ${total}`
+    : isSingleSided
+      ? `${totalLabel}: ${hasOnlyCorrect ? correctLabel : incorrectLabel} ${
+          hasOnlyCorrect ? correct : incorrect
+        }`
+      : `${totalLabel}: ${total} = ${correct} + ${incorrect}`;
 
   return (
     <Stack
@@ -79,8 +82,17 @@ export function StatsFormula({
         alignItems="center"
         flexWrap="wrap"
         useFlexGap
+        sx={{ justifyContent: 'flex-start' }}
       >
-        {isSingleSided ? (
+        {hasNoAnswers ? (
+          <MetricChip
+            ariaLabel={`${totalLabel}: ${total}`}
+            dataTest={`${dataTestPrefix}__total_chip`}
+            label={total}
+            tone="total"
+            tooltip={t(interfaceLanguage, 'totalAnsweredTooltip')}
+          />
+        ) : isSingleSided ? (
           <MetricChip
             ariaLabel={`${hasOnlyCorrect ? correctLabel : incorrectLabel}: ${
               hasOnlyCorrect ? correct : incorrect
@@ -148,7 +160,7 @@ function MetricLabel({
         color: '#203015',
         fontSize: 16,
         fontWeight: 800,
-        lineHeight: '38px',
+        lineHeight: 1.25,
       }}
     >
       {children}
@@ -239,7 +251,7 @@ const metricGridStyles = {
 };
 
 const formulaRowStyles = {
-  alignItems: 'center',
+  alignItems: 'flex-start',
   display: 'flex',
   flexWrap: 'wrap',
   gap: 0.75,

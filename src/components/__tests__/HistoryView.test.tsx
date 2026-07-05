@@ -44,17 +44,51 @@ describe('HistoryView', () => {
     expect(
       within(missingLettersCard!).getByLabelText('Правильный ответ: airport'),
     ).toBeInTheDocument();
+    const correctAirportRow = screen.getByTestId(
+      'history_view__detail_row__attempt-missing-1_card-airport',
+    );
+    expect(within(correctAirportRow).queryByText('Верно')).not.toBeInTheDocument();
     expect(
       within(
         within(missingLettersCard!).getByLabelText('Правильный ответ: airport'),
       ).getByText('a'),
     ).toHaveStyle({ color: 'rgb(32, 48, 21)' });
+    await user.hover(
+      within(missingLettersCard!).getByLabelText('Правильный ответ: airport'),
+    );
+    expect(await screen.findByText('Ввод был выполнен верно.')).toBeInTheDocument();
+    expect(await screen.findByText('1. Верно')).toBeInTheDocument();
     expect(
       within(missingLettersCard!).getByLabelText('Правильный ответ: vehicle'),
     ).toBeInTheDocument();
     expect(
       within(missingLettersCard!).getByLabelText('Неверный ответ: vehocle'),
     ).toBeInTheDocument();
+    const vehicleRow = screen.getByTestId(
+      'history_view__detail_row__attempt-missing-1_card-vehicle',
+    );
+    const incorrectVehicleCells = within(vehicleRow).getByTestId(
+      'history_view__detail_answer__attempt-missing-1_card-vehicle__incorrect_cells__root',
+    );
+    const correctVehicleCells = within(vehicleRow).getByTestId(
+      'history_view__detail_answer__attempt-missing-1_card-vehicle__correct_cells__root',
+    );
+    expect(
+      incorrectVehicleCells.compareDocumentPosition(correctVehicleCells) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      within(vehicleRow).queryByTestId(
+        'history_view__detail_result_chip__attempt-missing-1_card-vehicle',
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      within(vehicleRow).getByTestId(
+        'history_view__detail_answer__attempt-missing-1_card-vehicle__incorrect_cells__cell__3',
+      ),
+    ).toHaveStyle({
+      textDecorationLine: 'line-through',
+    });
   });
 
   it('renders multiple choice history as colored answer options', async () => {

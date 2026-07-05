@@ -10,6 +10,7 @@ import {
 
 export interface AppState {
   assistantId: AssistantId;
+  hasGameHelpCoachmarkBeenShown?: boolean;
   interfaceLanguage: SupportedLanguage;
   isGameHelpCollapsed?: boolean;
   practiceSettings?: PracticeSettings;
@@ -18,6 +19,7 @@ export interface AppState {
 
 const initialState: AppState = {
   assistantId: defaultAssistantId,
+  hasGameHelpCoachmarkBeenShown: false,
   interfaceLanguage: 'ru',
   isGameHelpCollapsed: false,
   practiceSettings: defaultPracticeSettings,
@@ -30,6 +32,9 @@ const appSlice = createSlice({
   reducers: {
     acknowledgeGameHelp(state) {
       state.isGameHelpCollapsed = true;
+    },
+    markGameHelpCoachmarkShown(state) {
+      state.hasGameHelpCoachmarkBeenShown = true;
     },
     setAssistantId(state, action: PayloadAction<AssistantId>) {
       state.assistantId = action.payload;
@@ -72,6 +77,7 @@ const appSlice = createSlice({
 
 export const {
   acknowledgeGameHelp,
+  markGameHelpCoachmarkShown,
   setAssistantId,
   setCorrectStreakCooldownMonths,
   setInterfaceLanguage,
