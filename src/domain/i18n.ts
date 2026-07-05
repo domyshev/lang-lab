@@ -18,7 +18,14 @@ type I18nKey =
   | 'newCardMixFrequency'
   | 'recentMistakeRepeatFrequency'
   | 'frequencyPercent'
-  | 'importSection'
+  | 'agentsSection'
+  | 'agentsTitle'
+  | 'agentsOpenRouterIntro'
+  | 'agentsTrialKeyNotice'
+  | 'agentsCapabilitiesTitle'
+  | 'agentsAnalyzeStatsCapability'
+  | 'agentsVocabularyCapability'
+  | 'agentsRollbackNotice'
   | 'importCards'
   | 'importDescription'
   | 'downloadCardFormat'
@@ -47,6 +54,20 @@ type I18nKey =
   | 'finishExerciseNotice'
   | 'answeredWords'
   | 'fillAllGapsWarning'
+  | 'gameHelpTitle'
+  | 'gameHelpLab'
+  | 'gameHelpPlayer'
+  | 'gameHelpVocabulary'
+  | 'gameHelpTeacher'
+  | 'gameHelpOwnTrainer'
+  | 'gameHelpGotIt'
+  | 'gameHelpCoachmarkTitle'
+  | 'gameHelpCoachmarkReturnTitle'
+  | 'gameHelpCoachmarkReturnBody'
+  | 'gameHelpCoachmarkSmartTitle'
+  | 'gameHelpCoachmarkSmartBody'
+  | 'tutorialClose'
+  | 'close'
   | 'cancel'
   | 'confirm'
   | 'correctAnswer'
@@ -112,7 +133,17 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     recentMistakeRepeatFrequency: 'Mistake repeat frequency',
     newCardMixFrequency: 'New word mix-in',
     frequencyPercent: 'Frequency percent',
-    importSection: 'Import',
+    agentsSection: 'Agents',
+    agentsTitle: 'Agents',
+    agentsOpenRouterIntro:
+      'You can add your own Open Router key to run agent features through your own quota.',
+    agentsTrialKeyNotice:
+      'A default trial Open Router key is available with a limited quota. When the quota is reached, Agents features will be unavailable until you enter your own key.',
+    agentsCapabilitiesTitle: 'What agents can help with',
+    agentsAnalyzeStatsCapability: 'Analyze statistics and create new themes.',
+    agentsVocabularyCapability: 'Create and add vocabulary.',
+    agentsRollbackNotice:
+      'Everything created by agents will be marked as agent-created, and the agent work history will keep a matching record so changes can be rolled back. No worries, the agent will not spoil your work :)',
     importCards: 'Import cards',
     importDescription: 'Load a JSON file or paste a JSON array of language cards.',
     downloadCardFormat: 'Download agent JSON requirements',
@@ -142,6 +173,25 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
       'Exercise results will be counted and the exercise will end.',
     answeredWords: 'Answered words',
     fillAllGapsWarning: 'Fill all gaps',
+    gameHelpTitle: 'Help',
+    gameHelpLab: 'This is a language learning laboratory.',
+    gameHelpPlayer:
+      'Here you are not just a student: you are a player creating your own game and playing by your own rules!',
+    gameHelpVocabulary: 'You create and modify your own vocabulary.',
+    gameHelpTeacher:
+      'You are your own teacher - do not give away that responsibility.',
+    gameHelpOwnTrainer:
+      'Unlike most apps, this is not a "dumb" trainer someone built for you. You create your own trainer and play by your own rules!',
+    gameHelpGotIt: 'Got it!',
+    gameHelpCoachmarkTitle: 'Help stays here',
+    gameHelpCoachmarkReturnTitle: 'Always available',
+    gameHelpCoachmarkReturnBody:
+      'You can always return by opening the Help accordion.',
+    gameHelpCoachmarkSmartTitle: 'Smart help',
+    gameHelpCoachmarkSmartBody:
+      'It will not repeat the same thing every time; it will change with your reading and learning progress.',
+    tutorialClose: 'OK',
+    close: 'Close',
     cancel: 'Cancel',
     confirm: 'Confirm',
     correctAnswer: 'Correct answer',
@@ -206,7 +256,17 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     recentMistakeRepeatFrequency: 'Частота повторов ошибок',
     newCardMixFrequency: 'Примешивание новых слов',
     frequencyPercent: 'Процент появления',
-    importSection: 'Импорт',
+    agentsSection: 'Агенты',
+    agentsTitle: 'Агенты',
+    agentsOpenRouterIntro:
+      'Пользователь может добавить свой ключ Open Router, чтобы запускать агентские функции через свои лимиты.',
+    agentsTrialKeyNotice:
+      'По умолчанию доступен триальный ключ Open Router с ограниченным лимитом. Когда лимит будет достигнут, функции Агенты станут недоступны до ввода своего ключа.',
+    agentsCapabilitiesTitle: 'Что позволяют агенты',
+    agentsAnalyzeStatsCapability: 'Анализировать статистику и создавать новые темы.',
+    agentsVocabularyCapability: 'Создавать и добавлять словарный запас.',
+    agentsRollbackNotice:
+      'Все, что создано агентами в приложении, будет помечено как созданное агентами, а в истории работы агента появится соответствующая запись. Это позволит откатить внесенные изменения. Не переживайте, агент не испортит ваши наработки :)',
     importCards: 'Импорт карточек',
     importDescription:
       'Загрузите JSON-файл или вставьте JSON-массив языковых карточек.',
@@ -237,6 +297,26 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
       'Результаты упражнения будут зачтены, а упражнение закончено.',
     answeredWords: 'Отвечено слов',
     fillAllGapsWarning: 'Заполните все пропуски',
+    gameHelpTitle: 'Помощь',
+    gameHelpLab: 'Это лаборатория изучения языков.',
+    gameHelpPlayer:
+      'Здесь вы не просто ученик: вы игрок, создающий свою игру и играющий по своим правилам!',
+    gameHelpVocabulary:
+      'Вы сами создаете и модифицируете свой словарный запас.',
+    gameHelpTeacher:
+      'Вы сами являетесь себе учителем - не снимайте с себя эту ответственность.',
+    gameHelpOwnTrainer:
+      'В отличие от большинства приложений это не "тупой" тренажер, который кто-то сделал за вас. Вы сами создаете свой тренажер и играете по своим правилам!',
+    gameHelpGotIt: 'Понятно!',
+    gameHelpCoachmarkTitle: 'Помощь остается здесь',
+    gameHelpCoachmarkReturnTitle: 'Всегда под рукой',
+    gameHelpCoachmarkReturnBody:
+      'К этой помощи всегда можно вернуться: откройте аккордион «Помощь».',
+    gameHelpCoachmarkSmartTitle: 'Помощь умная',
+    gameHelpCoachmarkSmartBody:
+      'Она не показывает одно и то же каждый раз, а меняет содержимое по мере просмотра и прогресса ученика.',
+    tutorialClose: 'Хорошо',
+    close: 'Закрыть',
     cancel: 'Отмена',
     confirm: 'Подтвердить',
     correctAnswer: 'Правильный ответ',
@@ -301,7 +381,17 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     recentMistakeRepeatFrequency: 'Frecuencia de repeticion de errores',
     newCardMixFrequency: 'Mezcla de palabras nuevas',
     frequencyPercent: 'Porcentaje de frecuencia',
-    importSection: 'Importar',
+    agentsSection: 'Agentes',
+    agentsTitle: 'Agentes',
+    agentsOpenRouterIntro:
+      'Puedes anadir tu propia clave de Open Router para ejecutar las funciones de agentes con tu propio limite.',
+    agentsTrialKeyNotice:
+      'Hay una clave de prueba de Open Router por defecto con limite reducido. Cuando se alcance el limite, las funciones de Agentes no estaran disponibles hasta que introduzcas tu propia clave.',
+    agentsCapabilitiesTitle: 'Que pueden hacer los agentes',
+    agentsAnalyzeStatsCapability: 'Analizar estadisticas y crear temas nuevos.',
+    agentsVocabularyCapability: 'Crear y anadir vocabulario.',
+    agentsRollbackNotice:
+      'Todo lo creado por agentes se marcara como creado por agentes, y el historial de trabajo guardara un registro correspondiente para poder deshacer los cambios. No te preocupes, el agente no estropeara tu trabajo :)',
     importCards: 'Importar tarjetas',
     importDescription:
       'Carga un archivo JSON o pega un array JSON de tarjetas de idioma.',
@@ -332,6 +422,25 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
       'Los resultados del ejercicio se guardaran y el ejercicio terminara.',
     answeredWords: 'Palabras respondidas',
     fillAllGapsWarning: 'Rellena todos los huecos',
+    gameHelpTitle: 'Ayuda',
+    gameHelpLab: 'Esto es un laboratorio de aprendizaje de idiomas.',
+    gameHelpPlayer:
+      'Aqui no eres solo estudiante: eres un jugador que crea su propio juego y juega con sus propias reglas!',
+    gameHelpVocabulary: 'Tu creas y modificas tu propio vocabulario.',
+    gameHelpTeacher:
+      'Tu eres tu propio profesor - no abandones esa responsabilidad.',
+    gameHelpOwnTrainer:
+      'A diferencia de la mayoria de apps, esto no es un entrenador "tonto" hecho por otra persona. Tu creas tu propio entrenador y juegas con tus propias reglas!',
+    gameHelpGotIt: 'Entendido!',
+    gameHelpCoachmarkTitle: 'La ayuda queda aqui',
+    gameHelpCoachmarkReturnTitle: 'Siempre disponible',
+    gameHelpCoachmarkReturnBody:
+      'Siempre puedes volver abriendo el acordeon Ayuda.',
+    gameHelpCoachmarkSmartTitle: 'Ayuda inteligente',
+    gameHelpCoachmarkSmartBody:
+      'No repite siempre lo mismo; cambia segun lo que ves y tu progreso.',
+    tutorialClose: 'Bien',
+    close: 'Cerrar',
     cancel: 'Cancelar',
     confirm: 'Confirmar',
     correctAnswer: 'Respuesta correcta',

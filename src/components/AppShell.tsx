@@ -13,7 +13,7 @@ import { RootState } from '../store/store';
 import { AppLogo } from './AppLogo';
 import { LanguageSelectors } from './LanguageSelectors';
 
-export type AppShellSection = 'game' | 'cards' | 'statistics' | 'import';
+export type AppShellSection = 'game' | 'cards' | 'statistics' | 'agents';
 
 interface AppShellProps {
   activeSection?: AppShellSection;
@@ -105,9 +105,9 @@ export function AppShell({
               label={t(interfaceLanguage, 'statistics')}
             />
             <Tab
-              data-test="app_shell__tab__import"
-              value="import"
-              label={t(interfaceLanguage, 'importSection')}
+              data-test="app_shell__tab__agents"
+              value="agents"
+              label={t(interfaceLanguage, 'agentsSection')}
             />
           </Tabs>
 

@@ -186,6 +186,7 @@ describe('MissingWordExercise', () => {
   it('submits with Enter from any missing word cell', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();
+    const onNext = vi.fn();
 
     render(
       <Provider store={createStore()}>
@@ -198,7 +199,7 @@ describe('MissingWordExercise', () => {
             translationHints: [{ language: 'ru', value: 'оно того стоит' }],
           }}
           onAnswer={onAnswer}
-          onNext={vi.fn()}
+          onNext={onNext}
         />
       </Provider>,
     );
@@ -212,6 +213,79 @@ describe('MissingWordExercise', () => {
 
     expect(onAnswer).toHaveBeenCalledWith('worth it');
     expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
+
+    await user.keyboard('{Enter}');
+    expect(onNext).toHaveBeenCalledOnce();
+  });
+
+  it('does not bubble the submit Enter from a word cell to document shortcuts', async () => {
+    const user = userEvent.setup();
+    const enterSpy = vi.fn();
+    const handleDocumentKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        enterSpy();
+      }
+    };
+    document.addEventListener('keydown', handleDocumentKeyDown);
+
+    try {
+      render(
+        <Provider store={createStore()}>
+          <MissingWordExercise
+            prompt={{
+              cardId: 'worth-it',
+              prompt: 'ru: оно того стоит',
+              expectedAnswer: 'worth it',
+              sentenceWithGap: 'It is _____ today.',
+              translationHints: [{ language: 'ru', value: 'оно того стоит' }],
+            }}
+            onAnswer={vi.fn()}
+            onNext={vi.fn()}
+          />
+        </Provider>,
+      );
+
+      const inputs = screen.getAllByLabelText(/Missing word letter/);
+      await user.type(inputs[0], 'o');
+      await user.type(inputs[1], 't');
+      await user.type(inputs[2], 't{enter}');
+
+      expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
+      expect(enterSpy).not.toHaveBeenCalled();
+    } finally {
+      document.removeEventListener('keydown', handleDocumentKeyDown);
+    }
+  });
+
+  it('advances incorrect results with Enter after submitting from a word cell', async () => {
+    const user = userEvent.setup();
+    const onNext = vi.fn();
+
+    render(
+      <Provider store={createStore()}>
+        <MissingWordExercise
+          prompt={{
+            cardId: 'worth-it',
+            prompt: 'ru: оно того стоит',
+            expectedAnswer: 'worth it',
+            sentenceWithGap: 'It is _____ today.',
+            translationHints: [{ language: 'ru', value: 'оно того стоит' }],
+          }}
+          onAnswer={vi.fn()}
+          onNext={onNext}
+        />
+      </Provider>,
+    );
+
+    const inputs = screen.getAllByLabelText(/Missing word letter/);
+    await user.type(inputs[0], 'x');
+    await user.type(inputs[1], 'x');
+    await user.type(inputs[2], 'x{enter}');
+
+    expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
+
+    await user.keyboard('{Enter}');
+    expect(onNext).toHaveBeenCalledOnce();
   });
 });
 

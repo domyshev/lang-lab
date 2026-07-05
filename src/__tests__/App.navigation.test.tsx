@@ -14,10 +14,17 @@ import { themesReducer } from '../store/themesSlice';
 const now = '2026-07-03T12:00:00.000Z';
 
 function renderApp({
+  app = {},
   attempts = [],
 }: {
+  app?: Partial<ReturnType<typeof appReducer>>;
   attempts?: ExerciseAttempt[];
 } = {}) {
+  const appState = {
+    ...appReducer(undefined, { type: 'test/init' }),
+    ...app,
+  };
+
   const store = configureStore({
     reducer: {
       app: appReducer,
@@ -27,6 +34,7 @@ function renderApp({
       themes: themesReducer,
     },
     preloadedState: {
+      app: appState,
       cards: {
         cards: [
           {
@@ -153,9 +161,81 @@ describe('App navigation', () => {
     expect(screen.queryByText('Language Crossword Lab')).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Карточки' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Статистика' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Импорт' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Агенты' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
     expect(screen.queryByText('worth it')).not.toBeInTheDocument();
+  });
+
+  it('describes agent features and keeps import controls on the agents tab', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('tab', { name: 'Агенты' }));
+
+    expect(screen.queryByRole('tab', { name: 'Импорт' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Агенты' })).toBeInTheDocument();
+    expect(screen.getByText(/свой ключ Open Router/i)).toBeInTheDocument();
+    expect(screen.getByText(/триальный ключ Open Router/i)).toBeInTheDocument();
+    expect(screen.getByText(/анализировать статистику/i)).toBeInTheDocument();
+    expect(screen.getByText(/создавать и добавлять словарный запас/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/агент не испортит ваши наработки/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Импорт из файла')).toBeInTheDocument();
+    expect(screen.getByText('Вставить JSON')).toBeInTheDocument();
+  });
+
+  it('collapses game help after the player acknowledges it and points back to the accordion', async () => {
+    const user = userEvent.setup();
+    const store = renderApp();
+
+    expect(screen.getByRole('button', { name: /Помощь/ })).toBeInTheDocument();
+    expect(
+      screen.getByText(/лаборатория изучения языков/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/вы игрок, создающий свою игру/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/не снимайте с себя эту ответственность/i),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Понятно!' }));
+
+    expect(screen.getByRole('button', { name: /Помощь/ })).toBeInTheDocument();
+    expect(screen.queryByText(/лаборатория изучения языков/i)).not.toBeInTheDocument();
+    expect(store.getState().app.isGameHelpCollapsed).toBe(true);
+    expect(screen.getByTestId('game_help__coachmark_icon')).toBeInTheDocument();
+    expect(
+      screen.getByTestId('game_help__coachmark_item__return'),
+    ).toHaveTextContent(/всегда можно вернуться/i);
+    expect(
+      screen.getByTestId('game_help__coachmark_item__smart'),
+    ).toHaveTextContent(/помощь умная/i);
+    expect(
+      screen.queryByTestId('game_help__coachmark_body'),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Хорошо' }));
+    expect(screen.queryByText(/всегда можно вернуться/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Помощь/ }));
+    expect(
+      screen.getByText(/лаборатория изучения языков/i),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps game help collapsed when the collapsed flag is already stored', async () => {
+    const user = userEvent.setup();
+    renderApp({ app: { isGameHelpCollapsed: true } });
+
+    expect(screen.getByRole('button', { name: /Помощь/ })).toBeInTheDocument();
+    expect(screen.queryByText(/лаборатория изучения языков/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Помощь/ }));
+    expect(
+      screen.getByText(/лаборатория изучения языков/i),
+    ).toBeInTheDocument();
   });
 
   it('shows All words as a fixed cards topic without an archive action', async () => {

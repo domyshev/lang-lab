@@ -60,6 +60,27 @@ export function MissingWordExercise({
     setSubmissionOutcome(null);
   }, [prompt.cardId, prompt.expectedAnswer, prompt.sentenceWithGap]);
 
+  useEffect(() => {
+    if (!isSubmitted) {
+      return undefined;
+    }
+
+    const handleDocumentKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== 'Enter' || event.repeat) {
+        return;
+      }
+
+      event.preventDefault();
+      onNext();
+    };
+
+    document.addEventListener('keydown', handleDocumentKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleDocumentKeyDown);
+    };
+  }, [isSubmitted, onNext]);
+
   function handleSubmitOrNext(eventDetail = 1) {
     if (isSubmitted) {
       if (eventDetail > 1) {
@@ -89,6 +110,8 @@ export function MissingWordExercise({
       return;
     }
 
+    event.stopPropagation();
+    event.nativeEvent.stopImmediatePropagation();
     event.preventDefault();
     handleSubmitOrNext();
   }

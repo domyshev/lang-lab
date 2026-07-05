@@ -159,6 +159,7 @@ describe('MissingLettersExercise', () => {
   it('submits with Enter from any missing letter cell', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();
+    const onNext = vi.fn();
 
     render(
       <MissingLettersExercise
@@ -171,7 +172,7 @@ describe('MissingLettersExercise', () => {
           translationHints: [{ language: 'ru', value: 'транспортное средство' }],
         }}
         onAnswer={onAnswer}
-        onNext={vi.fn()}
+        onNext={onNext}
       />,
     );
 
@@ -182,6 +183,75 @@ describe('MissingLettersExercise', () => {
 
     expect(onAnswer).toHaveBeenCalledWith('vehicle');
     expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
+
+    await user.keyboard('{Enter}');
+    expect(onNext).toHaveBeenCalledOnce();
+  });
+
+  it('does not bubble the submit Enter from a letter cell to document shortcuts', async () => {
+    const user = userEvent.setup();
+    const enterSpy = vi.fn();
+    const handleDocumentKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        enterSpy();
+      }
+    };
+    document.addEventListener('keydown', handleDocumentKeyDown);
+
+    try {
+      render(
+        <MissingLettersExercise
+          interfaceLanguage="ru"
+          prompt={{
+            cardId: 'vehicle',
+            prompt: 'ru: транспортное средство',
+            expectedAnswer: 'vehicle',
+            maskedAnswer: 'v_h_c_e',
+            translationHints: [{ language: 'ru', value: 'транспортное средство' }],
+          }}
+          onAnswer={vi.fn()}
+          onNext={vi.fn()}
+        />,
+      );
+
+      const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
+      await user.type(missingLetterInputs[0], 'e');
+      await user.type(missingLetterInputs[1], 'i');
+      await user.type(missingLetterInputs[2], 'l{enter}');
+
+      expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
+      expect(enterSpy).not.toHaveBeenCalled();
+    } finally {
+      document.removeEventListener('keydown', handleDocumentKeyDown);
+    }
+  });
+
+  it('advances memorize results with Enter after submitting from a letter cell', async () => {
+    const user = userEvent.setup();
+    const onNext = vi.fn();
+
+    render(
+      <MissingLettersExercise
+        interfaceLanguage="ru"
+        prompt={{
+          cardId: 'vehicle',
+          prompt: 'ru: транспортное средство',
+          expectedAnswer: 'vehicle',
+          maskedAnswer: 'v_h_c_e',
+          translationHints: [{ language: 'ru', value: 'транспортное средство' }],
+        }}
+        onAnswer={vi.fn()}
+        onNext={onNext}
+      />,
+    );
+
+    const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
+    await user.type(missingLetterInputs[0], 'e{enter}');
+
+    expect(screen.getByRole('button', { name: 'Запомнить!' })).toBeInTheDocument();
+
+    await user.keyboard('{Enter}');
+    expect(onNext).toHaveBeenCalledOnce();
   });
 
   it('does not advance when the submit button receives an accidental double click', async () => {

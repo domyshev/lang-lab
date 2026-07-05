@@ -74,8 +74,8 @@ export function AppLogo({
           display: 'block',
           height: 15.84,
           position: 'absolute',
-          right: -8,
-          top: 3,
+          right: -5,
+          top: 0,
           width: 40.32,
           zIndex: 0,
         }}

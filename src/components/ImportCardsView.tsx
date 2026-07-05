@@ -1,6 +1,11 @@
 import { ChangeEvent, useState } from 'react';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
+import HistoryIcon from '@mui/icons-material/History';
+import KeyIcon from '@mui/icons-material/Key';
+import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
 import {
   Accordion,
   AccordionDetails,
@@ -45,6 +50,21 @@ const summaryLabels = [
     | 'importInvalid'
     | 'importSkipped';
 }>;
+
+const agentCapabilityRows = [
+  {
+    icon: <BarChartIcon fontSize="small" />,
+    key: 'agentsAnalyzeStatsCapability',
+  },
+  {
+    icon: <LibraryAddIcon fontSize="small" />,
+    key: 'agentsVocabularyCapability',
+  },
+  {
+    icon: <HistoryIcon fontSize="small" />,
+    key: 'agentsRollbackNotice',
+  },
+] as const;
 
 export function ImportCardsView() {
   const dispatch = useDispatch<AppDispatch>();
@@ -98,11 +118,119 @@ export function ImportCardsView() {
   return (
     <Paper data-test="import_cards__panel" sx={{ p: { xs: 2, md: 3 } }}>
       <Stack data-test="import_cards__content" spacing={2.5}>
+        <Box data-test="agents_view__header">
+          <Typography
+            data-test="agents_view__title"
+            variant="h5"
+            component="h2"
+            sx={{ fontWeight: 800 }}
+          >
+            {t(interfaceLanguage, 'agentsTitle')}
+          </Typography>
+          <Typography
+            color="text.secondary"
+            data-test="agents_view__open_router_intro"
+            sx={{ mt: 0.5 }}
+          >
+            {t(interfaceLanguage, 'agentsOpenRouterIntro')}
+          </Typography>
+        </Box>
+
+        <Alert
+          data-test="agents_view__trial_key_notice"
+          icon={<KeyIcon data-test="agents_view__trial_key_icon" />}
+          severity="info"
+          sx={{
+            alignItems: 'center',
+            bgcolor: '#f2f7e4',
+            border: '1px solid rgba(35, 50, 22, 0.12)',
+          }}
+        >
+          {t(interfaceLanguage, 'agentsTrialKeyNotice')}
+        </Alert>
+
+        <Box data-test="agents_view__capabilities">
+          <Stack data-test="agents_view__capabilities_content" spacing={1.25}>
+            <Stack
+              data-test="agents_view__capabilities_title_row"
+              direction="row"
+              spacing={1}
+              alignItems="center"
+            >
+              <Box
+                aria-hidden="true"
+                data-test="agents_view__capabilities_title_icon"
+                sx={{
+                  alignItems: 'center',
+                  bgcolor: '#e4f2bf',
+                  border: '1px solid rgba(35, 50, 22, 0.14)',
+                  borderRadius: '50%',
+                  color: '#203015',
+                  display: 'inline-flex',
+                  height: 32,
+                  justifyContent: 'center',
+                  width: 32,
+                }}
+              >
+                <AutoAwesomeIcon fontSize="small" />
+              </Box>
+              <Typography
+                data-test="agents_view__capabilities_title"
+                fontWeight={900}
+              >
+                {t(interfaceLanguage, 'agentsCapabilitiesTitle')}
+              </Typography>
+            </Stack>
+
+            <Stack data-test="agents_view__capability_rows" spacing={1}>
+              {agentCapabilityRows.map((row) => (
+                <Stack
+                  data-test={`agents_view__capability_row__${row.key}`}
+                  key={row.key}
+                  direction="row"
+                  spacing={1.25}
+                  alignItems="flex-start"
+                  sx={{
+                    border: '1px solid rgba(35, 50, 22, 0.10)',
+                    borderRadius: 2,
+                    p: 1.25,
+                  }}
+                >
+                  <Box
+                    aria-hidden="true"
+                    data-test={`agents_view__capability_icon__${row.key}`}
+                    sx={{
+                      alignItems: 'center',
+                      bgcolor: '#f2f7e4',
+                      border: '1px solid rgba(35, 50, 22, 0.12)',
+                      borderRadius: 1.5,
+                      color: '#203015',
+                      display: 'inline-flex',
+                      flexShrink: 0,
+                      height: 32,
+                      justifyContent: 'center',
+                      mt: 0.1,
+                      width: 32,
+                    }}
+                  >
+                    {row.icon}
+                  </Box>
+                  <Typography data-test={`agents_view__capability_text__${row.key}`}>
+                    {t(interfaceLanguage, row.key)}
+                  </Typography>
+                </Stack>
+              ))}
+            </Stack>
+          </Stack>
+        </Box>
+
+        <Divider data-test="agents_view__import_divider" />
+
         <Box data-test="import_cards__header">
           <Typography
             data-test="import_cards__title"
-            variant="h5"
-            component="h2"
+            variant="h6"
+            component="h3"
             sx={{ fontWeight: 800 }}
           >
             {t(interfaceLanguage, 'importCards')}

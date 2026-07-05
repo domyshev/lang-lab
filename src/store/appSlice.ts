@@ -11,6 +11,7 @@ import {
 export interface AppState {
   assistantId: AssistantId;
   interfaceLanguage: SupportedLanguage;
+  isGameHelpCollapsed?: boolean;
   practiceSettings?: PracticeSettings;
   targetLanguage: SupportedLanguage;
 }
@@ -18,6 +19,7 @@ export interface AppState {
 const initialState: AppState = {
   assistantId: defaultAssistantId,
   interfaceLanguage: 'ru',
+  isGameHelpCollapsed: false,
   practiceSettings: defaultPracticeSettings,
   targetLanguage: 'en',
 };
@@ -26,6 +28,9 @@ const appSlice = createSlice({
   name: 'app',
   initialState,
   reducers: {
+    acknowledgeGameHelp(state) {
+      state.isGameHelpCollapsed = true;
+    },
     setAssistantId(state, action: PayloadAction<AssistantId>) {
       state.assistantId = action.payload;
     },
@@ -66,6 +71,7 @@ const appSlice = createSlice({
 });
 
 export const {
+  acknowledgeGameHelp,
   setAssistantId,
   setCorrectStreakCooldownMonths,
   setInterfaceLanguage,

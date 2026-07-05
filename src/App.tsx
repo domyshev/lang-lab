@@ -22,6 +22,7 @@ import type { SelectChangeEvent } from '@mui/material/Select';
 import { AppShell, AppShellSection } from './components/AppShell';
 import { CoachPanel } from './components/CoachPanel';
 import { ExercisePicker } from './components/ExercisePicker';
+import { GameHelpPanel } from './components/GameHelpPanel';
 import { HistoryView } from './components/HistoryView';
 import { ImportCardsView } from './components/ImportCardsView';
 import { SplitWordStatsChip } from './components/SplitWordStatsChip';
@@ -61,6 +62,7 @@ import {
 } from './domain/practiceOrdering';
 import { ALL_WORDS_THEME_ID, Theme } from './domain/themes';
 import { saveAttempt } from './store/attemptsSlice';
+import { acknowledgeGameHelp } from './store/appSlice';
 import { applyImportResult } from './store/cardsSlice';
 import { recordAttemptStats } from './store/statsSlice';
 import { selectTheme } from './store/themesSlice';
@@ -132,6 +134,9 @@ export function App() {
   );
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
+  );
+  const isGameHelpCollapsed = useSelector((state: RootState) =>
+    Boolean(state.app.isGameHelpCollapsed),
   );
   const practiceSettings = useSelector(
     (state: RootState) => state.app.practiceSettings,
@@ -596,9 +601,9 @@ export function App() {
       );
     }
 
-    if (activeSection === 'import') {
+    if (activeSection === 'agents') {
       return (
-        <Box data-test="app__import_section">
+        <Box data-test="app__agents_section">
           <ImportCardsView />
         </Box>
       );
@@ -609,7 +614,16 @@ export function App() {
 
   function renderGameContent() {
     if (!isExerciseStarted) {
-      return <GameSetup />;
+      return (
+        <Stack data-test="app__game_setup_section" spacing={3}>
+          <GameHelpPanel
+            interfaceLanguage={interfaceLanguage}
+            isInitiallyCollapsed={isGameHelpCollapsed}
+            onAcknowledge={() => dispatch(acknowledgeGameHelp())}
+          />
+          <GameSetup />
+        </Stack>
+      );
     }
 
     const coachProgressMessage = getCoachProgressMessage({
