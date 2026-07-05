@@ -61,6 +61,15 @@ export function MissingWordExercise({
   }, [prompt.cardId, prompt.expectedAnswer, prompt.sentenceWithGap]);
 
   useEffect(() => {
+    const firstEditableIndex = editableIndexes[0];
+    if (firstEditableIndex === undefined) {
+      return;
+    }
+
+    inputRefs.current[firstEditableIndex]?.focus();
+  }, [prompt.cardId, prompt.expectedAnswer, prompt.sentenceWithGap]);
+
+  useEffect(() => {
     if (!isSubmitted) {
       return undefined;
     }

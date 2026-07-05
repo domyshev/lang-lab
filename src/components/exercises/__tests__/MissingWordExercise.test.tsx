@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it, vi } from 'vitest';
@@ -181,6 +181,34 @@ describe('MissingWordExercise', () => {
     await user.type(inputs[1], 't');
 
     expect(inputs[2]).toHaveFocus();
+  });
+
+  it('focuses the first missing word letter so typing can start immediately', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Provider store={createStore()}>
+        <MissingWordExercise
+          prompt={{
+            cardId: 'worth-it',
+            prompt: 'ru: оно того стоит',
+            expectedAnswer: 'worth it',
+            sentenceWithGap: 'It is _____ today.',
+            translationHints: [{ language: 'ru', value: 'оно того стоит' }],
+          }}
+          onAnswer={vi.fn()}
+          onNext={vi.fn()}
+        />
+      </Provider>,
+    );
+
+    const inputs = screen.getAllByLabelText(/Missing word letter/);
+    await waitFor(() => expect(inputs[0]).toHaveFocus());
+
+    await user.keyboard('o');
+
+    expect(inputs[0]).toHaveValue('o');
+    expect(inputs[1]).toHaveFocus();
   });
 
   it('submits with Enter from any missing word cell', async () => {

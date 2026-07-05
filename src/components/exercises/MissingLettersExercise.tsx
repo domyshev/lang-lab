@@ -54,6 +54,15 @@ export function MissingLettersExercise({
   }, [prompt.cardId, prompt.maskedAnswer]);
 
   useEffect(() => {
+    const firstEditableIndex = editableIndexes[0];
+    if (firstEditableIndex === undefined) {
+      return;
+    }
+
+    inputRefs.current[firstEditableIndex]?.focus();
+  }, [prompt.cardId, prompt.maskedAnswer]);
+
+  useEffect(() => {
     if (!isSubmitted) {
       return undefined;
     }

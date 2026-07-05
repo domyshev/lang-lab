@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { MissingLettersExercise } from '../MissingLettersExercise';
@@ -153,6 +153,33 @@ describe('MissingLettersExercise', () => {
     const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
     await user.type(missingLetterInputs[0], 'e');
 
+    expect(missingLetterInputs[1]).toHaveFocus();
+  });
+
+  it('focuses the first missing letter so typing can start immediately', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MissingLettersExercise
+        interfaceLanguage="ru"
+        prompt={{
+          cardId: 'vehicle',
+          prompt: 'ru: транспортное средство',
+          expectedAnswer: 'vehicle',
+          maskedAnswer: 'v_h_c_e',
+          translationHints: [{ language: 'ru', value: 'транспортное средство' }],
+        }}
+        onAnswer={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
+    await waitFor(() => expect(missingLetterInputs[0]).toHaveFocus());
+
+    await user.keyboard('e');
+
+    expect(missingLetterInputs[0]).toHaveValue('e');
     expect(missingLetterInputs[1]).toHaveFocus();
   });
 
