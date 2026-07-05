@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it, vi } from 'vitest';
@@ -39,7 +39,11 @@ describe('MissingWordExercise', () => {
       screen.queryByLabelText('Заполните все пропуски'),
     ).not.toBeInTheDocument();
     expect(screen.getByText('Правильный ответ')).toBeInTheDocument();
-    expect(screen.getByLabelText('Правильный ответ: worth it')).toBeInTheDocument();
+    const correctAnswer = screen.getByLabelText('Правильный ответ: worth it');
+    expect(correctAnswer).toBeInTheDocument();
+    expect(within(correctAnswer).getByText('w')).toHaveStyle({
+      color: 'rgb(32, 48, 21)',
+    });
     expect(screen.queryByRole('button', { name: 'Неверно' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Запомнить!' })).toHaveStyle({
       backgroundColor: 'rgb(255, 243, 205)',
@@ -89,7 +93,11 @@ describe('MissingWordExercise', () => {
     expect(onAnswer).toHaveBeenCalledWith('wxrxh ix');
     expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
     expect(screen.getByText('Правильный ответ')).toBeInTheDocument();
-    expect(screen.getByLabelText('Правильный ответ: worth it')).toBeInTheDocument();
+    const correctAnswer = screen.getByLabelText('Правильный ответ: worth it');
+    expect(correctAnswer).toBeInTheDocument();
+    expect(within(correctAnswer).getByText('w')).toHaveStyle({
+      color: 'rgb(32, 48, 21)',
+    });
 
     await user.click(screen.getByRole('button', { name: 'Неверно' }));
     expect(onNext).toHaveBeenCalledOnce();

@@ -15,6 +15,9 @@ type I18nKey =
   | 'correctStreakCooldownFour'
   | 'correctStreakCooldownThree'
   | 'cooldownMonths'
+  | 'newCardMixFrequency'
+  | 'recentMistakeRepeatFrequency'
+  | 'frequencyPercent'
   | 'importSection'
   | 'importCards'
   | 'importDescription'
@@ -106,6 +109,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctStreakCooldownFour: 'Last 4 answers correct',
     correctStreakCooldownThree: 'Last 3 answers correct',
     cooldownMonths: 'Months before showing again',
+    recentMistakeRepeatFrequency: 'Mistake repeat frequency',
+    newCardMixFrequency: 'New word mix-in',
+    frequencyPercent: 'Frequency percent',
     importSection: 'Import',
     importCards: 'Import cards',
     importDescription: 'Load a JSON file or paste a JSON array of language cards.',
@@ -197,6 +203,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctStreakCooldownFour: 'Последние 4 раза верно',
     correctStreakCooldownThree: 'Последние 3 раза верно',
     cooldownMonths: 'Месяцев до повтора',
+    recentMistakeRepeatFrequency: 'Частота повторов ошибок',
+    newCardMixFrequency: 'Примешивание новых слов',
+    frequencyPercent: 'Процент появления',
     importSection: 'Импорт',
     importCards: 'Импорт карточек',
     importDescription:
@@ -289,6 +298,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctStreakCooldownFour: 'Ultimas 4 respuestas correctas',
     correctStreakCooldownThree: 'Ultimas 3 respuestas correctas',
     cooldownMonths: 'Meses antes de mostrar otra vez',
+    recentMistakeRepeatFrequency: 'Frecuencia de repeticion de errores',
+    newCardMixFrequency: 'Mezcla de palabras nuevas',
+    frequencyPercent: 'Porcentaje de frecuencia',
     importSection: 'Importar',
     importCards: 'Importar tarjetas',
     importDescription:

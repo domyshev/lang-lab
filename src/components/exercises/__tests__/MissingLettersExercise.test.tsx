@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { MissingLettersExercise } from '../MissingLettersExercise';
@@ -81,7 +81,11 @@ describe('MissingLettersExercise', () => {
       backgroundColor: 'rgb(253, 235, 238)',
     });
     expect(screen.getByText('Правильный ответ')).toBeInTheDocument();
-    expect(screen.getByLabelText('Правильный ответ: airport')).toBeInTheDocument();
+    const correctAnswer = screen.getByLabelText('Правильный ответ: airport');
+    expect(correctAnswer).toBeInTheDocument();
+    expect(within(correctAnswer).getByText('a')).toHaveStyle({
+      color: 'rgb(32, 48, 21)',
+    });
     expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
   });
 
@@ -115,7 +119,11 @@ describe('MissingLettersExercise', () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Неверно' })).not.toBeInTheDocument();
     expect(screen.getByText('Правильный ответ')).toBeInTheDocument();
-    expect(screen.getByLabelText('Правильный ответ: vehicle')).toBeInTheDocument();
+    const correctAnswer = screen.getByLabelText('Правильный ответ: vehicle');
+    expect(correctAnswer).toBeInTheDocument();
+    expect(within(correctAnswer).getByText('v')).toHaveStyle({
+      color: 'rgb(32, 48, 21)',
+    });
     expect(screen.getByRole('button', { name: 'Запомнить!' })).toHaveStyle({
       backgroundColor: 'rgb(255, 243, 205)',
     });

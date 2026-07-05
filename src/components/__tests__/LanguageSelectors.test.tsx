@@ -55,6 +55,37 @@ describe('LanguageSelectors', () => {
       store.getState().app.practiceSettings!.correctStreakCooldownMonths.fivePlus,
     ).toBe(3);
   });
+
+  it('updates practice frequency percentages from the top-right menu', async () => {
+    const user = userEvent.setup();
+    const store = createStore();
+
+    render(
+      <Provider store={store}>
+        <LanguageSelectors />
+      </Provider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Настройки практики' }));
+
+    const repeatFrequency = screen.getByLabelText('Частота повторов ошибок');
+    const newCardMix = screen.getByLabelText('Примешивание новых слов');
+
+    expect(repeatFrequency).toHaveValue(25);
+    expect(newCardMix).toHaveValue(25);
+
+    await user.clear(repeatFrequency);
+    await user.type(repeatFrequency, '40');
+    await user.clear(newCardMix);
+    await user.type(newCardMix, '35');
+
+    expect(
+      store.getState().app.practiceSettings!.recentMistakeRepeatFrequencyPercent,
+    ).toBe(40);
+    expect(
+      store.getState().app.practiceSettings!.newCardMixFrequencyPercent,
+    ).toBe(35);
+  });
 });
 
 function createStore() {

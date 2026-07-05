@@ -313,7 +313,7 @@ function AnswerCells({
               border: '1px solid',
               borderColor: tone === 'correct' ? '#8fc773' : '#f2a7b4',
               borderRadius: 1,
-              color: 'rgb(117, 117, 117)',
+              color: '#203015',
               display: 'inline-flex',
               fontSize: 20,
               fontWeight: 800,

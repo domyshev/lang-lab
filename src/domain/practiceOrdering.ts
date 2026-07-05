@@ -6,6 +6,8 @@ export type CorrectStreakCooldownKey = 'three' | 'four' | 'fivePlus';
 
 export interface PracticeSettings {
   correctStreakCooldownMonths: Record<CorrectStreakCooldownKey, number>;
+  newCardMixFrequencyPercent: number;
+  recentMistakeRepeatFrequencyPercent: number;
 }
 
 export interface CardPracticeSummary {
@@ -26,6 +28,8 @@ export const defaultPracticeSettings: PracticeSettings = {
     four: 1,
     fivePlus: 2,
   },
+  newCardMixFrequencyPercent: 25,
+  recentMistakeRepeatFrequencyPercent: 25,
 };
 
 const recentWindowSize = 5;
@@ -38,6 +42,12 @@ export function getPracticeSettings(
       ...defaultPracticeSettings.correctStreakCooldownMonths,
       ...(settings?.correctStreakCooldownMonths ?? {}),
     },
+    newCardMixFrequencyPercent:
+      settings?.newCardMixFrequencyPercent ??
+      defaultPracticeSettings.newCardMixFrequencyPercent,
+    recentMistakeRepeatFrequencyPercent:
+      settings?.recentMistakeRepeatFrequencyPercent ??
+      defaultPracticeSettings.recentMistakeRepeatFrequencyPercent,
   };
 }
 
@@ -134,11 +144,122 @@ export function orderCardsForMissingLettersPractice(input: {
     input.seed,
   );
 
-  return [
-    ...recentMistakeCards.map((item) => item.card),
-    ...newCards,
+  return buildFrequencyMixedQueue({
+    newCards,
+    practicedWithoutRecentMistakes,
+    recentMistakeCards: recentMistakeCards.map((item) => item.card),
+    seed: input.seed,
+    settings: getPracticeSettings(input.settings),
+  });
+}
+
+function buildFrequencyMixedQueue({
+  newCards,
+  practicedWithoutRecentMistakes,
+  recentMistakeCards,
+  seed,
+  settings,
+}: {
+  newCards: LanguageCard[];
+  practicedWithoutRecentMistakes: LanguageCard[];
+  recentMistakeCards: LanguageCard[];
+  seed: number;
+  settings: PracticeSettings;
+}): LanguageCard[] {
+  if (recentMistakeCards.length === 0) {
+    return [...newCards, ...practicedWithoutRecentMistakes];
+  }
+
+  const baseCount =
+    recentMistakeCards.length +
+    newCards.length +
+    practicedWithoutRecentMistakes.length;
+  const repeatSlots = Math.floor(
+    (baseCount * settings.recentMistakeRepeatFrequencyPercent) / 100,
+  );
+  const earlyNewSlots =
+    settings.newCardMixFrequencyPercent > 0
+      ? Math.max(
+          1,
+          Math.floor((baseCount * settings.newCardMixFrequencyPercent) / 100),
+        )
+      : 0;
+  const repeatCards = cycleCards(recentMistakeCards, repeatSlots, seed);
+  const earlyNewCards = newCards.slice(0, earlyNewSlots);
+  const laterNewCards = newCards.slice(earlyNewSlots);
+  const queue: LanguageCard[] = [];
+  const separators = [...earlyNewCards, ...practicedWithoutRecentMistakes];
+
+  pushCard(queue, recentMistakeCards[0]);
+  for (const card of repeatCards) {
+    pushAvoidingImmediateRepeat(queue, card, separators);
+  }
+
+  for (const card of [
+    ...recentMistakeCards.slice(1),
+    ...earlyNewCards,
     ...practicedWithoutRecentMistakes,
-  ];
+    ...laterNewCards,
+  ]) {
+    pushUniqueCard(queue, card);
+  }
+
+  return queue;
+}
+
+function cycleCards(
+  cards: LanguageCard[],
+  count: number,
+  seed: number,
+): LanguageCard[] {
+  if (cards.length === 0 || count <= 0) {
+    return [];
+  }
+
+  const orderedCards = shuffleBySeed(cards, seed);
+  return Array.from(
+    { length: count },
+    (_, index) => orderedCards[index % orderedCards.length],
+  );
+}
+
+function pushAvoidingImmediateRepeat(
+  queue: LanguageCard[],
+  card: LanguageCard,
+  separators: LanguageCard[],
+) {
+  if (queue[queue.length - 1]?.id !== card.id) {
+    pushCard(queue, card);
+    return;
+  }
+
+  const separator = separators.find(
+    (candidate) =>
+      candidate.id !== card.id && !queue.some((item) => item.id === candidate.id),
+  );
+  if (separator) {
+    pushCard(queue, separator);
+  }
+
+  if (queue[queue.length - 1]?.id !== card.id) {
+    pushCard(queue, card);
+  }
+}
+
+function pushCard(queue: LanguageCard[], card: LanguageCard | undefined) {
+  if (!card) {
+    return;
+  }
+
+  queue.push(card);
+}
+
+function pushUniqueCard(queue: LanguageCard[], card: LanguageCard | undefined) {
+  if (!card || queue.some((item) => item.id === card.id)) {
+    return;
+  }
+
+  queue.push(card);
 }
 
 function countRecentCorrectStreak(

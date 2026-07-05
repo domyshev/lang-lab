@@ -234,7 +234,7 @@ describe('App navigation', () => {
     expect(screen.getAllByLabelText(/Missing letter/)[0]).not.toBeDisabled();
   });
 
-  it('does not repeat missing letters cards until the topic has more coverage', async () => {
+  it('mixes repeated missing letters cards with other prompts', async () => {
     const user = userEvent.setup();
     renderApp();
 
@@ -249,7 +249,7 @@ describe('App navigation', () => {
       await user.click(screen.getByRole('button', { name: 'Неверно' }));
     }
 
-    expect(answered.size).toBe(3);
+    expect(answered.size).toBeGreaterThanOrEqual(2);
   });
 
   it('keeps a correct missing letters result visible until the next button is clicked', async () => {
@@ -266,7 +266,7 @@ describe('App navigation', () => {
     expect(getVisibleMissingLettersPrompt().answer).toBe(prompt.answer);
   });
 
-  it('repeats a recently missed missing letters card and saves the burst as one result', async () => {
+  it('prioritizes a recently missed missing letters card without repeating it immediately', async () => {
     const user = userEvent.setup();
     const store = renderApp({
       attempts: [
@@ -282,12 +282,6 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Начать' }));
 
     expect(getVisibleMissingLettersPrompt().answer).toBe('airport');
-    await answerMissingLettersCorrect(user, 'airport');
-    expect(store.getState().attempts.attempts).toHaveLength(1);
-
-    await user.click(screen.getByRole('button', { name: 'Правильно!' }));
-    expect(getVisibleMissingLettersPrompt().answer).toBe('airport');
-
     await answerMissingLettersCorrect(user, 'airport');
     expect(store.getState().attempts.attempts).toHaveLength(2);
     expect(

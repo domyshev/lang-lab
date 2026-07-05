@@ -35,7 +35,9 @@ import { MultipleChoiceExercise } from './components/exercises/MultipleChoiceExe
 import {
   LanguageCard,
   createCardSnapshot,
+  getCardAnswer,
   getTranslationHints,
+  isPhraseValue,
 } from './domain/cards';
 import { CrosswordPuzzle, createCrossword } from './domain/crossword';
 import { defaultVocabularyJson } from './domain/defaultVocabulary';
@@ -57,10 +59,6 @@ import {
   getPracticeSettings,
   orderCardsForMissingLettersPractice,
 } from './domain/practiceOrdering';
-import {
-  aggregateRepeatedPracticeAnswers,
-  getRepeatedPracticeCount,
-} from './domain/practiceRepetition';
 import { ALL_WORDS_THEME_ID, Theme } from './domain/themes';
 import { saveAttempt } from './store/attemptsSlice';
 import { applyImportResult } from './store/cardsSlice';
@@ -71,22 +69,23 @@ import { AppDispatch, RootState } from './store/store';
 type ExercisePreview =
   | { type: 'crossword'; puzzle: CrosswordPuzzle }
   | { type: 'multipleChoice'; prompt: ExercisePrompt & { options: string[] } }
-  | { type: 'missingLetters'; prompt?: ExercisePrompt & { maskedAnswer: string } }
-  | { type: 'missingWord'; prompt?: ExercisePrompt & { sentenceWithGap: string } };
+  | {
+      type: 'missingLetters';
+      prompt?: PracticePrompt<ExercisePrompt & { maskedAnswer: string }>;
+    }
+  | {
+      type: 'missingWord';
+      prompt?: PracticePrompt<ExercisePrompt & { sentenceWithGap: string }>;
+    };
 
 type SelectableTheme = Theme & { isAllWords?: boolean };
 
-type RepeatedPracticeBurst = {
-  answers: string[];
-  cardId: string;
+type ResultPromptHold = {
   exerciseType: 'missingLetters' | 'missingWord';
-  repeatCount: number;
+  practiceKey: string;
 };
 
-type ResultPromptHold = {
-  cardId: string;
-  exerciseType: 'missingLetters' | 'missingWord';
-};
+type PracticePrompt<T extends ExercisePrompt> = T & { practiceKey: string };
 
 export function App() {
   const dispatch = useDispatch<AppDispatch>();
@@ -101,16 +100,14 @@ export function App() {
     null,
   );
   const [
-    answeredMissingLettersCardIds,
-    setAnsweredMissingLettersCardIds,
+    answeredMissingLettersPromptKeys,
+    setAnsweredMissingLettersPromptKeys,
   ] = useState<string[]>([]);
-  const [answeredMissingWordCardIds, setAnsweredMissingWordCardIds] = useState<
+  const [answeredMissingWordPromptKeys, setAnsweredMissingWordPromptKeys] = useState<
     string[]
   >([]);
   const [answeredMultipleChoiceCardIds, setAnsweredMultipleChoiceCardIds] =
     useState<string[]>([]);
-  const [activePracticeBurst, setActivePracticeBurst] =
-    useState<RepeatedPracticeBurst | null>(null);
   const [resultPromptHold, setResultPromptHold] =
     useState<ResultPromptHold | null>(null);
   const [currentExerciseAnsweredCount, setCurrentExerciseAnsweredCount] =
@@ -175,17 +172,57 @@ export function App() {
     () => shuffleCards(eligibleCards, generationSeed),
     [eligibleCards, generationSeed],
   );
+  const missingLettersEligibleCards = useMemo(
+    () =>
+      eligibleCards.filter((card) => {
+        const answer = getCardAnswer(card, targetLanguage);
+        return Boolean(answer && !isPhraseValue(answer));
+      }),
+    [eligibleCards, targetLanguage],
+  );
+  const missingWordEligibleCards = useMemo(
+    () =>
+      eligibleCards.filter((card) => {
+        const answer = getCardAnswer(card, targetLanguage);
+        return Boolean(answer && isPhraseValue(answer));
+      }),
+    [eligibleCards, targetLanguage],
+  );
   const missingLettersOrderedCards = useMemo(
     () =>
       orderCardsForMissingLettersPractice({
         attempts,
-        cards: eligibleCards,
+        cards: missingLettersEligibleCards,
         now: new Date().toISOString(),
         seed: generationSeed,
         settings: getPracticeSettings(practiceSettings),
         targetLanguage,
       }),
-    [attempts, eligibleCards, generationSeed, practiceSettings, targetLanguage],
+    [
+      attempts,
+      generationSeed,
+      missingLettersEligibleCards,
+      practiceSettings,
+      targetLanguage,
+    ],
+  );
+  const missingWordOrderedCards = useMemo(
+    () =>
+      orderCardsForMissingLettersPractice({
+        attempts,
+        cards: missingWordEligibleCards,
+        now: new Date().toISOString(),
+        seed: generationSeed,
+        settings: getPracticeSettings(practiceSettings),
+        targetLanguage,
+      }),
+    [
+      attempts,
+      generationSeed,
+      missingWordEligibleCards,
+      practiceSettings,
+      targetLanguage,
+    ],
   );
   const lastSavedAttempt =
     attempts.find((attempt) => attempt.id === lastSavedAttemptId) ?? null;
@@ -254,74 +291,98 @@ export function App() {
     }
 
     if (selectedExerciseType === 'missingLetters') {
+      const occurrenceCounts = new Map<string, number>();
       const missingLettersPrompts = missingLettersOrderedCards
-        .map((card) => createMissingLettersPrompt({ card, targetLanguage }))
-        .filter((prompt): prompt is ExercisePrompt & { maskedAnswer: string } =>
-          Boolean(prompt),
+        .map((card) => {
+          const prompt = createMissingLettersPrompt({ card, targetLanguage });
+          return prompt
+            ? {
+                ...prompt,
+                practiceKey: createPracticeKey(
+                  card.id,
+                  getNextOccurrence(card.id, occurrenceCounts),
+                ),
+              }
+            : undefined;
+        })
+        .filter(
+          (
+            prompt,
+          ): prompt is PracticePrompt<ExercisePrompt & { maskedAnswer: string }> =>
+            Boolean(prompt),
         );
-      const activeBurstPrompt =
-        activePracticeBurst?.exerciseType === 'missingLetters'
-          ? missingLettersPrompts.find(
-              (prompt) => prompt.cardId === activePracticeBurst.cardId,
-            )
-          : undefined;
       const heldResultPrompt =
         resultPromptHold?.exerciseType === 'missingLetters'
           ? missingLettersPrompts.find(
-              (prompt) => prompt.cardId === resultPromptHold.cardId,
+              (prompt) => prompt.practiceKey === resultPromptHold.practiceKey,
             )
           : undefined;
       const lastAnsweredCardId =
-        answeredMissingLettersCardIds[answeredMissingLettersCardIds.length - 1];
-      const blockedCardIds =
-        answeredMissingLettersCardIds.length >= missingLettersPrompts.length
+        answeredMissingLettersPromptKeys[
+          answeredMissingLettersPromptKeys.length - 1
+        ];
+      const blockedPromptKeys =
+        answeredMissingLettersPromptKeys.length >= missingLettersPrompts.length
           ? [lastAnsweredCardId]
-          : answeredMissingLettersCardIds;
+          : answeredMissingLettersPromptKeys;
 
       return {
         type: 'missingLetters',
         prompt:
-          activeBurstPrompt ??
           heldResultPrompt ??
           missingLettersPrompts.find(
-            (prompt) => !blockedCardIds.includes(prompt.cardId),
+            (prompt) => !blockedPromptKeys.includes(prompt.practiceKey),
           ) ?? missingLettersPrompts[0],
       };
     }
 
-    const missingWordPrompts = randomizedEligibleCards
-      .map((card) => createMissingWordPrompt({ card, targetLanguage }))
-      .filter((prompt): prompt is ExercisePrompt & { sentenceWithGap: string } =>
-        Boolean(prompt),
+    const occurrenceCounts = new Map<string, number>();
+    const missingWordPrompts = missingWordOrderedCards
+      .map((card) => {
+        const prompt = createMissingWordPrompt({ card, targetLanguage });
+        return prompt
+          ? {
+              ...prompt,
+              practiceKey: createPracticeKey(
+                card.id,
+                getNextOccurrence(card.id, occurrenceCounts),
+              ),
+            }
+          : undefined;
+      })
+      .filter(
+        (
+          prompt,
+        ): prompt is PracticePrompt<ExercisePrompt & { sentenceWithGap: string }> =>
+          Boolean(prompt),
       );
-    const activeBurstPrompt =
-      activePracticeBurst?.exerciseType === 'missingWord'
-        ? missingWordPrompts.find(
-            (prompt) => prompt.cardId === activePracticeBurst.cardId,
-          )
-        : undefined;
     const heldResultPrompt =
       resultPromptHold?.exerciseType === 'missingWord'
         ? missingWordPrompts.find(
-            (prompt) => prompt.cardId === resultPromptHold.cardId,
+            (prompt) => prompt.practiceKey === resultPromptHold.practiceKey,
           )
         : undefined;
+    const lastAnsweredPromptKey =
+      answeredMissingWordPromptKeys[answeredMissingWordPromptKeys.length - 1];
+    const blockedPromptKeys =
+      answeredMissingWordPromptKeys.length >= missingWordPrompts.length
+        ? [lastAnsweredPromptKey]
+        : answeredMissingWordPromptKeys;
 
     return {
       type: 'missingWord',
       prompt:
-        activeBurstPrompt ??
         heldResultPrompt ??
         missingWordPrompts.find(
-          (prompt) => !answeredMissingWordCardIds.includes(prompt.cardId),
+          (prompt) => !blockedPromptKeys.includes(prompt.practiceKey),
         ),
     };
   }, [
-    activePracticeBurst,
-    answeredMissingLettersCardIds,
-    answeredMissingWordCardIds,
+    answeredMissingLettersPromptKeys,
+    answeredMissingWordPromptKeys,
     answeredMultipleChoiceCardIds,
     missingLettersOrderedCards,
+    missingWordOrderedCards,
     randomizedEligibleCards,
     resultPromptHold,
     selectedExerciseType,
@@ -331,10 +392,9 @@ export function App() {
   function resetExerciseState() {
     setIsExerciseStarted(false);
     setLastSavedAttemptId(null);
-    setAnsweredMissingLettersCardIds([]);
-    setAnsweredMissingWordCardIds([]);
+    setAnsweredMissingLettersPromptKeys([]);
+    setAnsweredMissingWordPromptKeys([]);
     setAnsweredMultipleChoiceCardIds([]);
-    setActivePracticeBurst(null);
     setResultPromptHold(null);
     setCurrentExerciseAnsweredCount(0);
     setCurrentExerciseSessionId(createId('exercise-session'));
@@ -386,50 +446,6 @@ export function App() {
     });
   }
 
-  function saveRepeatedPromptAttempt(
-    exerciseType: 'missingLetters' | 'missingWord',
-    prompt: ExercisePrompt,
-    answer: string,
-  ) {
-    const currentBurst =
-      activePracticeBurst?.exerciseType === exerciseType &&
-      activePracticeBurst.cardId === prompt.cardId
-        ? activePracticeBurst
-        : {
-            answers: [],
-            cardId: prompt.cardId,
-            exerciseType,
-            repeatCount: getRepeatedPracticeCount({
-              attempts,
-              cardId: prompt.cardId,
-              targetLanguage,
-            }),
-          };
-    const nextAnswers = [...currentBurst.answers, answer];
-
-    if (nextAnswers.length < currentBurst.repeatCount) {
-      setActivePracticeBurst({
-        ...currentBurst,
-        answers: nextAnswers,
-      });
-      setLastSavedAttemptId(null);
-      return;
-    }
-
-    const aggregate = aggregateRepeatedPracticeAnswers({
-      answers: nextAnswers,
-      expectedAnswer: prompt.expectedAnswer,
-    });
-    setActivePracticeBurst(null);
-    persistPromptAttempt({
-      answer: aggregate.answer,
-      exerciseType,
-      isCorrect: aggregate.isCorrect,
-      prompt,
-      advance: false,
-    });
-  }
-
   function persistPromptAttempt({
     advance,
     answer,
@@ -444,7 +460,10 @@ export function App() {
     prompt: ExercisePrompt;
   }) {
     if (exerciseType === 'missingLetters' || exerciseType === 'missingWord') {
-      setResultPromptHold({ cardId: prompt.cardId, exerciseType });
+      setResultPromptHold({
+        exerciseType,
+        practiceKey: getPracticeKey(prompt),
+      });
     }
 
     persistAttempt({
@@ -711,10 +730,9 @@ export function App() {
             size="large"
             onClick={() => {
               setIsExerciseStarted(true);
-              setAnsweredMissingLettersCardIds([]);
-              setAnsweredMissingWordCardIds([]);
+              setAnsweredMissingLettersPromptKeys([]);
+              setAnsweredMissingWordPromptKeys([]);
               setAnsweredMultipleChoiceCardIds([]);
-              setActivePracticeBurst(null);
               setResultPromptHold(null);
               setCurrentExerciseAnsweredCount(0);
               setLastSavedAttemptId(null);
@@ -811,29 +829,23 @@ export function App() {
       const missingLettersPrompt = exercisePreview.prompt;
       return (
         <MissingLettersExercise
-          key={`${missingLettersPrompt.cardId}:${generationSeed}`}
+          key={missingLettersPrompt.practiceKey}
           interfaceLanguage={interfaceLanguage}
           prompt={missingLettersPrompt}
           onAnswer={(answer) =>
-            saveRepeatedPromptAttempt('missingLetters', missingLettersPrompt, answer)
+            savePromptAttempt('missingLetters', missingLettersPrompt, answer, {
+              advance: false,
+            })
           }
           onNext={() => {
-            if (
-              activePracticeBurst?.exerciseType === 'missingLetters' &&
-              activePracticeBurst.cardId === missingLettersPrompt.cardId
-            ) {
-              setResultPromptHold(null);
-              setLastSavedAttemptId(null);
-              setGenerationSeed((seed) => seed + 1);
-              return;
-            }
             setResultPromptHold(null);
-            setAnsweredMissingLettersCardIds((cardIds) => [
-              ...cardIds.filter((cardId) => cardId !== missingLettersPrompt.cardId),
-              missingLettersPrompt.cardId,
+            setAnsweredMissingLettersPromptKeys((promptKeys) => [
+              ...promptKeys.filter(
+                (promptKey) => promptKey !== missingLettersPrompt.practiceKey,
+              ),
+              missingLettersPrompt.practiceKey,
             ]);
             setLastSavedAttemptId(null);
-            setGenerationSeed((seed) => seed + 1);
           }}
         />
       );
@@ -850,28 +862,22 @@ export function App() {
     const missingWordPrompt = exercisePreview.prompt;
     return (
       <MissingWordExercise
-        key={`${missingWordPrompt.cardId}:${generationSeed}`}
+        key={missingWordPrompt.practiceKey}
         prompt={missingWordPrompt}
         onAnswer={(answer) =>
-          saveRepeatedPromptAttempt('missingWord', missingWordPrompt, answer)
+          savePromptAttempt('missingWord', missingWordPrompt, answer, {
+            advance: false,
+          })
         }
         onNext={() => {
-          if (
-            activePracticeBurst?.exerciseType === 'missingWord' &&
-            activePracticeBurst.cardId === missingWordPrompt.cardId
-          ) {
-            setResultPromptHold(null);
-            setLastSavedAttemptId(null);
-            setGenerationSeed((seed) => seed + 1);
-            return;
-          }
           setResultPromptHold(null);
-          setAnsweredMissingWordCardIds((cardIds) => [
-            ...cardIds.filter((cardId) => cardId !== missingWordPrompt.cardId),
-            missingWordPrompt.cardId,
+          setAnsweredMissingWordPromptKeys((promptKeys) => [
+            ...promptKeys.filter(
+              (promptKey) => promptKey !== missingWordPrompt.practiceKey,
+            ),
+            missingWordPrompt.practiceKey,
           ]);
           setLastSavedAttemptId(null);
-          setGenerationSeed((seed) => seed + 1);
         }}
       />
     );
@@ -1193,4 +1199,24 @@ function createId(prefix: string): string {
   }
 
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function createPracticeKey(cardId: string, index: number): string {
+  return `${cardId}__${index}`;
+}
+
+function getNextOccurrence(
+  cardId: string,
+  occurrenceCounts: Map<string, number>,
+): number {
+  const occurrence = occurrenceCounts.get(cardId) ?? 0;
+  occurrenceCounts.set(cardId, occurrence + 1);
+  return occurrence;
+}
+
+function getPracticeKey(prompt: ExercisePrompt): string {
+  return (
+    (prompt as ExercisePrompt & { practiceKey?: string }).practiceKey ??
+    prompt.cardId
+  );
 }

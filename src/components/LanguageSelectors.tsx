@@ -37,6 +37,8 @@ import {
   setCorrectStreakCooldownMonths,
   setAssistantId,
   setInterfaceLanguage,
+  setNewCardMixFrequencyPercent,
+  setRecentMistakeRepeatFrequencyPercent,
   setTargetLanguage,
 } from '../store/appSlice';
 import { AppDispatch, RootState } from '../store/store';
@@ -306,6 +308,44 @@ export function LanguageSelectors() {
               helperText={t(interfaceLanguage, 'cooldownMonths')}
             />
           ))}
+          <TextField
+            data-test="language_selectors__mistake_repeat_frequency_input"
+            label={t(interfaceLanguage, 'recentMistakeRepeatFrequency')}
+            size="small"
+            type="number"
+            value={practiceSettings.recentMistakeRepeatFrequencyPercent}
+            onChange={(event) =>
+              dispatch(
+                setRecentMistakeRepeatFrequencyPercent(
+                  Number(event.target.value),
+                ),
+              )
+            }
+            inputProps={{
+              max: 100,
+              min: 0,
+              step: 5,
+            }}
+            helperText={t(interfaceLanguage, 'frequencyPercent')}
+          />
+          <TextField
+            data-test="language_selectors__new_card_mix_frequency_input"
+            label={t(interfaceLanguage, 'newCardMixFrequency')}
+            size="small"
+            type="number"
+            value={practiceSettings.newCardMixFrequencyPercent}
+            onChange={(event) =>
+              dispatch(
+                setNewCardMixFrequencyPercent(Number(event.target.value)),
+              )
+            }
+            inputProps={{
+              max: 100,
+              min: 0,
+              step: 5,
+            }}
+            helperText={t(interfaceLanguage, 'frequencyPercent')}
+          />
         </Stack>
       </Menu>
     </Stack>

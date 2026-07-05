@@ -185,7 +185,7 @@ export function MissingLettersExercise({
                   key={`${character}-${index}`}
                   component="span"
                   data-test={`missing_letters_exercise__correct_answer_cell__${prompt.cardId}__${index}`}
-                  style={getLetterCellInlineStyle('correct')}
+                  style={getLetterCellInlineStyle('correct', 'strong')}
                   sx={letterCellStyles}
                 >
                   {character}
@@ -294,6 +294,7 @@ const typedLetterCellStyles = {
 
 function getLetterCellInlineStyle(
   resultTone: SubmissionOutcome | null,
+  textTone: 'muted' | 'strong' = 'muted',
 ): CSSProperties | undefined {
   if (!resultTone) {
     return undefined;
@@ -312,8 +313,9 @@ function getLetterCellInlineStyle(
         : resultTone === 'memorize'
           ? '#f2cf66'
           : '#f2a7b4',
-    color: 'rgb(117, 117, 117)',
-    WebkitTextFillColor: 'rgb(117, 117, 117)',
+    color: textTone === 'strong' ? '#203015' : 'rgb(117, 117, 117)',
+    WebkitTextFillColor:
+      textTone === 'strong' ? '#203015' : 'rgb(117, 117, 117)',
   };
 }
 

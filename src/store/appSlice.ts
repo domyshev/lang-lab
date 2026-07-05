@@ -47,6 +47,21 @@ const appSlice = createSlice({
         sanitizeMonths(action.payload.months);
       state.practiceSettings = settings;
     },
+    setNewCardMixFrequencyPercent(state, action: PayloadAction<number>) {
+      const settings = getPracticeSettings(state.practiceSettings);
+      settings.newCardMixFrequencyPercent = sanitizePercent(action.payload);
+      state.practiceSettings = settings;
+    },
+    setRecentMistakeRepeatFrequencyPercent(
+      state,
+      action: PayloadAction<number>,
+    ) {
+      const settings = getPracticeSettings(state.practiceSettings);
+      settings.recentMistakeRepeatFrequencyPercent = sanitizePercent(
+        action.payload,
+      );
+      state.practiceSettings = settings;
+    },
   },
 });
 
@@ -54,6 +69,8 @@ export const {
   setAssistantId,
   setCorrectStreakCooldownMonths,
   setInterfaceLanguage,
+  setNewCardMixFrequencyPercent,
+  setRecentMistakeRepeatFrequencyPercent,
   setTargetLanguage,
 } = appSlice.actions;
 export const appReducer = appSlice.reducer;
@@ -64,4 +81,12 @@ function sanitizeMonths(value: number): number {
   }
 
   return Math.round(value * 10) / 10;
+}
+
+function sanitizePercent(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.min(100, Math.max(0, Math.round(value)));
 }

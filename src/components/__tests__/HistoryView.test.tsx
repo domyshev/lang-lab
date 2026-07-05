@@ -45,6 +45,11 @@ describe('HistoryView', () => {
       within(missingLettersCard!).getByLabelText('Правильный ответ: airport'),
     ).toBeInTheDocument();
     expect(
+      within(
+        within(missingLettersCard!).getByLabelText('Правильный ответ: airport'),
+      ).getByText('a'),
+    ).toHaveStyle({ color: 'rgb(32, 48, 21)' });
+    expect(
       within(missingLettersCard!).getByLabelText('Правильный ответ: vehicle'),
     ).toBeInTheDocument();
     expect(
