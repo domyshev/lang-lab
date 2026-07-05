@@ -187,7 +187,7 @@ describe('App navigation', () => {
     expect(screen.queryByText('easy')).not.toBeInTheDocument();
     expect(screen.getAllByText('Фраза').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Слово').length).toBeGreaterThan(0);
-    expect(screen.getAllByTestId('theme-card-item')).toHaveLength(6);
+    expect(getByDataTestPrefix('theme_detail__card_item__')).toHaveLength(6);
     expect(
       screen.getAllByLabelText('Статистика по слову: Верно 0, Неверно 0').length,
     ).toBeGreaterThan(0);
@@ -331,7 +331,7 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Начать' }));
     await answerMissingLettersWrong(user);
 
-    const toolbar = screen.getByTestId('exercise-toolbar');
+    const toolbar = screen.getByTestId('app__exercise_toolbar');
     expect(within(toolbar).getByLabelText('Мысль персонажа')).toBeInTheDocument();
     expect(
       within(toolbar).getByRole('button', { name: 'Закончить упражнение' }),
@@ -407,7 +407,7 @@ describe('App navigation', () => {
     expect(screen.getAllByLabelText('Верно: 0').length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText('Неверно: 2').length).toBeGreaterThan(0);
 
-    const attemptCards = screen.getAllByTestId('history-attempt-card');
+    const attemptCards = getByDataTestPrefix('history_view__attempt_card__');
     expect(attemptCards).toHaveLength(1);
     expect(attemptCards[0]).toHaveTextContent('Пропущенные буквы');
     expect(
@@ -460,7 +460,7 @@ describe('App navigation', () => {
 
     await user.click(screen.getByRole('button', { name: 'Вопрос с 3 вариантами' }));
     await user.click(screen.getByRole('button', { name: 'Начать' }));
-    await user.click(screen.getAllByTestId('multiple-choice-option')[0]);
+    await user.click(getByDataTestPrefix('multiple_choice_exercise__option__')[0]);
 
     expect(screen.getByText('Статистика по слову')).toBeInTheDocument();
     expect(
@@ -476,7 +476,7 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Начать' }));
 
     const firstTriple = getMultipleChoiceOptionText();
-    await user.click(screen.getAllByTestId('multiple-choice-option')[0]);
+    await user.click(getByDataTestPrefix('multiple_choice_exercise__option__')[0]);
     await user.click(
       screen.queryByRole('button', { name: 'Правильно!' }) ??
         screen.getByRole('button', { name: 'Неверно' }),
@@ -549,9 +549,14 @@ async function answerMissingWordWrong(user: ReturnType<typeof userEvent.setup>) 
 }
 
 function getMultipleChoiceOptionText(): string[] {
-  return screen
-    .getAllByTestId('multiple-choice-option')
+  return getByDataTestPrefix('multiple_choice_exercise__option__')
     .map((option) => option.textContent ?? '');
+}
+
+function getByDataTestPrefix(prefix: string): HTMLElement[] {
+  return Array.from(
+    document.body.querySelectorAll<HTMLElement>(`[data-test^="${prefix}"]`),
+  );
 }
 
 function createStoredAttempt({

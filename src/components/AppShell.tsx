@@ -33,8 +33,12 @@ export function AppShell({
   );
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box
+      data-test="app_shell__root"
+      sx={{ minHeight: '100vh', bgcolor: 'background.default' }}
+    >
       <AppBar
+        data-test="app_shell__app_bar"
         position="sticky"
         elevation={0}
         sx={{
@@ -44,6 +48,7 @@ export function AppShell({
         }}
       >
         <Toolbar
+          data-test="app_shell__toolbar"
           sx={{
             alignItems: { xs: 'flex-start', md: 'center' },
             gap: { xs: 1.25, md: 2 },
@@ -58,6 +63,7 @@ export function AppShell({
           />
 
           <Tabs
+            data-test="app_shell__main_tabs"
             value={activeSection}
             onChange={(_, value: AppShellSection) => onNavigate?.(value)}
             aria-label="Main sections"
@@ -83,21 +89,39 @@ export function AppShell({
               },
             }}
           >
-            <Tab value="game" label={t(interfaceLanguage, 'game')} />
-            <Tab value="cards" label={t(interfaceLanguage, 'cards')} />
             <Tab
+              data-test="app_shell__tab__game"
+              value="game"
+              label={t(interfaceLanguage, 'game')}
+            />
+            <Tab
+              data-test="app_shell__tab__cards"
+              value="cards"
+              label={t(interfaceLanguage, 'cards')}
+            />
+            <Tab
+              data-test="app_shell__tab__statistics"
               value="statistics"
               label={t(interfaceLanguage, 'statistics')}
             />
-            <Tab value="import" label={t(interfaceLanguage, 'importSection')} />
+            <Tab
+              data-test="app_shell__tab__import"
+              value="import"
+              label={t(interfaceLanguage, 'importSection')}
+            />
           </Tabs>
 
-          <Box sx={{ flexGrow: 1 }} />
+          <Box data-test="app_shell__toolbar_spacer" sx={{ flexGrow: 1 }} />
           <LanguageSelectors />
         </Toolbar>
       </AppBar>
 
-      <Container component="main" maxWidth="lg" sx={{ py: { xs: 2, md: 3 } }}>
+      <Container
+        component="main"
+        data-test="app_shell__main_content"
+        maxWidth="lg"
+        sx={{ py: { xs: 2, md: 3 } }}
+      >
         {children}
       </Container>
     </Box>

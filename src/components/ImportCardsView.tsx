@@ -96,17 +96,27 @@ export function ImportCardsView() {
     lastResult?.invalidRecords.filter((record) => record.index !== -1) ?? [];
 
   return (
-    <Paper sx={{ p: { xs: 2, md: 3 } }}>
-      <Stack spacing={2.5}>
-        <Box>
-          <Typography variant="h5" component="h2" sx={{ fontWeight: 800 }}>
+    <Paper data-test="import_cards__panel" sx={{ p: { xs: 2, md: 3 } }}>
+      <Stack data-test="import_cards__content" spacing={2.5}>
+        <Box data-test="import_cards__header">
+          <Typography
+            data-test="import_cards__title"
+            variant="h5"
+            component="h2"
+            sx={{ fontWeight: 800 }}
+          >
             {t(interfaceLanguage, 'importCards')}
           </Typography>
-          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+          <Typography
+            color="text.secondary"
+            data-test="import_cards__description"
+            sx={{ mt: 0.5 }}
+          >
             {t(interfaceLanguage, 'importDescription')}
           </Typography>
           <Button
             component="a"
+            data-test="import_cards__download_format_link"
             download="LANGUAGE_CARD_FORMAT.md"
             href={languageCardFormatUrl}
             size="small"
@@ -117,29 +127,42 @@ export function ImportCardsView() {
           </Button>
         </Box>
 
-        <Accordion defaultExpanded disableGutters>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight={800}>
+        <Accordion data-test="import_cards__file_accordion" defaultExpanded disableGutters>
+          <AccordionSummary
+            data-test="import_cards__file_summary"
+            expandIcon={<ExpandMoreIcon data-test="import_cards__file_expand_icon" />}
+          >
+            <Typography data-test="import_cards__file_title" fontWeight={800}>
               {t(interfaceLanguage, 'fileImport')}
             </Typography>
           </AccordionSummary>
-          <AccordionDetails>
+          <AccordionDetails data-test="import_cards__file_details">
             <Stack
+              data-test="import_cards__file_controls"
               direction={{ xs: 'column', sm: 'row' }}
               spacing={1.5}
               alignItems={{ xs: 'stretch', sm: 'center' }}
             >
-              <Button component="label" variant="outlined">
+              <Button
+                component="label"
+                data-test="import_cards__choose_file_button"
+                variant="outlined"
+              >
                 {t(interfaceLanguage, 'chooseJsonFile')}
                 <input
                   aria-label={t(interfaceLanguage, 'chooseJsonFile')}
                   accept=".json,application/json"
+                  data-test="import_cards__file_input"
                   hidden
                   type="file"
                   onChange={handleFileChange}
                 />
               </Button>
-              <Typography color="text.secondary" variant="body2">
+              <Typography
+                color="text.secondary"
+                data-test="import_cards__file_status"
+                variant="body2"
+              >
                 {selectedFileName
                   ? formatImportedFile(interfaceLanguage, selectedFileName)
                   : formatStoredCardCount(interfaceLanguage, cards.length)}
@@ -149,17 +172,22 @@ export function ImportCardsView() {
         </Accordion>
 
         <Accordion
+          data-test="import_cards__paste_accordion"
           disableGutters
           slotProps={{ transition: { unmountOnExit: true } }}
         >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight={800}>
+          <AccordionSummary
+            data-test="import_cards__paste_summary"
+            expandIcon={<ExpandMoreIcon data-test="import_cards__paste_expand_icon" />}
+          >
+            <Typography data-test="import_cards__paste_title" fontWeight={800}>
               {t(interfaceLanguage, 'pasteJson')}
             </Typography>
           </AccordionSummary>
-          <AccordionDetails>
-            <Stack spacing={2}>
+          <AccordionDetails data-test="import_cards__paste_details">
+            <Stack data-test="import_cards__paste_form" spacing={2}>
               <TextField
+                data-test="import_cards__json_textarea"
                 label={t(interfaceLanguage, 'cardsJson')}
                 value={pastedJson}
                 onChange={(event) => setPastedJson(event.target.value)}
@@ -179,6 +207,7 @@ export function ImportCardsView() {
                 fullWidth
               />
               <Button
+                data-test="import_cards__paste_import_button"
                 startIcon={<FileUploadIcon />}
                 variant="contained"
                 onClick={handleImport}
@@ -191,14 +220,25 @@ export function ImportCardsView() {
           </AccordionDetails>
         </Accordion>
 
-        {fileError && <Alert severity="error">{fileError}</Alert>}
+        {fileError && (
+          <Alert data-test="import_cards__file_error_alert" severity="error">
+            {fileError}
+          </Alert>
+        )}
 
         {lastResult && (
           <>
             <Divider />
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Stack
+              data-test="import_cards__summary_chips"
+              direction="row"
+              spacing={1}
+              flexWrap="wrap"
+              useFlexGap
+            >
               {summaryLabels.map((item) => (
                 <Chip
+                  data-test={`import_cards__summary_chip__${item.key}`}
                   key={item.key}
                   label={`${t(interfaceLanguage, item.labelKey)}: ${
                     lastResult.summary[item.key]
@@ -216,20 +256,27 @@ export function ImportCardsView() {
               ))}
             </Stack>
 
-            {rootErrors.map((record) => (
-              <Alert key={record.reason} severity="error">
+            {rootErrors.map((record, index) => (
+              <Alert
+                data-test={`import_cards__root_error__${index}`}
+                key={record.reason}
+                severity="error"
+              >
                 {record.reason}
               </Alert>
             ))}
 
             {recordErrors.length > 0 && (
-              <Alert severity="warning">
-                <Stack spacing={0.5}>
-                  <Typography fontWeight={700}>
+              <Alert data-test="import_cards__record_errors_alert" severity="warning">
+                <Stack data-test="import_cards__record_errors_list" spacing={0.5}>
+                  <Typography data-test="import_cards__record_errors_title" fontWeight={700}>
                     {t(interfaceLanguage, 'recordsCouldNotBeImported')}
                   </Typography>
                   {recordErrors.map((record) => (
-                    <Typography key={`${record.index}-${record.reason}`}>
+                    <Typography
+                      data-test={`import_cards__record_error__${record.index}`}
+                      key={`${record.index}-${record.reason}`}
+                    >
                       {t(interfaceLanguage, 'row')} {record.index + 1}:{' '}
                       {record.reason}
                     </Typography>

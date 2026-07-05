@@ -26,22 +26,37 @@ export function MultipleChoiceExercise({
   }, [prompt.cardId, prompt.expectedAnswer]);
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Stack spacing={2}>
-        <Typography variant="h6">
+    <Paper
+      data-test={`multiple_choice_exercise__panel__${prompt.cardId}`}
+      sx={{ p: 2 }}
+    >
+      <Stack
+        data-test={`multiple_choice_exercise__content__${prompt.cardId}`}
+        spacing={2}
+      >
+        <Typography
+          data-test={`multiple_choice_exercise__title__${prompt.cardId}`}
+          variant="h6"
+        >
           {t(interfaceLanguage, 'multipleChoice')}
         </Typography>
-        <Typography>{prompt.prompt}</Typography>
-        {prompt.definitionHint && <Typography>{prompt.definitionHint}</Typography>}
+        <Typography data-test={`multiple_choice_exercise__prompt__${prompt.cardId}`}>
+          {prompt.prompt}
+        </Typography>
+        {prompt.definitionHint && (
+          <Typography data-test={`multiple_choice_exercise__definition_hint__${prompt.cardId}`}>
+            {prompt.definitionHint}
+          </Typography>
+        )}
         <Stack
-          data-testid="multiple-choice-options"
+          data-test={`multiple_choice_exercise__options__${prompt.cardId}`}
           direction="column"
           spacing={1}
           sx={{ alignItems: 'stretch', maxWidth: 420 }}
         >
-          {prompt.options.map((option) => (
+          {prompt.options.map((option, index) => (
             <Button
-              data-testid="multiple-choice-option"
+              data-test={`multiple_choice_exercise__option__${prompt.cardId}__${index}`}
               disabled={isSubmitted}
               key={option}
               variant="outlined"
@@ -73,6 +88,7 @@ export function MultipleChoiceExercise({
         </Stack>
         {isSubmitted && (
           <Button
+            data-test={`multiple_choice_exercise__next_button__${prompt.cardId}`}
             variant="contained"
             startIcon={
               isCorrect ? <EmojiEventsOutlinedIcon /> : <ErrorOutlineIcon />

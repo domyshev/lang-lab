@@ -6,15 +6,18 @@ import { t } from '../domain/i18n';
 import { SupportedLanguage } from '../domain/languages';
 
 export function CountMetric({
+  dataTestPrefix = 'count_metric',
   label,
   value,
 }: {
+  dataTestPrefix?: string;
   label: string;
   value: number;
 }) {
   return (
     <Stack
       aria-label={`${label}: ${value}`}
+      data-test={`${dataTestPrefix}__root`}
       direction="row"
       spacing={0.75}
       alignItems="center"
@@ -22,14 +25,20 @@ export function CountMetric({
       useFlexGap
       sx={{ width: '100%' }}
     >
-      <MetricLabel>{label}:</MetricLabel>
-      <MetricChip ariaLabel={`${label} ${value}`} label={value} tone="total" />
+      <MetricLabel dataTest={`${dataTestPrefix}__label`}>{label}:</MetricLabel>
+      <MetricChip
+        ariaLabel={`${label} ${value}`}
+        dataTest={`${dataTestPrefix}__value_chip`}
+        label={value}
+        tone="total"
+      />
     </Stack>
   );
 }
 
 export function StatsFormula({
   correct,
+  dataTestPrefix = 'stats_formula',
   incorrect,
   interfaceLanguage,
   showLabel = true,
@@ -37,6 +46,7 @@ export function StatsFormula({
   totalLabel,
 }: {
   correct: number;
+  dataTestPrefix?: string;
   incorrect: number;
   interfaceLanguage: SupportedLanguage;
   showLabel?: boolean;
@@ -49,6 +59,7 @@ export function StatsFormula({
   return (
     <Stack
       aria-label={`${totalLabel}: ${total} = ${correct} + ${incorrect}`}
+      data-test={`${dataTestPrefix}__root`}
       direction="row"
       spacing={0.75}
       alignItems="center"
@@ -56,27 +67,34 @@ export function StatsFormula({
       useFlexGap
       sx={{ width: '100%' }}
     >
-      {showLabel && <MetricLabel>{totalLabel}:</MetricLabel>}
+      {showLabel && (
+        <MetricLabel dataTest={`${dataTestPrefix}__label`}>
+          {totalLabel}:
+        </MetricLabel>
+      )}
       <MetricChip
         ariaLabel={`${totalLabel}: ${total}`}
+        dataTest={`${dataTestPrefix}__total_chip`}
         label={total}
         tone="total"
         tooltip={t(interfaceLanguage, 'totalAnsweredTooltip')}
       />
-      <FormulaIcon label="=">
+      <FormulaIcon dataTest={`${dataTestPrefix}__equals_icon`} label="=">
         <DragHandleRoundedIcon fontSize="inherit" />
       </FormulaIcon>
       <MetricChip
         ariaLabel={`${correctLabel}: ${correct}`}
+        dataTest={`${dataTestPrefix}__correct_chip`}
         label={correct}
         tone="correct"
         tooltip={t(interfaceLanguage, 'correctAnsweredTooltip')}
       />
-      <FormulaIcon label="+">
+      <FormulaIcon dataTest={`${dataTestPrefix}__plus_icon`} label="+">
         <AddRoundedIcon fontSize="inherit" />
       </FormulaIcon>
       <MetricChip
         ariaLabel={`${incorrectLabel}: ${incorrect}`}
+        dataTest={`${dataTestPrefix}__incorrect_chip`}
         label={incorrect}
         tone="incorrect"
         tooltip={t(interfaceLanguage, 'incorrectAnsweredTooltip')}
@@ -85,10 +103,17 @@ export function StatsFormula({
   );
 }
 
-function MetricLabel({ children }: { children: ReactNode }) {
+function MetricLabel({
+  children,
+  dataTest,
+}: {
+  children: ReactNode;
+  dataTest: string;
+}) {
   return (
     <Typography
       component="span"
+      data-test={dataTest}
       sx={{
         color: '#203015',
         fontSize: 16,
@@ -103,11 +128,13 @@ function MetricLabel({ children }: { children: ReactNode }) {
 
 function MetricChip({
   ariaLabel,
+  dataTest,
   label,
   tone,
   tooltip,
 }: {
   ariaLabel: string;
+  dataTest: string;
   label: number;
   tone: 'total' | 'correct' | 'incorrect';
   tooltip?: string;
@@ -115,6 +142,7 @@ function MetricChip({
   const chip = (
     <Chip
       aria-label={ariaLabel}
+      data-test={dataTest}
       label={label}
       variant="outlined"
       sx={
@@ -132,15 +160,18 @@ function MetricChip({
 
 function FormulaIcon({
   children,
+  dataTest,
   label,
 }: {
   children: ReactNode;
+  dataTest: string;
   label: string;
 }) {
   return (
     <Box
       aria-label={label}
       component="span"
+      data-test={dataTest}
       sx={{
         alignItems: 'center',
         alignSelf: 'center',

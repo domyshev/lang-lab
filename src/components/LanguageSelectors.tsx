@@ -77,6 +77,7 @@ export function LanguageSelectors() {
 
   return (
     <Stack
+      data-test="language_selectors__root"
       direction="row"
       flexWrap="wrap"
       spacing={1}
@@ -86,12 +87,19 @@ export function LanguageSelectors() {
         width: { xs: '100%', md: 'auto' },
       }}
     >
-      <FormControl size="small" sx={{ minWidth: 86 }}>
-        <InputLabel id={assistantLabelId}>
+      <FormControl
+        data-test="language_selectors__assistant_control"
+        size="small"
+        sx={{ minWidth: 86 }}
+      >
+        <InputLabel
+          data-test="language_selectors__assistant_label"
+          id={assistantLabelId}
+        >
           {t(interfaceLanguage, 'assistant')}
         </InputLabel>
         <Select
-          data-testid="assistant-select"
+          data-test="language_selectors__assistant_select"
           labelId={assistantLabelId}
           label={t(interfaceLanguage, 'assistant')}
           value={assistantId}
@@ -102,10 +110,15 @@ export function LanguageSelectors() {
             const tooltip = getAssistantTooltip(value, interfaceLanguage);
             return (
               <Tooltip describeChild title={tooltip}>
-                <Box component="span" sx={{ display: 'inline-flex', mx: 'auto' }}>
+                <Box
+                  component="span"
+                  data-test={`language_selectors__assistant_selected_icon__${value}`}
+                  sx={{ display: 'inline-flex', mx: 'auto' }}
+                >
                   <AssistantStickerIcon
                     ariaLabel={tooltip}
                     assistantId={value}
+                    dataTest={`language_selectors__assistant_selected_sticker__${value}`}
                     size={30}
                   />
                 </Box>
@@ -124,6 +137,7 @@ export function LanguageSelectors() {
         >
           {assistantCharacters.map((assistant) => (
             <MenuItem
+              data-test={`language_selectors__assistant_option__${assistant.id}`}
               key={assistant.id}
               aria-label={getAssistantTooltip(assistant.id, interfaceLanguage)}
               value={assistant.id}
@@ -133,13 +147,18 @@ export function LanguageSelectors() {
                 describeChild
                 title={getAssistantTooltip(assistant.id, interfaceLanguage)}
               >
-                <Box component="span" sx={{ display: 'inline-flex' }}>
+                <Box
+                  component="span"
+                  data-test={`language_selectors__assistant_option_icon__${assistant.id}`}
+                  sx={{ display: 'inline-flex' }}
+                >
                   <AssistantStickerIcon
                     ariaLabel={getAssistantTooltip(
                       assistant.id,
                       interfaceLanguage,
                     )}
                     assistantId={assistant.id}
+                    dataTest={`language_selectors__assistant_option_sticker__${assistant.id}`}
                     size={36}
                   />
                 </Box>
@@ -149,47 +168,81 @@ export function LanguageSelectors() {
         </Select>
       </FormControl>
 
-      <FormControl size="small" sx={{ minWidth: { xs: 138, sm: 150 } }}>
-        <InputLabel id={interfaceLabelId}>
+      <FormControl
+        data-test="language_selectors__interface_language_control"
+        size="small"
+        sx={{ minWidth: { xs: 138, sm: 150 } }}
+      >
+        <InputLabel
+          data-test="language_selectors__interface_language_label"
+          id={interfaceLabelId}
+        >
           {t(interfaceLanguage, 'interfaceLanguage')}
         </InputLabel>
         <Select
-          data-testid="interface-language-select"
+          data-test="language_selectors__interface_language_select"
           labelId={interfaceLabelId}
           label={t(interfaceLanguage, 'interfaceLanguage')}
           value={interfaceLanguage}
           onChange={handleInterfaceChange}
           renderValue={(value) => (
-            <LanguageLabel language={value as SupportedLanguage} />
+            <LanguageLabel
+              dataTestPrefix="language_selectors__interface_language_selected"
+              language={value as SupportedLanguage}
+            />
           )}
           sx={compactSelectSx}
         >
           {supportedLanguages.map((language) => (
-            <MenuItem key={language} value={language}>
-              <LanguageLabel language={language} />
+            <MenuItem
+              data-test={`language_selectors__interface_language_option__${language}`}
+              key={language}
+              value={language}
+            >
+              <LanguageLabel
+                dataTestPrefix={`language_selectors__interface_language_option_label__${language}`}
+                language={language}
+              />
             </MenuItem>
           ))}
         </Select>
       </FormControl>
 
-      <FormControl size="small" sx={{ minWidth: { xs: 118, sm: 138 } }}>
-        <InputLabel id={targetLabelId}>
+      <FormControl
+        data-test="language_selectors__target_language_control"
+        size="small"
+        sx={{ minWidth: { xs: 118, sm: 138 } }}
+      >
+        <InputLabel
+          data-test="language_selectors__target_language_label"
+          id={targetLabelId}
+        >
           {t(interfaceLanguage, 'targetLanguage')}
         </InputLabel>
         <Select
-          data-testid="target-language-select"
+          data-test="language_selectors__target_language_select"
           labelId={targetLabelId}
           label={t(interfaceLanguage, 'targetLanguage')}
           value={targetLanguage}
           onChange={handleTargetChange}
           renderValue={(value) => (
-            <LanguageLabel language={value as SupportedLanguage} />
+            <LanguageLabel
+              dataTestPrefix="language_selectors__target_language_selected"
+              language={value as SupportedLanguage}
+            />
           )}
           sx={compactSelectSx}
         >
           {supportedLanguages.map((language) => (
-            <MenuItem key={language} value={language}>
-              <LanguageLabel language={language} />
+            <MenuItem
+              data-test={`language_selectors__target_language_option__${language}`}
+              key={language}
+              value={language}
+            >
+              <LanguageLabel
+                dataTestPrefix={`language_selectors__target_language_option_label__${language}`}
+                language={language}
+              />
             </MenuItem>
           ))}
         </Select>
@@ -197,6 +250,7 @@ export function LanguageSelectors() {
 
       <IconButton
         aria-label={t(interfaceLanguage, 'practiceSettings')}
+        data-test="language_selectors__practice_settings_button"
         onClick={(event) => setSettingsAnchor(event.currentTarget)}
         sx={{
           border: '1px solid rgba(32, 48, 21, 0.22)',
@@ -210,17 +264,26 @@ export function LanguageSelectors() {
       </IconButton>
       <Menu
         anchorEl={settingsAnchor}
+        data-test="language_selectors__practice_settings_menu"
         open={isSettingsOpen}
         onClose={() => setSettingsAnchor(null)}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
       >
-        <Stack spacing={1.5} sx={{ minWidth: 280, p: 2 }}>
-          <Typography fontWeight={900}>
+        <Stack
+          data-test="language_selectors__practice_settings_panel"
+          spacing={1.5}
+          sx={{ minWidth: 280, p: 2 }}
+        >
+          <Typography
+            data-test="language_selectors__practice_settings_title"
+            fontWeight={900}
+          >
             {t(interfaceLanguage, 'practiceSettings')}
           </Typography>
           {cooldownFields.map((field) => (
             <TextField
+              data-test={`language_selectors__cooldown_input__${field.key}`}
               key={field.key}
               label={t(interfaceLanguage, field.labelKey)}
               size="small"
@@ -271,19 +334,36 @@ const compactSelectSx = {
   },
 };
 
-function LanguageLabel({ language }: { language: SupportedLanguage }) {
+function LanguageLabel({
+  dataTestPrefix,
+  language,
+}: {
+  dataTestPrefix: string;
+  language: SupportedLanguage;
+}) {
   return (
     <Stack
+      data-test={`${dataTestPrefix}__root`}
       component="span"
       direction="row"
       spacing={1}
       alignItems="center"
       sx={{ minWidth: 0 }}
     >
-      <Box component="span" aria-hidden="true" sx={{ fontSize: 18 }}>
+      <Box
+        component="span"
+        aria-hidden="true"
+        data-test={`${dataTestPrefix}__flag`}
+        sx={{ fontSize: 18 }}
+      >
         {languageFlags[language]}
       </Box>
-      <Typography component="span" noWrap sx={{ fontSize: 14 }}>
+      <Typography
+        component="span"
+        data-test={`${dataTestPrefix}__name`}
+        noWrap
+        sx={{ fontSize: 14 }}
+      >
         {languageLabels[language]}
       </Typography>
     </Stack>

@@ -94,12 +94,30 @@ export function MissingWordExercise({
   }
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Stack spacing={2}>
-        <Typography variant="h6">{t(interfaceLanguage, 'missingWord')}</Typography>
-        <Typography>{prompt.prompt}</Typography>
-        {prompt.definitionHint && <Typography>{prompt.definitionHint}</Typography>}
+    <Paper
+      data-test={`missing_word_exercise__panel__${prompt.cardId}`}
+      sx={{ p: 2 }}
+    >
+      <Stack
+        data-test={`missing_word_exercise__content__${prompt.cardId}`}
+        spacing={2}
+      >
+        <Typography
+          data-test={`missing_word_exercise__title__${prompt.cardId}`}
+          variant="h6"
+        >
+          {t(interfaceLanguage, 'missingWord')}
+        </Typography>
+        <Typography data-test={`missing_word_exercise__prompt__${prompt.cardId}`}>
+          {prompt.prompt}
+        </Typography>
+        {prompt.definitionHint && (
+          <Typography data-test={`missing_word_exercise__definition_hint__${prompt.cardId}`}>
+            {prompt.definitionHint}
+          </Typography>
+        )}
         <Box
+          data-test={`missing_word_exercise__sentence__${prompt.cardId}`}
           sx={{
             alignItems: 'center',
             display: 'flex',
@@ -107,9 +125,12 @@ export function MissingWordExercise({
             gap: 0.75,
           }}
         >
-          <SentenceText>{sentenceParts.before}</SentenceText>
+          <SentenceText dataTest={`missing_word_exercise__sentence_before__${prompt.cardId}`}>
+            {sentenceParts.before}
+          </SentenceText>
           {renderAnswerCells({
             characters: answerCharacters,
+            dataTestPrefix: `missing_word_exercise__answer_cells__${prompt.cardId}`,
             editableIndexes,
             inputRefs,
             isSubmitted,
@@ -118,17 +139,26 @@ export function MissingWordExercise({
             onCellKeyDown: handleCellKeyDown,
             setLetters,
           })}
-          <SentenceText>{sentenceParts.after}</SentenceText>
+          <SentenceText dataTest={`missing_word_exercise__sentence_after__${prompt.cardId}`}>
+            {sentenceParts.after}
+          </SentenceText>
         </Box>
         {isSubmitted && !isCorrect && (
-          <Stack spacing={0.75}>
-            <Typography variant="overline">
+          <Stack
+            data-test={`missing_word_exercise__correct_answer_block__${prompt.cardId}`}
+            spacing={0.75}
+          >
+            <Typography
+              data-test={`missing_word_exercise__correct_answer_label__${prompt.cardId}`}
+              variant="overline"
+            >
               {t(interfaceLanguage, 'correctAnswer')}
             </Typography>
             <Stack
               aria-label={`${t(interfaceLanguage, 'correctAnswer')}: ${
                 prompt.expectedAnswer
               }`}
+              data-test={`missing_word_exercise__correct_answer_cells__${prompt.cardId}`}
               direction="row"
               spacing={0.75}
               flexWrap="wrap"
@@ -136,11 +166,15 @@ export function MissingWordExercise({
             >
               {prompt.expectedAnswer.split('').map((character, index) =>
                 character.trim() === '' ? (
-                  <AnswerSpace key={`correct-space-${index}`} />
+                  <AnswerSpace
+                    dataTest={`missing_word_exercise__correct_answer_space__${prompt.cardId}__${index}`}
+                    key={`correct-space-${index}`}
+                  />
                 ) : (
                   <Box
                     key={`correct-${character}-${index}`}
                     component="span"
+                    data-test={`missing_word_exercise__correct_answer_cell__${prompt.cardId}__${index}`}
                     style={getLetterCellInlineStyle('correct')}
                     sx={letterCellStyles}
                   >
@@ -152,6 +186,7 @@ export function MissingWordExercise({
           </Stack>
         )}
         <Button
+          data-test={`missing_word_exercise__submit_or_next_button__${prompt.cardId}`}
           variant="contained"
           startIcon={
             isSubmitted && !isMemorize ? (
@@ -219,7 +254,13 @@ export function MissingWordExercise({
   );
 }
 
-function SentenceText({ children }: { children: string }) {
+function SentenceText({
+  children,
+  dataTest,
+}: {
+  children: string;
+  dataTest: string;
+}) {
   if (!children.trim()) {
     return null;
   }
@@ -227,6 +268,7 @@ function SentenceText({ children }: { children: string }) {
   return (
     <Typography
       component="span"
+      data-test={dataTest}
       sx={{ fontSize: 22, lineHeight: '38px', whiteSpace: 'pre-wrap' }}
     >
       {children.trim()}
@@ -236,6 +278,7 @@ function SentenceText({ children }: { children: string }) {
 
 function renderAnswerCells({
   characters,
+  dataTestPrefix,
   editableIndexes,
   inputRefs,
   isSubmitted,
@@ -245,6 +288,7 @@ function renderAnswerCells({
   setLetters,
 }: {
   characters: string[];
+  dataTestPrefix: string;
   editableIndexes: number[];
   inputRefs: MutableRefObject<Record<number, HTMLInputElement | null>>;
   isSubmitted: boolean;
@@ -257,15 +301,21 @@ function renderAnswerCells({
 
   return characters.map((character, index) => {
     if (character.trim() === '') {
-      return <AnswerSpace key={`space-${index}`} />;
+      return (
+        <AnswerSpace
+          dataTest={`${dataTestPrefix}__space__${index}`}
+          key={`space-${index}`}
+        />
+      );
     }
 
     if (!editableIndexes.includes(index)) {
       return (
         <Box
-          key={`${character}-${index}`}
-          component="span"
-          style={getLetterCellInlineStyle(resultTone)}
+        key={`${character}-${index}`}
+        component="span"
+        data-test={`${dataTestPrefix}__fixed_cell__${index}`}
+        style={getLetterCellInlineStyle(resultTone)}
           sx={letterCellStyles}
         >
           {character}
@@ -277,9 +327,10 @@ function renderAnswerCells({
     return (
       <Box
         key={`${character}-${index}`}
-        component="input"
-        aria-label={`Missing word letter ${inputIndex}`}
-        disabled={isSubmitted}
+      component="input"
+      aria-label={`Missing word letter ${inputIndex}`}
+      data-test={`${dataTestPrefix}__input_cell__${index}`}
+      disabled={isSubmitted}
         ref={(element: HTMLInputElement | null) => {
           inputRefs.current[index] = element;
         }}
@@ -306,11 +357,12 @@ function renderAnswerCells({
   });
 }
 
-function AnswerSpace() {
+function AnswerSpace({ dataTest }: { dataTest: string }) {
   return (
     <Box
       aria-hidden="true"
       component="span"
+      data-test={dataTest}
       sx={{ display: 'inline-flex', height: 38, width: 10 }}
     />
   );

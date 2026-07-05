@@ -7,11 +7,13 @@ const incorrectBackground = 'rgb(253, 235, 238)';
 
 export function SplitWordStatsChip({
   correct,
+  dataTestPrefix = 'split_word_stats_chip',
   incorrect,
   interfaceLanguage,
   statsLabel,
 }: {
   correct: number;
+  dataTestPrefix?: string;
   incorrect: number;
   interfaceLanguage: SupportedLanguage;
   statsLabel?: string;
@@ -23,6 +25,7 @@ export function SplitWordStatsChip({
   return (
     <Box
       aria-label={`${label}: ${correctLabel} ${correct}, ${incorrectLabel} ${incorrect}`}
+      data-test={`${dataTestPrefix}__root`}
       role="group"
       sx={{
         alignItems: 'stretch',
@@ -34,6 +37,7 @@ export function SplitWordStatsChip({
       }}
     >
       <Box
+        data-test={`${dataTestPrefix}__correct_segment`}
         sx={{
           alignItems: 'center',
           bgcolor: correctBackground,
@@ -50,6 +54,7 @@ export function SplitWordStatsChip({
         {correctLabel}: {correct}
       </Box>
       <Box
+        data-test={`${dataTestPrefix}__incorrect_segment`}
         sx={{
           alignItems: 'center',
           bgcolor: incorrectBackground,

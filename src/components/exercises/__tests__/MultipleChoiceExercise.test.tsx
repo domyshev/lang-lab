@@ -29,7 +29,7 @@ describe('MultipleChoiceExercise', () => {
       />,
     );
 
-    const options = screen.getByTestId('multiple-choice-options');
+    const options = screen.getByTestId('multiple_choice_exercise__options__airport');
     expect(options).toHaveStyle({ flexDirection: 'column' });
     const optionButtons = within(options).getAllByRole('button');
     expect(optionButtons).toHaveLength(3);

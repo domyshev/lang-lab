@@ -13,21 +13,29 @@ const now = '2026-07-04T00:00:00.000Z';
 
 describe('ThemeDetailView', () => {
   it('sorts cards by total target attempts and centers the kind chip', () => {
-    render(
+    const { container } = render(
       <Provider store={createStore()}>
         <ThemeDetailView />
       </Provider>,
     );
 
-    const items = screen.getAllByTestId('theme-card-item');
+    const items = getByDataTestPrefix(container, 'theme_detail__card_item__');
     expect(within(items[0]).getByText('impede')).toBeInTheDocument();
     expect(within(items[1]).getByText('worth it')).toBeInTheDocument();
     expect(within(items[2]).getByText('airport')).toBeInTheDocument();
 
-    const phraseChip = within(items[1]).getByTestId('card-kind-chip');
+    const phraseChip = within(items[1]).getByTestId(
+      'theme_detail__card_kind_chip__card-worth-it',
+    );
     expect(phraseChip.parentElement).toHaveStyle({ alignItems: 'center' });
   });
 });
+
+function getByDataTestPrefix(container: HTMLElement, prefix: string): HTMLElement[] {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(`[data-test^="${prefix}"]`),
+  );
+}
 
 function createStore() {
   return configureStore({

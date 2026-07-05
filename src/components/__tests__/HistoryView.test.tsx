@@ -14,9 +14,12 @@ import { themesReducer } from '../../store/themesSlice';
 describe('HistoryView', () => {
   it('renders formula chips without a visible total label and shows word answers as cells', async () => {
     const user = userEvent.setup();
-    renderHistoryView();
+    const { container } = renderHistoryView();
 
-    const attemptCards = screen.getAllByTestId('history-attempt-card');
+    const attemptCards = getByDataTestPrefix(
+      container,
+      'history_view__attempt_card__',
+    );
     const missingLettersCard = attemptCards.find((card) =>
       card.textContent?.includes('Пропущенные буквы'),
     );
@@ -51,9 +54,12 @@ describe('HistoryView', () => {
 
   it('renders multiple choice history as colored answer options', async () => {
     const user = userEvent.setup();
-    renderHistoryView();
+    const { container } = renderHistoryView();
 
-    const attemptCards = screen.getAllByTestId('history-attempt-card');
+    const attemptCards = getByDataTestPrefix(
+      container,
+      'history_view__attempt_card__',
+    );
     const multipleChoiceCard = attemptCards.find((card) =>
       card.textContent?.includes('Вопрос с 3 вариантами'),
     );
@@ -65,8 +71,9 @@ describe('HistoryView', () => {
       }),
     );
 
-    const options = within(multipleChoiceCard!).getAllByTestId(
-      'history-multiple-choice-option',
+    const options = getByDataTestPrefix(
+      multipleChoiceCard!,
+      'history_view__detail_answer__attempt-choice-1_card-vehicle__multiple_choice_option__',
     );
     expect(options).toHaveLength(3);
     expect(within(options[0]).getByText('airport')).toBeInTheDocument();
@@ -153,11 +160,17 @@ function renderHistoryView() {
     },
   });
 
-  render(
+  const result = render(
     <Provider store={store}>
       <HistoryView />
     </Provider>,
   );
 
-  return store;
+  return { store, ...result };
+}
+
+function getByDataTestPrefix(container: HTMLElement, prefix: string): HTMLElement[] {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(`[data-test^="${prefix}"]`),
+  );
 }

@@ -32,12 +32,13 @@ export function ExercisePicker({
   );
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Stack spacing={2}>
-        <Typography variant="h6">
+    <Paper data-test="exercise_picker__panel" sx={{ p: 2 }}>
+      <Stack data-test="exercise_picker__content" spacing={2}>
+        <Typography data-test="exercise_picker__title" variant="h6">
           {t(interfaceLanguage, 'chooseExercise')}
         </Typography>
         <ToggleButtonGroup
+          data-test="exercise_picker__toggle_group"
           value={selectedExerciseType}
           exclusive
           onChange={(_, value: ExerciseType | null) => {
@@ -59,6 +60,7 @@ export function ExercisePicker({
         >
           {exerciseOptions.map((option) => (
             <ToggleButton
+              data-test={`exercise_picker__option__${option.type}`}
               key={option.type}
               value={option.type}
               sx={{ justifyContent: 'flex-start', px: 1.5 }}

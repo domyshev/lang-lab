@@ -7,8 +7,8 @@ describe('AppLogo', () => {
     render(<AppLogo interfaceLanguage="ru" />);
 
     const logo = screen.getByRole('button', { name: 'Language Lab' });
-    const legacyLeaf = screen.getByTestId('app-logo-leaf');
-    const visibleLeaf = screen.getByTestId('app-logo-tree-leaf');
+    const legacyLeaf = screen.getByTestId('app_logo__legacy_leaf_hidden');
+    const visibleLeaf = screen.getByTestId('app_logo__tree_leaf_svg');
 
     expect(logo).toHaveStyle({
       alignSelf: 'center',
@@ -25,10 +25,10 @@ describe('AppLogo', () => {
       height: '17.6px',
       width: '44.8px',
     });
-    expect(screen.getByTestId('app-logo-leaf-shape')).toHaveAttribute(
+    expect(screen.getByTestId('app_logo__tree_leaf_shape')).toHaveAttribute(
       'd',
       expect.stringContaining('C 21 0, 43 0, 60 14'),
     );
-    expect(screen.getByTestId('app-logo-leaf-vein')).toBeInTheDocument();
+    expect(screen.getByTestId('app_logo__tree_leaf_main_vein')).toBeInTheDocument();
   });
 });

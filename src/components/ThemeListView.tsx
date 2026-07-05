@@ -53,23 +53,34 @@ export function ThemeListView() {
   }
 
   return (
-    <Paper sx={{ p: { xs: 2, md: 3 } }}>
-      <Stack spacing={2.5}>
+    <Paper data-test="theme_list__panel" sx={{ p: { xs: 2, md: 3 } }}>
+      <Stack data-test="theme_list__content" spacing={2.5}>
         <Stack
+          data-test="theme_list__header"
           direction={{ xs: 'column', sm: 'row' }}
           spacing={1.5}
           alignItems={{ xs: 'stretch', sm: 'center' }}
           justifyContent="space-between"
         >
-          <Box>
-            <Typography variant="h5" component="h2" sx={{ fontWeight: 800 }}>
+          <Box data-test="theme_list__header_text">
+            <Typography
+              data-test="theme_list__title"
+              variant="h5"
+              component="h2"
+              sx={{ fontWeight: 800 }}
+            >
               {t(interfaceLanguage, 'cards')}
             </Typography>
-            <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography
+              color="text.secondary"
+              data-test="theme_list__topic_count"
+              sx={{ mt: 0.5 }}
+            >
               {formatTopicCount(interfaceLanguage, visibleThemes.length + 1)}
             </Typography>
           </Box>
           <Button
+            data-test="theme_list__add_button"
             startIcon={<AddIcon />}
             variant="contained"
             onClick={() => setIsCreating((value) => !value)}
@@ -80,11 +91,13 @@ export function ThemeListView() {
 
         {isCreating && (
           <Stack
+            data-test="theme_list__create_form"
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1.5}
             sx={{ width: '100%' }}
           >
             <TextField
+              data-test="theme_list__create_name_input"
               label={t(interfaceLanguage, 'newTheme')}
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -96,6 +109,7 @@ export function ThemeListView() {
               fullWidth
             />
             <Button
+              data-test="theme_list__create_submit_button"
               variant="contained"
               onClick={createTheme}
               disabled={!name.trim()}
@@ -106,8 +120,9 @@ export function ThemeListView() {
           </Stack>
         )}
 
-        <Stack spacing={1.25}>
+        <Stack data-test="theme_list__tiles" spacing={1.25}>
           <ThemeTile
+            id={ALL_WORDS_THEME_ID}
             name={t(interfaceLanguage, 'allWords')}
             cardCount={cards.length}
             interfaceLanguage={interfaceLanguage}
@@ -119,6 +134,7 @@ export function ThemeListView() {
 
           {visibleThemes.map((theme) => (
             <ThemeTile
+              id={theme.id}
               key={theme.id}
               name={theme.name}
               cardCount={theme.cardIds.length}
@@ -143,6 +159,7 @@ export function ThemeListView() {
 
 function ThemeTile({
   cardCount,
+  id,
   interfaceLanguage,
   name,
   onArchive,
@@ -150,6 +167,7 @@ function ThemeTile({
   selected,
 }: {
   cardCount: number;
+  id: string;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   name: string;
   onArchive?: () => void;
@@ -158,6 +176,7 @@ function ThemeTile({
 }) {
   return (
     <Paper
+      data-test={`theme_list__tile__${id}`}
       variant="outlined"
       sx={{
         borderColor: selected ? 'primary.main' : 'divider',
@@ -166,6 +185,7 @@ function ThemeTile({
     >
       <Stack direction="row" alignItems="center">
         <Box
+          data-test={`theme_list__tile_select_area__${id}`}
           role="button"
           tabIndex={0}
           onClick={onSelect}
@@ -182,10 +202,15 @@ function ThemeTile({
             p: 1.5,
           }}
         >
-          <Typography fontWeight={800} noWrap>
+          <Typography
+            data-test={`theme_list__tile_name__${id}`}
+            fontWeight={800}
+            noWrap
+          >
             {name}
           </Typography>
           <Chip
+            data-test={`theme_list__tile_card_count__${id}`}
             label={formatCardCount(interfaceLanguage, cardCount)}
             size="small"
             variant="outlined"
@@ -197,6 +222,7 @@ function ThemeTile({
           <Tooltip title={t(interfaceLanguage, 'archive')}>
             <IconButton
               aria-label={`В архив: ${name}`}
+              data-test={`theme_list__tile_archive_button__${id}`}
               onClick={onArchive}
               sx={{ mx: 1 }}
             >

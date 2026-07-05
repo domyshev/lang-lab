@@ -64,8 +64,13 @@ export function ThemeDetailView() {
 
   if (!selectedTheme) {
     return (
-      <Paper sx={{ p: { xs: 2, md: 3 } }}>
-        <Alert severity="info">{t(interfaceLanguage, 'selectThemeToManage')}</Alert>
+      <Paper
+        data-test="theme_detail__empty_panel"
+        sx={{ p: { xs: 2, md: 3 } }}
+      >
+        <Alert data-test="theme_detail__select_theme_alert" severity="info">
+          {t(interfaceLanguage, 'selectThemeToManage')}
+        </Alert>
       </Paper>
     );
   }
@@ -109,25 +114,39 @@ export function ThemeDetailView() {
   };
 
   return (
-    <Paper sx={{ p: { xs: 2, md: 3 } }}>
-      <Stack spacing={2.5}>
+    <Paper
+      data-test={`theme_detail__panel__${selectedTheme.id}`}
+      sx={{ p: { xs: 2, md: 3 } }}
+    >
+      <Stack data-test={`theme_detail__content__${selectedTheme.id}`} spacing={2.5}>
         <Stack
+          data-test={`theme_detail__header__${selectedTheme.id}`}
           direction={{ xs: 'column', sm: 'row' }}
           spacing={1.5}
           alignItems={{ xs: 'flex-start', sm: 'center' }}
           justifyContent="space-between"
         >
-          <Box>
-            <Typography variant="h5" component="h2" sx={{ fontWeight: 800 }}>
+          <Box data-test={`theme_detail__header_text__${selectedTheme.id}`}>
+            <Typography
+              data-test={`theme_detail__title__${selectedTheme.id}`}
+              variant="h5"
+              component="h2"
+              sx={{ fontWeight: 800 }}
+            >
               {selectedTheme.name}
             </Typography>
-            <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography
+              color="text.secondary"
+              data-test={`theme_detail__target_answer__${selectedTheme.id}`}
+              sx={{ mt: 0.5 }}
+            >
               {t(interfaceLanguage, 'targetAnswerLabel')}:{' '}
               {languageFlags[targetLanguage]}{' '}
               {getLanguageDisplayName(interfaceLanguage, targetLanguage)}
             </Typography>
           </Box>
           <Chip
+            data-test={`theme_detail__card_count_chip__${selectedTheme.id}`}
             label={formatCardCount(interfaceLanguage, themeCards.length)}
             color="primary"
             variant="outlined"
@@ -136,15 +155,24 @@ export function ThemeDetailView() {
 
         {!isAllWordsSelected && (
           <Stack
+            data-test={`theme_detail__add_card_form__${selectedTheme.id}`}
             direction={{ xs: 'column', md: 'row' }}
             spacing={1.5}
             alignItems={{ xs: 'stretch', md: 'center' }}
           >
-            <FormControl fullWidth disabled={availableCards.length === 0}>
-              <InputLabel id={addCardLabelId}>
+            <FormControl
+              data-test={`theme_detail__add_card_control__${selectedTheme.id}`}
+              fullWidth
+              disabled={availableCards.length === 0}
+            >
+              <InputLabel
+                data-test={`theme_detail__add_card_label__${selectedTheme.id}`}
+                id={addCardLabelId}
+              >
                 {t(interfaceLanguage, 'add')}
               </InputLabel>
               <Select
+                data-test={`theme_detail__add_card_select__${selectedTheme.id}`}
                 labelId={addCardLabelId}
                 label={t(interfaceLanguage, 'add')}
                 value={addableCardId}
@@ -153,13 +181,18 @@ export function ThemeDetailView() {
                 }
               >
                 {availableCards.map((card) => (
-                  <MenuItem key={card.id} value={card.id}>
+                  <MenuItem
+                    data-test={`theme_detail__add_card_option__${card.id}`}
+                    key={card.id}
+                    value={card.id}
+                  >
                     {getCardLabel(card, targetLanguage, interfaceLanguage)}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
             <Button
+              data-test={`theme_detail__add_card_button__${selectedTheme.id}`}
               startIcon={<AddIcon />}
               variant="contained"
               onClick={handleAddCard}
@@ -172,13 +205,19 @@ export function ThemeDetailView() {
         )}
 
         {!isAllWordsSelected && cards.length === 0 && (
-          <Alert severity="info">
+          <Alert
+            data-test={`theme_detail__import_cards_alert__${selectedTheme.id}`}
+            severity="info"
+          >
             {t(interfaceLanguage, 'importCardsBeforeTheme')}
           </Alert>
         )}
 
         {!isAllWordsSelected && cards.length > 0 && availableCards.length === 0 && (
-          <Alert severity="success">
+          <Alert
+            data-test={`theme_detail__all_cards_added_alert__${selectedTheme.id}`}
+            severity="success"
+          >
             {t(interfaceLanguage, 'allImportedCardsInTheme')}
           </Alert>
         )}
@@ -186,13 +225,19 @@ export function ThemeDetailView() {
         <Divider />
 
         {themeCards.length === 0 ? (
-          <Typography color="text.secondary">
+          <Typography
+            color="text.secondary"
+            data-test={`theme_detail__empty_cards_message__${selectedTheme.id}`}
+          >
             {isAllWordsSelected
               ? t(interfaceLanguage, 'importCardsToFillList')
               : t(interfaceLanguage, 'addImportedCardsToStartTheme')}
           </Typography>
         ) : (
-          <Stack spacing={1.25}>
+          <Stack
+            data-test={`theme_detail__cards_list__${selectedTheme.id}`}
+            spacing={1.25}
+          >
             {sortedThemeCards.map((card) => {
               const answer = getDisplayAnswer(
                 card,
@@ -212,7 +257,7 @@ export function ThemeDetailView() {
 
               return (
                 <Box
-                  data-testid="theme-card-item"
+                  data-test={`theme_detail__card_item__${card.id}`}
                   key={card.id}
                   sx={{
                     border: '1px solid rgba(32, 48, 21, 0.14)',
@@ -222,16 +267,26 @@ export function ThemeDetailView() {
                     p: 1.5,
                   }}
                 >
-                  <Stack spacing={1}>
+                  <Stack data-test={`theme_detail__card_content__${card.id}`} spacing={1}>
                     <Stack
+                      data-test={`theme_detail__card_header__${card.id}`}
                       direction={{ xs: 'column', sm: 'row' }}
                       spacing={1}
                       alignItems={{ xs: 'flex-start', sm: 'center' }}
                       justifyContent="space-between"
                     >
-                      <Box>
-                        <Typography fontWeight={800}>{answer.text}</Typography>
-                        <Typography color="text.secondary" variant="body2">
+                      <Box data-test={`theme_detail__card_text_block__${card.id}`}>
+                        <Typography
+                          data-test={`theme_detail__card_answer__${card.id}`}
+                          fontWeight={800}
+                        >
+                          {answer.text}
+                        </Typography>
+                        <Typography
+                          color="text.secondary"
+                          data-test={`theme_detail__card_language_note__${card.id}`}
+                          variant="body2"
+                        >
                           {answer.isFallback
                             ? t(interfaceLanguage, 'fallbackTranslationShown')
                             : `${getLanguageDisplayName(
@@ -241,6 +296,7 @@ export function ThemeDetailView() {
                         </Typography>
                       </Box>
                       <Stack
+                        data-test={`theme_detail__card_meta__${card.id}`}
                         direction="row"
                         spacing={1}
                         flexWrap="wrap"
@@ -248,7 +304,7 @@ export function ThemeDetailView() {
                         sx={{ alignItems: 'center' }}
                       >
                         <Chip
-                          data-testid="card-kind-chip"
+                          data-test={`theme_detail__card_kind_chip__${card.id}`}
                           label={t(
                             interfaceLanguage,
                             isPhrase ? 'phraseLabel' : 'wordLabel',
@@ -264,6 +320,7 @@ export function ThemeDetailView() {
                         />
                         <SplitWordStatsChip
                           correct={stats?.correct ?? 0}
+                          dataTestPrefix={`theme_detail__card_stats__${card.id}`}
                           incorrect={stats?.incorrect ?? 0}
                           interfaceLanguage={interfaceLanguage}
                           statsLabel={statsLabel}

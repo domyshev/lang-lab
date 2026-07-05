@@ -39,7 +39,7 @@ export function HistoryView() {
   );
 
   return (
-    <Stack spacing={1.5}>
+    <Stack data-test="history_view__root" spacing={1.5}>
       {attemptSummaries.map((attempt) => (
         <AttemptHistoryCard
           key={attempt.id}
@@ -48,8 +48,8 @@ export function HistoryView() {
         />
       ))}
       {attemptSummaries.length === 0 && (
-        <Paper sx={{ p: 2 }}>
-          <Typography color="text.secondary">
+        <Paper data-test="history_view__empty_panel" sx={{ p: 2 }}>
+          <Typography color="text.secondary" data-test="history_view__empty_text">
             {t(interfaceLanguage, 'noAttempts')}
           </Typography>
         </Paper>
@@ -65,6 +65,7 @@ function AttemptHistoryCard({
   attempt: ExerciseHistorySummary;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
 }) {
+  const attemptDomKey = toDomKey(attempt.id);
   const detailRows = attempt.attempts.flatMap((savedAttempt) =>
     savedAttempt.prompts.map((prompt) => ({
       id: `${savedAttempt.id}:${prompt.cardId}`,
@@ -79,7 +80,7 @@ function AttemptHistoryCard({
 
   return (
     <Accordion
-      data-testid="history-attempt-card"
+      data-test={`history_view__attempt_card__${attemptDomKey}`}
       disableGutters
       sx={{
         border: '1px solid rgba(32, 48, 21, 0.14)',
@@ -89,13 +90,24 @@ function AttemptHistoryCard({
         '&::before': { display: 'none' },
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Stack spacing={1.25} sx={{ width: '100%', pr: 1 }}>
-          <Typography variant="h6">
+      <AccordionSummary
+        data-test={`history_view__attempt_summary__${attemptDomKey}`}
+        expandIcon={<ExpandMoreIcon data-test={`history_view__attempt_expand_icon__${attemptDomKey}`} />}
+      >
+        <Stack
+          data-test={`history_view__attempt_summary_content__${attemptDomKey}`}
+          spacing={1.25}
+          sx={{ width: '100%', pr: 1 }}
+        >
+          <Typography
+            data-test={`history_view__attempt_type__${attemptDomKey}`}
+            variant="h6"
+          >
             {t(interfaceLanguage, attempt.exerciseType)}
           </Typography>
           <StatsFormula
             correct={attempt.correct}
+            dataTestPrefix={`history_view__attempt_formula__${attemptDomKey}`}
             incorrect={attempt.incorrect}
             interfaceLanguage={interfaceLanguage}
             showLabel={false}
@@ -104,13 +116,23 @@ function AttemptHistoryCard({
           />
         </Stack>
       </AccordionSummary>
-      <AccordionDetails sx={{ pt: 0 }}>
-        <Stack spacing={1.25}>
-          <Typography variant="overline">
+      <AccordionDetails
+        data-test={`history_view__attempt_details__${attemptDomKey}`}
+        sx={{ pt: 0 }}
+      >
+        <Stack data-test={`history_view__attempt_detail_rows__${attemptDomKey}`} spacing={1.25}>
+          <Typography
+            data-test={`history_view__attempt_details_label__${attemptDomKey}`}
+            variant="overline"
+          >
             {t(interfaceLanguage, 'exerciseDetails')}
           </Typography>
-          {detailRows.map((row) => (
+          {detailRows.map((row) => {
+            const rowDomKey = toDomKey(row.id);
+
+            return (
             <Box
+              data-test={`history_view__detail_row__${rowDomKey}`}
               key={row.id}
               sx={{
                 border: '1px solid rgba(32, 48, 21, 0.12)',
@@ -118,12 +140,17 @@ function AttemptHistoryCard({
                 p: 1.25,
               }}
             >
-              <Stack spacing={0.75}>
-                <Typography color="text.secondary" variant="body2">
+              <Stack data-test={`history_view__detail_row_content__${rowDomKey}`} spacing={0.75}>
+                <Typography
+                  color="text.secondary"
+                  data-test={`history_view__detail_prompt__${rowDomKey}`}
+                  variant="body2"
+                >
                   {row.prompt}
                 </Typography>
                 <HistoryAnswer
                   answer={row.answer}
+                  dataTestPrefix={`history_view__detail_answer__${rowDomKey}`}
                   expectedAnswer={row.expectedAnswer}
                   interfaceLanguage={interfaceLanguage}
                   isCorrect={row.isCorrect}
@@ -131,6 +158,7 @@ function AttemptHistoryCard({
                   type={row.exerciseType}
                 />
                 <Chip
+                  data-test={`history_view__detail_result_chip__${rowDomKey}`}
                   label={t(
                     interfaceLanguage,
                     row.isCorrect ? 'correct' : 'incorrect',
@@ -149,7 +177,8 @@ function AttemptHistoryCard({
                 />
               </Stack>
             </Box>
-          ))}
+            );
+          })}
         </Stack>
       </AccordionDetails>
     </Accordion>
@@ -158,6 +187,7 @@ function AttemptHistoryCard({
 
 function HistoryAnswer({
   answer,
+  dataTestPrefix,
   expectedAnswer,
   interfaceLanguage,
   isCorrect,
@@ -165,6 +195,7 @@ function HistoryAnswer({
   type,
 }: {
   answer: string;
+  dataTestPrefix: string;
   expectedAnswer: string;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   isCorrect: boolean;
@@ -173,10 +204,10 @@ function HistoryAnswer({
 }) {
   if (type === 'multipleChoice') {
     return (
-      <Stack spacing={0.75} sx={{ maxWidth: 420 }}>
-        {(options.length > 0 ? options : [expectedAnswer]).map((option) => (
+      <Stack data-test={`${dataTestPrefix}__multiple_choice_options`} spacing={0.75} sx={{ maxWidth: 420 }}>
+        {(options.length > 0 ? options : [expectedAnswer]).map((option, index) => (
           <Box
-            data-testid="history-multiple-choice-option"
+            data-test={`${dataTestPrefix}__multiple_choice_option__${index}`}
             key={option}
             sx={{
               border: '1px solid',
@@ -212,6 +243,7 @@ function HistoryAnswer({
     return (
       <AnswerCells
         ariaLabel={`${t(interfaceLanguage, 'correctAnswer')}: ${expectedAnswer}`}
+        dataTestPrefix={`${dataTestPrefix}__correct_cells`}
         tone="correct"
         value={expectedAnswer}
       />
@@ -219,9 +251,10 @@ function HistoryAnswer({
   }
 
   return (
-    <Stack spacing={0.75}>
+    <Stack data-test={`${dataTestPrefix}__answer_cells_stack`} spacing={0.75}>
       <AnswerCells
         ariaLabel={`${t(interfaceLanguage, 'correctAnswer')}: ${expectedAnswer}`}
+        dataTestPrefix={`${dataTestPrefix}__correct_cells`}
         tone="correct"
         value={expectedAnswer}
       />
@@ -229,6 +262,7 @@ function HistoryAnswer({
         ariaLabel={`${t(interfaceLanguage, 'incorrectAnswer')}: ${
           answer || t(interfaceLanguage, 'noAnswer')
         }`}
+        dataTestPrefix={`${dataTestPrefix}__incorrect_cells`}
         tone="incorrect"
         value={answer || t(interfaceLanguage, 'noAnswer')}
       />
@@ -238,16 +272,19 @@ function HistoryAnswer({
 
 function AnswerCells({
   ariaLabel,
+  dataTestPrefix,
   tone,
   value,
 }: {
   ariaLabel: string;
+  dataTestPrefix: string;
   tone: 'correct' | 'incorrect';
   value: string;
 }) {
   return (
     <Stack
       aria-label={ariaLabel}
+      data-test={`${dataTestPrefix}__root`}
       direction="row"
       spacing={0.75}
       flexWrap="wrap"
@@ -258,12 +295,14 @@ function AnswerCells({
           <Box
             aria-hidden="true"
             component="span"
+            data-test={`${dataTestPrefix}__space__${index}`}
             key={`space-${index}`}
             sx={{ display: 'inline-flex', height: 34, width: 10 }}
           />
         ) : (
           <Box
             component="span"
+            data-test={`${dataTestPrefix}__cell__${index}`}
             key={`${character}-${index}`}
             sx={{
               alignItems: 'center',
@@ -295,4 +334,8 @@ function AnswerCells({
 
 function getPromptOptions(prompt: ExercisePrompt): string[] {
   return (prompt as ExercisePrompt & { options?: string[] }).options ?? [];
+}
+
+function toDomKey(value: string): string {
+  return value.replace(/[^a-zA-Z0-9_-]/g, '_');
 }

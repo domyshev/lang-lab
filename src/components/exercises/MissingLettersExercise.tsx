@@ -87,20 +87,42 @@ export function MissingLettersExercise({
   }
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Stack spacing={2}>
-        <Typography variant="h6">
+    <Paper
+      data-test={`missing_letters_exercise__panel__${prompt.cardId}`}
+      sx={{ p: 2 }}
+    >
+      <Stack
+        data-test={`missing_letters_exercise__content__${prompt.cardId}`}
+        spacing={2}
+      >
+        <Typography
+          data-test={`missing_letters_exercise__title__${prompt.cardId}`}
+          variant="h6"
+        >
           {t(interfaceLanguage, 'missingLetters')}
         </Typography>
-        <Typography>{prompt.prompt}</Typography>
-        {prompt.definitionHint && <Typography>{prompt.definitionHint}</Typography>}
-        <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+        <Typography data-test={`missing_letters_exercise__prompt__${prompt.cardId}`}>
+          {prompt.prompt}
+        </Typography>
+        {prompt.definitionHint && (
+          <Typography data-test={`missing_letters_exercise__definition_hint__${prompt.cardId}`}>
+            {prompt.definitionHint}
+          </Typography>
+        )}
+        <Stack
+          data-test={`missing_letters_exercise__answer_cells__${prompt.cardId}`}
+          direction="row"
+          spacing={0.75}
+          flexWrap="wrap"
+          useFlexGap
+        >
           {maskedCharacters.map((character, index) =>
             character === '_' ? (
               <Box
                 key={index}
                 component="input"
                 aria-label={`Missing letter ${index + 1}`}
+                data-test={`missing_letters_exercise__input_cell__${prompt.cardId}__${index}`}
                 disabled={isSubmitted}
                 ref={(element: HTMLInputElement | null) => {
                   inputRefs.current[index] = element;
@@ -128,6 +150,7 @@ export function MissingLettersExercise({
               <Box
                 key={index}
                 component="span"
+                data-test={`missing_letters_exercise__fixed_cell__${prompt.cardId}__${index}`}
                 style={getLetterCellInlineStyle(resultTone)}
                 sx={letterCellStyles}
               >
@@ -137,14 +160,21 @@ export function MissingLettersExercise({
           )}
         </Stack>
         {isSubmitted && !isCorrect && (
-          <Stack spacing={0.75}>
-            <Typography variant="overline">
+          <Stack
+            data-test={`missing_letters_exercise__correct_answer_block__${prompt.cardId}`}
+            spacing={0.75}
+          >
+            <Typography
+              data-test={`missing_letters_exercise__correct_answer_label__${prompt.cardId}`}
+              variant="overline"
+            >
               {t(interfaceLanguage, 'correctAnswer')}
             </Typography>
             <Stack
               aria-label={`${t(interfaceLanguage, 'correctAnswer')}: ${
                 prompt.expectedAnswer
               }`}
+              data-test={`missing_letters_exercise__correct_answer_cells__${prompt.cardId}`}
               direction="row"
               spacing={0.75}
               flexWrap="wrap"
@@ -154,6 +184,7 @@ export function MissingLettersExercise({
                 <Box
                   key={`${character}-${index}`}
                   component="span"
+                  data-test={`missing_letters_exercise__correct_answer_cell__${prompt.cardId}__${index}`}
                   style={getLetterCellInlineStyle('correct')}
                   sx={letterCellStyles}
                 >
@@ -164,6 +195,7 @@ export function MissingLettersExercise({
           </Stack>
         )}
         <Button
+          data-test={`missing_letters_exercise__submit_or_next_button__${prompt.cardId}`}
           variant="contained"
           startIcon={
             isSubmitted && !isMemorize ? (

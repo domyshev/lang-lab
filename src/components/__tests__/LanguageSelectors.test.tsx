@@ -18,11 +18,15 @@ describe('LanguageSelectors', () => {
       </Provider>,
     );
 
-    expect(screen.getByTestId('assistant-select')).toHaveStyle({ height: '34px' });
-    expect(screen.getByTestId('interface-language-select')).toHaveStyle({
+    expect(screen.getByTestId('language_selectors__assistant_select')).toHaveStyle(
+      { height: '34px' },
+    );
+    expect(
+      screen.getByTestId('language_selectors__interface_language_select'),
+    ).toHaveStyle({
       height: '34px',
     });
-    expect(screen.getByTestId('target-language-select')).toHaveStyle({
+    expect(screen.getByTestId('language_selectors__target_language_select')).toHaveStyle({
       height: '34px',
     });
   });

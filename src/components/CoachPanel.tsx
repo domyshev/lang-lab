@@ -32,6 +32,7 @@ export function CoachPanel({
 
   return (
     <Box
+      data-test="coach_panel__root"
       sx={{
         alignItems: 'flex-start',
         display: 'flex',
@@ -42,11 +43,16 @@ export function CoachPanel({
       }}
     >
       <Tooltip describeChild title={assistantTooltip}>
-        <Box component="span" sx={{ display: 'inline-flex' }}>
+        <Box
+          component="span"
+          data-test={`coach_panel__assistant_sticker_wrapper__${assistantId}`}
+          sx={{ display: 'inline-flex' }}
+        >
           <AssistantStickerIcon
             ariaLabel={assistantTooltip}
             assistantId={assistantId}
             className="coachPortrait"
+            dataTest={`coach_panel__assistant_sticker__${assistantId}`}
             size={118}
             sx={{ height: { xs: 90, lg: 118 }, width: { xs: 90, lg: 118 } }}
           />
@@ -54,6 +60,7 @@ export function CoachPanel({
       </Tooltip>
       <Box
         aria-label={t(interfaceLanguage, 'coachThought')}
+        data-test="coach_panel__thought_bubble"
         sx={{
           bgcolor: 'background.paper',
           border: '1px solid rgba(32, 48, 21, 0.18)',
@@ -79,7 +86,11 @@ export function CoachPanel({
         }}
       >
         <Tooltip describeChild title={thoughtTooltip}>
-          <Typography variant="body2" sx={{ fontWeight: 800, lineHeight: 1.35 }}>
+          <Typography
+            data-test="coach_panel__thought_text"
+            variant="body2"
+            sx={{ fontWeight: 800, lineHeight: 1.35 }}
+          >
             {thought}
           </Typography>
         </Tooltip>

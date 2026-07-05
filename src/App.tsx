@@ -545,7 +545,7 @@ export function App() {
   function renderMainContent() {
     if (activeSection === 'statistics') {
       return (
-        <Stack spacing={3}>
+        <Stack data-test="app__statistics_section" spacing={3}>
           <TargetStatsPanel />
           <HistoryView />
         </Stack>
@@ -555,6 +555,7 @@ export function App() {
     if (activeSection === 'cards') {
       return (
         <Box
+          data-test="app__cards_section"
           sx={{
             display: 'grid',
             gap: 3,
@@ -569,7 +570,11 @@ export function App() {
     }
 
     if (activeSection === 'import') {
-      return <ImportCardsView />;
+      return (
+        <Box data-test="app__import_section">
+          <ImportCardsView />
+        </Box>
+      );
     }
 
     return renderGameContent();
@@ -587,9 +592,9 @@ export function App() {
     });
 
     return (
-      <Stack spacing={3}>
+      <Stack data-test="app__active_exercise_section" spacing={3}>
         <Stack
-          data-testid="exercise-toolbar"
+          data-test="app__exercise_toolbar"
           direction={{ xs: 'column', sm: 'row' }}
           spacing={2}
           alignItems={{ xs: 'flex-start', sm: 'center' }}
@@ -600,6 +605,7 @@ export function App() {
             thoughtSeed={generationSeed + currentExerciseAnsweredCount}
           />
           <Button
+            data-test="app__finish_exercise_button"
             variant="outlined"
             color="error"
             onClick={() => openFinishDialog('finish')}
@@ -650,23 +656,34 @@ export function App() {
     };
 
     return (
-      <Paper sx={{ p: { xs: 2, md: 3 }, maxWidth: 760, mx: 'auto' }}>
-        <Stack spacing={3}>
-          <FormControl fullWidth>
-            <InputLabel id="game-theme-label">
+      <Paper
+        data-test="game_setup__panel"
+        sx={{ p: { xs: 2, md: 3 }, maxWidth: 760, mx: 'auto' }}
+      >
+        <Stack data-test="game_setup__content" spacing={3}>
+          <FormControl data-test="game_setup__theme_control" fullWidth>
+            <InputLabel data-test="game_setup__theme_label" id="game-theme-label">
               {t(interfaceLanguage, 'chooseTheme')}
             </InputLabel>
             <Select
+              data-test="game_setup__theme_select"
               labelId="game-theme-label"
               label={t(interfaceLanguage, 'chooseTheme')}
               value={currentThemeId}
               onChange={handleThemeChange}
             >
-              <MenuItem value={ALL_WORDS_THEME_ID}>
+              <MenuItem
+                data-test="game_setup__theme_option__all_words"
+                value={ALL_WORDS_THEME_ID}
+              >
                 {t(interfaceLanguage, 'allWords')} ({cards.length})
               </MenuItem>
               {visibleThemes.map((theme) => (
-                <MenuItem key={theme.id} value={theme.id}>
+                <MenuItem
+                  data-test={`game_setup__theme_option__${theme.id}`}
+                  key={theme.id}
+                  value={theme.id}
+                >
                   {theme.name} ({theme.cardIds.length})
                 </MenuItem>
               ))}
@@ -682,13 +699,14 @@ export function App() {
           />
 
           {!canStart && (
-            <Alert severity="info">
+            <Alert data-test="game_setup__cannot_start_alert" severity="info">
               Import cards or choose a theme with cards for the current target
               language.
             </Alert>
           )}
 
           <Button
+            data-test="game_setup__start_button"
             variant="contained"
             size="large"
             onClick={() => {
@@ -716,13 +734,15 @@ export function App() {
   function renderExercise() {
     if (!selectedTheme) {
       return (
-        <Alert severity="info">Select a theme to start a practice set.</Alert>
+        <Alert data-test="exercise_area__missing_theme_alert" severity="info">
+          Select a theme to start a practice set.
+        </Alert>
       );
     }
 
     if (eligibleCards.length === 0) {
       return (
-        <Alert severity="warning">
+        <Alert data-test="exercise_area__no_target_cards_alert" severity="warning">
           This theme has no cards for{' '}
           {getLanguageDisplayName(interfaceLanguage, targetLanguage)} yet.
         </Alert>
@@ -731,7 +751,7 @@ export function App() {
 
     if (selectedExerciseType === 'multipleChoice' && eligibleCards.length < 3) {
       return (
-        <Alert severity="info">
+        <Alert data-test="exercise_area__multiple_choice_needs_cards_alert" severity="info">
           Multiple choice needs at least 3 cards for the target language.
         </Alert>
       );
@@ -781,7 +801,7 @@ export function App() {
     if (exercisePreview.type === 'missingLetters') {
       if (!exercisePreview.prompt) {
         return (
-          <Alert severity="info">
+          <Alert data-test="exercise_area__missing_letters_needs_words_alert" severity="info">
             Missing letters practice needs single-word cards for the target
             language.
           </Alert>
@@ -821,7 +841,7 @@ export function App() {
 
     if (!exercisePreview.prompt) {
       return (
-        <Alert severity="info">
+        <Alert data-test="exercise_area__no_more_cards_alert" severity="info">
           {t(interfaceLanguage, 'noMoreCardsInExercise')}
         </Alert>
       );
@@ -874,22 +894,28 @@ export function App() {
     const incorrect = totalAnswered - correct;
 
     return (
-      <Paper sx={{ p: 2 }}>
-        <Stack spacing={1.5}>
-          <Typography variant="overline">
+      <Paper data-test="target_stats__panel" sx={{ p: 2 }}>
+        <Stack data-test="target_stats__content" spacing={1.5}>
+          <Typography data-test="target_stats__language" variant="overline">
             {languageFlags[targetLanguage]}{' '}
             {getLanguageDisplayName(interfaceLanguage, targetLanguage)}
           </Typography>
-          <Typography variant="h6" component="h2">
+          <Typography
+            data-test="target_stats__title"
+            variant="h6"
+            component="h2"
+          >
             {t(interfaceLanguage, 'resultsTitle')}
           </Typography>
-          <Stack spacing={2.25}>
+          <Stack data-test="target_stats__metrics" spacing={2.25}>
             <CountMetric
+              dataTestPrefix="target_stats__total_exercises"
               label={t(interfaceLanguage, 'totalExercises')}
               value={targetSummaries.length}
             />
             <StatsFormula
               correct={correct}
+              dataTestPrefix="target_stats__answered_formula"
               incorrect={incorrect}
               interfaceLanguage={interfaceLanguage}
               total={totalAnswered}
@@ -957,17 +983,29 @@ function AttemptSummary({
         : t(interfaceLanguage, 'resultStats');
 
   return (
-    <Paper sx={{ p: 2, borderLeft: '4px solid', borderColor: 'primary.main' }}>
-      <Stack spacing={1.5}>
+    <Paper
+      data-test={`attempt_summary__panel__${attempt.id}`}
+      sx={{ p: 2, borderLeft: '4px solid', borderColor: 'primary.main' }}
+    >
+      <Stack data-test={`attempt_summary__content__${attempt.id}`} spacing={1.5}>
         {showExpectedAnswers && (
           <>
-            <Typography variant="overline">
+            <Typography
+              data-test={`attempt_summary__expected_answers_label__${attempt.id}`}
+              variant="overline"
+            >
               {expectedAnswers.length === 1
                 ? t(interfaceLanguage, 'correctAnswer')
                 : t(interfaceLanguage, 'correctAnswers')}
             </Typography>
-            <Typography fontWeight={800}>{expectedAnswers.join(' / ')}</Typography>
+            <Typography
+              data-test={`attempt_summary__expected_answers_text__${attempt.id}`}
+              fontWeight={800}
+            >
+              {expectedAnswers.join(' / ')}
+            </Typography>
             <Chip
+              data-test={`attempt_summary__result_chip__${attempt.id}`}
               label={t(
                 interfaceLanguage,
                 isAttemptCorrect ? 'correct' : 'incorrect',
@@ -979,13 +1017,23 @@ function AttemptSummary({
             <Divider />
           </>
         )}
-        <Typography variant="overline">
+        <Typography
+          data-test={`attempt_summary__stats_label__${attempt.id}`}
+          variant="overline"
+        >
           {statsLabel}
         </Typography>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        <Stack
+          data-test={`attempt_summary__stats_chips__${attempt.id}`}
+          direction="row"
+          spacing={1}
+          flexWrap="wrap"
+          useFlexGap
+        >
           {usesSplitStats ? (
             <SplitWordStatsChip
               correct={correctCount}
+              dataTestPrefix={`attempt_summary__split_stats__${attempt.id}`}
               incorrect={incorrectCount}
               interfaceLanguage={interfaceLanguage}
               statsLabel={statsLabel}
@@ -994,6 +1042,7 @@ function AttemptSummary({
             <>
               {correctCount > 0 && (
                 <Chip
+                  data-test={`attempt_summary__correct_chip__${attempt.id}`}
                   label={`${t(interfaceLanguage, 'correct')}: ${correctCount}`}
                   size="small"
                   color="success"
@@ -1002,6 +1051,7 @@ function AttemptSummary({
               )}
               {incorrectCount > 0 && (
                 <Chip
+                  data-test={`attempt_summary__incorrect_chip__${attempt.id}`}
                   label={`${t(interfaceLanguage, 'incorrect')}: ${incorrectCount}`}
                   size="small"
                   color="error"
@@ -1031,6 +1081,7 @@ function FinishExerciseDialog({
 }) {
   return (
     <Dialog
+      data-test="finish_exercise_dialog__root"
       open={open}
       onClose={onCancel}
       PaperProps={{
@@ -1043,20 +1094,38 @@ function FinishExerciseDialog({
         },
       }}
     >
-      <DialogTitle sx={{ fontWeight: 900 }}>
+      <DialogTitle
+        data-test="finish_exercise_dialog__title"
+        sx={{ fontWeight: 900 }}
+      >
         {t(interfaceLanguage, 'finishExercise')}
       </DialogTitle>
-      <DialogContent>
-        <Typography>{t(interfaceLanguage, 'finishExerciseNotice')}</Typography>
-        <Typography sx={{ mt: 2 }}>
+      <DialogContent data-test="finish_exercise_dialog__content">
+        <Typography data-test="finish_exercise_dialog__notice">
+          {t(interfaceLanguage, 'finishExerciseNotice')}
+        </Typography>
+        <Typography data-test="finish_exercise_dialog__answered_count" sx={{ mt: 2 }}>
           {t(interfaceLanguage, 'answeredWords')}: {answeredCount}
         </Typography>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button color="success" variant="contained" onClick={onCancel}>
+      <DialogActions
+        data-test="finish_exercise_dialog__actions"
+        sx={{ px: 3, pb: 2 }}
+      >
+        <Button
+          color="success"
+          data-test="finish_exercise_dialog__cancel_button"
+          variant="contained"
+          onClick={onCancel}
+        >
           {t(interfaceLanguage, 'cancel')}
         </Button>
-        <Button color="error" variant="contained" onClick={onConfirm}>
+        <Button
+          color="error"
+          data-test="finish_exercise_dialog__confirm_button"
+          variant="contained"
+          onClick={onConfirm}
+        >
           {t(interfaceLanguage, 'confirm')}
         </Button>
       </DialogActions>

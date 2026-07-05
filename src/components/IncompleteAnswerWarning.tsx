@@ -12,6 +12,7 @@ export function IncompleteAnswerWarning({
 }) {
   return (
     <Box
+      data-test="incomplete_answer_warning__container"
       sx={{
         alignItems: 'center',
         display: 'inline-flex',
@@ -26,6 +27,7 @@ export function IncompleteAnswerWarning({
           key={pulseKey}
           aria-label={label}
           className="missingInputWarning"
+          data-test="incomplete_answer_warning__icon"
           sx={{ color: '#d6a500', fontSize: 30 }}
         />
       )}

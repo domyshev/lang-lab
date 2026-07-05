@@ -19,12 +19,14 @@ export function AssistantStickerIcon({
   ariaLabel,
   assistantId,
   className,
+  dataTest,
   size = 36,
   sx,
 }: {
   ariaLabel?: string;
   assistantId: AssistantId | string | undefined;
   className?: string;
+  dataTest?: string;
   size?: number;
   sx?: SxProps<Theme>;
 }) {
@@ -36,6 +38,7 @@ export function AssistantStickerIcon({
       alt={ariaLabel ?? ''}
       aria-label={ariaLabel}
       className={className}
+      data-test={dataTest ?? `assistant_sticker_icon__${resolvedAssistantId}`}
       src={assistantImages[resolvedAssistantId]}
       sx={{
         display: 'block',

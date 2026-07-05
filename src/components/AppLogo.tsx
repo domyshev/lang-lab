@@ -13,6 +13,7 @@ export function AppLogo({
     <Box
       aria-label={t(interfaceLanguage, 'appName')}
       component="button"
+      data-test="app_logo__button"
       onClick={onClick}
       type="button"
       sx={{
@@ -47,7 +48,7 @@ export function AppLogo({
     >
       <Box
         aria-hidden="true"
-        data-testid="app-logo-leaf"
+        data-test="app_logo__legacy_leaf_hidden"
         sx={{
           bgcolor: 'rgba(156, 202, 86, 0.22)',
           borderBottomLeftRadius: '999px',
@@ -67,7 +68,7 @@ export function AppLogo({
       <Box
         component="svg"
         aria-hidden="true"
-        data-testid="app-logo-tree-leaf"
+        data-test="app_logo__tree_leaf_svg"
         viewBox="0 0 64 28"
         sx={{
           display: 'block',
@@ -80,14 +81,14 @@ export function AppLogo({
         }}
       >
         <path
-          data-testid="app-logo-leaf-shape"
+          data-test="app_logo__tree_leaf_shape"
           d="M 4 15 C 21 0, 43 0, 60 14 C 44 30, 21 29, 4 15 Z"
           fill="rgba(156, 202, 86, 0.30)"
           stroke="rgba(96, 132, 46, 0.26)"
           strokeWidth="1.4"
         />
         <path
-          data-testid="app-logo-leaf-vein"
+          data-test="app_logo__tree_leaf_main_vein"
           d="M 8 15 C 23 12, 39 11, 58 14"
           fill="none"
           stroke="rgba(69, 98, 31, 0.34)"
@@ -95,6 +96,7 @@ export function AppLogo({
           strokeWidth="1.4"
         />
         <path
+          data-test="app_logo__tree_leaf_vein_top_left"
           d="M 25 12 C 22 9, 20 7, 17 5"
           fill="none"
           stroke="rgba(69, 98, 31, 0.20)"
@@ -102,6 +104,7 @@ export function AppLogo({
           strokeWidth="1"
         />
         <path
+          data-test="app_logo__tree_leaf_vein_bottom_left"
           d="M 31 12 C 28 16, 25 19, 21 22"
           fill="none"
           stroke="rgba(69, 98, 31, 0.20)"
@@ -109,6 +112,7 @@ export function AppLogo({
           strokeWidth="1"
         />
         <path
+          data-test="app_logo__tree_leaf_vein_top_right"
           d="M 40 12 C 37 9, 34 6, 30 4"
           fill="none"
           stroke="rgba(69, 98, 31, 0.18)"
@@ -116,6 +120,7 @@ export function AppLogo({
           strokeWidth="1"
         />
         <path
+          data-test="app_logo__tree_leaf_vein_bottom_right"
           d="M 46 13 C 42 17, 38 20, 34 23"
           fill="none"
           stroke="rgba(69, 98, 31, 0.18)"
@@ -125,6 +130,7 @@ export function AppLogo({
       </Box>
       <Box
         aria-hidden="true"
+        data-test="app_logo__letter_tile_grid"
         sx={{
           alignItems: 'center',
           bgcolor: '#ffffff',
@@ -139,13 +145,14 @@ export function AppLogo({
           zIndex: 1,
         }}
       >
-        {['A', 'Ñ', 'Я', 'B'].map((letter) => (
+        {logoLetters.map((item) => (
           <Box
-            key={letter}
+            key={item.value}
             component="span"
+            data-test={`app_logo__letter_tile__${item.testKey}`}
             sx={{
               alignItems: 'center',
-              bgcolor: letter === 'Я' ? '#dcefb1' : '#f0f7d7',
+              bgcolor: item.value === 'Я' ? '#dcefb1' : '#f0f7d7',
               borderRadius: 0.75,
               color: '#203015',
               display: 'inline-flex',
@@ -156,12 +163,13 @@ export function AppLogo({
               width: 18,
             }}
           >
-            {letter}
+            {item.value}
           </Box>
         ))}
       </Box>
       <Typography
         component="span"
+        data-test="app_logo__text"
         sx={{
           color: '#203015',
           fontSize: { xs: 22, md: 24 },
@@ -176,3 +184,10 @@ export function AppLogo({
     </Box>
   );
 }
+
+const logoLetters = [
+  { testKey: 'a', value: 'A' },
+  { testKey: 'n_tilde', value: 'Ñ' },
+  { testKey: 'ya', value: 'Я' },
+  { testKey: 'b', value: 'B' },
+];

@@ -41,16 +41,19 @@ export function CrosswordExercise({
   };
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Stack spacing={2}>
-        <Typography variant="h6">Crossword</Typography>
-        <Typography>
+    <Paper data-test="crossword_exercise__panel" sx={{ p: 2 }}>
+      <Stack data-test="crossword_exercise__content" spacing={2}>
+        <Typography data-test="crossword_exercise__title" variant="h6">
+          Crossword
+        </Typography>
+        <Typography data-test="crossword_exercise__mode_description">
           {puzzle.mode === 'phrase'
             ? 'Single phrase challenge'
             : 'Up to 6 words from the selected theme'}
         </Typography>
 
         <Box
+          data-test="crossword_exercise__grid"
           sx={{
             display: 'grid',
             gap: 0.5,
@@ -68,7 +71,13 @@ export function CrosswordExercise({
               const displayCol = col - puzzle.bounds.minCol + 1;
 
               if (!cell || /\s/.test(cell.solution)) {
-                return <Box key={key} sx={emptyCellStyles} />;
+                return (
+                  <Box
+                    data-test={`crossword_exercise__empty_cell__${displayRow}_${displayCol}`}
+                    key={key}
+                    sx={emptyCellStyles}
+                  />
+                );
               }
 
               return (
@@ -76,6 +85,7 @@ export function CrosswordExercise({
                   key={key}
                   component="input"
                   aria-label={`Crossword cell ${displayRow} ${displayCol}`}
+                  data-test={`crossword_exercise__input_cell__${displayRow}_${displayCol}`}
                   value={cellValues[key] ?? ''}
                   onChange={(event) =>
                     setCellValues((current) => ({
@@ -91,15 +101,23 @@ export function CrosswordExercise({
           )}
         </Box>
 
-        <Stack spacing={0.75}>
+        <Stack data-test="crossword_exercise__clues" spacing={0.75}>
           {puzzle.entries.map((entry, index) => (
-            <Typography key={entry.cardId} color="text.secondary">
+            <Typography
+              data-test={`crossword_exercise__clue__${entry.cardId}`}
+              key={entry.cardId}
+              color="text.secondary"
+            >
               {index + 1}. {entry.direction} - {entry.clue || 'Answer'}
             </Typography>
           ))}
         </Stack>
 
-        <Button variant="contained" onClick={handleSubmit}>
+        <Button
+          data-test="crossword_exercise__submit_button"
+          variant="contained"
+          onClick={handleSubmit}
+        >
           Submit crossword
         </Button>
       </Stack>
