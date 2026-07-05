@@ -49,6 +49,22 @@ The MVP includes four exercise modes:
 
 Crosswords are generated from a single theme. If a phrase is selected for a crossword, the crossword uses only that phrase. If the crossword uses single words, it includes up to six theme cards.
 
+## Practice Ordering
+
+The cards page sorts cards for the current target language by total practice volume. Cards with the largest number of correct plus incorrect answers appear first. Cards with no recorded attempts appear after practiced cards.
+
+Missing-letters practice uses a separate review order:
+
+1. Cards with recent mistakes are shown first. The app looks at the last five target-language attempts for each card and groups cards by the number of incorrect answers in that recent window. Cards with more recent incorrect answers are prioritized. Cards inside the same mistake group are shuffled by the current generation seed.
+2. Cards with no target-language attempts are shown next, shuffled by the current generation seed.
+3. Practiced cards with no recent mistakes are shown after new cards, also shuffled.
+4. Cards with a fresh correct streak can be cooled down. The default settings are:
+   - last 5 or more answers correct: show again after 2 months;
+   - last 4 answers correct: show again after 1 month;
+   - last 3 answers correct: show again after 0.5 months.
+
+The cooldown values are stored in the persisted app settings and can be changed from the settings menu in the top-right header. The order is reconstructed from saved exercise attempts, not only from aggregate card counters, so future analytics can change the weighting without losing the answer sequence.
+
 ## Language Card JSON
 
 Language cards are documented in [docs/LANGUAGE_CARD_FORMAT.md](docs/LANGUAGE_CARD_FORMAT.md).

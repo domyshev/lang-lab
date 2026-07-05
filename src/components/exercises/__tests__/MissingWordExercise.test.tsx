@@ -132,6 +132,31 @@ describe('MissingWordExercise', () => {
     expect(screen.queryByText(/I need to remember/)).not.toBeInTheDocument();
     expect(screen.getAllByLabelText(/Missing word letter/)).toHaveLength(11);
   });
+
+  it('moves focus to the next answer letter and skips spaces', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Provider store={createStore()}>
+        <MissingWordExercise
+          prompt={{
+            cardId: 'worth-it',
+            prompt: 'ru: оно того стоит',
+            expectedAnswer: 'worth it',
+            sentenceWithGap: 'It is _____ today.',
+            translationHints: [{ language: 'ru', value: 'оно того стоит' }],
+          }}
+          onAnswer={vi.fn()}
+          onNext={vi.fn()}
+        />
+      </Provider>,
+    );
+
+    const inputs = screen.getAllByLabelText(/Missing word letter/);
+    await user.type(inputs[3], 't');
+
+    expect(inputs[4]).toHaveFocus();
+  });
 });
 
 function createStore() {

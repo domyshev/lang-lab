@@ -1,8 +1,13 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
-import type { CSSProperties, Dispatch, SetStateAction } from 'react';
-import { useEffect, useState } from 'react';
+import type {
+  CSSProperties,
+  Dispatch,
+  MutableRefObject,
+  SetStateAction,
+} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { IncompleteAnswerWarning } from '../IncompleteAnswerWarning';
 import { MissingWordPrompt } from '../../domain/exercises';
@@ -22,6 +27,7 @@ export function MissingWordExercise({
   const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
   const [warningPulse, setWarningPulse] = useState(0);
   const [isWarningVisible, setIsWarningVisible] = useState(false);
+  const inputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
@@ -41,6 +47,9 @@ export function MissingWordExercise({
     normalizeAnswer(submittedAnswer) === normalizeAnswer(prompt.expectedAnswer);
   const resultTone = isSubmitted ? (isCorrect ? 'correct' : 'incorrect') : null;
   const sentenceParts = splitSentenceWithGap(prompt.sentenceWithGap);
+  const editableIndexes = answerCharacters.flatMap((character, index) =>
+    character.trim() === '' ? [] : [index],
+  );
 
   useEffect(() => {
     setLetters({});
@@ -78,6 +87,8 @@ export function MissingWordExercise({
             <SentenceText>{sentenceParts.before}</SentenceText>
             {renderAnswerCells({
               characters: answerCharacters,
+              editableIndexes,
+              inputRefs,
               isSubmitted,
               letters,
               resultTone,
@@ -197,12 +208,16 @@ function SentenceText({ children }: { children: string }) {
 
 function renderAnswerCells({
   characters,
+  editableIndexes,
+  inputRefs,
   isSubmitted,
   letters,
   resultTone,
   setLetters,
 }: {
   characters: string[];
+  editableIndexes: number[];
+  inputRefs: MutableRefObject<Record<number, HTMLInputElement | null>>;
   isSubmitted: boolean;
   letters: Record<number, string>;
   resultTone: 'correct' | 'incorrect' | null;
@@ -222,14 +237,25 @@ function renderAnswerCells({
         component="input"
         aria-label={`Missing word letter ${inputIndex}`}
         disabled={isSubmitted}
+        ref={(element: HTMLInputElement | null) => {
+          inputRefs.current[index] = element;
+        }}
         style={getLetterCellInlineStyle(resultTone)}
         value={letters[index] ?? ''}
-        onChange={(event) =>
+        onChange={(event) => {
+          const nextValue = event.target.value.slice(-1);
           setLetters((current) => ({
             ...current,
-            [index]: event.target.value.slice(-1),
-          }))
-        }
+            [index]: nextValue,
+          }));
+          if (nextValue) {
+            focusNextEditableInput({
+              currentIndex: index,
+              editableIndexes,
+              inputRefs,
+            });
+          }
+        }}
         sx={letterCellStyles}
       />
     );
@@ -298,4 +324,22 @@ function getLetterCellInlineStyle(
 
 function normalizeAnswer(value: string): string {
   return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+}
+
+function focusNextEditableInput({
+  currentIndex,
+  editableIndexes,
+  inputRefs,
+}: {
+  currentIndex: number;
+  editableIndexes: number[];
+  inputRefs: MutableRefObject<Record<number, HTMLInputElement | null>>;
+}) {
+  const currentPosition = editableIndexes.indexOf(currentIndex);
+  const nextIndex = editableIndexes[currentPosition + 1];
+  if (nextIndex === undefined) {
+    return;
+  }
+
+  inputRefs.current[nextIndex]?.focus();
 }

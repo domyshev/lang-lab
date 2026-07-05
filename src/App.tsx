@@ -52,6 +52,10 @@ import { summarizeExerciseHistory } from './domain/exerciseHistory';
 import { importLanguageCards } from './domain/importCards';
 import { getLanguageDisplayName, t } from './domain/i18n';
 import { languageFlags } from './domain/languages';
+import {
+  getPracticeSettings,
+  orderCardsForMissingLettersPractice,
+} from './domain/practiceOrdering';
 import { ALL_WORDS_THEME_ID, Theme } from './domain/themes';
 import { saveAttempt } from './store/attemptsSlice';
 import { applyImportResult } from './store/cardsSlice';
@@ -111,6 +115,9 @@ export function App() {
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
+  const practiceSettings = useSelector(
+    (state: RootState) => state.app.practiceSettings,
+  );
 
   const visibleThemes = useMemo(
     () => themes.filter((theme) => !theme.archivedAt),
@@ -146,6 +153,18 @@ export function App() {
   const randomizedEligibleCards = useMemo(
     () => shuffleCards(eligibleCards, generationSeed),
     [eligibleCards, generationSeed],
+  );
+  const missingLettersOrderedCards = useMemo(
+    () =>
+      orderCardsForMissingLettersPractice({
+        attempts,
+        cards: eligibleCards,
+        now: new Date().toISOString(),
+        seed: generationSeed,
+        settings: getPracticeSettings(practiceSettings),
+        targetLanguage,
+      }),
+    [attempts, eligibleCards, generationSeed, practiceSettings, targetLanguage],
   );
   const lastSavedAttempt =
     attempts.find((attempt) => attempt.id === lastSavedAttemptId) ?? null;
@@ -214,7 +233,7 @@ export function App() {
     }
 
     if (selectedExerciseType === 'missingLetters') {
-      const missingLettersPrompts = randomizedEligibleCards
+      const missingLettersPrompts = missingLettersOrderedCards
         .map((card) => createMissingLettersPrompt({ card, targetLanguage }))
         .filter((prompt): prompt is ExercisePrompt & { maskedAnswer: string } =>
           Boolean(prompt),
@@ -251,6 +270,7 @@ export function App() {
     answeredMissingLettersCardIds,
     answeredMissingWordCardIds,
     answeredMultipleChoiceCardIds,
+    missingLettersOrderedCards,
     randomizedEligibleCards,
     selectedExerciseType,
     targetLanguage,

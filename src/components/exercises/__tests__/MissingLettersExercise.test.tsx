@@ -111,4 +111,28 @@ describe('MissingLettersExercise', () => {
     expect(screen.queryByRole('button', { name: 'Неверно' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Отправить' })).toBeInTheDocument();
   });
+
+  it('moves focus to the next missing letter after typing', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MissingLettersExercise
+        interfaceLanguage="ru"
+        prompt={{
+          cardId: 'vehicle',
+          prompt: 'ru: транспортное средство',
+          expectedAnswer: 'vehicle',
+          maskedAnswer: 'v_h_c_e',
+          translationHints: [{ language: 'ru', value: 'транспортное средство' }],
+        }}
+        onAnswer={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
+    await user.type(missingLetterInputs[0], 'e');
+
+    expect(missingLetterInputs[1]).toHaveFocus();
+  });
 });

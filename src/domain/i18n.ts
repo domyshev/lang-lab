@@ -10,6 +10,11 @@ type I18nKey =
   | 'interfaceLanguage'
   | 'targetLanguage'
   | 'assistant'
+  | 'practiceSettings'
+  | 'correctStreakCooldownFivePlus'
+  | 'correctStreakCooldownFour'
+  | 'correctStreakCooldownThree'
+  | 'cooldownMonths'
   | 'importSection'
   | 'importCards'
   | 'importDescription'
@@ -91,6 +96,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     interfaceLanguage: 'Interface',
     targetLanguage: 'Target',
     assistant: 'Character',
+    practiceSettings: 'Practice settings',
+    correctStreakCooldownFivePlus: 'Last 5 or more answers correct',
+    correctStreakCooldownFour: 'Last 4 answers correct',
+    correctStreakCooldownThree: 'Last 3 answers correct',
+    cooldownMonths: 'Months before showing again',
     importSection: 'Import',
     importCards: 'Import cards',
     importDescription: 'Load a JSON file or paste a JSON array of language cards.',
@@ -172,6 +182,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     interfaceLanguage: 'Интерфейс',
     targetLanguage: 'Цель',
     assistant: 'Персонаж',
+    practiceSettings: 'Настройки практики',
+    correctStreakCooldownFivePlus: 'Последние 5 и более раз верно',
+    correctStreakCooldownFour: 'Последние 4 раза верно',
+    correctStreakCooldownThree: 'Последние 3 раза верно',
+    cooldownMonths: 'Месяцев до повтора',
     importSection: 'Импорт',
     importCards: 'Импорт карточек',
     importDescription:
@@ -254,6 +269,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     interfaceLanguage: 'Interfaz',
     targetLanguage: 'Objetivo',
     assistant: 'Personaje',
+    practiceSettings: 'Ajustes de practica',
+    correctStreakCooldownFivePlus: 'Ultimas 5 o mas respuestas correctas',
+    correctStreakCooldownFour: 'Ultimas 4 respuestas correctas',
+    correctStreakCooldownThree: 'Ultimas 3 respuestas correctas',
+    cooldownMonths: 'Meses antes de mostrar otra vez',
     importSection: 'Importar',
     importCards: 'Importar tarjetas',
     importDescription:

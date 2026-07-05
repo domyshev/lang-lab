@@ -1,8 +1,8 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
-import type { CSSProperties } from 'react';
-import { useEffect, useState } from 'react';
+import type { CSSProperties, MutableRefObject } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { IncompleteAnswerWarning } from '../IncompleteAnswerWarning';
 import { MissingLettersPrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
@@ -23,7 +23,11 @@ export function MissingLettersExercise({
   const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
   const [warningPulse, setWarningPulse] = useState(0);
   const [isWarningVisible, setIsWarningVisible] = useState(false);
+  const inputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const maskedCharacters = prompt.maskedAnswer.split('');
+  const editableIndexes = maskedCharacters.flatMap((character, index) =>
+    character === '_' ? [index] : [],
+  );
   const answer = maskedCharacters
     .map((character, index) =>
       character === '_' ? (letters[index] ?? '') : character,
@@ -73,14 +77,25 @@ export function MissingLettersExercise({
                   component="input"
                   aria-label={`Missing letter ${index + 1}`}
                   disabled={isSubmitted}
+                  ref={(element: HTMLInputElement | null) => {
+                    inputRefs.current[index] = element;
+                  }}
                   style={getLetterCellInlineStyle(resultTone)}
                   value={letters[index] ?? ''}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    const nextValue = event.target.value.slice(-1);
                     setLetters((current) => ({
                       ...current,
-                      [index]: event.target.value.slice(-1),
-                    }))
-                  }
+                      [index]: nextValue,
+                    }));
+                    if (nextValue) {
+                      focusNextEditableInput({
+                        currentIndex: index,
+                        editableIndexes,
+                        inputRefs,
+                      });
+                    }
+                  }}
                   sx={letterCellStyles}
                 />
               ) : (
@@ -226,4 +241,22 @@ function getLetterCellInlineStyle(
 
 function normalizeAnswer(value: string): string {
   return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+}
+
+function focusNextEditableInput({
+  currentIndex,
+  editableIndexes,
+  inputRefs,
+}: {
+  currentIndex: number;
+  editableIndexes: number[];
+  inputRefs: MutableRefObject<Record<number, HTMLInputElement | null>>;
+}) {
+  const currentPosition = editableIndexes.indexOf(currentIndex);
+  const nextIndex = editableIndexes[currentPosition + 1];
+  if (nextIndex === undefined) {
+    return;
+  }
+
+  inputRefs.current[nextIndex]?.focus();
 }

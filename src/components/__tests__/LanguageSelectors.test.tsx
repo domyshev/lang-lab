@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
 import { appReducer } from '../../store/appSlice';
@@ -24,6 +25,31 @@ describe('LanguageSelectors', () => {
     expect(screen.getByTestId('target-language-select')).toHaveStyle({
       height: '34px',
     });
+  });
+
+  it('opens practice settings from the top-right menu and updates cooldown months', async () => {
+    const user = userEvent.setup();
+    const store = createStore();
+
+    render(
+      <Provider store={store}>
+        <LanguageSelectors />
+      </Provider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Настройки практики' }));
+    const fivePlusInput = screen.getByLabelText(
+      'Последние 5 и более раз верно',
+    );
+
+    expect(fivePlusInput).toHaveValue(2);
+
+    await user.clear(fivePlusInput);
+    await user.type(fivePlusInput, '3');
+
+    expect(
+      store.getState().app.practiceSettings!.correctStreakCooldownMonths.fivePlus,
+    ).toBe(3);
   });
 });
 

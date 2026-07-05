@@ -74,6 +74,18 @@ export function ThemeDetailView() {
   const themeCards = selectedTheme.cardIds
     .map((cardId) => cards.find((card) => card.id === cardId))
     .filter((card): card is LanguageCard => Boolean(card));
+  const sortedThemeCards = [...themeCards].sort((left, right) => {
+    const leftAttempts = getCardAttempts(left.id, cardStats, targetLanguage);
+    const rightAttempts = getCardAttempts(right.id, cardStats, targetLanguage);
+
+    if (leftAttempts !== rightAttempts) {
+      return rightAttempts - leftAttempts;
+    }
+
+    return getCardLabel(left, targetLanguage, interfaceLanguage).localeCompare(
+      getCardLabel(right, targetLanguage, interfaceLanguage),
+    );
+  });
   const availableCards = isAllWordsSelected
     ? []
     : cards.filter((card) => !selectedCardIds.has(card.id));
@@ -181,7 +193,7 @@ export function ThemeDetailView() {
           </Typography>
         ) : (
           <Stack spacing={1.25}>
-            {themeCards.map((card) => {
+            {sortedThemeCards.map((card) => {
               const answer = getDisplayAnswer(
                 card,
                 targetLanguage,
@@ -233,8 +245,10 @@ export function ThemeDetailView() {
                         spacing={1}
                         flexWrap="wrap"
                         useFlexGap
+                        sx={{ alignItems: 'center' }}
                       >
                         <Chip
+                          data-testid="card-kind-chip"
                           label={t(
                             interfaceLanguage,
                             isPhrase ? 'phraseLabel' : 'wordLabel',
@@ -245,6 +259,7 @@ export function ThemeDetailView() {
                             borderColor: 'rgba(32, 48, 21, 0.28)',
                             color: '#203015',
                             fontWeight: 800,
+                            height: 38,
                           }}
                         />
                         <SplitWordStatsChip
@@ -263,6 +278,18 @@ export function ThemeDetailView() {
         )}
       </Stack>
     </Paper>
+  );
+}
+
+function getCardAttempts(
+  cardId: string,
+  cardStats: RootState['stats']['cardStats'],
+  targetLanguage: SupportedLanguage,
+): number {
+  return (
+    cardStats.find(
+      (item) => item.cardId === cardId && item.targetLanguage === targetLanguage,
+    )?.attempts ?? 0
   );
 }
 

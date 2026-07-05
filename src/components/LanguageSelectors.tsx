@@ -1,11 +1,15 @@
-import { useId } from 'react';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import { useId, useState } from 'react';
 import {
   Box,
   FormControl,
+  IconButton,
   InputLabel,
+  Menu,
   MenuItem,
   Select,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
@@ -24,6 +28,11 @@ import {
 } from '../domain/languages';
 import { t } from '../domain/i18n';
 import {
+  CorrectStreakCooldownKey,
+  getPracticeSettings,
+} from '../domain/practiceOrdering';
+import {
+  setCorrectStreakCooldownMonths,
   setAssistantId,
   setInterfaceLanguage,
   setTargetLanguage,
@@ -36,6 +45,9 @@ export function LanguageSelectors() {
   const assistantLabelId = useId();
   const interfaceLabelId = useId();
   const targetLabelId = useId();
+  const [settingsAnchor, setSettingsAnchor] = useState<HTMLElement | null>(
+    null,
+  );
   const assistantId = useSelector((state: RootState) =>
     resolveAssistantId(state.app.assistantId ?? defaultAssistantId),
   );
@@ -45,6 +57,11 @@ export function LanguageSelectors() {
   const targetLanguage = useSelector(
     (state: RootState) => state.app.targetLanguage,
   );
+  const storedPracticeSettings = useSelector(
+    (state: RootState) => state.app.practiceSettings,
+  );
+  const practiceSettings = getPracticeSettings(storedPracticeSettings);
+  const isSettingsOpen = Boolean(settingsAnchor);
 
   const handleInterfaceChange = (
     event: SelectChangeEvent<SupportedLanguage>,
@@ -159,9 +176,72 @@ export function LanguageSelectors() {
           ))}
         </Select>
       </FormControl>
+
+      <IconButton
+        aria-label={t(interfaceLanguage, 'practiceSettings')}
+        onClick={(event) => setSettingsAnchor(event.currentTarget)}
+        sx={{
+          border: '1px solid rgba(32, 48, 21, 0.22)',
+          borderRadius: 1,
+          color: '#203015',
+          height: 34,
+          width: 34,
+        }}
+      >
+        <SettingsOutlinedIcon fontSize="small" />
+      </IconButton>
+      <Menu
+        anchorEl={settingsAnchor}
+        open={isSettingsOpen}
+        onClose={() => setSettingsAnchor(null)}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+      >
+        <Stack spacing={1.5} sx={{ minWidth: 280, p: 2 }}>
+          <Typography fontWeight={900}>
+            {t(interfaceLanguage, 'practiceSettings')}
+          </Typography>
+          {cooldownFields.map((field) => (
+            <TextField
+              key={field.key}
+              label={t(interfaceLanguage, field.labelKey)}
+              size="small"
+              type="number"
+              value={
+                practiceSettings.correctStreakCooldownMonths[field.key]
+              }
+              onChange={(event) =>
+                dispatch(
+                  setCorrectStreakCooldownMonths({
+                    months: Number(event.target.value),
+                    streak: field.key,
+                  }),
+                )
+              }
+              inputProps={{
+                min: 0,
+                step: 0.5,
+              }}
+              helperText={t(interfaceLanguage, 'cooldownMonths')}
+            />
+          ))}
+        </Stack>
+      </Menu>
     </Stack>
   );
 }
+
+const cooldownFields: Array<{
+  key: CorrectStreakCooldownKey;
+  labelKey:
+    | 'correctStreakCooldownFivePlus'
+    | 'correctStreakCooldownFour'
+    | 'correctStreakCooldownThree';
+}> = [
+  { key: 'fivePlus', labelKey: 'correctStreakCooldownFivePlus' },
+  { key: 'four', labelKey: 'correctStreakCooldownFour' },
+  { key: 'three', labelKey: 'correctStreakCooldownThree' },
+];
 
 const compactSelectSx = {
   height: 34,
