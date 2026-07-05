@@ -11,9 +11,10 @@ import { statsReducer } from '../../../store/statsSlice';
 import { themesReducer } from '../../../store/themesSlice';
 
 describe('MissingWordExercise', () => {
-  it('flashes a warning and does not submit an empty answer', async () => {
+  it('shows a memorize state without saving stats for an empty answer', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();
+    const onNext = vi.fn();
 
     render(
       <Provider store={createStore()}>
@@ -26,7 +27,7 @@ describe('MissingWordExercise', () => {
             translationHints: [{ language: 'ru', value: 'оно того стоит' }],
           }}
           onAnswer={onAnswer}
-          onNext={vi.fn()}
+          onNext={onNext}
         />
       </Provider>,
     );
@@ -34,8 +35,19 @@ describe('MissingWordExercise', () => {
     await user.click(screen.getByRole('button', { name: 'Отправить' }));
 
     expect(onAnswer).not.toHaveBeenCalled();
-    expect(screen.getByLabelText('Заполните все пропуски')).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText('Заполните все пропуски'),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Правильный ответ')).toBeInTheDocument();
+    expect(screen.getByLabelText('Правильный ответ: worth it')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Неверно' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Запомнить!' })).toHaveStyle({
+      backgroundColor: 'rgb(255, 243, 205)',
+    });
     expect(screen.queryByRole('textbox', { name: 'Ответ' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Запомнить!' }));
+    expect(onNext).toHaveBeenCalledOnce();
   });
 
   it('renders the missing phrase inline as letter cells and shows the correct phrase after a mistake', async () => {
@@ -61,15 +73,20 @@ describe('MissingWordExercise', () => {
 
     expect(screen.getByText('It is')).toBeInTheDocument();
     expect(screen.getByText('today.')).toBeInTheDocument();
-    expect(screen.getAllByLabelText(/Missing word letter/)).toHaveLength(7);
+    expect(screen.getAllByLabelText(/Missing word letter/)).toHaveLength(3);
+    expect(screen.getByText('w')).toBeInTheDocument();
+    expect(screen.getByText('r')).toBeInTheDocument();
+    expect(screen.getByText('h')).toBeInTheDocument();
+    expect(screen.getByText('i')).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: 'Ответ' })).not.toBeInTheDocument();
 
-    for (const input of screen.getAllByLabelText(/Missing word letter/)) {
-      await user.type(input, 'x');
-    }
+    const inputs = screen.getAllByLabelText(/Missing word letter/);
+    await user.type(inputs[0], 'x');
+    await user.type(inputs[1], 'x');
+    await user.type(inputs[2], 'x');
     await user.click(screen.getByRole('button', { name: 'Отправить' }));
 
-    expect(onAnswer).toHaveBeenCalledWith('xxxxx xx');
+    expect(onAnswer).toHaveBeenCalledWith('wxrxh ix');
     expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
     expect(screen.getByText('Правильный ответ')).toBeInTheDocument();
     expect(screen.getByLabelText('Правильный ответ: worth it')).toBeInTheDocument();
@@ -98,7 +115,7 @@ describe('MissingWordExercise', () => {
       </Provider>,
     );
 
-    const letters = 'worthit'.split('');
+    const letters = ['o', 't', 't'];
     const inputs = screen.getAllByLabelText(/Missing word letter/);
     for (let index = 0; index < inputs.length; index += 1) {
       await user.type(inputs[index], letters[index]);
@@ -130,7 +147,7 @@ describe('MissingWordExercise', () => {
     );
 
     expect(screen.queryByText(/I need to remember/)).not.toBeInTheDocument();
-    expect(screen.getAllByLabelText(/Missing word letter/)).toHaveLength(11);
+    expect(screen.getAllByLabelText(/Missing word letter/)).toHaveLength(5);
   });
 
   it('moves focus to the next answer letter and skips spaces', async () => {
@@ -153,9 +170,39 @@ describe('MissingWordExercise', () => {
     );
 
     const inputs = screen.getAllByLabelText(/Missing word letter/);
-    await user.type(inputs[3], 't');
+    await user.type(inputs[1], 't');
 
-    expect(inputs[4]).toHaveFocus();
+    expect(inputs[2]).toHaveFocus();
+  });
+
+  it('submits with Enter from any missing word cell', async () => {
+    const user = userEvent.setup();
+    const onAnswer = vi.fn();
+
+    render(
+      <Provider store={createStore()}>
+        <MissingWordExercise
+          prompt={{
+            cardId: 'worth-it',
+            prompt: 'ru: оно того стоит',
+            expectedAnswer: 'worth it',
+            sentenceWithGap: 'It is _____ today.',
+            translationHints: [{ language: 'ru', value: 'оно того стоит' }],
+          }}
+          onAnswer={onAnswer}
+          onNext={vi.fn()}
+        />
+      </Provider>,
+    );
+
+    const inputs = screen.getAllByLabelText(/Missing word letter/);
+    await user.type(inputs[0], 'o');
+    expect(inputs[0]).toHaveStyle({ color: 'rgb(95, 107, 87)' });
+    await user.type(inputs[1], 't');
+    await user.type(inputs[2], 't{enter}');
+
+    expect(onAnswer).toHaveBeenCalledWith('worth it');
+    expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
   });
 });
 

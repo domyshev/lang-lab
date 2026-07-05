@@ -1,6 +1,6 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DragHandleRoundedIcon from '@mui/icons-material/DragHandleRounded';
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
 import { t } from '../domain/i18n';
 import { SupportedLanguage } from '../domain/languages';
@@ -32,12 +32,14 @@ export function StatsFormula({
   correct,
   incorrect,
   interfaceLanguage,
+  showLabel = true,
   total,
   totalLabel,
 }: {
   correct: number;
   incorrect: number;
   interfaceLanguage: SupportedLanguage;
+  showLabel?: boolean;
   total: number;
   totalLabel: string;
 }) {
@@ -54,11 +56,12 @@ export function StatsFormula({
       useFlexGap
       sx={{ width: '100%' }}
     >
-      <MetricLabel>{totalLabel}:</MetricLabel>
+      {showLabel && <MetricLabel>{totalLabel}:</MetricLabel>}
       <MetricChip
         ariaLabel={`${totalLabel}: ${total}`}
         label={total}
         tone="total"
+        tooltip={t(interfaceLanguage, 'totalAnsweredTooltip')}
       />
       <FormulaIcon label="=">
         <DragHandleRoundedIcon fontSize="inherit" />
@@ -67,6 +70,7 @@ export function StatsFormula({
         ariaLabel={`${correctLabel}: ${correct}`}
         label={correct}
         tone="correct"
+        tooltip={t(interfaceLanguage, 'correctAnsweredTooltip')}
       />
       <FormulaIcon label="+">
         <AddRoundedIcon fontSize="inherit" />
@@ -75,6 +79,7 @@ export function StatsFormula({
         ariaLabel={`${incorrectLabel}: ${incorrect}`}
         label={incorrect}
         tone="incorrect"
+        tooltip={t(interfaceLanguage, 'incorrectAnsweredTooltip')}
       />
     </Stack>
   );
@@ -100,12 +105,14 @@ function MetricChip({
   ariaLabel,
   label,
   tone,
+  tooltip,
 }: {
   ariaLabel: string;
   label: number;
   tone: 'total' | 'correct' | 'incorrect';
+  tooltip?: string;
 }) {
-  return (
+  const chip = (
     <Chip
       aria-label={ariaLabel}
       label={label}
@@ -119,6 +126,8 @@ function MetricChip({
       }
     />
   );
+
+  return tooltip ? <Tooltip title={tooltip}>{chip}</Tooltip> : chip;
 }
 
 function FormulaIcon({
@@ -169,12 +178,12 @@ const correctChipStyles = {
   ...formulaChipBaseStyles,
   bgcolor: 'rgb(235, 247, 225)',
   borderColor: '#8fc773',
-  color: '#203015',
+  color: '#111111',
 };
 
 const incorrectChipStyles = {
   ...formulaChipBaseStyles,
   bgcolor: 'rgb(253, 235, 238)',
   borderColor: '#f2a7b4',
-  color: '#4a111b',
+  color: '#111111',
 };

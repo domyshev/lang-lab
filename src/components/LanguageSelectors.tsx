@@ -10,6 +10,7 @@ import {
   Select,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
@@ -18,6 +19,7 @@ import {
   AssistantId,
   assistantCharacters,
   defaultAssistantId,
+  getAssistantTooltip,
   resolveAssistantId,
 } from '../domain/assistants';
 import {
@@ -96,14 +98,20 @@ export function LanguageSelectors() {
           onChange={(event: SelectChangeEvent<AssistantId>) =>
             dispatch(setAssistantId(event.target.value as AssistantId))
           }
-          renderValue={(value) => (
-            <AssistantStickerIcon
-              ariaLabel={t(interfaceLanguage, 'selectedAssistant')}
-              assistantId={value}
-              size={30}
-              sx={{ mx: 'auto' }}
-            />
-          )}
+          renderValue={(value) => {
+            const tooltip = getAssistantTooltip(value, interfaceLanguage);
+            return (
+              <Tooltip describeChild title={tooltip}>
+                <Box component="span" sx={{ display: 'inline-flex', mx: 'auto' }}>
+                  <AssistantStickerIcon
+                    ariaLabel={tooltip}
+                    assistantId={value}
+                    size={30}
+                  />
+                </Box>
+              </Tooltip>
+            );
+          }}
           sx={{
             ...compactSelectSx,
             '& .MuiSelect-select': {
@@ -117,15 +125,25 @@ export function LanguageSelectors() {
           {assistantCharacters.map((assistant) => (
             <MenuItem
               key={assistant.id}
-              aria-label={assistant.label}
+              aria-label={getAssistantTooltip(assistant.id, interfaceLanguage)}
               value={assistant.id}
               sx={{ justifyContent: 'center' }}
             >
-              <AssistantStickerIcon
-                ariaLabel={assistant.label}
-                assistantId={assistant.id}
-                size={36}
-              />
+              <Tooltip
+                describeChild
+                title={getAssistantTooltip(assistant.id, interfaceLanguage)}
+              >
+                <Box component="span" sx={{ display: 'inline-flex' }}>
+                  <AssistantStickerIcon
+                    ariaLabel={getAssistantTooltip(
+                      assistant.id,
+                      interfaceLanguage,
+                    )}
+                    assistantId={assistant.id}
+                    size={36}
+                  />
+                </Box>
+              </Tooltip>
             </MenuItem>
           ))}
         </Select>

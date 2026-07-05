@@ -1,12 +1,18 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
-import type { CSSProperties, MutableRefObject } from 'react';
+import type {
+  CSSProperties,
+  KeyboardEvent,
+  MouseEvent,
+  MutableRefObject,
+} from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { IncompleteAnswerWarning } from '../IncompleteAnswerWarning';
 import { MissingLettersPrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
+
+type SubmissionOutcome = 'correct' | 'incorrect' | 'memorize';
 
 export function MissingLettersExercise({
   interfaceLanguage,
@@ -21,8 +27,8 @@ export function MissingLettersExercise({
 }) {
   const [letters, setLetters] = useState<Record<number, string>>({});
   const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
-  const [warningPulse, setWarningPulse] = useState(0);
-  const [isWarningVisible, setIsWarningVisible] = useState(false);
+  const [submissionOutcome, setSubmissionOutcome] =
+    useState<SubmissionOutcome | null>(null);
   const inputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const maskedCharacters = prompt.maskedAnswer.split('');
   const editableIndexes = maskedCharacters.flatMap((character, index) =>
@@ -37,28 +43,48 @@ export function MissingLettersExercise({
     (character, index) => character !== '_' || Boolean(letters[index]?.trim()),
   );
   const isSubmitted = submittedAnswer !== null;
-  const isCorrect =
-    submittedAnswer !== null &&
-    normalizeAnswer(submittedAnswer) === normalizeAnswer(prompt.expectedAnswer);
-  const resultTone = isSubmitted ? (isCorrect ? 'correct' : 'incorrect') : null;
+  const isCorrect = submissionOutcome === 'correct';
+  const isMemorize = submissionOutcome === 'memorize';
+  const resultTone = submissionOutcome;
 
   useEffect(() => {
     setLetters({});
     setSubmittedAnswer(null);
-    setIsWarningVisible(false);
+    setSubmissionOutcome(null);
   }, [prompt.cardId, prompt.maskedAnswer]);
 
-  useEffect(() => {
-    if (!isWarningVisible) {
-      return undefined;
+  function handleSubmitOrNext(eventDetail = 1) {
+    if (isSubmitted) {
+      if (eventDetail > 1) {
+        return;
+      }
+      onNext();
+      return;
     }
 
-    const timeoutId = window.setTimeout(() => {
-      setIsWarningVisible(false);
-    }, 1100);
+    if (!isAnswerComplete) {
+      setSubmittedAnswer(answer);
+      setSubmissionOutcome('memorize');
+      return;
+    }
 
-    return () => window.clearTimeout(timeoutId);
-  }, [isWarningVisible, warningPulse]);
+    setSubmittedAnswer(answer);
+    setSubmissionOutcome(
+      normalizeAnswer(answer) === normalizeAnswer(prompt.expectedAnswer)
+        ? 'correct'
+        : 'incorrect',
+    );
+    onAnswer(answer);
+  }
+
+  function handleCellKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== 'Enter') {
+      return;
+    }
+
+    event.preventDefault();
+    handleSubmitOrNext();
+  }
 
   return (
     <Paper sx={{ p: 2 }}>
@@ -68,53 +94,47 @@ export function MissingLettersExercise({
         </Typography>
         <Typography>{prompt.prompt}</Typography>
         {prompt.definitionHint && <Typography>{prompt.definitionHint}</Typography>}
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-            {maskedCharacters.map((character, index) =>
-              character === '_' ? (
-                <Box
-                  key={index}
-                  component="input"
-                  aria-label={`Missing letter ${index + 1}`}
-                  disabled={isSubmitted}
-                  ref={(element: HTMLInputElement | null) => {
-                    inputRefs.current[index] = element;
-                  }}
-                  style={getLetterCellInlineStyle(resultTone)}
-                  value={letters[index] ?? ''}
-                  onChange={(event) => {
-                    const nextValue = event.target.value.slice(-1);
-                    setLetters((current) => ({
-                      ...current,
-                      [index]: nextValue,
-                    }));
-                    if (nextValue) {
-                      focusNextEditableInput({
-                        currentIndex: index,
-                        editableIndexes,
-                        inputRefs,
-                      });
-                    }
-                  }}
-                  sx={letterCellStyles}
-                />
-              ) : (
-                <Box
-                  key={index}
-                  component="span"
-                  style={getLetterCellInlineStyle(resultTone)}
-                  sx={letterCellStyles}
-                >
-                  {character}
-                </Box>
-              ),
-            )}
-          </Stack>
-          <IncompleteAnswerWarning
-            label={t(interfaceLanguage, 'fillAllGapsWarning')}
-            pulseKey={warningPulse}
-            visible={isWarningVisible}
-          />
+        <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+          {maskedCharacters.map((character, index) =>
+            character === '_' ? (
+              <Box
+                key={index}
+                component="input"
+                aria-label={`Missing letter ${index + 1}`}
+                disabled={isSubmitted}
+                ref={(element: HTMLInputElement | null) => {
+                  inputRefs.current[index] = element;
+                }}
+                style={getLetterCellInlineStyle(resultTone)}
+                value={letters[index] ?? ''}
+                onKeyDown={handleCellKeyDown}
+                onChange={(event) => {
+                  const nextValue = event.target.value.slice(-1);
+                  setLetters((current) => ({
+                    ...current,
+                    [index]: nextValue,
+                  }));
+                  if (nextValue) {
+                    focusNextEditableInput({
+                      currentIndex: index,
+                      editableIndexes,
+                      inputRefs,
+                    });
+                  }
+                }}
+                sx={typedLetterCellStyles}
+              />
+            ) : (
+              <Box
+                key={index}
+                component="span"
+                style={getLetterCellInlineStyle(resultTone)}
+                sx={letterCellStyles}
+              >
+                {character}
+              </Box>
+            ),
+          )}
         </Stack>
         {isSubmitted && !isCorrect && (
           <Stack spacing={0.75}>
@@ -146,7 +166,7 @@ export function MissingLettersExercise({
         <Button
           variant="contained"
           startIcon={
-            isSubmitted ? (
+            isSubmitted && !isMemorize ? (
               isCorrect ? (
                 <EmojiEventsOutlinedIcon />
               ) : (
@@ -154,21 +174,18 @@ export function MissingLettersExercise({
               )
             ) : undefined
           }
-          onClick={() => {
-            if (isSubmitted) {
-              onNext();
-              return;
-            }
-
-            if (!isAnswerComplete) {
-              setWarningPulse((value) => value + 1);
-              setIsWarningVisible(true);
-              return;
-            }
-
-            setSubmittedAnswer(answer);
-            onAnswer(answer);
-          }}
+          onClick={(event: MouseEvent<HTMLButtonElement>) =>
+            handleSubmitOrNext(event.detail)
+          }
+          style={
+            submissionOutcome === 'memorize'
+              ? {
+                  backgroundColor: 'rgb(255, 243, 205)',
+                  border: '1px solid #f2cf66',
+                  color: '#5f4400',
+                }
+              : undefined
+          }
           sx={{
             alignSelf: 'flex-start',
             boxShadow: 'none',
@@ -180,12 +197,23 @@ export function MissingLettersExercise({
                   '&:hover': { bgcolor: '#276b2a', boxShadow: 'none' },
                 }
               : {}),
-            ...(isSubmitted && !isCorrect
+            ...(submissionOutcome === 'incorrect'
               ? {
                   bgcolor: '#fdebee',
                   border: '1px solid #f2a7b4',
                   color: '#9f1239',
                   '&:hover': { bgcolor: '#fbdde3', boxShadow: 'none' },
+                }
+              : {}),
+            ...(submissionOutcome === 'memorize'
+              ? {
+                  bgcolor: 'rgb(255, 243, 205)',
+                  border: '1px solid #f2cf66',
+                  color: '#5f4400',
+                  '&:hover': {
+                    bgcolor: 'rgb(255, 236, 168)',
+                    boxShadow: 'none',
+                  },
                 }
               : {}),
           }}
@@ -194,6 +222,8 @@ export function MissingLettersExercise({
             ? t(interfaceLanguage, 'submit')
             : isCorrect
               ? t(interfaceLanguage, 'correctResult')
+              : isMemorize
+                ? t(interfaceLanguage, 'memorizeResult')
               : t(interfaceLanguage, 'incorrect')}
         </Button>
       </Stack>
@@ -223,8 +253,14 @@ const letterCellStyles = {
   },
 };
 
+const typedLetterCellStyles = {
+  ...letterCellStyles,
+  color: '#5f6b57',
+  WebkitTextFillColor: '#5f6b57',
+};
+
 function getLetterCellInlineStyle(
-  resultTone: 'correct' | 'incorrect' | null,
+  resultTone: SubmissionOutcome | null,
 ): CSSProperties | undefined {
   if (!resultTone) {
     return undefined;
@@ -232,8 +268,17 @@ function getLetterCellInlineStyle(
 
   return {
     backgroundColor:
-      resultTone === 'correct' ? 'rgb(235, 247, 225)' : 'rgb(253, 235, 238)',
-    borderColor: resultTone === 'correct' ? '#8fc773' : '#f2a7b4',
+      resultTone === 'correct'
+        ? 'rgb(235, 247, 225)'
+        : resultTone === 'memorize'
+          ? 'rgb(255, 243, 205)'
+          : 'rgb(253, 235, 238)',
+    borderColor:
+      resultTone === 'correct'
+        ? '#8fc773'
+        : resultTone === 'memorize'
+          ? '#f2cf66'
+          : '#f2a7b4',
     color: 'rgb(117, 117, 117)',
     WebkitTextFillColor: 'rgb(117, 117, 117)',
   };

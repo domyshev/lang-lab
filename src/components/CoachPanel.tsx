@@ -1,19 +1,34 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { defaultAssistantId, resolveAssistantId } from '../domain/assistants';
+import {
+  defaultAssistantId,
+  getAssistantTooltip,
+  resolveAssistantId,
+} from '../domain/assistants';
+import { CoachProgressMessage } from '../domain/coachProgress';
 import { getCoachThought } from '../domain/coachThoughts';
 import { t } from '../domain/i18n';
 import { RootState } from '../store/store';
 import { AssistantStickerIcon } from './assistantAssets';
 
-export function CoachPanel({ thoughtSeed }: { thoughtSeed: number }) {
+export function CoachPanel({
+  progressMessage,
+  thoughtSeed,
+}: {
+  progressMessage?: CoachProgressMessage;
+  thoughtSeed: number;
+}) {
   const assistantId = useSelector((state: RootState) =>
     resolveAssistantId(state.app.assistantId ?? defaultAssistantId),
   );
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
-  const thought = getCoachThought(interfaceLanguage, thoughtSeed, assistantId);
+  const thought =
+    progressMessage?.text ??
+    getCoachThought(interfaceLanguage, thoughtSeed, assistantId);
+  const thoughtTooltip = progressMessage?.tooltip ?? '';
+  const assistantTooltip = getAssistantTooltip(assistantId, interfaceLanguage);
 
   return (
     <Box
@@ -26,13 +41,17 @@ export function CoachPanel({ thoughtSeed }: { thoughtSeed: number }) {
         minWidth: 0,
       }}
     >
-      <AssistantStickerIcon
-        ariaLabel="Assistant character"
-        assistantId={assistantId}
-        className="coachPortrait"
-        size={118}
-        sx={{ height: { xs: 90, lg: 118 }, width: { xs: 90, lg: 118 } }}
-      />
+      <Tooltip describeChild title={assistantTooltip}>
+        <Box component="span" sx={{ display: 'inline-flex' }}>
+          <AssistantStickerIcon
+            ariaLabel={assistantTooltip}
+            assistantId={assistantId}
+            className="coachPortrait"
+            size={118}
+            sx={{ height: { xs: 90, lg: 118 }, width: { xs: 90, lg: 118 } }}
+          />
+        </Box>
+      </Tooltip>
       <Box
         aria-label={t(interfaceLanguage, 'coachThought')}
         sx={{
@@ -59,9 +78,11 @@ export function CoachPanel({ thoughtSeed }: { thoughtSeed: number }) {
           },
         }}
       >
-        <Typography variant="body2" sx={{ fontWeight: 800, lineHeight: 1.35 }}>
-          {thought}
-        </Typography>
+        <Tooltip describeChild title={thoughtTooltip}>
+          <Typography variant="body2" sx={{ fontWeight: 800, lineHeight: 1.35 }}>
+            {thought}
+          </Typography>
+        </Tooltip>
       </Box>
     </Box>
   );

@@ -30,6 +30,7 @@ describe('MissingLettersExercise', () => {
     expect(missingLetterInputs).toHaveLength(3);
 
     await user.type(missingLetterInputs[0], 'e');
+    expect(missingLetterInputs[0]).toHaveStyle({ color: 'rgb(95, 107, 87)' });
     await user.type(missingLetterInputs[1], 'i');
     await user.type(missingLetterInputs[2], 'l');
     await user.click(screen.getByRole('button', { name: 'Отправить' }));
@@ -83,9 +84,10 @@ describe('MissingLettersExercise', () => {
     expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
   });
 
-  it('flashes a warning and does not submit an incomplete answer', async () => {
+  it('shows a memorize state without saving stats for an incomplete answer', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();
+    const onNext = vi.fn();
 
     render(
       <MissingLettersExercise
@@ -98,7 +100,7 @@ describe('MissingLettersExercise', () => {
           translationHints: [{ language: 'ru', value: 'транспортное средство' }],
         }}
         onAnswer={onAnswer}
-        onNext={vi.fn()}
+        onNext={onNext}
       />,
     );
 
@@ -107,9 +109,18 @@ describe('MissingLettersExercise', () => {
     await user.click(screen.getByRole('button', { name: 'Отправить' }));
 
     expect(onAnswer).not.toHaveBeenCalled();
-    expect(screen.getByLabelText('Заполните все пропуски')).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText('Заполните все пропуски'),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Неверно' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Отправить' })).toBeInTheDocument();
+    expect(screen.getByText('Правильный ответ')).toBeInTheDocument();
+    expect(screen.getByLabelText('Правильный ответ: vehicle')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Запомнить!' })).toHaveStyle({
+      backgroundColor: 'rgb(255, 243, 205)',
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Запомнить!' }));
+    expect(onNext).toHaveBeenCalledOnce();
   });
 
   it('moves focus to the next missing letter after typing', async () => {
@@ -134,5 +145,62 @@ describe('MissingLettersExercise', () => {
     await user.type(missingLetterInputs[0], 'e');
 
     expect(missingLetterInputs[1]).toHaveFocus();
+  });
+
+  it('submits with Enter from any missing letter cell', async () => {
+    const user = userEvent.setup();
+    const onAnswer = vi.fn();
+
+    render(
+      <MissingLettersExercise
+        interfaceLanguage="ru"
+        prompt={{
+          cardId: 'vehicle',
+          prompt: 'ru: транспортное средство',
+          expectedAnswer: 'vehicle',
+          maskedAnswer: 'v_h_c_e',
+          translationHints: [{ language: 'ru', value: 'транспортное средство' }],
+        }}
+        onAnswer={onAnswer}
+        onNext={vi.fn()}
+      />,
+    );
+
+    const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
+    await user.type(missingLetterInputs[0], 'e');
+    await user.type(missingLetterInputs[1], 'i');
+    await user.type(missingLetterInputs[2], 'l{enter}');
+
+    expect(onAnswer).toHaveBeenCalledWith('vehicle');
+    expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
+  });
+
+  it('does not advance when the submit button receives an accidental double click', async () => {
+    const user = userEvent.setup();
+    const onNext = vi.fn();
+
+    render(
+      <MissingLettersExercise
+        interfaceLanguage="ru"
+        prompt={{
+          cardId: 'vehicle',
+          prompt: 'ru: транспортное средство',
+          expectedAnswer: 'vehicle',
+          maskedAnswer: 'v_h_c_e',
+          translationHints: [{ language: 'ru', value: 'транспортное средство' }],
+        }}
+        onAnswer={vi.fn()}
+        onNext={onNext}
+      />,
+    );
+
+    const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
+    await user.type(missingLetterInputs[0], 'e');
+    await user.type(missingLetterInputs[1], 'i');
+    await user.type(missingLetterInputs[2], 'l');
+    await user.dblClick(screen.getByRole('button', { name: 'Отправить' }));
+
+    expect(onNext).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
   });
 });

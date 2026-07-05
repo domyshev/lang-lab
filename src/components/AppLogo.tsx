@@ -26,11 +26,13 @@ export function AppLogo({
         display: 'inline-flex',
         font: 'inherit',
         gap: 1,
+        height: 52,
         lineHeight: 1,
         m: 0,
+        minHeight: 52,
         overflow: 'hidden',
         px: 1,
-        py: 0.65,
+        py: 0,
         position: 'relative',
         alignSelf: 'center',
         mt: { xs: 2.5, md: 0 },
@@ -53,7 +55,8 @@ export function AppLogo({
           borderTopLeftRadius: 0,
           borderTopRightRadius: '999px',
           clipPath: 'polygon(0 0, 100% 0, 100% 100%, 18% 100%)',
-          height: 16,
+          display: 'none',
+          height: 12,
           position: 'absolute',
           right: -8,
           top: -3,
@@ -61,6 +64,65 @@ export function AppLogo({
           zIndex: 0,
         }}
       />
+      <Box
+        component="svg"
+        aria-hidden="true"
+        data-testid="app-logo-tree-leaf"
+        viewBox="0 0 64 28"
+        sx={{
+          display: 'block',
+          height: 22,
+          position: 'absolute',
+          right: -10,
+          top: 1,
+          width: 56,
+          zIndex: 0,
+        }}
+      >
+        <path
+          data-testid="app-logo-leaf-shape"
+          d="M 4 15 C 21 0, 43 0, 60 14 C 44 30, 21 29, 4 15 Z"
+          fill="rgba(156, 202, 86, 0.30)"
+          stroke="rgba(96, 132, 46, 0.26)"
+          strokeWidth="1.4"
+        />
+        <path
+          data-testid="app-logo-leaf-vein"
+          d="M 8 15 C 23 12, 39 11, 58 14"
+          fill="none"
+          stroke="rgba(69, 98, 31, 0.34)"
+          strokeLinecap="round"
+          strokeWidth="1.4"
+        />
+        <path
+          d="M 25 12 C 22 9, 20 7, 17 5"
+          fill="none"
+          stroke="rgba(69, 98, 31, 0.20)"
+          strokeLinecap="round"
+          strokeWidth="1"
+        />
+        <path
+          d="M 31 12 C 28 16, 25 19, 21 22"
+          fill="none"
+          stroke="rgba(69, 98, 31, 0.20)"
+          strokeLinecap="round"
+          strokeWidth="1"
+        />
+        <path
+          d="M 40 12 C 37 9, 34 6, 30 4"
+          fill="none"
+          stroke="rgba(69, 98, 31, 0.18)"
+          strokeLinecap="round"
+          strokeWidth="1"
+        />
+        <path
+          d="M 46 13 C 42 17, 38 20, 34 23"
+          fill="none"
+          stroke="rgba(69, 98, 31, 0.18)"
+          strokeLinecap="round"
+          strokeWidth="1"
+        />
+      </Box>
       <Box
         aria-hidden="true"
         sx={{

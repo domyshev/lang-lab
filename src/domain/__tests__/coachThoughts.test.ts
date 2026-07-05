@@ -24,4 +24,14 @@ describe('coachThoughts', () => {
       getCoachThought('ru', 7, 'webRunner'),
     );
   });
+
+  it('keeps generated transition thoughts to one sentence', () => {
+    for (const assistant of assistantCharacters) {
+      for (const language of supportedLanguages) {
+        for (const thought of coachThoughts[assistant.id][language]) {
+          expect(thought.match(/\./g)).toHaveLength(1);
+        }
+      }
+    }
+  });
 });

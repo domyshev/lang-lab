@@ -4,15 +4,18 @@ import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import type {
   CSSProperties,
   Dispatch,
+  KeyboardEvent,
+  MouseEvent,
   MutableRefObject,
   SetStateAction,
 } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { IncompleteAnswerWarning } from '../IncompleteAnswerWarning';
 import { MissingWordPrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import { RootState } from '../../store/store';
+
+type SubmissionOutcome = 'correct' | 'incorrect' | 'memorize';
 
 export function MissingWordExercise({
   prompt,
@@ -25,49 +28,70 @@ export function MissingWordExercise({
 }) {
   const [letters, setLetters] = useState<Record<number, string>>({});
   const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
-  const [warningPulse, setWarningPulse] = useState(0);
-  const [isWarningVisible, setIsWarningVisible] = useState(false);
+  const [submissionOutcome, setSubmissionOutcome] =
+    useState<SubmissionOutcome | null>(null);
   const inputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
   const answerCharacters = prompt.expectedAnswer.split('');
+  const editableIndexes = getEditableAnswerIndexes(answerCharacters);
   const answer = answerCharacters
     .map((character, index) =>
-      character.trim() === '' ? character : (letters[index] ?? ''),
+      character.trim() === ''
+        ? character
+        : editableIndexes.includes(index)
+          ? (letters[index] ?? '')
+          : character,
     )
     .join('');
-  const isAnswerComplete = answerCharacters.every(
-    (character, index) =>
-      character.trim() === '' || Boolean(letters[index]?.trim()),
+  const isAnswerComplete = editableIndexes.every((index) =>
+    Boolean(letters[index]?.trim()),
   );
   const isSubmitted = submittedAnswer !== null;
-  const isCorrect =
-    submittedAnswer !== null &&
-    normalizeAnswer(submittedAnswer) === normalizeAnswer(prompt.expectedAnswer);
-  const resultTone = isSubmitted ? (isCorrect ? 'correct' : 'incorrect') : null;
+  const isCorrect = submissionOutcome === 'correct';
+  const isMemorize = submissionOutcome === 'memorize';
+  const resultTone = submissionOutcome;
   const sentenceParts = splitSentenceWithGap(prompt.sentenceWithGap);
-  const editableIndexes = answerCharacters.flatMap((character, index) =>
-    character.trim() === '' ? [] : [index],
-  );
 
   useEffect(() => {
     setLetters({});
     setSubmittedAnswer(null);
-    setIsWarningVisible(false);
+    setSubmissionOutcome(null);
   }, [prompt.cardId, prompt.expectedAnswer, prompt.sentenceWithGap]);
 
-  useEffect(() => {
-    if (!isWarningVisible) {
-      return undefined;
+  function handleSubmitOrNext(eventDetail = 1) {
+    if (isSubmitted) {
+      if (eventDetail > 1) {
+        return;
+      }
+      onNext();
+      return;
     }
 
-    const timeoutId = window.setTimeout(() => {
-      setIsWarningVisible(false);
-    }, 1100);
+    if (!isAnswerComplete) {
+      setSubmittedAnswer(answer);
+      setSubmissionOutcome('memorize');
+      return;
+    }
 
-    return () => window.clearTimeout(timeoutId);
-  }, [isWarningVisible, warningPulse]);
+    setSubmittedAnswer(answer);
+    setSubmissionOutcome(
+      normalizeAnswer(answer) === normalizeAnswer(prompt.expectedAnswer)
+        ? 'correct'
+        : 'incorrect',
+    );
+    onAnswer(answer);
+  }
+
+  function handleCellKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== 'Enter') {
+      return;
+    }
+
+    event.preventDefault();
+    handleSubmitOrNext();
+  }
 
   return (
     <Paper sx={{ p: 2 }}>
@@ -75,33 +99,27 @@ export function MissingWordExercise({
         <Typography variant="h6">{t(interfaceLanguage, 'missingWord')}</Typography>
         <Typography>{prompt.prompt}</Typography>
         {prompt.definitionHint && <Typography>{prompt.definitionHint}</Typography>}
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Box
-            sx={{
-              alignItems: 'center',
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 0.75,
-            }}
-          >
-            <SentenceText>{sentenceParts.before}</SentenceText>
-            {renderAnswerCells({
-              characters: answerCharacters,
-              editableIndexes,
-              inputRefs,
-              isSubmitted,
-              letters,
-              resultTone,
-              setLetters,
-            })}
-            <SentenceText>{sentenceParts.after}</SentenceText>
-          </Box>
-          <IncompleteAnswerWarning
-            label={t(interfaceLanguage, 'fillAllGapsWarning')}
-            pulseKey={warningPulse}
-            visible={isWarningVisible}
-          />
-        </Stack>
+        <Box
+          sx={{
+            alignItems: 'center',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 0.75,
+          }}
+        >
+          <SentenceText>{sentenceParts.before}</SentenceText>
+          {renderAnswerCells({
+            characters: answerCharacters,
+            editableIndexes,
+            inputRefs,
+            isSubmitted,
+            letters,
+            resultTone,
+            onCellKeyDown: handleCellKeyDown,
+            setLetters,
+          })}
+          <SentenceText>{sentenceParts.after}</SentenceText>
+        </Box>
         {isSubmitted && !isCorrect && (
           <Stack spacing={0.75}>
             <Typography variant="overline">
@@ -136,7 +154,7 @@ export function MissingWordExercise({
         <Button
           variant="contained"
           startIcon={
-            isSubmitted ? (
+            isSubmitted && !isMemorize ? (
               isCorrect ? (
                 <EmojiEventsOutlinedIcon />
               ) : (
@@ -144,21 +162,18 @@ export function MissingWordExercise({
               )
             ) : undefined
           }
-          onClick={() => {
-            if (isSubmitted) {
-              onNext();
-              return;
-            }
-
-            if (!isAnswerComplete) {
-              setWarningPulse((value) => value + 1);
-              setIsWarningVisible(true);
-              return;
-            }
-
-            setSubmittedAnswer(answer);
-            onAnswer(answer);
-          }}
+          onClick={(event: MouseEvent<HTMLButtonElement>) =>
+            handleSubmitOrNext(event.detail)
+          }
+          style={
+            submissionOutcome === 'memorize'
+              ? {
+                  backgroundColor: 'rgb(255, 243, 205)',
+                  border: '1px solid #f2cf66',
+                  color: '#5f4400',
+                }
+              : undefined
+          }
           sx={{
             alignSelf: 'flex-start',
             boxShadow: 'none',
@@ -170,12 +185,23 @@ export function MissingWordExercise({
                   '&:hover': { bgcolor: '#276b2a', boxShadow: 'none' },
                 }
               : {}),
-            ...(isSubmitted && !isCorrect
+            ...(submissionOutcome === 'incorrect'
               ? {
                   bgcolor: '#fdebee',
                   border: '1px solid #f2a7b4',
                   color: '#9f1239',
                   '&:hover': { bgcolor: '#fbdde3', boxShadow: 'none' },
+                }
+              : {}),
+            ...(submissionOutcome === 'memorize'
+              ? {
+                  bgcolor: 'rgb(255, 243, 205)',
+                  border: '1px solid #f2cf66',
+                  color: '#5f4400',
+                  '&:hover': {
+                    bgcolor: 'rgb(255, 236, 168)',
+                    boxShadow: 'none',
+                  },
                 }
               : {}),
           }}
@@ -184,6 +210,8 @@ export function MissingWordExercise({
             ? t(interfaceLanguage, 'submit')
             : isCorrect
               ? t(interfaceLanguage, 'correctResult')
+              : isMemorize
+                ? t(interfaceLanguage, 'memorizeResult')
               : t(interfaceLanguage, 'incorrect')}
         </Button>
       </Stack>
@@ -212,6 +240,7 @@ function renderAnswerCells({
   inputRefs,
   isSubmitted,
   letters,
+  onCellKeyDown,
   resultTone,
   setLetters,
 }: {
@@ -220,7 +249,8 @@ function renderAnswerCells({
   inputRefs: MutableRefObject<Record<number, HTMLInputElement | null>>;
   isSubmitted: boolean;
   letters: Record<number, string>;
-  resultTone: 'correct' | 'incorrect' | null;
+  onCellKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
+  resultTone: SubmissionOutcome | null;
   setLetters: Dispatch<SetStateAction<Record<number, string>>>;
 }) {
   let inputIndex = 0;
@@ -228,6 +258,19 @@ function renderAnswerCells({
   return characters.map((character, index) => {
     if (character.trim() === '') {
       return <AnswerSpace key={`space-${index}`} />;
+    }
+
+    if (!editableIndexes.includes(index)) {
+      return (
+        <Box
+          key={`${character}-${index}`}
+          component="span"
+          style={getLetterCellInlineStyle(resultTone)}
+          sx={letterCellStyles}
+        >
+          {character}
+        </Box>
+      );
     }
 
     inputIndex += 1;
@@ -242,6 +285,7 @@ function renderAnswerCells({
         }}
         style={getLetterCellInlineStyle(resultTone)}
         value={letters[index] ?? ''}
+        onKeyDown={onCellKeyDown}
         onChange={(event) => {
           const nextValue = event.target.value.slice(-1);
           setLetters((current) => ({
@@ -256,7 +300,7 @@ function renderAnswerCells({
             });
           }
         }}
-        sx={letterCellStyles}
+        sx={typedLetterCellStyles}
       />
     );
   });
@@ -306,8 +350,14 @@ const letterCellStyles = {
   },
 };
 
+const typedLetterCellStyles = {
+  ...letterCellStyles,
+  color: '#5f6b57',
+  WebkitTextFillColor: '#5f6b57',
+};
+
 function getLetterCellInlineStyle(
-  resultTone: 'correct' | 'incorrect' | null,
+  resultTone: SubmissionOutcome | null,
 ): CSSProperties | undefined {
   if (!resultTone) {
     return undefined;
@@ -315,8 +365,17 @@ function getLetterCellInlineStyle(
 
   return {
     backgroundColor:
-      resultTone === 'correct' ? 'rgb(235, 247, 225)' : 'rgb(253, 235, 238)',
-    borderColor: resultTone === 'correct' ? '#8fc773' : '#f2a7b4',
+      resultTone === 'correct'
+        ? 'rgb(235, 247, 225)'
+        : resultTone === 'memorize'
+          ? 'rgb(255, 243, 205)'
+          : 'rgb(253, 235, 238)',
+    borderColor:
+      resultTone === 'correct'
+        ? '#8fc773'
+        : resultTone === 'memorize'
+          ? '#f2cf66'
+          : '#f2a7b4',
     color: 'rgb(117, 117, 117)',
     WebkitTextFillColor: 'rgb(117, 117, 117)',
   };
@@ -324,6 +383,25 @@ function getLetterCellInlineStyle(
 
 function normalizeAnswer(value: string): string {
   return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+}
+
+function getEditableAnswerIndexes(characters: string[]): number[] {
+  const editableIndexes: number[] = [];
+  let indexInWord = 0;
+
+  characters.forEach((character, index) => {
+    if (character.trim() === '') {
+      indexInWord = 0;
+      return;
+    }
+
+    if (indexInWord % 2 === 1) {
+      editableIndexes.push(index);
+    }
+    indexInWord += 1;
+  });
+
+  return editableIndexes;
 }
 
 function focusNextEditableInput({

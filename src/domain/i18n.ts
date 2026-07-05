@@ -48,6 +48,7 @@ type I18nKey =
   | 'confirm'
   | 'correctAnswer'
   | 'correctAnswers'
+  | 'incorrectAnswer'
   | 'exerciseDetails'
   | 'userAnswer'
   | 'noAnswer'
@@ -61,6 +62,7 @@ type I18nKey =
   | 'phraseLabel'
   | 'noMoreCardsInExercise'
   | 'correctResult'
+  | 'memorizeResult'
   | 'correct'
   | 'incorrect'
   | 'targetAnswerLabel'
@@ -83,7 +85,10 @@ type I18nKey =
   | 'row'
   | 'selectedAssistant'
   | 'coachThought'
-  | 'noAttempts';
+  | 'noAttempts'
+  | 'totalAnsweredTooltip'
+  | 'correctAnsweredTooltip'
+  | 'incorrectAnsweredTooltip';
 
 const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
   en: {
@@ -135,6 +140,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     confirm: 'Confirm',
     correctAnswer: 'Correct answer',
     correctAnswers: 'Correct answers',
+    incorrectAnswer: 'Incorrect answer',
     exerciseDetails: 'Exercise details',
     userAnswer: 'Your answer',
     noAnswer: 'No answer',
@@ -148,6 +154,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     phraseLabel: 'Phrase',
     noMoreCardsInExercise: 'No more cards in this exercise.',
     correctResult: 'Correct!',
+    memorizeResult: 'Remember!',
     correct: 'Correct',
     incorrect: 'Incorrect',
     targetAnswerLabel: 'Target answer',
@@ -171,6 +178,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     selectedAssistant: 'Selected character',
     coachThought: 'Character thought',
     noAttempts: 'No attempts for this target language yet.',
+    totalAnsweredTooltip: 'Total number of answered questions in this exercise.',
+    correctAnsweredTooltip: 'Number of questions answered correctly.',
+    incorrectAnsweredTooltip: 'Number of questions answered incorrectly.',
   },
   ru: {
     appName: 'Language Lab',
@@ -222,6 +232,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     confirm: 'Подтвердить',
     correctAnswer: 'Правильный ответ',
     correctAnswers: 'Правильные ответы',
+    incorrectAnswer: 'Неверный ответ',
     exerciseDetails: 'Детали упражнения',
     userAnswer: 'Ваш ответ',
     noAnswer: 'Нет ответа',
@@ -235,6 +246,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     phraseLabel: 'Фраза',
     noMoreCardsInExercise: 'Карточки для этого упражнения закончились.',
     correctResult: 'Правильно!',
+    memorizeResult: 'Запомнить!',
     correct: 'Верно',
     incorrect: 'Неверно',
     targetAnswerLabel: 'Целевой ответ',
@@ -258,6 +270,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     selectedAssistant: 'Выбранный персонаж',
     coachThought: 'Мысль персонажа',
     noAttempts: 'Пока нет упражнений для этого языка-цели.',
+    totalAnsweredTooltip: 'Общее количество отвеченных вопросов в упражнении.',
+    correctAnsweredTooltip: 'Количество вопросов, отвеченных верно.',
+    incorrectAnsweredTooltip: 'Количество вопросов, отвеченных неверно.',
   },
   es: {
     appName: 'Language Lab',
@@ -309,6 +324,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     confirm: 'Confirmar',
     correctAnswer: 'Respuesta correcta',
     correctAnswers: 'Respuestas correctas',
+    incorrectAnswer: 'Respuesta incorrecta',
     exerciseDetails: 'Detalles del ejercicio',
     userAnswer: 'Tu respuesta',
     noAnswer: 'Sin respuesta',
@@ -322,6 +338,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     phraseLabel: 'Frase',
     noMoreCardsInExercise: 'No quedan tarjetas en este ejercicio.',
     correctResult: 'Correcto!',
+    memorizeResult: 'Memorizar!',
     correct: 'Correctas',
     incorrect: 'Incorrectas',
     targetAnswerLabel: 'Respuesta objetivo',
@@ -345,6 +362,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     selectedAssistant: 'Personaje seleccionado',
     coachThought: 'Pensamiento del personaje',
     noAttempts: 'Todavia no hay intentos para este idioma objetivo.',
+    totalAnsweredTooltip: 'Numero total de preguntas respondidas en este ejercicio.',
+    correctAnsweredTooltip: 'Numero de preguntas respondidas correctamente.',
+    incorrectAnsweredTooltip: 'Numero de preguntas respondidas incorrectamente.',
   },
 };
 

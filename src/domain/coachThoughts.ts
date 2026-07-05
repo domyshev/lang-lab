@@ -438,6 +438,14 @@ export function getCoachThought(
 
 function buildThoughts(openings: string[], endings: string[]): string[] {
   return openings.flatMap((opening) =>
-    endings.map((ending) => `${opening}. ${ending}`),
+    endings.map((ending) => `${opening}: ${lowercaseFirst(stripPeriod(ending))}.`),
   );
+}
+
+function stripPeriod(value: string): string {
+  return value.replace(/\.$/, '');
+}
+
+function lowercaseFirst(value: string): string {
+  return value.charAt(0).toLocaleLowerCase() + value.slice(1);
 }

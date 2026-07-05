@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
 import { App } from '../App';
+import type { ExerciseAttempt } from '../domain/exercises';
 import { appReducer } from '../store/appSlice';
 import { attemptsReducer } from '../store/attemptsSlice';
 import { cardsReducer } from '../store/cardsSlice';
@@ -12,7 +13,11 @@ import { themesReducer } from '../store/themesSlice';
 
 const now = '2026-07-03T12:00:00.000Z';
 
-function renderApp() {
+function renderApp({
+  attempts = [],
+}: {
+  attempts?: ExerciseAttempt[];
+} = {}) {
   const store = configureStore({
     reducer: {
       app: appReducer,
@@ -99,6 +104,9 @@ function renderApp() {
         ],
         duplicateProcessingHistory: [],
         pendingDuplicates: [],
+      },
+      attempts: {
+        attempts,
       },
     },
   });
@@ -244,11 +252,74 @@ describe('App navigation', () => {
     expect(answered.size).toBe(3);
   });
 
+  it('keeps a correct missing letters result visible until the next button is clicked', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+
+    const prompt = getVisibleMissingLettersPrompt();
+    await answerMissingLettersCorrect(user, prompt.answer);
+
+    expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
+    expect(getVisibleMissingLettersPrompt().answer).toBe(prompt.answer);
+  });
+
+  it('repeats a recently missed missing letters card and saves the burst as one result', async () => {
+    const user = userEvent.setup();
+    const store = renderApp({
+      attempts: [
+        createStoredAttempt({
+          cardId: 'card-airport',
+          completedAt: '2026-07-03T13:00:00.000Z',
+          isCorrect: false,
+        }),
+      ],
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+
+    expect(getVisibleMissingLettersPrompt().answer).toBe('airport');
+    await answerMissingLettersCorrect(user, 'airport');
+    expect(store.getState().attempts.attempts).toHaveLength(1);
+
+    await user.click(screen.getByRole('button', { name: 'Правильно!' }));
+    expect(getVisibleMissingLettersPrompt().answer).toBe('airport');
+
+    await answerMissingLettersCorrect(user, 'airport');
+    expect(store.getState().attempts.attempts).toHaveLength(2);
+    expect(
+      store.getState().attempts.attempts[1].correctness['card-airport'],
+    ).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: 'Правильно!' }));
+    expect(getVisibleMissingLettersPrompt().answer).not.toBe('airport');
+  });
+
+  it('shows a progress-aware coach message after a correct answer', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+
+    const prompt = getVisibleMissingLettersPrompt();
+    await answerMissingLettersCorrect(user, prompt.answer);
+
+    expect(
+      screen.getByText('Ура! Похоже, ты начал запоминать это слово.'),
+    ).toBeInTheDocument();
+  });
+
   it('shows assistant character settings in the header', () => {
     renderApp();
 
     expect(screen.getByLabelText('Персонаж')).toBeInTheDocument();
-    expect(screen.getByLabelText('Выбранный персонаж')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/Моховой Смотритель: Замечает упрямые ошибки/),
+    ).toBeInTheDocument();
     expect(screen.queryByText('Forest Tutor')).not.toBeInTheDocument();
   });
 
@@ -355,7 +426,7 @@ describe('App navigation', () => {
     );
 
     expect(screen.getByText('Детали упражнения')).toBeInTheDocument();
-    expect(screen.getAllByText('Ваш ответ:').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Ваш ответ:')).not.toBeInTheDocument();
   });
 
   it('uses phrases for missing word practice', async () => {
@@ -444,6 +515,19 @@ async function answerMissingLettersWrong(
   return missingLetterInputs;
 }
 
+async function answerMissingLettersCorrect(
+  user: ReturnType<typeof userEvent.setup>,
+  answer: string,
+) {
+  const missingLetterInputs = screen.getAllByLabelText(/Missing letter/);
+  for (const input of missingLetterInputs) {
+    const label = input.getAttribute('aria-label') ?? '';
+    const characterIndex = Number(label.replace(/\D/g, '')) - 1;
+    await user.type(input, answer[characterIndex]);
+  }
+  await user.click(screen.getByRole('button', { name: 'Отправить' }));
+}
+
 function getVisibleMissingWordSentence(): string {
   if (screen.queryByText('It is')) {
     return 'It is worth it today.';
@@ -468,4 +552,28 @@ function getMultipleChoiceOptionText(): string[] {
   return screen
     .getAllByTestId('multiple-choice-option')
     .map((option) => option.textContent ?? '');
+}
+
+function createStoredAttempt({
+  cardId,
+  completedAt,
+  isCorrect,
+}: {
+  cardId: string;
+  completedAt: string;
+  isCorrect: boolean;
+}): ExerciseAttempt {
+  return {
+    id: `attempt-${cardId}-${completedAt}`,
+    exerciseType: 'missingLetters',
+    themeId: 'all-words',
+    targetLanguage: 'en',
+    createdAt: completedAt,
+    completedAt,
+    cardSnapshots: [],
+    prompts: [],
+    answers: { [cardId]: isCorrect ? 'ok' : 'wrong' },
+    correctness: { [cardId]: isCorrect },
+    hintsUsed: { [cardId]: 0 },
+  };
 }
