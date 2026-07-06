@@ -65,6 +65,10 @@ describe('ThemeDetailView', () => {
         'theme_detail__card_stats__card-impede__recent_results',
       ),
     ).toHaveStyle({ overflowY: 'auto' });
+    expect(screen.getByRole('tooltip')).toHaveAttribute(
+      'data-popper-placement',
+      expect.stringContaining('right'),
+    );
 
     fireEvent.mouseLeave(statsChip);
     fireEvent.mouseOver(
@@ -73,10 +77,72 @@ describe('ThemeDetailView', () => {
     );
 
     expect(
+      screen.queryByTestId(
+        'theme_detail__card_stats__card-impede__recent_tooltip',
+      ),
+    ).not.toBeInTheDocument();
+    expect(
       await screen.findByTestId(
         'theme_detail__card_stats__card-worth-it__recent_tooltip',
       ),
     ).toBeInTheDocument();
+  });
+
+  it('keeps the card stats tooltip open while the pointer moves from the chip into the tooltip', async () => {
+    const { container } = render(
+      <Provider store={createStore()}>
+        <ThemeDetailView />
+      </Provider>,
+    );
+
+    const items = getByDataTestPrefix(container, 'theme_detail__card_item__');
+    const statsChip = within(items[0]).getByTestId(
+      'theme_detail__card_stats__card-impede__root',
+    );
+    const tooltipAnchor = within(items[0]).getByTestId(
+      'theme_detail__card_stats__card-impede__tooltip_anchor',
+    );
+
+    fireEvent.mouseOver(statsChip, { clientX: 220, clientY: 120 });
+
+    const tooltip = await screen.findByTestId(
+      'theme_detail__card_stats__card-impede__recent_tooltip',
+    );
+
+    expect(tooltipAnchor).toHaveAttribute('data-anchor-x', '220');
+    expect(tooltipAnchor).toHaveAttribute('data-anchor-y', '120');
+    expect(
+      screen.queryByTestId(
+        'theme_detail__card_stats__card-impede__tooltip_arrow__hover_bridge',
+      ),
+    ).not.toBeInTheDocument();
+
+    fireEvent.mouseMove(statsChip, { clientX: 260, clientY: 122 });
+
+    expect(tooltipAnchor).toHaveAttribute('data-anchor-x', '220');
+    expect(tooltipAnchor).toHaveAttribute('data-anchor-y', '120');
+    expect(
+      screen.queryByTestId(
+        'theme_detail__card_stats__card-impede__tooltip_arrow__hover_bridge',
+      ),
+    ).not.toBeInTheDocument();
+
+    fireEvent.mouseLeave(tooltipAnchor, { clientX: 264, clientY: 122 });
+    expect(tooltip).toBeInTheDocument();
+    expect(
+      screen.getByTestId(
+        'theme_detail__card_stats__card-impede__tooltip_arrow__hover_bridge',
+      ),
+    ).toHaveStyle({
+      left: '216px',
+      width: '118px',
+    });
+
+    fireEvent.mouseEnter(tooltip, { clientX: 302, clientY: 122 });
+    fireEvent.mouseMove(tooltip, { clientX: 316, clientY: 148 });
+    expect(tooltip).toBeInTheDocument();
+
+    fireEvent.mouseLeave(tooltip, { clientX: 340, clientY: 190 });
     await waitFor(() =>
       expect(
         screen.queryByTestId(

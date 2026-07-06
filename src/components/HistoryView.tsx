@@ -316,6 +316,9 @@ function RecentAnswersTooltip({
   return (
     <CursorAnchoredTooltip
       arrowDataTest={`${dataTestPrefix}__tooltip_arrow`}
+      closeOnOtherOpen
+      leaveDelay={0}
+      transitionTimeout={0}
       tooltipSx={recentAnswersTooltipStyles}
       title={
         <Stack data-test={`${dataTestPrefix}__recent_tooltip`} spacing={0.75}>

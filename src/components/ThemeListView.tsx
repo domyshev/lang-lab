@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import {
@@ -19,18 +19,13 @@ import { addTheme, archiveTheme, selectTheme } from '../store/themesSlice';
 import { AppDispatch, RootState } from '../store/store';
 
 export function ThemeListView({
-  createThemeAttentionNonce = 0,
   onStartCardSelection,
   onThemeCreated,
-  showCreateThemeCoachmark = false,
 }: {
-  createThemeAttentionNonce?: number;
   onStartCardSelection?: () => void;
   onThemeCreated?: (themeId: string) => void;
-  showCreateThemeCoachmark?: boolean;
 }) {
   const dispatch = useDispatch<AppDispatch>();
-  const createNameInputRef = useRef<HTMLInputElement | null>(null);
   const cards = useSelector((state: RootState) => state.cards.cards);
   const themes = useSelector((state: RootState) => state.themes.themes);
   const selectedThemeId = useSelector(
@@ -42,13 +37,6 @@ export function ThemeListView({
   const [name, setName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const visibleThemes = themes.filter((theme) => !theme.archivedAt);
-
-  useLayoutEffect(() => {
-    if (createThemeAttentionNonce > 0) {
-      setIsCreating(true);
-      createNameInputRef.current?.focus();
-    }
-  }, [createThemeAttentionNonce]);
 
   const createTheme = () => {
     const trimmedName = name.trim();
@@ -127,7 +115,6 @@ export function ThemeListView({
               data-test="theme_list__create_name_input"
               label={t(interfaceLanguage, 'newTheme')}
               value={name}
-              inputRef={createNameInputRef}
               onChange={(event) => setName(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
@@ -141,34 +128,10 @@ export function ThemeListView({
               variant="contained"
               onClick={createTheme}
               disabled={!name.trim()}
-              sx={{
-                boxShadow: showCreateThemeCoachmark
-                  ? '0 0 0 4px rgba(111, 75, 216, 0.20)'
-                  : undefined,
-                minWidth: 150,
-              }}
+              sx={{ minWidth: 150 }}
             >
               {t(interfaceLanguage, 'create')}
             </Button>
-            {showCreateThemeCoachmark && (
-              <Box
-                data-test="theme_list__create_theme_coachmark"
-                sx={{
-                  alignSelf: 'center',
-                  bgcolor: '#f5efff',
-                  border: '1px solid rgba(111, 75, 216, 0.24)',
-                  borderRadius: 1,
-                  color: '#3b2a68',
-                  fontSize: 13,
-                  fontWeight: 800,
-                  lineHeight: 1.3,
-                  px: 1.25,
-                  py: 0.9,
-                }}
-              >
-                {t(interfaceLanguage, 'createThemeToAddCards')}
-              </Box>
-            )}
           </Stack>
         )}
 

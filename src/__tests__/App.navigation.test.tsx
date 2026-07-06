@@ -520,7 +520,7 @@ describe('App navigation', () => {
     expect(screen.getByTestId('assistant_profile__sticker__studyTroll')).toBeInTheDocument();
   });
 
-  it('selects all-word cards while creating a new theme and adds them after the theme is created', async () => {
+  it('asks for a theme before selecting cards and then adds selected cards to the created theme', async () => {
     const user = userEvent.setup();
     const store = renderApp();
 
@@ -535,6 +535,23 @@ describe('App navigation', () => {
     await user.click(
       screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
     );
+
+    expect(
+      screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
+    ).not.toBeChecked();
+    expect(
+      screen.getByTestId('theme_detail__card_selection_warning__card-airport'),
+    ).toHaveTextContent(
+      'нужно сначала придумать название для темы и нажать "Создать" а потом продолжить выбор слов',
+    );
+    expect(screen.getByRole('button', { name: 'Добавить в тему' })).toBeDisabled();
+
+    await user.type(screen.getByLabelText('Новая тема'), 'Дорога');
+    await user.click(screen.getByRole('button', { name: 'Создать' }));
+
+    await user.click(
+      screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
+    );
     await user.click(
       screen.getByTestId('theme_detail__card_select_checkbox__card-impede'),
     );
@@ -543,16 +560,8 @@ describe('App navigation', () => {
       name: 'Добавить в тему',
     });
     expect(addToThemeButton).toBeEnabled();
-
+    expect(addToThemeButton).toHaveClass('MuiButton-outlined');
     await user.click(addToThemeButton);
-
-    expect(screen.getByLabelText('Новая тема')).toHaveFocus();
-    expect(screen.getByTestId('theme_list__create_theme_coachmark')).toHaveTextContent(
-      'создайте тему чтобы слова добавились в нее',
-    );
-
-    await user.type(screen.getByLabelText('Новая тема'), 'Дорога');
-    await user.click(screen.getByRole('button', { name: 'Создать' }));
 
     const createdTheme = store
       .getState()

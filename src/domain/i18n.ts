@@ -43,6 +43,7 @@ type I18nKey =
   | 'chooseTheme'
   | 'chooseExercise'
   | 'createThemeToAddCards'
+  | 'createThemeBeforeSelectingCards'
   | 'fileImport'
   | 'pasteJson'
   | 'chooseJsonFile'
@@ -183,6 +184,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     chooseTheme: 'Choose theme',
     chooseExercise: 'Choose exercise',
     createThemeToAddCards: 'create a theme so the words can be added to it',
+    createThemeBeforeSelectingCards:
+      'first give the theme a name and press "Create", then continue selecting words',
     fileImport: 'Import from file',
     pasteJson: 'Paste JSON',
     chooseJsonFile: 'Choose JSON file',
@@ -328,6 +331,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     chooseTheme: 'Выберите тему',
     chooseExercise: 'Выберите упражнение',
     createThemeToAddCards: 'создайте тему чтобы слова добавились в нее',
+    createThemeBeforeSelectingCards:
+      'нужно сначала придумать название для темы и нажать "Создать" а потом продолжить выбор слов',
     fileImport: 'Импорт из файла',
     pasteJson: 'Вставить JSON',
     chooseJsonFile: 'Выбрать JSON-файл',
@@ -474,6 +479,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     chooseTheme: 'Elegir tema',
     chooseExercise: 'Elegir ejercicio',
     createThemeToAddCards: 'crea un tema para que las palabras se anadan a el',
+    createThemeBeforeSelectingCards:
+      'primero pon nombre al tema y pulsa "Crear"; despues sigue seleccionando palabras',
     fileImport: 'Importar desde archivo',
     pasteJson: 'Pegar JSON',
     chooseJsonFile: 'Elegir archivo JSON',

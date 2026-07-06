@@ -2,12 +2,15 @@ import { Box, Tooltip } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import {
   cloneElement,
-  type MouseEvent,
+  type MouseEvent as ReactMouseEvent,
   type ReactElement,
   type ReactNode,
+  type SyntheticEvent,
+  useCallback,
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { flushSync } from 'react-dom';
@@ -17,11 +20,32 @@ type TooltipAnchorPosition = {
   y: number;
 };
 
+type TooltipPlacement =
+  | 'bottom'
+  | 'bottom-end'
+  | 'bottom-start'
+  | 'left'
+  | 'left-end'
+  | 'left-start'
+  | 'right'
+  | 'right-end'
+  | 'right-start'
+  | 'top'
+  | 'top-end'
+  | 'top-start';
+
+type TooltipChildHandlers = {
+  onMouseEnter?: (event: ReactMouseEvent<HTMLElement>) => void;
+  onMouseLeave?: (event: ReactMouseEvent<HTMLElement>) => void;
+  onMouseMove?: (event: ReactMouseEvent<HTMLElement>) => void;
+  onMouseOver?: (event: ReactMouseEvent<HTMLElement>) => void;
+};
+
 export function CursorAnchoredTooltip({
   arrowDataTest,
   children,
   closeOnOtherOpen = false,
-  leaveDelay = 420,
+  leaveDelay = 0,
   placement = 'top',
   preventOverflow = false,
   title,
@@ -32,27 +56,37 @@ export function CursorAnchoredTooltip({
   children: ReactElement;
   closeOnOtherOpen?: boolean;
   leaveDelay?: number;
-  placement?: 'top' | 'top-start' | 'top-end';
+  placement?: TooltipPlacement;
   preventOverflow?: boolean;
   title: ReactNode;
   transitionTimeout?: number;
   tooltipSx: SxProps<Theme>;
 }) {
   const instanceId = useId();
+  const bridgeHoveredRef = useRef(false);
+  const tooltipHoveredRef = useRef(false);
   const [anchorPosition, setAnchorPosition] =
     useState<TooltipAnchorPosition | null>(null);
+  const [isTriggerHovered, setIsTriggerHovered] = useState(false);
+
+  const closeTooltip = useCallback(() => {
+    bridgeHoveredRef.current = false;
+    tooltipHoveredRef.current = false;
+    setAnchorPosition(null);
+    setIsTriggerHovered(false);
+  }, []);
 
   useEffect(() => {
     if (!closeOnOtherOpen) {
       return undefined;
     }
 
-    cursorTooltipClosers.set(instanceId, () => setAnchorPosition(null));
+    cursorTooltipClosers.set(instanceId, closeTooltip);
 
     return () => {
       cursorTooltipClosers.delete(instanceId);
     };
-  }, [closeOnOtherOpen, instanceId]);
+  }, [closeOnOtherOpen, closeTooltip, instanceId]);
 
   const virtualAnchor = useMemo(
     () =>
@@ -118,48 +152,229 @@ export function CursorAnchoredTooltip({
             },
           }),
       tooltip: {
+        onMouseEnter: () => {
+          tooltipHoveredRef.current = true;
+        },
+        onMouseLeave: () => {
+          tooltipHoveredRef.current = false;
+          closeTooltip();
+        },
         sx: tooltipSx,
       },
     }),
-    [arrowDataTest, preventOverflow, tooltipSx, transitionTimeout, virtualAnchor],
+    [
+      arrowDataTest,
+      closeTooltip,
+      preventOverflow,
+      tooltipSx,
+      transitionTimeout,
+      virtualAnchor,
+    ],
   );
 
-  const handleMouseOver = (event: MouseEvent<HTMLElement>) => {
-    if (closeOnOtherOpen) {
-      flushSync(() => {
-        for (const [tooltipId, closeTooltip] of cursorTooltipClosers) {
-          if (tooltipId !== instanceId) {
-            closeTooltip();
+  const bridgeSx = useMemo(
+    () =>
+      anchorPosition
+        ? getTooltipBridgeSx(anchorPosition, placement)
+        : undefined,
+    [anchorPosition, placement],
+  );
+
+  const openAtPointer = useCallback(
+    (event: ReactMouseEvent<HTMLElement>) => {
+      const nextPosition = { x: event.clientX, y: event.clientY };
+
+      setIsTriggerHovered(true);
+
+      if (anchorPosition) {
+        return;
+      }
+
+      if (closeOnOtherOpen) {
+        flushSync(() => {
+          for (const [tooltipId, closeOtherTooltip] of cursorTooltipClosers) {
+            if (tooltipId !== instanceId) {
+              closeOtherTooltip();
+            }
           }
-        }
-      });
+        });
+      }
+
+      setAnchorPosition(nextPosition);
+    },
+    [anchorPosition, closeOnOtherOpen, instanceId],
+  );
+
+  const handleClose = (event: SyntheticEvent | Event) => {
+    const eventPoint = getEventPoint(event);
+    if (
+      bridgeHoveredRef.current ||
+      tooltipHoveredRef.current ||
+      (eventPoint &&
+        anchorPosition &&
+        isPointInsideTooltipBridge(
+          eventPoint,
+          anchorPosition,
+          placement,
+        ))
+    ) {
+      return;
     }
-    setAnchorPosition(
-      (currentPosition) =>
-        currentPosition ?? { x: event.clientX, y: event.clientY },
-    );
+
+    closeTooltip();
   };
 
+  const childProps = children.props as TooltipChildHandlers;
+
   return (
-    <Tooltip
-      arrow
-      leaveDelay={leaveDelay}
-      onClose={() => setAnchorPosition(null)}
-      open={Boolean(anchorPosition)}
-      placement={placement}
-      slotProps={tooltipSlotProps}
-      title={title}
-    >
-      {cloneElement(children, {
-        'data-anchor-x': anchorPosition?.x ?? '',
-        'data-anchor-y': anchorPosition?.y ?? '',
-        onMouseOver: handleMouseOver,
-      })}
-    </Tooltip>
+    <>
+      <Tooltip
+        arrow
+        leaveDelay={leaveDelay}
+        onClose={handleClose}
+        open={Boolean(anchorPosition)}
+        placement={placement}
+        slotProps={tooltipSlotProps}
+        title={anchorPosition ? title : ''}
+      >
+        {cloneElement(children, {
+          'data-anchor-x': anchorPosition?.x ?? '',
+          'data-anchor-y': anchorPosition?.y ?? '',
+          onMouseEnter: (event: ReactMouseEvent<HTMLElement>) => {
+            childProps.onMouseEnter?.(event);
+            openAtPointer(event);
+          },
+          onMouseLeave: (event: ReactMouseEvent<HTMLElement>) => {
+            childProps.onMouseLeave?.(event);
+            setIsTriggerHovered(false);
+          },
+          onMouseMove: (event: ReactMouseEvent<HTMLElement>) => {
+            childProps.onMouseMove?.(event);
+          },
+          onMouseOver: (event: ReactMouseEvent<HTMLElement>) => {
+            childProps.onMouseOver?.(event);
+            openAtPointer(event);
+          },
+        })}
+      </Tooltip>
+      {anchorPosition && bridgeSx && !isTriggerHovered && (
+        <Box
+          aria-hidden="true"
+          data-test={`${arrowDataTest}__hover_bridge`}
+          onMouseEnter={() => {
+            bridgeHoveredRef.current = true;
+          }}
+          onMouseLeave={() => {
+            bridgeHoveredRef.current = false;
+            if (!tooltipHoveredRef.current) {
+              closeTooltip();
+            }
+          }}
+          sx={bridgeSx}
+        />
+      )}
+    </>
   );
 }
 
 const cursorTooltipClosers = new Map<string, () => void>();
+
+function getTooltipBridgeSx(
+  anchorPosition: TooltipAnchorPosition,
+  placement: TooltipPlacement,
+): SxProps<Theme> {
+  const bridgeSize = 118;
+  const crossAxisSize = 72;
+  const halfCrossAxis = crossAxisSize / 2;
+  const baseSx = {
+    bgcolor: 'transparent',
+    pointerEvents: 'auto',
+    position: 'fixed',
+    zIndex: 1499,
+  };
+
+  if (placement.startsWith('right')) {
+    return {
+      ...baseSx,
+      height: crossAxisSize,
+      left: anchorPosition.x - 4,
+      top: anchorPosition.y - halfCrossAxis,
+      width: bridgeSize,
+    };
+  }
+
+  if (placement.startsWith('left')) {
+    return {
+      ...baseSx,
+      height: crossAxisSize,
+      left: anchorPosition.x - bridgeSize + 4,
+      top: anchorPosition.y - halfCrossAxis,
+      width: bridgeSize,
+    };
+  }
+
+  if (placement.startsWith('bottom')) {
+    return {
+      ...baseSx,
+      height: bridgeSize,
+      left: anchorPosition.x - halfCrossAxis,
+      top: anchorPosition.y - 4,
+      width: crossAxisSize,
+    };
+  }
+
+  return {
+    ...baseSx,
+    height: bridgeSize,
+    left: anchorPosition.x - halfCrossAxis,
+    top: anchorPosition.y - bridgeSize + 4,
+    width: crossAxisSize,
+  };
+}
+
+function isPointInsideTooltipBridge(
+  point: TooltipAnchorPosition,
+  anchorPosition: TooltipAnchorPosition,
+  placement: TooltipPlacement,
+): boolean {
+  const bridgeSx = getTooltipBridgeSx(
+    anchorPosition,
+    placement,
+  ) as {
+    height: number;
+    left: number;
+    top: number;
+    width: number;
+  };
+
+  return (
+    point.x >= bridgeSx.left &&
+    point.x <= bridgeSx.left + bridgeSx.width &&
+    point.y >= bridgeSx.top &&
+    point.y <= bridgeSx.top + bridgeSx.height
+  );
+}
+
+function getEventPoint(event: SyntheticEvent | Event) {
+  const maybeNativeEvent =
+    'nativeEvent' in event ? event.nativeEvent : event;
+
+  if (
+    maybeNativeEvent &&
+    typeof maybeNativeEvent === 'object' &&
+    'clientX' in maybeNativeEvent &&
+    'clientY' in maybeNativeEvent &&
+    typeof maybeNativeEvent.clientX === 'number' &&
+    typeof maybeNativeEvent.clientY === 'number'
+  ) {
+    return {
+      x: maybeNativeEvent.clientX,
+      y: maybeNativeEvent.clientY,
+    };
+  }
+
+  return null;
+}
 
 export function TooltipContent({
   children,

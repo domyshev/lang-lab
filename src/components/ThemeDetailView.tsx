@@ -36,11 +36,13 @@ import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
 import { SplitWordStatsChip } from './SplitWordStatsChip';
 
 export function ThemeDetailView({
+  canSelectThemeCards = true,
   isCardSelectionMode = false,
   onAddSelectedCardsToTheme,
   onPendingThemeCardToggle,
   pendingThemeCardIds = [],
 }: {
+  canSelectThemeCards?: boolean;
   isCardSelectionMode?: boolean;
   onAddSelectedCardsToTheme?: () => void;
   onPendingThemeCardToggle?: (cardId: string) => void;
@@ -49,6 +51,9 @@ export function ThemeDetailView({
   const dispatch = useDispatch<AppDispatch>();
   const addCardLabelId = useId();
   const [selectedCardId, setSelectedCardId] = useState('');
+  const [selectionWarningCardId, setSelectionWarningCardId] = useState<
+    string | null
+  >(null);
   const cards = useSelector((state: RootState) => state.cards.cards);
   const targetLanguage = useSelector(
     (state: RootState) => state.app.targetLanguage,
@@ -189,11 +194,15 @@ export function ThemeDetailView({
                 disabled={pendingThemeCardIds.length === 0}
                 onClick={onAddSelectedCardsToTheme}
                 startIcon={<CheckCircleRoundedIcon />}
-                variant="contained"
+                variant="outlined"
                 sx={{
-                  bgcolor: '#6f4bd8',
+                  borderColor: '#6f4bd8',
+                  color: '#5e3fc0',
                   mr: { sm: 3.75 },
-                  '&:hover': { bgcolor: '#5e3fc0' },
+                  '&:hover': {
+                    bgcolor: 'rgba(111, 75, 216, 0.08)',
+                    borderColor: '#5e3fc0',
+                  },
                 }}
               >
                 {t(interfaceLanguage, 'addToTheme')}
@@ -323,6 +332,8 @@ export function ThemeDetailView({
               const isPhrase = isPhraseCard(card, targetLanguage);
               const isAlreadyInTheme = existingThemeCardIds.has(card.id);
               const isPending = pendingThemeCardIdSet.has(card.id);
+              const showSelectionWarning =
+                selectionWarningCardId === card.id && !canSelectThemeCards;
               const stats = cardStats.find(
                 (item) =>
                   item.cardId === card.id &&
@@ -368,22 +379,54 @@ export function ThemeDetailView({
                         sx={{ alignItems: 'flex-start', minWidth: 0 }}
                       >
                         {isCardSelectionMode && (
-                          <Checkbox
-                            checked={isAlreadyInTheme || isPending}
-                            disabled={isAlreadyInTheme}
-                            onChange={() => onPendingThemeCardToggle?.(card.id)}
-                            slotProps={{
-                              input: {
-                                'data-test': `theme_detail__card_select_checkbox__${card.id}`,
-                              } as Record<string, string>,
-                            }}
-                            sx={{
-                              color: '#6f4bd8',
-                              mt: -0.65,
-                              p: 0.5,
-                              '&.Mui-checked': { color: '#6f4bd8' },
-                            }}
-                          />
+                          <Stack
+                            data-test={`theme_detail__card_select_control__${card.id}`}
+                            direction="row"
+                            spacing={0.75}
+                            sx={{ alignItems: 'center', flexShrink: 0 }}
+                          >
+                            <Checkbox
+                              checked={isAlreadyInTheme || isPending}
+                              disabled={isAlreadyInTheme}
+                              onChange={() => {
+                                if (!canSelectThemeCards) {
+                                  setSelectionWarningCardId(card.id);
+                                  return;
+                                }
+                                setSelectionWarningCardId(null);
+                                onPendingThemeCardToggle?.(card.id);
+                              }}
+                              slotProps={{
+                                input: {
+                                  'data-test': `theme_detail__card_select_checkbox__${card.id}`,
+                                } as Record<string, string>,
+                              }}
+                              sx={{
+                                color: '#6f4bd8',
+                                p: 0.5,
+                                '&.Mui-checked': { color: '#6f4bd8' },
+                              }}
+                            />
+                            {showSelectionWarning && (
+                              <Box
+                                data-test={`theme_detail__card_selection_warning__${card.id}`}
+                                sx={{
+                                  bgcolor: '#f5efff',
+                                  border: '1px solid rgba(111, 75, 216, 0.24)',
+                                  borderRadius: 1,
+                                  color: '#3b2a68',
+                                  fontSize: 12,
+                                  fontWeight: 800,
+                                  lineHeight: 1.25,
+                                  maxWidth: 260,
+                                  px: 1,
+                                  py: 0.75,
+                                }}
+                              >
+                                {t(interfaceLanguage, 'createThemeBeforeSelectingCards')}
+                              </Box>
+                            )}
+                          </Stack>
                         )}
                         <Box data-test={`theme_detail__card_text_block__${card.id}`}>
                           <Typography
@@ -479,6 +522,7 @@ function RecentCardStatsTooltip({
       arrowDataTest={`${dataTestPrefix}__tooltip_arrow`}
       closeOnOtherOpen
       leaveDelay={0}
+      placement="right-start"
       preventOverflow
       transitionTimeout={0}
       tooltipSx={recentCardStatsTooltipStyles}

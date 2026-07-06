@@ -138,8 +138,6 @@ export function App() {
   const [isThemeCardSelectionMode, setIsThemeCardSelectionMode] =
     useState(false);
   const [pendingThemeCardIds, setPendingThemeCardIds] = useState<string[]>([]);
-  const [themeCreateAttentionNonce, setThemeCreateAttentionNonce] =
-    useState(0);
 
   const cards = useSelector((state: RootState) => state.cards.cards);
   const themes = useSelector((state: RootState) => state.themes.themes);
@@ -494,16 +492,14 @@ export function App() {
 
   function handleAddPendingCardsToSelectedTheme() {
     if (!selectedTheme || selectedTheme.isAllWords) {
-      setThemeCreateAttentionNonce((value) => value + 1);
       return;
     }
 
     addPendingCardsToTheme(selectedTheme.id, selectedTheme.cardIds);
   }
 
-  function handleThemeCreated(themeId: string) {
-    addPendingCardsToTheme(themeId, []);
-    setThemeCreateAttentionNonce(0);
+  function handleThemeCreated() {
+    setPendingThemeCardIds([]);
     setIsThemeCardSelectionMode(true);
   }
 
@@ -675,12 +671,11 @@ export function App() {
           }}
         >
           <ThemeListView
-            createThemeAttentionNonce={themeCreateAttentionNonce}
             onStartCardSelection={() => setIsThemeCardSelectionMode(true)}
             onThemeCreated={handleThemeCreated}
-            showCreateThemeCoachmark={themeCreateAttentionNonce > 0}
           />
           <ThemeDetailView
+            canSelectThemeCards={Boolean(selectedTheme && !selectedTheme.isAllWords)}
             isCardSelectionMode={isThemeCardSelectionMode}
             onAddSelectedCardsToTheme={handleAddPendingCardsToSelectedTheme}
             onPendingThemeCardToggle={togglePendingThemeCard}
