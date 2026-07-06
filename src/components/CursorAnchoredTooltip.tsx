@@ -5,9 +5,12 @@ import {
   type MouseEvent,
   type ReactElement,
   type ReactNode,
+  useEffect,
+  useId,
   useMemo,
   useState,
 } from 'react';
+import { flushSync } from 'react-dom';
 
 type TooltipAnchorPosition = {
   x: number;
@@ -17,22 +20,40 @@ type TooltipAnchorPosition = {
 export function CursorAnchoredTooltip({
   arrowDataTest,
   children,
+  closeOnOtherOpen = false,
   leaveDelay = 420,
   placement = 'top',
+  preventOverflow = false,
   title,
   transitionTimeout,
   tooltipSx,
 }: {
   arrowDataTest: string;
   children: ReactElement;
+  closeOnOtherOpen?: boolean;
   leaveDelay?: number;
   placement?: 'top' | 'top-start' | 'top-end';
+  preventOverflow?: boolean;
   title: ReactNode;
   transitionTimeout?: number;
   tooltipSx: SxProps<Theme>;
 }) {
+  const instanceId = useId();
   const [anchorPosition, setAnchorPosition] =
     useState<TooltipAnchorPosition | null>(null);
+
+  useEffect(() => {
+    if (!closeOnOtherOpen) {
+      return undefined;
+    }
+
+    cursorTooltipClosers.set(instanceId, () => setAnchorPosition(null));
+
+    return () => {
+      cursorTooltipClosers.delete(instanceId);
+    };
+  }, [closeOnOtherOpen, instanceId]);
+
   const virtualAnchor = useMemo(
     () =>
       anchorPosition
@@ -78,8 +99,13 @@ export function CursorAnchoredTooltip({
               name: 'flip',
             },
             {
-              enabled: false,
+              enabled: preventOverflow,
               name: 'preventOverflow',
+              options: {
+                altAxis: true,
+                padding: 8,
+                tether: false,
+              },
             },
           ],
         },
@@ -95,10 +121,19 @@ export function CursorAnchoredTooltip({
         sx: tooltipSx,
       },
     }),
-    [arrowDataTest, tooltipSx, transitionTimeout, virtualAnchor],
+    [arrowDataTest, preventOverflow, tooltipSx, transitionTimeout, virtualAnchor],
   );
 
   const handleMouseOver = (event: MouseEvent<HTMLElement>) => {
+    if (closeOnOtherOpen) {
+      flushSync(() => {
+        for (const [tooltipId, closeTooltip] of cursorTooltipClosers) {
+          if (tooltipId !== instanceId) {
+            closeTooltip();
+          }
+        }
+      });
+    }
     setAnchorPosition(
       (currentPosition) =>
         currentPosition ?? { x: event.clientX, y: event.clientY },
@@ -110,6 +145,7 @@ export function CursorAnchoredTooltip({
       arrow
       leaveDelay={leaveDelay}
       onClose={() => setAnchorPosition(null)}
+      open={Boolean(anchorPosition)}
       placement={placement}
       slotProps={tooltipSlotProps}
       title={title}
@@ -122,6 +158,8 @@ export function CursorAnchoredTooltip({
     </Tooltip>
   );
 }
+
+const cursorTooltipClosers = new Map<string, () => void>();
 
 export function TooltipContent({
   children,

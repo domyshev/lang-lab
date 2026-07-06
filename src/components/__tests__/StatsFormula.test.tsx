@@ -256,9 +256,11 @@ describe('StatsFormula', () => {
     expect(
       await screen.findByText('Количество вопросов, отвеченных верно.'),
     ).toBeInTheDocument();
-    expect(
-      screen.queryByText('Общее количество отвеченных вопросов в упражнении.'),
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Общее количество отвеченных вопросов в упражнении.'),
+      ).not.toBeInTheDocument(),
+    );
     expect(screen.getAllByRole('tooltip')).toHaveLength(1);
   });
 });

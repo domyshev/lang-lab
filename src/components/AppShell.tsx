@@ -13,7 +13,12 @@ import { RootState } from '../store/store';
 import { AppLogo } from './AppLogo';
 import { LanguageSelectors } from './LanguageSelectors';
 
-export type AppShellSection = 'game' | 'cards' | 'statistics' | 'agents';
+export type AppShellSection =
+  | 'game'
+  | 'cards'
+  | 'statistics'
+  | 'agents'
+  | 'assistant';
 
 interface AppShellProps {
   activeSection?: AppShellSection;
@@ -31,6 +36,9 @@ export function AppShell({
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
+  const tabValue = visibleTabSections.includes(activeSection)
+    ? activeSection
+    : false;
 
   return (
     <Box
@@ -82,7 +90,7 @@ export function AppShell({
 
           <Tabs
             data-test="app_shell__main_tabs"
-            value={activeSection}
+            value={tabValue}
             onChange={(_, value: AppShellSection) => onNavigate?.(value)}
             aria-label="Main sections"
             variant="scrollable"
@@ -148,3 +156,10 @@ export function AppShell({
     </Box>
   );
 }
+
+const visibleTabSections: AppShellSection[] = [
+  'game',
+  'cards',
+  'statistics',
+  'agents',
+];

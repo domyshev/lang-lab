@@ -482,6 +482,101 @@ describe('App navigation', () => {
     expect(screen.queryByText('Forest Tutor')).not.toBeInTheDocument();
   });
 
+  it('opens a character profile from the game assistant tooltip', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await user.hover(
+      screen.getByTestId('coach_panel__assistant_sticker_wrapper__studyTroll'),
+    );
+
+    const tooltip = await screen.findByTestId('coach_panel__assistant_tooltip');
+    expect(tooltip).toHaveStyle({ backgroundColor: 'rgb(255, 255, 255)' });
+    expect(
+      within(tooltip).getByTestId('coach_panel__assistant_tooltip_title'),
+    ).toHaveTextContent('Веселый листочек');
+    expect(
+      within(tooltip).getByTestId('coach_panel__assistant_tooltip_motto'),
+    ).toHaveStyle({ fontStyle: 'italic' });
+
+    await user.click(
+      within(tooltip).getByRole('link', { name: 'Познакомиться поближе' }),
+    );
+
+    expect(
+      screen.getByTestId('assistant_profile__page__studyTroll'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Веселый листочек' }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('assistant_profile__motto__studyTroll')).toHaveStyle({
+      fontStyle: 'italic',
+    });
+    expect(
+      screen.getByRole('heading', { name: 'Супер-способности' }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('assistant_profile__sticker__studyTroll')).toBeInTheDocument();
+  });
+
+  it('selects all-word cards while creating a new theme and adds them after the theme is created', async () => {
+    const user = userEvent.setup();
+    const store = renderApp();
+
+    await user.click(screen.getByRole('tab', { name: 'Карточки' }));
+    await user.click(screen.getByRole('button', { name: 'Добавить' }));
+
+    expect(screen.getByTestId('theme_list__create_form')).toBeInTheDocument();
+    expect(
+      screen.getByTestId('theme_detail__selection_mode_banner'),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
+    );
+    await user.click(
+      screen.getByTestId('theme_detail__card_select_checkbox__card-impede'),
+    );
+
+    const addToThemeButton = screen.getByRole('button', {
+      name: 'Добавить в тему',
+    });
+    expect(addToThemeButton).toBeEnabled();
+
+    await user.click(addToThemeButton);
+
+    expect(screen.getByLabelText('Новая тема')).toHaveFocus();
+    expect(screen.getByTestId('theme_list__create_theme_coachmark')).toHaveTextContent(
+      'создайте тему чтобы слова добавились в нее',
+    );
+
+    await user.type(screen.getByLabelText('Новая тема'), 'Дорога');
+    await user.click(screen.getByRole('button', { name: 'Создать' }));
+
+    const createdTheme = store
+      .getState()
+      .themes.themes.find((theme) => theme.name === 'Дорога');
+    expect(createdTheme?.cardIds).toEqual(
+      expect.arrayContaining(['card-airport', 'card-impede']),
+    );
+    expect(
+      screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
+    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Добавить в тему' })).toBeDisabled();
+
+    await user.click(
+      screen.getByTestId('theme_detail__card_select_checkbox__card-vehicle'),
+    );
+    await user.click(screen.getByRole('button', { name: 'Добавить в тему' }));
+
+    expect(
+      store
+        .getState()
+        .themes.themes.find((theme) => theme.name === 'Дорога')?.cardIds,
+    ).toEqual(expect.arrayContaining(['card-airport', 'card-impede', 'card-vehicle']));
+  });
+
   it('closes an unanswered exercise without a finish confirmation dialog', async () => {
     const user = userEvent.setup();
     renderApp();

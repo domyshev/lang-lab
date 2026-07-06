@@ -10,6 +10,8 @@ type I18nKey =
   | 'interfaceLanguage'
   | 'targetLanguage'
   | 'assistant'
+  | 'assistantProfileLink'
+  | 'assistantSuperpowersTitle'
   | 'practiceSettings'
   | 'correctStreakCooldownFivePlus'
   | 'correctStreakCooldownFour'
@@ -34,11 +36,13 @@ type I18nKey =
   | 'start'
   | 'allWords'
   | 'add'
+  | 'addToTheme'
   | 'archive'
   | 'newTheme'
   | 'create'
   | 'chooseTheme'
   | 'chooseExercise'
+  | 'createThemeToAddCards'
   | 'fileImport'
   | 'pasteJson'
   | 'chooseJsonFile'
@@ -97,6 +101,7 @@ type I18nKey =
   | 'metricIncorrectSuffix'
   | 'totalExercisesTooltip'
   | 'targetAnswerLabel'
+  | 'themeCardSelectionMode'
   | 'targetLanguageAnswer'
   | 'fallbackTranslationShown'
   | 'selectThemeToManage'
@@ -140,6 +145,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     interfaceLanguage: 'Interface',
     targetLanguage: 'Target',
     assistant: 'Character',
+    assistantProfileLink: 'Meet them properly',
+    assistantSuperpowersTitle: 'Superpowers',
     practiceSettings: 'Practice settings',
     correctStreakCooldownFivePlus: 'Last 5 or more answers correct',
     correctStreakCooldownFour: 'Last 4 answers correct',
@@ -169,11 +176,13 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     start: 'Start',
     allWords: 'All words',
     add: 'Add',
+    addToTheme: 'Add to theme',
     archive: 'Archive',
     newTheme: 'New theme',
     create: 'Create',
     chooseTheme: 'Choose theme',
     chooseExercise: 'Choose exercise',
+    createThemeToAddCards: 'create a theme so the words can be added to it',
     fileImport: 'Import from file',
     pasteJson: 'Paste JSON',
     chooseJsonFile: 'Choose JSON file',
@@ -238,6 +247,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     metricIncorrectSuffix: 'incorrect',
     totalExercisesTooltip: 'Total number of completed exercises.',
     targetAnswerLabel: 'Target answer',
+    themeCardSelectionMode: 'Select cards for the theme.',
     targetLanguageAnswer: 'answer',
     fallbackTranslationShown: 'Fallback translation shown',
     selectThemeToManage: 'Select a theme to manage its cards.',
@@ -280,6 +290,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     interfaceLanguage: 'Интерфейс',
     targetLanguage: 'Цель',
     assistant: 'Персонаж',
+    assistantProfileLink: 'Познакомиться поближе',
+    assistantSuperpowersTitle: 'Супер-способности',
     practiceSettings: 'Настройки практики',
     correctStreakCooldownFivePlus: 'Последние 5 и более раз верно',
     correctStreakCooldownFour: 'Последние 4 раза верно',
@@ -309,11 +321,13 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     start: 'Начать',
     allWords: 'Все слова',
     add: 'Добавить',
+    addToTheme: 'Добавить в тему',
     archive: 'В архив',
     newTheme: 'Новая тема',
     create: 'Создать',
     chooseTheme: 'Выберите тему',
     chooseExercise: 'Выберите упражнение',
+    createThemeToAddCards: 'создайте тему чтобы слова добавились в нее',
     fileImport: 'Импорт из файла',
     pasteJson: 'Вставить JSON',
     chooseJsonFile: 'Выбрать JSON-файл',
@@ -379,6 +393,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     metricIncorrectSuffix: 'неверно',
     totalExercisesTooltip: 'Общее количество пройденных упражнений.',
     targetAnswerLabel: 'Целевой ответ',
+    themeCardSelectionMode: 'Выберите карточки для темы.',
     targetLanguageAnswer: 'ответ',
     fallbackTranslationShown: 'Показан запасной перевод',
     selectThemeToManage: 'Выберите тему, чтобы управлять карточками.',
@@ -421,6 +436,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     interfaceLanguage: 'Interfaz',
     targetLanguage: 'Objetivo',
     assistant: 'Personaje',
+    assistantProfileLink: 'Conocerlo mejor',
+    assistantSuperpowersTitle: 'Superpoderes',
     practiceSettings: 'Ajustes de practica',
     correctStreakCooldownFivePlus: 'Ultimas 5 o mas respuestas correctas',
     correctStreakCooldownFour: 'Ultimas 4 respuestas correctas',
@@ -450,11 +467,13 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     start: 'Empezar',
     allWords: 'Todas las palabras',
     add: 'Anadir',
+    addToTheme: 'Anadir al tema',
     archive: 'Archivar',
     newTheme: 'Nuevo tema',
     create: 'Crear',
     chooseTheme: 'Elegir tema',
     chooseExercise: 'Elegir ejercicio',
+    createThemeToAddCards: 'crea un tema para que las palabras se anadan a el',
     fileImport: 'Importar desde archivo',
     pasteJson: 'Pegar JSON',
     chooseJsonFile: 'Elegir archivo JSON',
@@ -519,6 +538,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     metricIncorrectSuffix: 'incorrectas',
     totalExercisesTooltip: 'Numero total de ejercicios completados.',
     targetAnswerLabel: 'Respuesta objetivo',
+    themeCardSelectionMode: 'Selecciona tarjetas para el tema.',
     targetLanguageAnswer: 'respuesta',
     fallbackTranslationShown: 'Traduccion alternativa mostrada',
     selectThemeToManage: 'Elige un tema para gestionar sus tarjetas.',

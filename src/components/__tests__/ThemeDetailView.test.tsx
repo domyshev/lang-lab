@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { fireEvent } from '@testing-library/react';
 import { render, screen, within } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
 import type { ExerciseAttempt } from '../../domain/exercises';
@@ -59,6 +60,30 @@ describe('ThemeDetailView', () => {
     expect(
       screen.getByTestId('theme_detail__card_stats__card-impede__tooltip_arrow'),
     ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(
+        'theme_detail__card_stats__card-impede__recent_results',
+      ),
+    ).toHaveStyle({ overflowY: 'auto' });
+
+    fireEvent.mouseLeave(statsChip);
+    fireEvent.mouseOver(
+      within(items[1]).getByTestId('theme_detail__card_stats__card-worth-it__root'),
+      { clientX: 240, clientY: 120 },
+    );
+
+    expect(
+      await screen.findByTestId(
+        'theme_detail__card_stats__card-worth-it__recent_tooltip',
+      ),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(
+          'theme_detail__card_stats__card-impede__recent_tooltip',
+        ),
+      ).not.toBeInTheDocument(),
+    );
   });
 });
 

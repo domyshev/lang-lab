@@ -224,6 +224,7 @@ function MetricChip({
   return tooltip ? (
     <CursorAnchoredTooltip
       arrowDataTest={`${dataTest}__tooltip_arrow`}
+      closeOnOtherOpen
       leaveDelay={0}
       title={
         <TooltipContent sx={metricTooltipContentStyles}>

@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import { AppShell, AppShellSection } from './components/AppShell';
+import { AssistantProfileView } from './components/AssistantProfileView';
 import { CoachPanel } from './components/CoachPanel';
 import { ExercisePicker } from './components/ExercisePicker';
 import { GameHelpPanel } from './components/GameHelpPanel';
@@ -43,6 +44,7 @@ import {
 import { CrosswordPuzzle, createCrossword } from './domain/crossword';
 import { defaultVocabularyJson } from './domain/defaultVocabulary';
 import { getCoachProgressMessage } from './domain/coachProgress';
+import { AssistantId } from './domain/assistants';
 import {
   ExerciseAttempt,
   ExercisePrompt,
@@ -65,7 +67,7 @@ import { saveAttempt } from './store/attemptsSlice';
 import { acknowledgeGameHelp, markGameHelpCoachmarkShown } from './store/appSlice';
 import { applyImportResult } from './store/cardsSlice';
 import { recordAttemptStats } from './store/statsSlice';
-import { selectTheme } from './store/themesSlice';
+import { addCardToTheme, selectTheme } from './store/themesSlice';
 import { AppDispatch, RootState } from './store/store';
 
 type ExercisePreview =
@@ -131,6 +133,13 @@ export function App() {
   const [finishDialogIntent, setFinishDialogIntent] = useState<
     'finish' | 'home' | null
   >(null);
+  const [profileAssistantId, setProfileAssistantId] =
+    useState<AssistantId | null>(null);
+  const [isThemeCardSelectionMode, setIsThemeCardSelectionMode] =
+    useState(false);
+  const [pendingThemeCardIds, setPendingThemeCardIds] = useState<string[]>([]);
+  const [themeCreateAttentionNonce, setThemeCreateAttentionNonce] =
+    useState(0);
 
   const cards = useSelector((state: RootState) => state.cards.cards);
   const themes = useSelector((state: RootState) => state.themes.themes);
@@ -449,7 +458,53 @@ export function App() {
       return;
     }
 
+    setProfileAssistantId(null);
     setActiveSection('game');
+  }
+
+  function handleNavigate(section: AppShellSection) {
+    if (section !== 'assistant') {
+      setProfileAssistantId(null);
+    }
+    setActiveSection(section);
+  }
+
+  function openAssistantProfile(assistantId: AssistantId) {
+    setProfileAssistantId(assistantId);
+    setActiveSection('assistant');
+  }
+
+  function togglePendingThemeCard(cardId: string) {
+    setPendingThemeCardIds((cardIds) =>
+      cardIds.includes(cardId)
+        ? cardIds.filter((item) => item !== cardId)
+        : [...cardIds, cardId],
+    );
+  }
+
+  function addPendingCardsToTheme(themeId: string, existingCardIds: string[]) {
+    const now = new Date().toISOString();
+    for (const cardId of pendingThemeCardIds) {
+      if (!existingCardIds.includes(cardId)) {
+        dispatch(addCardToTheme({ themeId, cardId, now }));
+      }
+    }
+    setPendingThemeCardIds([]);
+  }
+
+  function handleAddPendingCardsToSelectedTheme() {
+    if (!selectedTheme || selectedTheme.isAllWords) {
+      setThemeCreateAttentionNonce((value) => value + 1);
+      return;
+    }
+
+    addPendingCardsToTheme(selectedTheme.id, selectedTheme.cardIds);
+  }
+
+  function handleThemeCreated(themeId: string) {
+    addPendingCardsToTheme(themeId, []);
+    setThemeCreateAttentionNonce(0);
+    setIsThemeCardSelectionMode(true);
   }
 
   function savePromptAttempt(
@@ -619,8 +674,26 @@ export function App() {
             alignItems: 'start',
           }}
         >
-          <ThemeListView />
-          <ThemeDetailView />
+          <ThemeListView
+            createThemeAttentionNonce={themeCreateAttentionNonce}
+            onStartCardSelection={() => setIsThemeCardSelectionMode(true)}
+            onThemeCreated={handleThemeCreated}
+            showCreateThemeCoachmark={themeCreateAttentionNonce > 0}
+          />
+          <ThemeDetailView
+            isCardSelectionMode={isThemeCardSelectionMode}
+            onAddSelectedCardsToTheme={handleAddPendingCardsToSelectedTheme}
+            onPendingThemeCardToggle={togglePendingThemeCard}
+            pendingThemeCardIds={pendingThemeCardIds}
+          />
+        </Box>
+      );
+    }
+
+    if (activeSection === 'assistant') {
+      return (
+        <Box data-test="app__assistant_section">
+          <AssistantProfileView assistantId={profileAssistantId} />
         </Box>
       );
     }
@@ -669,6 +742,7 @@ export function App() {
           justifyContent="space-between"
         >
           <CoachPanel
+            onAssistantOpen={openAssistantProfile}
             progressMessage={coachProgressMessage}
             thoughtSeed={generationSeed + currentExerciseAnsweredCount}
           />
@@ -1050,7 +1124,7 @@ export function App() {
     <AppShell
       activeSection={activeSection}
       onLogoClick={handleLogoClick}
-      onNavigate={setActiveSection}
+      onNavigate={handleNavigate}
     >
       {renderMainContent()}
     </AppShell>

@@ -1,9 +1,11 @@
 import { type ReactElement, useId, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import {
   Alert,
   Box,
   Button,
+  Checkbox,
   Chip,
   Divider,
   FormControl,
@@ -33,7 +35,17 @@ import { AppDispatch, RootState } from '../store/store';
 import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
 import { SplitWordStatsChip } from './SplitWordStatsChip';
 
-export function ThemeDetailView() {
+export function ThemeDetailView({
+  isCardSelectionMode = false,
+  onAddSelectedCardsToTheme,
+  onPendingThemeCardToggle,
+  pendingThemeCardIds = [],
+}: {
+  isCardSelectionMode?: boolean;
+  onAddSelectedCardsToTheme?: () => void;
+  onPendingThemeCardToggle?: (cardId: string) => void;
+  pendingThemeCardIds?: string[];
+}) {
   const dispatch = useDispatch<AppDispatch>();
   const addCardLabelId = useId();
   const [selectedCardId, setSelectedCardId] = useState('');
@@ -83,7 +95,12 @@ export function ThemeDetailView() {
   const themeCards = selectedTheme.cardIds
     .map((cardId) => cards.find((card) => card.id === cardId))
     .filter((card): card is LanguageCard => Boolean(card));
-  const sortedThemeCards = [...themeCards].sort((left, right) => {
+  const cardsForList = isCardSelectionMode ? cards : themeCards;
+  const existingThemeCardIds = new Set(
+    isAllWordsSelected ? [] : selectedTheme.cardIds,
+  );
+  const pendingThemeCardIdSet = new Set(pendingThemeCardIds);
+  const sortedThemeCards = [...cardsForList].sort((left, right) => {
     const leftAttempts = getCardAttempts(left.id, cardStats, targetLanguage);
     const rightAttempts = getCardAttempts(right.id, cardStats, targetLanguage);
 
@@ -159,15 +176,54 @@ export function ThemeDetailView() {
               {getLanguageDisplayName(interfaceLanguage, targetLanguage)}
             </Typography>
           </Box>
-          <Chip
-            data-test={`theme_detail__card_count_chip__${selectedTheme.id}`}
-            label={formatCardCount(interfaceLanguage, themeCards.length)}
-            color="primary"
-            variant="outlined"
-          />
+          <Stack
+            data-test={`theme_detail__header_actions__${selectedTheme.id}`}
+            direction="row"
+            spacing={1}
+            sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+            useFlexGap
+          >
+            {isCardSelectionMode && (
+              <Button
+                data-test="theme_detail__add_selected_cards_button"
+                disabled={pendingThemeCardIds.length === 0}
+                onClick={onAddSelectedCardsToTheme}
+                startIcon={<CheckCircleRoundedIcon />}
+                variant="contained"
+                sx={{
+                  bgcolor: '#6f4bd8',
+                  mr: { sm: 3.75 },
+                  '&:hover': { bgcolor: '#5e3fc0' },
+                }}
+              >
+                {t(interfaceLanguage, 'addToTheme')}
+              </Button>
+            )}
+            <Chip
+              data-test={`theme_detail__card_count_chip__${selectedTheme.id}`}
+              label={formatCardCount(interfaceLanguage, themeCards.length)}
+              color="primary"
+              variant="outlined"
+            />
+          </Stack>
         </Stack>
 
-        {!isAllWordsSelected && (
+        {isCardSelectionMode && (
+          <Alert
+            data-test="theme_detail__selection_mode_banner"
+            severity="info"
+            sx={{
+              bgcolor: '#f5efff',
+              border: '1px solid rgba(111, 75, 216, 0.20)',
+              color: '#3b2a68',
+              '& .MuiAlert-icon': { color: '#6f4bd8' },
+            }}
+          >
+            {t(interfaceLanguage, 'themeCardSelectionMode')}
+          </Alert>
+        )}
+
+        {!isCardSelectionMode && !isAllWordsSelected && (
           <Stack
             data-test={`theme_detail__add_card_form__${selectedTheme.id}`}
             direction={{ xs: 'column', md: 'row' }}
@@ -238,7 +294,7 @@ export function ThemeDetailView() {
 
         <Divider />
 
-        {themeCards.length === 0 ? (
+        {cardsForList.length === 0 ? (
           <Typography
             color="text.secondary"
             data-test={`theme_detail__empty_cards_message__${selectedTheme.id}`}
@@ -265,6 +321,8 @@ export function ThemeDetailView() {
                 interfaceLanguage,
               );
               const isPhrase = isPhraseCard(card, targetLanguage);
+              const isAlreadyInTheme = existingThemeCardIds.has(card.id);
+              const isPending = pendingThemeCardIdSet.has(card.id);
               const stats = cardStats.find(
                 (item) =>
                   item.cardId === card.id &&
@@ -280,10 +338,18 @@ export function ThemeDetailView() {
                   data-test={`theme_detail__card_item__${card.id}`}
                   key={card.id}
                   sx={{
-                    border: '1px solid rgba(32, 48, 21, 0.14)',
+                    border: '1px solid',
+                    borderColor: isAlreadyInTheme
+                      ? 'rgba(111, 75, 216, 0.52)'
+                      : 'rgba(32, 48, 21, 0.14)',
                     borderLeft: '4px solid',
-                    borderLeftColor: 'primary.main',
+                    borderLeftColor: isAlreadyInTheme
+                      ? '#6f4bd8'
+                      : 'primary.main',
                     borderRadius: 1,
+                    bgcolor: isAlreadyInTheme
+                      ? 'rgba(111, 75, 216, 0.045)'
+                      : 'background.paper',
                     p: 1.5,
                   }}
                 >
@@ -295,26 +361,51 @@ export function ThemeDetailView() {
                       alignItems={{ xs: 'flex-start', sm: 'center' }}
                       justifyContent="space-between"
                     >
-                      <Box data-test={`theme_detail__card_text_block__${card.id}`}>
-                        <Typography
-                          data-test={`theme_detail__card_answer__${card.id}`}
-                          fontWeight={800}
-                        >
-                          {answer.text}
-                        </Typography>
-                        <Typography
-                          color="text.secondary"
-                          data-test={`theme_detail__card_language_note__${card.id}`}
-                          variant="body2"
-                        >
-                          {answer.isFallback
-                            ? t(interfaceLanguage, 'fallbackTranslationShown')
-                            : `${getLanguageDisplayName(
-                                interfaceLanguage,
-                                targetLanguage,
-                              )} ${t(interfaceLanguage, 'targetLanguageAnswer')}`}
-                        </Typography>
-                      </Box>
+                      <Stack
+                        data-test={`theme_detail__card_identity__${card.id}`}
+                        direction="row"
+                        spacing={1}
+                        sx={{ alignItems: 'flex-start', minWidth: 0 }}
+                      >
+                        {isCardSelectionMode && (
+                          <Checkbox
+                            checked={isAlreadyInTheme || isPending}
+                            disabled={isAlreadyInTheme}
+                            onChange={() => onPendingThemeCardToggle?.(card.id)}
+                            slotProps={{
+                              input: {
+                                'data-test': `theme_detail__card_select_checkbox__${card.id}`,
+                              } as Record<string, string>,
+                            }}
+                            sx={{
+                              color: '#6f4bd8',
+                              mt: -0.65,
+                              p: 0.5,
+                              '&.Mui-checked': { color: '#6f4bd8' },
+                            }}
+                          />
+                        )}
+                        <Box data-test={`theme_detail__card_text_block__${card.id}`}>
+                          <Typography
+                            data-test={`theme_detail__card_answer__${card.id}`}
+                            fontWeight={800}
+                          >
+                            {answer.text}
+                          </Typography>
+                          <Typography
+                            color="text.secondary"
+                            data-test={`theme_detail__card_language_note__${card.id}`}
+                            variant="body2"
+                          >
+                            {answer.isFallback
+                              ? t(interfaceLanguage, 'fallbackTranslationShown')
+                              : `${getLanguageDisplayName(
+                                  interfaceLanguage,
+                                  targetLanguage,
+                                )} ${t(interfaceLanguage, 'targetLanguageAnswer')}`}
+                          </Typography>
+                        </Box>
+                      </Stack>
                       <Stack
                         data-test={`theme_detail__card_meta__${card.id}`}
                         direction="row"
@@ -386,6 +477,10 @@ function RecentCardStatsTooltip({
   return (
     <CursorAnchoredTooltip
       arrowDataTest={`${dataTestPrefix}__tooltip_arrow`}
+      closeOnOtherOpen
+      leaveDelay={0}
+      preventOverflow
+      transitionTimeout={0}
       tooltipSx={recentCardStatsTooltipStyles}
       title={
         <Stack data-test={`${dataTestPrefix}__recent_tooltip`} spacing={0.75}>
@@ -406,7 +501,15 @@ function RecentCardStatsTooltip({
           >
             {subject}
           </Typography>
-          <Stack data-test={`${dataTestPrefix}__recent_results`} spacing={0.5}>
+          <Stack
+            data-test={`${dataTestPrefix}__recent_results`}
+            spacing={0.5}
+            sx={{
+              maxHeight: 'min(360px, calc(100vh - 178px))',
+              overflowY: 'auto',
+              pr: 0.5,
+            }}
+          >
             {recentResults.map((result, index) => (
               <Stack
                 data-test={`${dataTestPrefix}__recent_result__${index}`}
