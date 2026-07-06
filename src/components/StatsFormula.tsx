@@ -8,10 +8,12 @@ import { SupportedLanguage } from '../domain/languages';
 export function CountMetric({
   dataTestPrefix = 'count_metric',
   label,
+  suffix,
   value,
 }: {
   dataTestPrefix?: string;
   label: string;
+  suffix?: string;
   value: number;
 }) {
   return (
@@ -26,6 +28,7 @@ export function CountMetric({
           ariaLabel={`${label} ${value}`}
           dataTest={`${dataTestPrefix}__value_chip`}
           label={value}
+          suffix={suffix}
           tone="total"
         />
       </Box>
@@ -38,6 +41,7 @@ export function StatsFormula({
   dataTestPrefix = 'stats_formula',
   incorrect,
   interfaceLanguage,
+  labelDisplay,
   showLabel = true,
   total,
   totalLabel,
@@ -46,23 +50,23 @@ export function StatsFormula({
   dataTestPrefix?: string;
   incorrect: number;
   interfaceLanguage: SupportedLanguage;
+  labelDisplay?: ReactNode;
   showLabel?: boolean;
   total: number;
   totalLabel: string;
 }) {
   const correctLabel = t(interfaceLanguage, 'correct');
   const incorrectLabel = t(interfaceLanguage, 'incorrect');
-  const hasNoAnswers = total === 0;
-  const hasOnlyCorrect = correct > 0 && incorrect === 0;
-  const hasOnlyIncorrect = incorrect > 0 && correct === 0;
-  const isSingleSided = hasOnlyCorrect || hasOnlyIncorrect;
-  const ariaLabel = hasNoAnswers
-    ? `${totalLabel}: ${total}`
-    : isSingleSided
-      ? `${totalLabel}: ${hasOnlyCorrect ? correctLabel : incorrectLabel} ${
-          hasOnlyCorrect ? correct : incorrect
-        }`
-      : `${totalLabel}: ${total} = ${correct} + ${incorrect}`;
+  const hasCorrect = correct > 0;
+  const hasIncorrect = incorrect > 0;
+  const resultParts = [
+    hasCorrect ? `${correctLabel} ${correct}` : undefined,
+    hasIncorrect ? `${incorrectLabel} ${incorrect}` : undefined,
+  ].filter((part): part is string => Boolean(part));
+  const ariaLabel =
+    resultParts.length > 0
+      ? `${totalLabel}: ${total} = ${resultParts.join(' + ')}`
+      : `${totalLabel}: ${total}`;
 
   return (
     <Stack
@@ -72,7 +76,7 @@ export function StatsFormula({
     >
       {showLabel && (
         <MetricLabel dataTest={`${dataTestPrefix}__label`}>
-          {totalLabel}:
+          {labelDisplay ?? `${totalLabel}:`}
         </MetricLabel>
       )}
       <Stack
@@ -84,61 +88,43 @@ export function StatsFormula({
         useFlexGap
         sx={{ justifyContent: 'flex-start' }}
       >
-        {hasNoAnswers ? (
+        <MetricChip
+          ariaLabel={`${totalLabel}: ${total}`}
+          dataTest={`${dataTestPrefix}__total_chip`}
+          label={total}
+          suffix={t(interfaceLanguage, 'metricAnsweredSuffix')}
+          tone="total"
+          tooltip={t(interfaceLanguage, 'totalAnsweredTooltip')}
+        />
+        {resultParts.length > 0 && (
+          <FormulaIcon dataTest={`${dataTestPrefix}__equals_icon`} label="=">
+            <DragHandleRoundedIcon fontSize="inherit" />
+          </FormulaIcon>
+        )}
+        {hasCorrect && (
           <MetricChip
-            ariaLabel={`${totalLabel}: ${total}`}
-            dataTest={`${dataTestPrefix}__total_chip`}
-            label={total}
-            tone="total"
-            tooltip={t(interfaceLanguage, 'totalAnsweredTooltip')}
+            ariaLabel={`${correctLabel}: ${correct}`}
+            dataTest={`${dataTestPrefix}__correct_chip`}
+            label={correct}
+            suffix={t(interfaceLanguage, 'metricCorrectSuffix')}
+            tone="correct"
+            tooltip={t(interfaceLanguage, 'correctAnsweredTooltip')}
           />
-        ) : isSingleSided ? (
+        )}
+        {hasCorrect && hasIncorrect && (
+          <FormulaIcon dataTest={`${dataTestPrefix}__plus_icon`} label="+">
+            <AddRoundedIcon fontSize="inherit" />
+          </FormulaIcon>
+        )}
+        {hasIncorrect && (
           <MetricChip
-            ariaLabel={`${hasOnlyCorrect ? correctLabel : incorrectLabel}: ${
-              hasOnlyCorrect ? correct : incorrect
-            }`}
-            dataTest={`${dataTestPrefix}__${
-              hasOnlyCorrect ? 'correct' : 'incorrect'
-            }_chip`}
-            label={hasOnlyCorrect ? correct : incorrect}
-            tone={hasOnlyCorrect ? 'correct' : 'incorrect'}
-            tooltip={t(
-              interfaceLanguage,
-              hasOnlyCorrect
-                ? 'correctAnsweredTooltip'
-                : 'incorrectAnsweredTooltip',
-            )}
+            ariaLabel={`${incorrectLabel}: ${incorrect}`}
+            dataTest={`${dataTestPrefix}__incorrect_chip`}
+            label={incorrect}
+            suffix={t(interfaceLanguage, 'metricIncorrectSuffix')}
+            tone="incorrect"
+            tooltip={t(interfaceLanguage, 'incorrectAnsweredTooltip')}
           />
-        ) : (
-          <>
-            <MetricChip
-              ariaLabel={`${totalLabel}: ${total}`}
-              dataTest={`${dataTestPrefix}__total_chip`}
-              label={total}
-              tone="total"
-              tooltip={t(interfaceLanguage, 'totalAnsweredTooltip')}
-            />
-            <FormulaIcon dataTest={`${dataTestPrefix}__equals_icon`} label="=">
-              <DragHandleRoundedIcon fontSize="inherit" />
-            </FormulaIcon>
-            <MetricChip
-              ariaLabel={`${correctLabel}: ${correct}`}
-              dataTest={`${dataTestPrefix}__correct_chip`}
-              label={correct}
-              tone="correct"
-              tooltip={t(interfaceLanguage, 'correctAnsweredTooltip')}
-            />
-            <FormulaIcon dataTest={`${dataTestPrefix}__plus_icon`} label="+">
-              <AddRoundedIcon fontSize="inherit" />
-            </FormulaIcon>
-            <MetricChip
-              ariaLabel={`${incorrectLabel}: ${incorrect}`}
-              dataTest={`${dataTestPrefix}__incorrect_chip`}
-              label={incorrect}
-              tone="incorrect"
-              tooltip={t(interfaceLanguage, 'incorrectAnsweredTooltip')}
-            />
-          </>
         )}
       </Stack>
     </Stack>
@@ -172,12 +158,14 @@ function MetricChip({
   ariaLabel,
   dataTest,
   label,
+  suffix,
   tone,
   tooltip,
 }: {
   ariaLabel: string;
   dataTest: string;
   label: number;
+  suffix?: string;
   tone: 'total' | 'correct' | 'incorrect';
   tooltip?: string;
 }) {
@@ -185,7 +173,39 @@ function MetricChip({
     <Chip
       aria-label={ariaLabel}
       data-test={dataTest}
-      label={label}
+      label={
+        <Box
+          component="span"
+          data-test={`${dataTest}__label`}
+          sx={{
+            alignItems: 'baseline',
+            display: 'inline-flex',
+          }}
+        >
+          <Box
+            component="span"
+            data-test={`${dataTest}__number`}
+            sx={{ fontSize: 16, lineHeight: 1 }}
+          >
+            {label}
+          </Box>
+          {suffix && (
+            <Box
+              component="span"
+              data-test={`${dataTest}__suffix`}
+              sx={{
+                fontSize: 11,
+                fontWeight: 800,
+                lineHeight: 1,
+                ml: 0.5,
+                textTransform: 'lowercase',
+              }}
+            >
+              {` ${suffix}`}
+            </Box>
+          )}
+        </Box>
+      }
       variant="outlined"
       sx={
         tone === 'correct'
@@ -197,7 +217,24 @@ function MetricChip({
     />
   );
 
-  return tooltip ? <Tooltip title={tooltip}>{chip}</Tooltip> : chip;
+  return tooltip ? (
+    <Tooltip
+      title={
+        <Box component="span" sx={metricTooltipContentStyles}>
+          {tooltip}
+        </Box>
+      }
+      slotProps={{
+        tooltip: {
+          sx: metricTooltipStyles,
+        },
+      }}
+    >
+      {chip}
+    </Tooltip>
+  ) : (
+    chip
+  );
 }
 
 function FormulaIcon({
@@ -237,6 +274,8 @@ const formulaChipBaseStyles = {
   height: 38,
   minWidth: 42,
   '& .MuiChip-label': {
+    alignItems: 'baseline',
+    display: 'inline-flex',
     px: 1.35,
   },
 };
@@ -276,4 +315,24 @@ const incorrectChipStyles = {
   bgcolor: 'rgb(253, 235, 238)',
   borderColor: '#f2a7b4',
   color: '#111111',
+};
+
+const metricTooltipStyles = {
+  bgcolor: '#ffffff',
+  border: '1px solid rgba(32, 48, 21, 0.16)',
+  boxShadow: '0 10px 24px rgba(32, 48, 21, 0.14)',
+  color: '#203015',
+  fontSize: 14,
+  lineHeight: 1.35,
+  maxWidth: 280,
+  px: 1.25,
+  py: 1,
+};
+
+const metricTooltipContentStyles = {
+  bgcolor: '#ffffff',
+  color: '#203015',
+  display: 'inline-block',
+  fontSize: 14,
+  lineHeight: 1.35,
 };

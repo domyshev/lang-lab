@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
@@ -30,7 +30,7 @@ describe('HistoryView', () => {
     ).not.toBeInTheDocument();
     expect(
       within(missingLettersCard!).getByLabelText(
-        'Всего отвечено вопросов: 2 = 1 + 1',
+        'Всего отвечено вопросов: 2 = Верно 1 + Неверно 1',
       ),
     ).toBeInTheDocument();
 
@@ -56,8 +56,29 @@ describe('HistoryView', () => {
     await user.hover(
       within(missingLettersCard!).getByLabelText('Правильный ответ: airport'),
     );
-    expect(await screen.findByText('Ввод был выполнен верно.')).toBeInTheDocument();
-    expect(await screen.findByText('1. Верно')).toBeInTheDocument();
+    const airportTooltip = await screen.findByTestId(
+      'history_view__detail_answer__attempt-missing-1_card-airport__recent_tooltip',
+    );
+    expect(within(airportTooltip).getByText('10 последних ответов')).toBeInTheDocument();
+    expect(
+      within(airportTooltip).getByTestId(
+        'history_view__detail_answer__attempt-missing-1_card-airport__recent_result_chip__0',
+      ),
+    ).toHaveTextContent('правильно');
+    expect(
+      within(airportTooltip).getByTestId(
+        'history_view__detail_answer__attempt-missing-1_card-airport__recent_result_date__0',
+      ),
+    ).toHaveTextContent(/\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/);
+    expect(within(airportTooltip).queryByText(/^1\./)).not.toBeInTheDocument();
+    const tooltips = screen.getAllByRole('tooltip');
+    expect(tooltips[tooltips.length - 1].closest('[data-popper-placement]')).toHaveAttribute(
+      'data-popper-placement',
+      expect.stringMatching(/^top-start/),
+    );
+    await user.unhover(
+      within(missingLettersCard!).getByLabelText('Правильный ответ: airport'),
+    );
     expect(
       within(missingLettersCard!).getByLabelText('Правильный ответ: vehicle'),
     ).toBeInTheDocument();
@@ -89,6 +110,23 @@ describe('HistoryView', () => {
     ).toHaveStyle({
       textDecorationLine: 'line-through',
     });
+    await user.hover(incorrectVehicleCells);
+    const vehicleTooltip = await screen.findByTestId(
+      'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_tooltip',
+    );
+    expect(within(vehicleTooltip).getByText('10 последних ответов')).toBeInTheDocument();
+    expect(
+      within(vehicleTooltip).getByTestId(
+        'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_result_chip__0',
+      ),
+    ).toHaveTextContent('неверно');
+    await user.unhover(incorrectVehicleCells);
+    await user.hover(correctVehicleCells);
+    expect(
+      await screen.findByTestId(
+        'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_tooltip',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('renders multiple choice history as colored answer options', async () => {
@@ -123,6 +161,51 @@ describe('HistoryView', () => {
     expect(options[1]).toHaveStyle({
       backgroundColor: 'rgb(235, 247, 225)',
     });
+  });
+
+  it('keeps the recent answers tooltip fixed after it opens at the cursor position', async () => {
+    renderHistoryView();
+
+    const missingLettersCard = getByDataTestPrefix(
+      document.body,
+      'history_view__attempt_card__',
+    ).find((card) => card.textContent?.includes('Пропущенные буквы'));
+
+    expect(missingLettersCard).toBeDefined();
+    fireEvent.click(
+      within(missingLettersCard!).getByRole('button', {
+        name: /Пропущенные буквы/,
+      }),
+    );
+
+    const tooltipAnchor = screen.getByTestId(
+      'history_view__detail_answer__attempt-missing-1_card-airport__tooltip_anchor',
+    );
+
+    fireEvent.mouseOver(tooltipAnchor, { clientX: 240, clientY: 180 });
+
+    expect(
+      await screen.findByTestId(
+        'history_view__detail_answer__attempt-missing-1_card-airport__recent_tooltip',
+      ),
+    ).toBeInTheDocument();
+    expect(tooltipAnchor).toHaveAttribute('data-anchor-x', '240');
+    expect(tooltipAnchor).toHaveAttribute('data-anchor-y', '180');
+
+    fireEvent.mouseMove(tooltipAnchor, { clientX: 320, clientY: 260 });
+
+    expect(tooltipAnchor).toHaveAttribute('data-anchor-x', '240');
+    expect(tooltipAnchor).toHaveAttribute('data-anchor-y', '180');
+
+    fireEvent.mouseLeave(tooltipAnchor);
+
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(
+          'history_view__detail_answer__attempt-missing-1_card-airport__recent_tooltip',
+        ),
+      ).not.toBeInTheDocument(),
+    );
   });
 });
 

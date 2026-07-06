@@ -10,7 +10,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useMemo } from 'react';
+import { type MouseEvent, type ReactElement, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { ExercisePrompt } from '../domain/exercises';
 import {
@@ -217,7 +217,7 @@ function HistoryAnswer({
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   isCorrect: boolean;
   options: string[];
-  recentResults: boolean[];
+  recentResults: RecentCardResult[];
   type: ExerciseHistorySummary['exerciseType'];
 }) {
   if (type === 'multipleChoice') {
@@ -257,8 +257,7 @@ function HistoryAnswer({
     );
   }
 
-  if (isCorrect) {
-    const cells = (
+  const answerContent = isCorrect ? (
       <Box component="span" sx={{ display: 'inline-flex' }}>
         <AnswerCells
           ariaLabel={`${t(interfaceLanguage, 'correctAnswer')}: ${expectedAnswer}`}
@@ -267,71 +266,160 @@ function HistoryAnswer({
           value={expectedAnswer}
         />
       </Box>
+    ) : (
+      <Stack data-test={`${dataTestPrefix}__answer_cells_stack`} spacing={0.75}>
+        <AnswerCells
+          ariaLabel={`${t(interfaceLanguage, 'incorrectAnswer')}: ${
+            answer || t(interfaceLanguage, 'noAnswer')
+          }`}
+          dataTestPrefix={`${dataTestPrefix}__incorrect_cells`}
+          expectedValue={expectedAnswer}
+          tone="incorrect"
+          value={answer || t(interfaceLanguage, 'noAnswer')}
+        />
+        <AnswerCells
+          ariaLabel={`${t(interfaceLanguage, 'correctAnswer')}: ${expectedAnswer}`}
+          dataTestPrefix={`${dataTestPrefix}__correct_cells`}
+          expectedValue={expectedAnswer}
+          tone="correct"
+          value={expectedAnswer}
+        />
+      </Stack>
     );
-
-    return (
-      <Tooltip
-        arrow
-        title={
-          <Stack data-test={`${dataTestPrefix}__correct_tooltip`} spacing={0.5}>
-            <Typography sx={{ color: '#203015', fontSize: 13, fontWeight: 850 }}>
-              {t(interfaceLanguage, 'correctInputTooltip')}
-            </Typography>
-            {recentResults.slice(0, 10).map((result, index) => (
-              <Typography
-                data-test={`${dataTestPrefix}__recent_result__${index}`}
-                key={`${result}-${index}`}
-                sx={{ color: '#203015', fontSize: 12 }}
-              >
-                {index + 1}.{' '}
-                {t(interfaceLanguage, result ? 'correct' : 'incorrect')}
-              </Typography>
-            ))}
-          </Stack>
-        }
-        slotProps={{
-          tooltip: {
-            sx: {
-              bgcolor: '#ffffff',
-              border: '1px solid rgba(32, 48, 21, 0.14)',
-              boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
-              p: 1.25,
-            },
-          },
-          arrow: {
-            sx: {
-              color: '#ffffff',
-              '&:before': {
-                border: '1px solid rgba(32, 48, 21, 0.14)',
-              },
-            },
-          },
-        }}
-      >
-        {cells}
-      </Tooltip>
-    );
-  }
 
   return (
-    <Stack data-test={`${dataTestPrefix}__answer_cells_stack`} spacing={0.75}>
-      <AnswerCells
-        ariaLabel={`${t(interfaceLanguage, 'incorrectAnswer')}: ${
-          answer || t(interfaceLanguage, 'noAnswer')
-        }`}
-        dataTestPrefix={`${dataTestPrefix}__incorrect_cells`}
-        expectedValue={expectedAnswer}
-        tone="incorrect"
-        value={answer || t(interfaceLanguage, 'noAnswer')}
-      />
-      <AnswerCells
-        ariaLabel={`${t(interfaceLanguage, 'correctAnswer')}: ${expectedAnswer}`}
-        dataTestPrefix={`${dataTestPrefix}__correct_cells`}
-        expectedValue={expectedAnswer}
-        tone="correct"
-        value={expectedAnswer}
-      />
-    </Stack>
+    <RecentAnswersTooltip
+      dataTestPrefix={dataTestPrefix}
+      interfaceLanguage={interfaceLanguage}
+      recentResults={recentResults}
+    >
+      {answerContent}
+    </RecentAnswersTooltip>
+  );
+}
+
+function RecentAnswersTooltip({
+  children,
+  dataTestPrefix,
+  interfaceLanguage,
+  recentResults,
+}: {
+  children: ReactElement;
+  dataTestPrefix: string;
+  interfaceLanguage: RootState['app']['interfaceLanguage'];
+  recentResults: RecentCardResult[];
+}) {
+  const [anchorPosition, setAnchorPosition] =
+    useState<TooltipAnchorPosition | null>(null);
+  const virtualAnchor = useMemo(
+    () =>
+      anchorPosition
+        ? {
+            getBoundingClientRect: () => ({
+              bottom: anchorPosition.y,
+              height: 0,
+              left: anchorPosition.x,
+              right: anchorPosition.x,
+              top: anchorPosition.y,
+              width: 0,
+              x: anchorPosition.x,
+              y: anchorPosition.y,
+              toJSON: () => undefined,
+            }),
+          }
+        : undefined,
+    [anchorPosition],
+  );
+  const tooltipSlotProps = useMemo(
+    () => ({
+      ...recentAnswersTooltipSlotProps,
+      popper: {
+        ...recentAnswersTooltipSlotProps.popper,
+        ...(virtualAnchor ? { anchorEl: virtualAnchor } : {}),
+      },
+    }),
+    [virtualAnchor],
+  );
+  const handleMouseOver = (event: MouseEvent<HTMLElement>) => {
+    setAnchorPosition(
+      (currentPosition) =>
+        currentPosition ?? { x: event.clientX, y: event.clientY },
+    );
+  };
+  const handleMouseLeave = () => {
+    setAnchorPosition(null);
+  };
+
+  return (
+    <Tooltip
+      arrow
+      placement="top-start"
+      slotProps={tooltipSlotProps}
+      title={
+        <Stack data-test={`${dataTestPrefix}__recent_tooltip`} spacing={0.75}>
+          <Typography
+            data-test={`${dataTestPrefix}__recent_tooltip_title`}
+            sx={{ color: '#203015', fontSize: 14, fontWeight: 850 }}
+          >
+            {t(interfaceLanguage, 'recentAnswersTitle')}
+          </Typography>
+          <Stack data-test={`${dataTestPrefix}__recent_results`} spacing={0.5}>
+            {recentResults.slice(0, 10).map((result, index) => (
+              <Stack
+                data-test={`${dataTestPrefix}__recent_result__${index}`}
+                direction="row"
+                key={`${result.occurredAt}-${index}`}
+                spacing={0.75}
+                sx={{ alignItems: 'center' }}
+              >
+                <Chip
+                  data-test={`${dataTestPrefix}__recent_result_chip__${index}`}
+                  label={t(
+                    interfaceLanguage,
+                    result.isCorrect
+                      ? 'metricCorrectSuffix'
+                      : 'metricIncorrectSuffix',
+                  )}
+                  size="small"
+                  sx={{
+                    bgcolor: result.isCorrect
+                      ? 'rgb(235, 247, 225)'
+                      : 'rgb(253, 235, 238)',
+                    border: '1px solid',
+                    borderColor: result.isCorrect ? '#8fc773' : '#f2a7b4',
+                    color: '#111111',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    height: 24,
+                  }}
+                />
+                <Typography
+                  data-test={`${dataTestPrefix}__recent_result_date__${index}`}
+                  sx={{ color: 'rgba(32, 48, 21, 0.72)', fontSize: 11 }}
+                >
+                  {formatAttemptDate(result.occurredAt)}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
+        </Stack>
+      }
+    >
+      <Box
+        data-anchor-x={anchorPosition?.x ?? ''}
+        data-anchor-y={anchorPosition?.y ?? ''}
+        data-test={`${dataTestPrefix}__tooltip_anchor`}
+        onMouseLeave={handleMouseLeave}
+        onMouseOver={handleMouseOver}
+        sx={{
+          alignItems: 'flex-start',
+          display: 'inline-flex',
+          flexDirection: 'column',
+        }}
+      >
+        {children}
+      </Box>
+    </Tooltip>
   );
 }
 
@@ -414,6 +502,54 @@ function areAnswerCharactersEqual(
   );
 }
 
+type RecentCardResult = {
+  isCorrect: boolean;
+  occurredAt: string;
+};
+
+type TooltipAnchorPosition = {
+  x: number;
+  y: number;
+};
+
+const recentAnswersTooltipSlotProps = {
+  tooltip: {
+    sx: {
+      bgcolor: '#ffffff',
+      border: '1px solid rgba(32, 48, 21, 0.14)',
+      boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
+      color: '#203015',
+      p: 1.25,
+    },
+  },
+  arrow: {
+    sx: {
+      color: '#ffffff',
+      '&:before': {
+        border: '1px solid rgba(32, 48, 21, 0.14)',
+      },
+    },
+  },
+  popper: {
+    modifiers: [
+      {
+        name: 'offset',
+        options: {
+          offset: [8, 8],
+        },
+      },
+      {
+        enabled: false,
+        name: 'flip',
+      },
+      {
+        enabled: false,
+        name: 'preventOverflow',
+      },
+    ],
+  },
+};
+
 function getPromptOptions(prompt: ExercisePrompt): string[] {
   return (prompt as ExercisePrompt & { options?: string[] }).options ?? [];
 }
@@ -426,7 +562,7 @@ function getRecentCardResults({
   attempts: RootState['attempts']['attempts'];
   cardId: string;
   targetLanguage: RootState['app']['targetLanguage'];
-}): boolean[] {
+}): RecentCardResult[] {
   return [...attempts]
     .filter(
       (attempt) =>
@@ -439,7 +575,29 @@ function getRecentCardResults({
         Date.parse(left.completedAt ?? left.createdAt),
     )
     .slice(0, 10)
-    .map((attempt) => Boolean(attempt.correctness[cardId]));
+    .map((attempt) => ({
+      isCorrect: Boolean(attempt.correctness[cardId]),
+      occurredAt: attempt.completedAt ?? attempt.createdAt,
+    }));
+}
+
+function formatAttemptDate(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return [
+    `${padDatePart(date.getMonth() + 1)}/${padDatePart(
+      date.getDate(),
+    )}/${date.getFullYear()}`,
+    `${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`,
+  ].join(' ');
+}
+
+function padDatePart(value: number): string {
+  return String(value).padStart(2, '0');
 }
 
 function toDomKey(value: string): string {

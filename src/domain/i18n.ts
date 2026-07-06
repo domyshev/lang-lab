@@ -91,6 +91,9 @@ type I18nKey =
   | 'memorizeResult'
   | 'correct'
   | 'incorrect'
+  | 'metricAnsweredSuffix'
+  | 'metricCorrectSuffix'
+  | 'metricIncorrectSuffix'
   | 'targetAnswerLabel'
   | 'targetLanguageAnswer'
   | 'fallbackTranslationShown'
@@ -116,6 +119,7 @@ type I18nKey =
   | 'correctAnsweredTooltip'
   | 'incorrectAnsweredTooltip'
   | 'correctInputTooltip'
+  | 'recentAnswersTitle'
   | 'crosswordWordsDescription'
   | 'crosswordPhraseDescription'
   | 'crosswordThemeLabel'
@@ -224,6 +228,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     memorizeResult: 'Remember!',
     correct: 'Correct',
     incorrect: 'Incorrect',
+    metricAnsweredSuffix: 'answered',
+    metricCorrectSuffix: 'correct',
+    metricIncorrectSuffix: 'incorrect',
     targetAnswerLabel: 'Target answer',
     targetLanguageAnswer: 'answer',
     fallbackTranslationShown: 'Fallback translation shown',
@@ -249,6 +256,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctAnsweredTooltip: 'Number of questions answered correctly.',
     incorrectAnsweredTooltip: 'Number of questions answered incorrectly.',
     correctInputTooltip: 'The input was completed correctly.',
+    recentAnswersTitle: 'Last 10 answers',
     crosswordWordsDescription: 'Up to 6 words from the selected theme',
     crosswordPhraseDescription: 'Single phrase challenge',
     crosswordThemeLabel: 'Theme',
@@ -357,6 +365,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     memorizeResult: 'Запомнить!',
     correct: 'Верно',
     incorrect: 'Неверно',
+    metricAnsweredSuffix: 'отвечено',
+    metricCorrectSuffix: 'правильно',
+    metricIncorrectSuffix: 'неверно',
     targetAnswerLabel: 'Целевой ответ',
     targetLanguageAnswer: 'ответ',
     fallbackTranslationShown: 'Показан запасной перевод',
@@ -382,6 +393,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctAnsweredTooltip: 'Количество вопросов, отвеченных верно.',
     incorrectAnsweredTooltip: 'Количество вопросов, отвеченных неверно.',
     correctInputTooltip: 'Ввод был выполнен верно.',
+    recentAnswersTitle: '10 последних ответов',
     crosswordWordsDescription: 'До 6 слов из выбранной темы',
     crosswordPhraseDescription: 'Задание с одной фразой',
     crosswordThemeLabel: 'Тема',
@@ -489,6 +501,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     memorizeResult: 'Memorizar!',
     correct: 'Correctas',
     incorrect: 'Incorrectas',
+    metricAnsweredSuffix: 'respondidas',
+    metricCorrectSuffix: 'correctas',
+    metricIncorrectSuffix: 'incorrectas',
     targetAnswerLabel: 'Respuesta objetivo',
     targetLanguageAnswer: 'respuesta',
     fallbackTranslationShown: 'Traduccion alternativa mostrada',
@@ -514,6 +529,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctAnsweredTooltip: 'Numero de preguntas respondidas correctamente.',
     incorrectAnsweredTooltip: 'Numero de preguntas respondidas incorrectamente.',
     correctInputTooltip: 'La entrada se completo correctamente.',
+    recentAnswersTitle: '10 ultimas respuestas',
     crosswordWordsDescription: 'Hasta 6 palabras del tema elegido',
     crosswordPhraseDescription: 'Reto de una sola frase',
     crosswordThemeLabel: 'Tema',

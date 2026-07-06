@@ -3,9 +3,9 @@ export const supportedLanguages = ['ru', 'en', 'es'] as const;
 export type SupportedLanguage = (typeof supportedLanguages)[number];
 
 export const languageLabels: Record<SupportedLanguage, string> = {
-  ru: 'Russian',
+  ru: 'Русский',
   en: 'English',
-  es: 'Spanish',
+  es: 'Español',
 };
 
 export const languageFlags: Record<SupportedLanguage, string> = {

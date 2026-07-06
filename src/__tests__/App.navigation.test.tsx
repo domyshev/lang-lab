@@ -569,10 +569,20 @@ describe('App navigation', () => {
     expect(
       screen.getByLabelText('Всего пройдено упражнений: 1'),
     ).toBeInTheDocument();
-    expect(screen.queryByTestId('target_stats__answered_formula__total_chip')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('target_stats__answered_formula__equals_icon')).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId('target_stats__answered_formula__label_line__0'),
+    ).toHaveTextContent('Всего отвечено');
+    expect(
+      screen.getByTestId('target_stats__answered_formula__label_line__1'),
+    ).toHaveTextContent('вопросов:');
+    expect(screen.getByTestId('target_stats__answered_formula__total_chip')).toHaveTextContent(
+      '2 отвечено',
+    );
+    expect(screen.getByTestId('target_stats__answered_formula__equals_icon')).toBeInTheDocument();
     expect(screen.queryByTestId('target_stats__answered_formula__correct_chip')).not.toBeInTheDocument();
-    expect(screen.getAllByLabelText('Неверно: 2').length).toBeGreaterThan(0);
+    expect(screen.getByTestId('target_stats__answered_formula__incorrect_chip')).toHaveTextContent(
+      '2 неверно',
+    );
 
     expect(screen.getByTestId('app__statistics_section')).toHaveStyle({
       overflow: 'hidden',
@@ -585,10 +595,10 @@ describe('App navigation', () => {
     expect(attemptCards).toHaveLength(1);
     expect(attemptCards[0]).toHaveTextContent('Пропущенные буквы');
     expect(
-      within(attemptCards[0]).queryByTestId(
+      within(attemptCards[0]).getByTestId(
         /^history_view__attempt_formula__.*__total_chip$/,
       ),
-    ).not.toBeInTheDocument();
+    ).toHaveTextContent('2 отвечено');
     expect(
       within(attemptCards[0]).queryByText('Всего отвечено вопросов: 2'),
     ).not.toBeInTheDocument();

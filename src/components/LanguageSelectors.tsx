@@ -111,7 +111,12 @@ export function LanguageSelectors() {
           renderValue={(value) => {
             const tooltip = getAssistantTooltip(value, interfaceLanguage);
             return (
-              <Tooltip describeChild title={tooltip}>
+              <Tooltip
+                describeChild
+                placement="top"
+                slotProps={assistantTooltipSlotProps}
+                title={tooltip}
+              >
                 <Box
                   component="span"
                   data-test={`language_selectors__assistant_selected_icon__${value}`}
@@ -147,6 +152,8 @@ export function LanguageSelectors() {
             >
               <Tooltip
                 describeChild
+                placement="top"
+                slotProps={assistantTooltipSlotProps}
                 title={getAssistantTooltip(assistant.id, interfaceLanguage)}
               >
                 <Box
@@ -379,6 +386,22 @@ const compactSelectSx = {
     display: 'flex',
     minHeight: 'unset',
     py: 0.25,
+  },
+};
+
+const assistantTooltipSlotProps = {
+  tooltip: {
+    sx: {
+      bgcolor: '#ffffff',
+      border: '1px solid rgba(32, 48, 21, 0.16)',
+      boxShadow: '0 10px 24px rgba(32, 48, 21, 0.14)',
+      color: '#203015',
+      fontSize: 14,
+      lineHeight: 1.35,
+      maxWidth: 280,
+      px: 1.25,
+      py: 1,
+    },
   },
 };
 

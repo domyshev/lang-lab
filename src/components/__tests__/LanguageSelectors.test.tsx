@@ -1,8 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { render, screen } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
+import { getAssistantTooltip } from '../../domain/assistants';
 import { appReducer } from '../../store/appSlice';
 import { attemptsReducer } from '../../store/attemptsSlice';
 import { cardsReducer } from '../../store/cardsSlice';
@@ -29,6 +36,79 @@ describe('LanguageSelectors', () => {
     expect(screen.getByTestId('language_selectors__target_language_select')).toHaveStyle({
       height: '34px',
     });
+  });
+
+  it('shows character selector tooltips above the icon with light theme styles', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Provider store={createStore()}>
+        <LanguageSelectors />
+      </Provider>,
+    );
+
+    await user.hover(
+      screen.getByTestId('language_selectors__assistant_selected_icon__studyTroll'),
+    );
+
+    const tooltipText = await screen.findByText(
+      getAssistantTooltip('studyTroll', 'ru'),
+    );
+    const tooltipRoot = screen.getByRole('tooltip');
+
+    expect(tooltipRoot.closest('[data-popper-placement]')).toHaveAttribute(
+      'data-popper-placement',
+      expect.stringMatching(/^top/),
+    );
+    expect(tooltipText).toHaveStyle({
+      backgroundColor: 'rgb(255, 255, 255)',
+      color: 'rgb(32, 48, 21)',
+      fontSize: '14px',
+    });
+  });
+
+  it('shows language options in their own languages', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Provider store={createStore()}>
+        <LanguageSelectors />
+      </Provider>,
+    );
+
+    fireEvent.mouseDown(
+      within(
+        screen.getByTestId('language_selectors__interface_language_control'),
+      ).getByRole('combobox'),
+    );
+
+    expect(
+      screen.getByTestId('language_selectors__interface_language_option_label__ru__name'),
+    ).toHaveTextContent('Русский');
+    expect(
+      screen.getByTestId('language_selectors__interface_language_option_label__en__name'),
+    ).toHaveTextContent('English');
+    expect(
+      screen.getByTestId('language_selectors__interface_language_option_label__es__name'),
+    ).toHaveTextContent('Español');
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
+    fireEvent.mouseDown(
+      within(
+        screen.getByTestId('language_selectors__target_language_control'),
+      ).getByRole('combobox'),
+    );
+
+    expect(
+      screen.getByTestId('language_selectors__target_language_option_label__ru__name'),
+    ).toHaveTextContent('Русский');
+    expect(
+      screen.getByTestId('language_selectors__target_language_option_label__en__name'),
+    ).toHaveTextContent('English');
+    expect(
+      screen.getByTestId('language_selectors__target_language_option_label__es__name'),
+    ).toHaveTextContent('Español');
   });
 
   it('opens practice settings from the top-right menu and updates cooldown months', async () => {

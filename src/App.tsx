@@ -1004,6 +1004,7 @@ export function App() {
             <CountMetric
               dataTestPrefix="target_stats__total_exercises"
               label={t(interfaceLanguage, 'totalExercises')}
+              suffix={t(interfaceLanguage, 'metricAnsweredSuffix')}
               value={targetSummaries.length}
             />
             <StatsFormula
@@ -1011,6 +1012,26 @@ export function App() {
               dataTestPrefix="target_stats__answered_formula"
               incorrect={incorrect}
               interfaceLanguage={interfaceLanguage}
+              labelDisplay={
+                interfaceLanguage === 'ru' ? (
+                  <>
+                    <Box
+                      component="span"
+                      data-test="target_stats__answered_formula__label_line__0"
+                      sx={{ display: 'block' }}
+                    >
+                      Всего отвечено
+                    </Box>
+                    <Box
+                      component="span"
+                      data-test="target_stats__answered_formula__label_line__1"
+                      sx={{ display: 'block' }}
+                    >
+                      вопросов:
+                    </Box>
+                  </>
+                ) : undefined
+              }
               total={totalAnswered}
               totalLabel={t(interfaceLanguage, 'totalAnsweredQuestions')}
             />

@@ -32,8 +32,11 @@ export function SplitWordStatsChip({
         border: '1px solid rgba(32, 48, 21, 0.18)',
         borderRadius: 1,
         display: 'inline-flex',
+        alignSelf: 'flex-start',
         height: 38,
+        maxWidth: '100%',
         overflow: 'hidden',
+        width: 'fit-content',
       }}
     >
       <Box
