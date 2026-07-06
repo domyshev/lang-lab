@@ -569,6 +569,9 @@ describe('App navigation', () => {
     expect(
       screen.getByLabelText('Всего пройдено упражнений: 1'),
     ).toBeInTheDocument();
+    expect(screen.getByTestId('target_stats__total_exercises__value_chip')).toHaveTextContent(
+      '1 пройдено',
+    );
     expect(
       screen.getByTestId('target_stats__answered_formula__label_line__0'),
     ).toHaveTextContent('Всего отвечено');

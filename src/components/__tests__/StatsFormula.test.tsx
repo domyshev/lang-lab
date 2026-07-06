@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { CountMetric, StatsFormula } from '../StatsFormula';
@@ -112,7 +112,7 @@ describe('StatsFormula', () => {
         <CountMetric
           dataTestPrefix="stats_count_with_suffix"
           label="Всего пройдено упражнений"
-          suffix="отвечено"
+          suffix="пройдено"
           value={3}
         />
         <StatsFormula
@@ -127,7 +127,7 @@ describe('StatsFormula', () => {
     );
 
     expect(screen.getByTestId('stats_count_with_suffix__value_chip')).toHaveTextContent(
-      '3 отвечено',
+      '3 пройдено',
     );
     expect(
       screen.getByTestId('stats_formula_with_suffixes__total_chip'),
@@ -171,5 +171,61 @@ describe('StatsFormula', () => {
       color: 'rgb(32, 48, 21)',
       fontSize: '14px',
     });
+    expect(
+      screen.getByTestId('stats_formula_tooltip__total_chip__tooltip_arrow'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('tooltip').closest('[data-popper-placement]')).toHaveAttribute(
+      'data-popper-placement',
+      expect.stringMatching(/^top/),
+    );
+  });
+
+  it('uses an interactive cursor-anchored tooltip for the completed exercise count', async () => {
+    render(
+      <CountMetric
+        dataTestPrefix="completed_count_metric"
+        label="Всего пройдено упражнений"
+        suffix="пройдено"
+        tooltip="Общее количество пройденных упражнений."
+        value={4}
+      />,
+    );
+
+    const chip = screen.getByTestId('completed_count_metric__value_chip');
+
+    expect(chip).toHaveTextContent('4 пройдено');
+
+    fireEvent.mouseOver(chip, { clientX: 180, clientY: 90 });
+
+    expect(
+      await screen.findByText('Общее количество пройденных упражнений.'),
+    ).toHaveStyle({
+      backgroundColor: 'rgb(255, 255, 255)',
+      color: 'rgb(32, 48, 21)',
+      fontSize: '14px',
+    });
+    expect(chip).toHaveAttribute('data-anchor-x', '180');
+    expect(chip).toHaveAttribute('data-anchor-y', '90');
+    expect(
+      screen.getByTestId('completed_count_metric__value_chip__tooltip_arrow'),
+    ).toBeInTheDocument();
+
+    fireEvent.mouseMove(chip, { clientX: 220, clientY: 110 });
+
+    expect(chip).toHaveAttribute('data-anchor-x', '180');
+    expect(chip).toHaveAttribute('data-anchor-y', '90');
+
+    fireEvent.mouseLeave(chip);
+    fireEvent.mouseOver(screen.getByRole('tooltip'));
+
+    expect(screen.getByText('Общее количество пройденных упражнений.')).toBeInTheDocument();
+
+    fireEvent.mouseLeave(screen.getByRole('tooltip'));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Общее количество пройденных упражнений.'),
+      ).not.toBeInTheDocument(),
+    );
   });
 });

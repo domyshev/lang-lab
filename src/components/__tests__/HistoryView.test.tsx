@@ -74,8 +74,13 @@ describe('HistoryView', () => {
     const tooltips = screen.getAllByRole('tooltip');
     expect(tooltips[tooltips.length - 1].closest('[data-popper-placement]')).toHaveAttribute(
       'data-popper-placement',
-      expect.stringMatching(/^top-start/),
+      expect.stringMatching(/^top/),
     );
+    expect(
+      screen.getByTestId(
+        'history_view__detail_answer__attempt-missing-1_card-airport__tooltip_arrow',
+      ),
+    ).toBeInTheDocument();
     await user.unhover(
       within(missingLettersCard!).getByLabelText('Правильный ответ: airport'),
     );
@@ -163,7 +168,7 @@ describe('HistoryView', () => {
     });
   });
 
-  it('keeps the recent answers tooltip fixed after it opens at the cursor position', async () => {
+  it('keeps the recent answers tooltip fixed and interactive after opening at the cursor', async () => {
     renderHistoryView();
 
     const missingLettersCard = getByDataTestPrefix(
@@ -198,6 +203,15 @@ describe('HistoryView', () => {
     expect(tooltipAnchor).toHaveAttribute('data-anchor-y', '180');
 
     fireEvent.mouseLeave(tooltipAnchor);
+    fireEvent.mouseOver(screen.getByRole('tooltip'));
+
+    expect(
+      screen.getByTestId(
+        'history_view__detail_answer__attempt-missing-1_card-airport__recent_tooltip',
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.mouseLeave(screen.getByRole('tooltip'));
 
     await waitFor(() =>
       expect(

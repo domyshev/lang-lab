@@ -10,7 +10,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { type MouseEvent, type ReactElement, useMemo, useState } from 'react';
+import { type ReactElement, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { ExercisePrompt } from '../domain/exercises';
 import {
@@ -19,6 +19,7 @@ import {
 } from '../domain/exerciseHistory';
 import { t } from '../domain/i18n';
 import { RootState } from '../store/store';
+import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
 import { StatsFormula } from './StatsFormula';
 
 export function HistoryView() {
@@ -309,52 +310,10 @@ function RecentAnswersTooltip({
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   recentResults: RecentCardResult[];
 }) {
-  const [anchorPosition, setAnchorPosition] =
-    useState<TooltipAnchorPosition | null>(null);
-  const virtualAnchor = useMemo(
-    () =>
-      anchorPosition
-        ? {
-            getBoundingClientRect: () => ({
-              bottom: anchorPosition.y,
-              height: 0,
-              left: anchorPosition.x,
-              right: anchorPosition.x,
-              top: anchorPosition.y,
-              width: 0,
-              x: anchorPosition.x,
-              y: anchorPosition.y,
-              toJSON: () => undefined,
-            }),
-          }
-        : undefined,
-    [anchorPosition],
-  );
-  const tooltipSlotProps = useMemo(
-    () => ({
-      ...recentAnswersTooltipSlotProps,
-      popper: {
-        ...recentAnswersTooltipSlotProps.popper,
-        ...(virtualAnchor ? { anchorEl: virtualAnchor } : {}),
-      },
-    }),
-    [virtualAnchor],
-  );
-  const handleMouseOver = (event: MouseEvent<HTMLElement>) => {
-    setAnchorPosition(
-      (currentPosition) =>
-        currentPosition ?? { x: event.clientX, y: event.clientY },
-    );
-  };
-  const handleMouseLeave = () => {
-    setAnchorPosition(null);
-  };
-
   return (
-    <Tooltip
-      arrow
-      placement="top-start"
-      slotProps={tooltipSlotProps}
+    <CursorAnchoredTooltip
+      arrowDataTest={`${dataTestPrefix}__tooltip_arrow`}
+      tooltipSx={recentAnswersTooltipStyles}
       title={
         <Stack data-test={`${dataTestPrefix}__recent_tooltip`} spacing={0.75}>
           <Typography
@@ -406,11 +365,7 @@ function RecentAnswersTooltip({
       }
     >
       <Box
-        data-anchor-x={anchorPosition?.x ?? ''}
-        data-anchor-y={anchorPosition?.y ?? ''}
         data-test={`${dataTestPrefix}__tooltip_anchor`}
-        onMouseLeave={handleMouseLeave}
-        onMouseOver={handleMouseOver}
         sx={{
           alignItems: 'flex-start',
           display: 'inline-flex',
@@ -419,7 +374,7 @@ function RecentAnswersTooltip({
       >
         {children}
       </Box>
-    </Tooltip>
+    </CursorAnchoredTooltip>
   );
 }
 
@@ -507,47 +462,12 @@ type RecentCardResult = {
   occurredAt: string;
 };
 
-type TooltipAnchorPosition = {
-  x: number;
-  y: number;
-};
-
-const recentAnswersTooltipSlotProps = {
-  tooltip: {
-    sx: {
-      bgcolor: '#ffffff',
-      border: '1px solid rgba(32, 48, 21, 0.14)',
-      boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
-      color: '#203015',
-      p: 1.25,
-    },
-  },
-  arrow: {
-    sx: {
-      color: '#ffffff',
-      '&:before': {
-        border: '1px solid rgba(32, 48, 21, 0.14)',
-      },
-    },
-  },
-  popper: {
-    modifiers: [
-      {
-        name: 'offset',
-        options: {
-          offset: [8, 8],
-        },
-      },
-      {
-        enabled: false,
-        name: 'flip',
-      },
-      {
-        enabled: false,
-        name: 'preventOverflow',
-      },
-    ],
-  },
+const recentAnswersTooltipStyles = {
+  bgcolor: '#ffffff',
+  border: '1px solid rgba(32, 48, 21, 0.14)',
+  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
+  color: '#203015',
+  p: 1.25,
 };
 
 function getPromptOptions(prompt: ExercisePrompt): string[] {

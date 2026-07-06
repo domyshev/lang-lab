@@ -1004,7 +1004,8 @@ export function App() {
             <CountMetric
               dataTestPrefix="target_stats__total_exercises"
               label={t(interfaceLanguage, 'totalExercises')}
-              suffix={t(interfaceLanguage, 'metricAnsweredSuffix')}
+              suffix={t(interfaceLanguage, 'metricCompletedSuffix')}
+              tooltip={t(interfaceLanguage, 'totalExercisesTooltip')}
               value={targetSummaries.length}
             />
             <StatsFormula

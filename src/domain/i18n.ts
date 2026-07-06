@@ -92,8 +92,10 @@ type I18nKey =
   | 'correct'
   | 'incorrect'
   | 'metricAnsweredSuffix'
+  | 'metricCompletedSuffix'
   | 'metricCorrectSuffix'
   | 'metricIncorrectSuffix'
+  | 'totalExercisesTooltip'
   | 'targetAnswerLabel'
   | 'targetLanguageAnswer'
   | 'fallbackTranslationShown'
@@ -229,8 +231,10 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correct: 'Correct',
     incorrect: 'Incorrect',
     metricAnsweredSuffix: 'answered',
+    metricCompletedSuffix: 'completed',
     metricCorrectSuffix: 'correct',
     metricIncorrectSuffix: 'incorrect',
+    totalExercisesTooltip: 'Total number of completed exercises.',
     targetAnswerLabel: 'Target answer',
     targetLanguageAnswer: 'answer',
     fallbackTranslationShown: 'Fallback translation shown',
@@ -366,8 +370,10 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correct: 'Верно',
     incorrect: 'Неверно',
     metricAnsweredSuffix: 'отвечено',
+    metricCompletedSuffix: 'пройдено',
     metricCorrectSuffix: 'правильно',
     metricIncorrectSuffix: 'неверно',
+    totalExercisesTooltip: 'Общее количество пройденных упражнений.',
     targetAnswerLabel: 'Целевой ответ',
     targetLanguageAnswer: 'ответ',
     fallbackTranslationShown: 'Показан запасной перевод',
@@ -502,8 +508,10 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correct: 'Correctas',
     incorrect: 'Incorrectas',
     metricAnsweredSuffix: 'respondidas',
+    metricCompletedSuffix: 'completados',
     metricCorrectSuffix: 'correctas',
     metricIncorrectSuffix: 'incorrectas',
+    totalExercisesTooltip: 'Numero total de ejercicios completados.',
     targetAnswerLabel: 'Respuesta objetivo',
     targetLanguageAnswer: 'respuesta',
     fallbackTranslationShown: 'Traduccion alternativa mostrada',

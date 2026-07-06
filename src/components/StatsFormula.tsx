@@ -1,19 +1,22 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DragHandleRoundedIcon from '@mui/icons-material/DragHandleRounded';
-import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
 import { t } from '../domain/i18n';
 import { SupportedLanguage } from '../domain/languages';
+import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
 
 export function CountMetric({
   dataTestPrefix = 'count_metric',
   label,
   suffix,
+  tooltip,
   value,
 }: {
   dataTestPrefix?: string;
   label: string;
   suffix?: string;
+  tooltip?: string;
   value: number;
 }) {
   return (
@@ -30,6 +33,7 @@ export function CountMetric({
           label={value}
           suffix={suffix}
           tone="total"
+          tooltip={tooltip}
         />
       </Box>
     </Stack>
@@ -218,20 +222,17 @@ function MetricChip({
   );
 
   return tooltip ? (
-    <Tooltip
+    <CursorAnchoredTooltip
+      arrowDataTest={`${dataTest}__tooltip_arrow`}
       title={
-        <Box component="span" sx={metricTooltipContentStyles}>
+        <TooltipContent sx={metricTooltipContentStyles}>
           {tooltip}
-        </Box>
+        </TooltipContent>
       }
-      slotProps={{
-        tooltip: {
-          sx: metricTooltipStyles,
-        },
-      }}
+      tooltipSx={metricTooltipStyles}
     >
       {chip}
-    </Tooltip>
+    </CursorAnchoredTooltip>
   ) : (
     chip
   );
