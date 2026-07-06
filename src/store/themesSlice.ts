@@ -59,9 +59,23 @@ const themesSlice = createSlice({
       theme.cardIds.push(action.payload.cardId);
       theme.updatedAt = action.payload.now;
     },
+    setThemeCards(
+      state,
+      action: PayloadAction<{ themeId: string; cardIds: string[]; now: string }>,
+    ) {
+      const theme = state.themes.find(
+        (item) => item.id === action.payload.themeId,
+      );
+      if (!theme || theme.archivedAt) {
+        return;
+      }
+
+      theme.cardIds = Array.from(new Set(action.payload.cardIds));
+      theme.updatedAt = action.payload.now;
+    },
   },
 });
 
-export const { addTheme, archiveTheme, selectTheme, addCardToTheme } =
+export const { addTheme, archiveTheme, selectTheme, addCardToTheme, setThemeCards } =
   themesSlice.actions;
 export const themesReducer = themesSlice.reducer;

@@ -1,4 +1,4 @@
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import {
@@ -8,15 +8,11 @@ import {
   Checkbox,
   Chip,
   Divider,
-  FormControl,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material/Select';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCardAnswer, isPhraseValue, LanguageCard } from '../domain/cards';
 import { ALL_WORDS_THEME_ID } from '../domain/themes';
@@ -30,30 +26,16 @@ import {
   supportedLanguages,
   SupportedLanguage,
 } from '../domain/languages';
-import { addCardToTheme } from '../store/themesSlice';
+import { setThemeCards } from '../store/themesSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
 import { SplitWordStatsChip } from './SplitWordStatsChip';
 
-export function ThemeDetailView({
-  canSelectThemeCards = true,
-  isCardSelectionMode = false,
-  onAddSelectedCardsToTheme,
-  onPendingThemeCardToggle,
-  pendingThemeCardIds = [],
-}: {
-  canSelectThemeCards?: boolean;
-  isCardSelectionMode?: boolean;
-  onAddSelectedCardsToTheme?: () => void;
-  onPendingThemeCardToggle?: (cardId: string) => void;
-  pendingThemeCardIds?: string[];
-}) {
+export function ThemeDetailView() {
   const dispatch = useDispatch<AppDispatch>();
-  const addCardLabelId = useId();
-  const [selectedCardId, setSelectedCardId] = useState('');
-  const [selectionWarningCardId, setSelectionWarningCardId] = useState<
-    string | null
-  >(null);
+  const [isEditingCards, setIsEditingCards] = useState(false);
+  const [draftCardIds, setDraftCardIds] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const cards = useSelector((state: RootState) => state.cards.cards);
   const targetLanguage = useSelector(
     (state: RootState) => state.app.targetLanguage,
@@ -96,16 +78,23 @@ export function ThemeDetailView({
     );
   }
 
-  const selectedCardIds = new Set(selectedTheme.cardIds);
   const themeCards = selectedTheme.cardIds
     .map((cardId) => cards.find((card) => card.id === cardId))
     .filter((card): card is LanguageCard => Boolean(card));
-  const cardsForList = isCardSelectionMode ? cards : themeCards;
+  const cardsForList = isEditingCards && !isAllWordsSelected ? cards : themeCards;
   const existingThemeCardIds = new Set(
     isAllWordsSelected ? [] : selectedTheme.cardIds,
   );
-  const pendingThemeCardIdSet = new Set(pendingThemeCardIds);
-  const sortedThemeCards = [...cardsForList].sort((left, right) => {
+  const draftCardIdSet = new Set(
+    isEditingCards ? draftCardIds : selectedTheme.cardIds,
+  );
+  const hasDraftChanges = isEditingCards
+    ? !areCardIdSetsEqual(draftCardIds, selectedTheme.cardIds)
+    : false;
+  const filteredCardsForList = cardsForList.filter((card) =>
+    cardMatchesSearch(card, searchQuery),
+  );
+  const sortedThemeCards = [...filteredCardsForList].sort((left, right) => {
     const leftAttempts = getCardAttempts(left.id, cardStats, targetLanguage);
     const rightAttempts = getCardAttempts(right.id, cardStats, targetLanguage);
 
@@ -117,26 +106,41 @@ export function ThemeDetailView({
       getCardLabel(right, targetLanguage, interfaceLanguage),
     );
   });
-  const availableCards = isAllWordsSelected
-    ? []
-    : cards.filter((card) => !selectedCardIds.has(card.id));
-  const addableCardId = availableCards.some((card) => card.id === selectedCardId)
-    ? selectedCardId
-    : '';
 
-  const handleAddCard = () => {
-    if (!addableCardId) {
+  const handleEditButtonClick = () => {
+    if (isAllWordsSelected) {
+      return;
+    }
+
+    if (!isEditingCards) {
+      setDraftCardIds(selectedTheme.cardIds);
+      setIsEditingCards(true);
+      return;
+    }
+
+    if (!hasDraftChanges) {
       return;
     }
 
     dispatch(
-      addCardToTheme({
+      setThemeCards({
         themeId: selectedTheme.id,
-        cardId: addableCardId,
+        cardIds: cards
+          .filter((card) => draftCardIdSet.has(card.id))
+          .map((card) => card.id),
         now: new Date().toISOString(),
       }),
     );
-    setSelectedCardId('');
+    setIsEditingCards(false);
+    setDraftCardIds([]);
+  };
+
+  const handleDraftCardToggle = (cardId: string) => {
+    setDraftCardIds((current) =>
+      current.includes(cardId)
+        ? current.filter((item) => item !== cardId)
+        : [...current, cardId],
+    );
   };
 
   return (
@@ -188,12 +192,14 @@ export function ThemeDetailView({
             sx={{ alignItems: 'center', flexWrap: 'wrap' }}
             useFlexGap
           >
-            {isCardSelectionMode && (
+            {!isAllWordsSelected && (
               <Button
-                data-test="theme_detail__add_selected_cards_button"
-                disabled={pendingThemeCardIds.length === 0}
-                onClick={onAddSelectedCardsToTheme}
-                startIcon={<CheckCircleRoundedIcon />}
+                data-test={`theme_detail__edit_cards_button__${selectedTheme.id}`}
+                disabled={isEditingCards && !hasDraftChanges}
+                onClick={handleEditButtonClick}
+                startIcon={
+                  isEditingCards ? <CheckCircleRoundedIcon /> : <AddIcon />
+                }
                 variant="outlined"
                 sx={{
                   borderColor: '#6f4bd8',
@@ -205,7 +211,7 @@ export function ThemeDetailView({
                   },
                 }}
               >
-                {t(interfaceLanguage, 'addToTheme')}
+                {t(interfaceLanguage, isEditingCards ? 'saveWords' : 'addWords')}
               </Button>
             )}
             <Chip
@@ -217,70 +223,14 @@ export function ThemeDetailView({
           </Stack>
         </Stack>
 
-        {isCardSelectionMode && (
-          <Alert
-            data-test="theme_detail__selection_mode_banner"
-            severity="info"
-            sx={{
-              bgcolor: '#f5efff',
-              border: '1px solid rgba(111, 75, 216, 0.20)',
-              color: '#3b2a68',
-              '& .MuiAlert-icon': { color: '#6f4bd8' },
-            }}
-          >
-            {t(interfaceLanguage, 'themeCardSelectionMode')}
-          </Alert>
-        )}
-
-        {!isCardSelectionMode && !isAllWordsSelected && (
-          <Stack
-            data-test={`theme_detail__add_card_form__${selectedTheme.id}`}
-            direction={{ xs: 'column', md: 'row' }}
-            spacing={1.5}
-            alignItems={{ xs: 'stretch', md: 'center' }}
-          >
-            <FormControl
-              data-test={`theme_detail__add_card_control__${selectedTheme.id}`}
-              fullWidth
-              disabled={availableCards.length === 0}
-            >
-              <InputLabel
-                data-test={`theme_detail__add_card_label__${selectedTheme.id}`}
-                id={addCardLabelId}
-              >
-                {t(interfaceLanguage, 'add')}
-              </InputLabel>
-              <Select
-                data-test={`theme_detail__add_card_select__${selectedTheme.id}`}
-                labelId={addCardLabelId}
-                label={t(interfaceLanguage, 'add')}
-                value={addableCardId}
-                onChange={(event: SelectChangeEvent) =>
-                  setSelectedCardId(event.target.value)
-                }
-              >
-                {availableCards.map((card) => (
-                  <MenuItem
-                    data-test={`theme_detail__add_card_option__${card.id}`}
-                    key={card.id}
-                    value={card.id}
-                  >
-                    {getCardLabel(card, targetLanguage, interfaceLanguage)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Button
-              data-test={`theme_detail__add_card_button__${selectedTheme.id}`}
-              startIcon={<AddIcon />}
-              variant="contained"
-              onClick={handleAddCard}
-              disabled={!addableCardId}
-              sx={{ minWidth: 150 }}
-            >
-              {t(interfaceLanguage, 'add')}
-            </Button>
-          </Stack>
+        {cards.length > 0 && (
+          <TextField
+            data-test={`theme_detail__search_input__${selectedTheme.id}`}
+            fullWidth
+            label={t(interfaceLanguage, 'searchCards')}
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+          />
         )}
 
         {!isAllWordsSelected && cards.length === 0 && (
@@ -289,15 +239,6 @@ export function ThemeDetailView({
             severity="info"
           >
             {t(interfaceLanguage, 'importCardsBeforeTheme')}
-          </Alert>
-        )}
-
-        {!isAllWordsSelected && cards.length > 0 && availableCards.length === 0 && (
-          <Alert
-            data-test={`theme_detail__all_cards_added_alert__${selectedTheme.id}`}
-            severity="success"
-          >
-            {t(interfaceLanguage, 'allImportedCardsInTheme')}
           </Alert>
         )}
 
@@ -329,11 +270,16 @@ export function ThemeDetailView({
                 targetLanguage,
                 interfaceLanguage,
               );
+              const translationNote = getTranslationNote({
+                card,
+                interfaceLanguage,
+                targetLanguage,
+              });
               const isPhrase = isPhraseCard(card, targetLanguage);
-              const isAlreadyInTheme = existingThemeCardIds.has(card.id);
-              const isPending = pendingThemeCardIdSet.has(card.id);
-              const showSelectionWarning =
-                selectionWarningCardId === card.id && !canSelectThemeCards;
+              const isDraftSelected = draftCardIdSet.has(card.id);
+              const isAlreadyInTheme = isEditingCards
+                ? isDraftSelected
+                : existingThemeCardIds.has(card.id);
               const stats = cardStats.find(
                 (item) =>
                   item.cardId === card.id &&
@@ -378,7 +324,7 @@ export function ThemeDetailView({
                         spacing={1}
                         sx={{ alignItems: 'flex-start', minWidth: 0 }}
                       >
-                        {isCardSelectionMode && (
+                        {isEditingCards && !isAllWordsSelected && (
                           <Stack
                             data-test={`theme_detail__card_select_control__${card.id}`}
                             direction="row"
@@ -386,16 +332,8 @@ export function ThemeDetailView({
                             sx={{ alignItems: 'center', flexShrink: 0 }}
                           >
                             <Checkbox
-                              checked={isAlreadyInTheme || isPending}
-                              disabled={isAlreadyInTheme}
-                              onChange={() => {
-                                if (!canSelectThemeCards) {
-                                  setSelectionWarningCardId(card.id);
-                                  return;
-                                }
-                                setSelectionWarningCardId(null);
-                                onPendingThemeCardToggle?.(card.id);
-                              }}
+                              checked={isDraftSelected}
+                              onChange={() => handleDraftCardToggle(card.id)}
                               slotProps={{
                                 input: {
                                   'data-test': `theme_detail__card_select_checkbox__${card.id}`,
@@ -407,25 +345,6 @@ export function ThemeDetailView({
                                 '&.Mui-checked': { color: '#6f4bd8' },
                               }}
                             />
-                            {showSelectionWarning && (
-                              <Box
-                                data-test={`theme_detail__card_selection_warning__${card.id}`}
-                                sx={{
-                                  bgcolor: '#f5efff',
-                                  border: '1px solid rgba(111, 75, 216, 0.24)',
-                                  borderRadius: 1,
-                                  color: '#3b2a68',
-                                  fontSize: 12,
-                                  fontWeight: 800,
-                                  lineHeight: 1.25,
-                                  maxWidth: 260,
-                                  px: 1,
-                                  py: 0.75,
-                                }}
-                              >
-                                {t(interfaceLanguage, 'createThemeBeforeSelectingCards')}
-                              </Box>
-                            )}
                           </Stack>
                         )}
                         <Box data-test={`theme_detail__card_text_block__${card.id}`}>
@@ -442,10 +361,7 @@ export function ThemeDetailView({
                           >
                             {answer.isFallback
                               ? t(interfaceLanguage, 'fallbackTranslationShown')
-                              : `${getLanguageDisplayName(
-                                  interfaceLanguage,
-                                  targetLanguage,
-                                )} ${t(interfaceLanguage, 'targetLanguageAnswer')}`}
+                              : translationNote}
                           </Typography>
                         </Box>
                       </Stack>
@@ -612,6 +528,55 @@ function getCardAttempts(
       (item) => item.cardId === cardId && item.targetLanguage === targetLanguage,
     )?.attempts ?? 0
   );
+}
+
+function areCardIdSetsEqual(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  const rightIds = new Set(right);
+  return left.every((cardId) => rightIds.has(cardId));
+}
+
+function cardMatchesSearch(card: LanguageCard, searchQuery: string): boolean {
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  return [
+    card.id,
+    ...Object.values(card.translations),
+    ...Object.values(card.definitions ?? {}),
+    ...Object.values(card.examples ?? {}).flatMap((examples) =>
+      examples.map((example) => `${example.sentence} ${example.answer ?? ''}`),
+    ),
+  ]
+    .filter((value): value is string => Boolean(value))
+    .some((value) => value.toLocaleLowerCase().includes(normalizedQuery));
+}
+
+function getTranslationNote({
+  card,
+  interfaceLanguage,
+  targetLanguage,
+}: {
+  card: LanguageCard;
+  interfaceLanguage: SupportedLanguage;
+  targetLanguage: SupportedLanguage;
+}): string {
+  const notes = supportedLanguages
+    .filter((language) => language !== targetLanguage)
+    .map((language) => {
+      const translation = card.translations[language];
+      return translation ? `${language}: ${translation}` : undefined;
+    })
+    .filter((note): note is string => Boolean(note));
+
+  return notes.length > 0
+    ? notes.join(' / ')
+    : t(interfaceLanguage, 'noTranslationAvailable');
 }
 
 function isPhraseCard(

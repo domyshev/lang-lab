@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { fireEvent } from '@testing-library/react';
 import { render, screen, within } from '@testing-library/react';
 import { waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
 import type { ExerciseAttempt } from '../../domain/exercises';
@@ -151,6 +152,67 @@ describe('ThemeDetailView', () => {
       ).not.toBeInTheDocument(),
     );
   });
+
+  it('edits a custom theme with checkboxes, filters by search, and shows non-target translations', async () => {
+    const user = userEvent.setup();
+    const store = createStore({
+      selectedThemeId: 'theme-road',
+      themes: [
+        {
+          id: 'theme-road',
+          name: 'Road',
+          cardIds: ['card-airport', 'card-worth-it'],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    });
+
+    render(
+      <Provider store={store}>
+        <ThemeDetailView />
+      </Provider>,
+    );
+
+    expect(screen.queryByTestId('theme_detail__add_card_form__theme-road')).not.toBeInTheDocument();
+    expect(screen.getByTestId('theme_detail__card_language_note__card-airport')).toHaveTextContent(
+      'ru: аэропорт / es: aeropuerto',
+    );
+
+    await user.type(screen.getByRole('textbox', { name: 'Поиск карточек' }), 'оно');
+
+    expect(screen.queryByText('airport')).not.toBeInTheDocument();
+    expect(screen.getByText('worth it')).toBeInTheDocument();
+
+    await user.clear(screen.getByRole('textbox', { name: 'Поиск карточек' }));
+    await user.click(screen.getByRole('button', { name: 'Добавить слова' }));
+
+    expect(screen.getByText('impede')).toBeInTheDocument();
+    expect(
+      screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
+    ).toBeChecked();
+    expect(
+      screen.getByTestId('theme_detail__card_select_checkbox__card-impede'),
+    ).not.toBeChecked();
+    expect(screen.getByRole('button', { name: 'Сохранить слова' })).toBeDisabled();
+
+    await user.click(
+      screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
+    );
+    await user.click(
+      screen.getByTestId('theme_detail__card_select_checkbox__card-impede'),
+    );
+
+    expect(screen.getByRole('button', { name: 'Сохранить слова' })).toBeEnabled();
+
+    await user.click(screen.getByRole('button', { name: 'Сохранить слова' }));
+
+    expect(
+      store.getState().themes.themes.find((theme) => theme.id === 'theme-road')?.cardIds,
+    ).toEqual(['card-worth-it', 'card-impede']);
+    expect(screen.queryByText('airport')).not.toBeInTheDocument();
+    expect(screen.getByText('impede')).toBeInTheDocument();
+  });
 });
 
 function getByDataTestPrefix(container: HTMLElement, prefix: string): HTMLElement[] {
@@ -159,7 +221,19 @@ function getByDataTestPrefix(container: HTMLElement, prefix: string): HTMLElemen
   );
 }
 
-function createStore() {
+function createStore({
+  selectedThemeId,
+  themes = [],
+}: {
+  selectedThemeId?: string;
+  themes?: Array<{
+    id: string;
+    name: string;
+    cardIds: string[];
+    createdAt: string;
+    updatedAt: string;
+  }>;
+} = {}) {
   return configureStore({
     reducer: {
       app: appReducer,
@@ -173,19 +247,23 @@ function createStore() {
         cards: [
           {
             id: 'card-airport',
-            translations: { en: 'airport', ru: 'аэропорт' },
+            translations: { en: 'airport', ru: 'аэропорт', es: 'aeropuerto' },
             createdAt: now,
             updatedAt: now,
           },
           {
             id: 'card-worth-it',
-            translations: { en: 'worth it', ru: 'оно того стоит' },
+            translations: {
+              en: 'worth it',
+              ru: 'оно того стоит',
+              es: 'vale la pena',
+            },
             createdAt: now,
             updatedAt: now,
           },
           {
             id: 'card-impede',
-            translations: { en: 'impede', ru: 'затруднять' },
+            translations: { en: 'impede', ru: 'затруднять', es: 'impedir' },
             createdAt: now,
             updatedAt: now,
           },
@@ -223,6 +301,10 @@ function createStore() {
       },
       attempts: {
         attempts: createCardAttempts('card-impede', 21),
+      },
+      themes: {
+        themes,
+        selectedThemeId,
       },
     },
   });

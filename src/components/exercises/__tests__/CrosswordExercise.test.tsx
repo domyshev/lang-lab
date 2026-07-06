@@ -81,6 +81,83 @@ describe('CrosswordExercise', () => {
     expect(onSubmit).toHaveBeenCalledWith({ cat: 'cat', tea: 'tea' });
   });
 
+  it('colors submitted words and shows recent answer history from submitted cells', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <CrosswordExercise
+        interfaceLanguage="ru"
+        themeName="Все слова"
+        recentResultsByCardId={{
+          cat: [
+            {
+              isCorrect: true,
+              occurredAt: '2026-07-03T10:00:00.000Z',
+            },
+          ],
+          tea: [
+            {
+              isCorrect: false,
+              occurredAt: '2026-07-04T10:00:00.000Z',
+            },
+          ],
+        }}
+        puzzle={{
+          mode: 'words',
+          bounds: { minRow: 0, maxRow: 2, minCol: 0, maxCol: 2 },
+          cells: [
+            { row: 0, col: 0, solution: 'c', entryIds: ['cat'] },
+            { row: 0, col: 1, solution: 'a', entryIds: ['cat'] },
+            { row: 0, col: 2, solution: 't', entryIds: ['cat', 'tea'] },
+            { row: 1, col: 2, solution: 'e', entryIds: ['tea'] },
+            { row: 2, col: 2, solution: 'a', entryIds: ['tea'] },
+          ],
+          entries: [
+            {
+              cardId: 'cat',
+              answer: 'cat',
+              clue: 'ru: кот',
+              row: 0,
+              col: 0,
+              direction: 'across',
+            },
+            {
+              cardId: 'tea',
+              answer: 'tea',
+              clue: 'ru: чай',
+              row: 0,
+              col: 2,
+              direction: 'down',
+            },
+          ],
+        }}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    await user.type(screen.getByLabelText('Crossword cell 1 1'), 'c');
+    await user.type(screen.getByLabelText('Crossword cell 1 2'), 'a');
+    await user.type(screen.getByLabelText('Crossword cell 1 3'), 't');
+    await user.type(screen.getByLabelText('Crossword cell 2 3'), 'x');
+    await user.type(screen.getByLabelText('Crossword cell 3 3'), 'x');
+    await user.click(screen.getByRole('button', { name: 'Отправить кроссворд' }));
+
+    expect(screen.getByLabelText('Crossword cell 1 1')).toHaveStyle({
+      backgroundColor: 'rgb(235, 247, 225)',
+    });
+    expect(screen.getByLabelText('Crossword cell 1 3')).toHaveStyle({
+      backgroundColor: 'rgb(253, 235, 238)',
+    });
+    expect(screen.getByLabelText('Crossword cell 2 3')).toHaveStyle({
+      backgroundColor: 'rgb(253, 235, 238)',
+    });
+
+    await user.hover(screen.getByLabelText('Crossword cell 1 1'));
+
+    expect(await screen.findByText('10 последних ответов')).toBeInTheDocument();
+    expect(await screen.findByText('cat')).toBeInTheDocument();
+  });
+
   it('keeps advancing in the active direction after crossing another word', async () => {
     const user = userEvent.setup();
 

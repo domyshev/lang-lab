@@ -66,7 +66,7 @@ import { saveAttempt } from './store/attemptsSlice';
 import { acknowledgeGameHelp, markGameHelpCoachmarkShown } from './store/appSlice';
 import { applyImportResult } from './store/cardsSlice';
 import { recordAttemptStats } from './store/statsSlice';
-import { addCardToTheme, selectTheme } from './store/themesSlice';
+import { selectTheme } from './store/themesSlice';
 import { AppDispatch, RootState } from './store/store';
 
 type ExercisePreview =
@@ -135,9 +135,6 @@ export function App() {
   >(null);
   const [profileAssistantId, setProfileAssistantId] =
     useState<AssistantId | null>(null);
-  const [isThemeCardSelectionMode, setIsThemeCardSelectionMode] =
-    useState(false);
-  const [pendingThemeCardIds, setPendingThemeCardIds] = useState<string[]>([]);
 
   const cards = useSelector((state: RootState) => state.cards.cards);
   const themes = useSelector((state: RootState) => state.themes.themes);
@@ -340,22 +337,14 @@ export function App() {
         resultPromptHold?.exerciseType === 'missingLetters'
           ? resultPromptHold.prompt
           : undefined;
-      const lastAnsweredCardId =
-        answeredMissingLettersPromptKeys[
-          answeredMissingLettersPromptKeys.length - 1
-        ];
-      const blockedPromptKeys =
-        answeredMissingLettersPromptKeys.length >= missingLettersPrompts.length
-          ? [lastAnsweredCardId]
-          : answeredMissingLettersPromptKeys;
-
       return {
         type: 'missingLetters',
         prompt:
           heldResultPrompt ??
-          missingLettersPrompts.find(
-            (prompt) => !blockedPromptKeys.includes(prompt.practiceKey),
-          ) ?? missingLettersPrompts[0],
+          pickPracticePrompt(
+            missingLettersPrompts,
+            answeredMissingLettersPromptKeys,
+          ),
       };
     }
 
@@ -383,20 +372,11 @@ export function App() {
       resultPromptHold?.exerciseType === 'missingWord'
         ? resultPromptHold.prompt
         : undefined;
-    const lastAnsweredPromptKey =
-      answeredMissingWordPromptKeys[answeredMissingWordPromptKeys.length - 1];
-    const blockedPromptKeys =
-      answeredMissingWordPromptKeys.length >= missingWordPrompts.length
-        ? [lastAnsweredPromptKey]
-        : answeredMissingWordPromptKeys;
-
     return {
       type: 'missingWord',
       prompt:
         heldResultPrompt ??
-        missingWordPrompts.find(
-          (prompt) => !blockedPromptKeys.includes(prompt.practiceKey),
-        ),
+        pickPracticePrompt(missingWordPrompts, answeredMissingWordPromptKeys),
     };
   }, [
     answeredMissingLettersPromptKeys,
@@ -480,37 +460,6 @@ export function App() {
   function openAssistantProfile(assistantId: AssistantId) {
     setProfileAssistantId(assistantId);
     setActiveSection('assistant');
-  }
-
-  function togglePendingThemeCard(cardId: string) {
-    setPendingThemeCardIds((cardIds) =>
-      cardIds.includes(cardId)
-        ? cardIds.filter((item) => item !== cardId)
-        : [...cardIds, cardId],
-    );
-  }
-
-  function addPendingCardsToTheme(themeId: string, existingCardIds: string[]) {
-    const now = new Date().toISOString();
-    for (const cardId of pendingThemeCardIds) {
-      if (!existingCardIds.includes(cardId)) {
-        dispatch(addCardToTheme({ themeId, cardId, now }));
-      }
-    }
-    setPendingThemeCardIds([]);
-  }
-
-  function handleAddPendingCardsToSelectedTheme() {
-    if (!selectedTheme || selectedTheme.isAllWords) {
-      return;
-    }
-
-    addPendingCardsToTheme(selectedTheme.id, selectedTheme.cardIds);
-  }
-
-  function handleThemeCreated() {
-    setPendingThemeCardIds([]);
-    setIsThemeCardSelectionMode(true);
   }
 
   function savePromptAttempt(
@@ -601,7 +550,7 @@ export function App() {
       correctness,
       hintsUsed,
       cardIds: puzzle.entries.map((entry) => entry.cardId),
-      advance: true,
+      advance: false,
     });
   }
 
@@ -680,17 +629,8 @@ export function App() {
             alignItems: 'start',
           }}
         >
-          <ThemeListView
-            onStartCardSelection={() => setIsThemeCardSelectionMode(true)}
-            onThemeCreated={handleThemeCreated}
-          />
-          <ThemeDetailView
-            canSelectThemeCards={Boolean(selectedTheme && !selectedTheme.isAllWords)}
-            isCardSelectionMode={isThemeCardSelectionMode}
-            onAddSelectedCardsToTheme={handleAddPendingCardsToSelectedTheme}
-            onPendingThemeCardToggle={togglePendingThemeCard}
-            pendingThemeCardIds={pendingThemeCardIds}
-          />
+          <ThemeListView />
+          <ThemeDetailView />
         </Box>
       );
     }
@@ -783,7 +723,8 @@ export function App() {
             showExpectedAnswers={
               lastSavedAttempt.exerciseType !== 'missingLetters' &&
               lastSavedAttempt.exerciseType !== 'missingWord' &&
-              lastSavedAttempt.exerciseType !== 'multipleChoice'
+              lastSavedAttempt.exerciseType !== 'multipleChoice' &&
+              lastSavedAttempt.exerciseType !== 'crossword'
             }
             targetLanguage={targetLanguage}
           />
@@ -969,6 +910,11 @@ export function App() {
             setActiveSection('cards');
           }}
           puzzle={exercisePreview.puzzle}
+          recentResultsByCardId={getRecentResultsByCardId({
+            attempts,
+            cardIds: exercisePreview.puzzle.entries.map((entry) => entry.cardId),
+            targetLanguage,
+          })}
           themeName={selectedTheme.name}
           onSubmit={(answers) =>
             saveCrosswordAttempt(exercisePreview.puzzle, answers)
@@ -1035,6 +981,7 @@ export function App() {
               missingLettersPrompt.practiceKey,
             ]);
             setLastSavedAttemptId(null);
+            setGenerationSeed((seed) => seed + 1);
           }}
         />
       );
@@ -1068,6 +1015,7 @@ export function App() {
             missingWordPrompt.practiceKey,
           ]);
           setLastSavedAttemptId(null);
+          setGenerationSeed((seed) => seed + 1);
         }}
       />
     );
@@ -1277,6 +1225,10 @@ function AttemptSummary({
     0,
   );
   const isAttemptCorrect = Object.values(attempt.correctness).every(Boolean);
+  const attemptCorrectCount = Object.values(attempt.correctness).filter(Boolean)
+    .length;
+  const attemptTotalCount = Object.keys(attempt.correctness).length;
+  const attemptIncorrectCount = attemptTotalCount - attemptCorrectCount;
   const usesSplitStats =
     attempt.exerciseType === 'missingLetters' ||
     attempt.exerciseType === 'missingWord' ||
@@ -1336,7 +1288,17 @@ function AttemptSummary({
           flexWrap="wrap"
           useFlexGap
         >
-          {usesSplitStats ? (
+          {attempt.exerciseType === 'crossword' ? (
+            <StatsFormula
+              correct={attemptCorrectCount}
+              dataTestPrefix={`attempt_summary__crossword_formula__${attempt.id}`}
+              incorrect={attemptIncorrectCount}
+              interfaceLanguage={interfaceLanguage}
+              showLabel={false}
+              total={attemptTotalCount}
+              totalLabel={t(interfaceLanguage, 'totalAnsweredQuestions')}
+            />
+          ) : usesSplitStats ? (
             <SplitWordStatsChip
               correct={correctCount}
               dataTestPrefix={`attempt_summary__split_stats__${attempt.id}`}
@@ -1503,6 +1465,83 @@ function createId(prefix: string): string {
 
 function createPracticeKey(cardId: string, index: number): string {
   return `${cardId}__${index}`;
+}
+
+function pickPracticePrompt<T extends PracticePrompt<ExercisePrompt>>(
+  prompts: T[],
+  answeredPromptKeys: string[],
+): T | undefined {
+  const lastAnsweredPromptKey = answeredPromptKeys[answeredPromptKeys.length - 1];
+  const lastAnsweredPrompt = prompts.find(
+    (prompt) => prompt.practiceKey === lastAnsweredPromptKey,
+  );
+  const blockedPromptKeys =
+    answeredPromptKeys.length >= prompts.length
+      ? [lastAnsweredPromptKey]
+      : answeredPromptKeys;
+  const availablePrompts = prompts.filter(
+    (prompt) => !blockedPromptKeys.includes(prompt.practiceKey),
+  );
+  const promptsForDifferentCard = lastAnsweredPrompt
+    ? availablePrompts.filter(
+        (prompt) => prompt.cardId !== lastAnsweredPrompt.cardId,
+      )
+    : availablePrompts;
+
+  return (
+    promptsForDifferentCard[0] ??
+    availablePrompts[0] ??
+    (lastAnsweredPrompt
+      ? prompts.find((prompt) => prompt.cardId !== lastAnsweredPrompt.cardId)
+      : undefined) ??
+    prompts[0]
+  );
+}
+
+function getRecentResultsByCardId({
+  attempts,
+  cardIds,
+  targetLanguage,
+}: {
+  attempts: RootState['attempts']['attempts'];
+  cardIds: string[];
+  targetLanguage: RootState['app']['targetLanguage'];
+}): Record<string, Array<{ isCorrect: boolean; occurredAt: string }>> {
+  const cardIdSet = new Set(cardIds);
+  const resultsByCardId: Record<
+    string,
+    Array<{ isCorrect: boolean; occurredAt: string }>
+  > = {};
+
+  [...attempts]
+    .filter((attempt) => attempt.targetLanguage === targetLanguage)
+    .sort(
+      (left, right) =>
+        Date.parse(right.completedAt ?? right.createdAt) -
+        Date.parse(left.completedAt ?? left.createdAt),
+    )
+    .forEach((attempt) => {
+      Object.entries(attempt.correctness).forEach(([cardId, isCorrect]) => {
+        if (!cardIdSet.has(cardId)) {
+          return;
+        }
+
+        const results = resultsByCardId[cardId] ?? [];
+        if (results.length >= 10) {
+          return;
+        }
+
+        resultsByCardId[cardId] = [
+          ...results,
+          {
+            isCorrect: Boolean(isCorrect),
+            occurredAt: attempt.completedAt ?? attempt.createdAt,
+          },
+        ];
+      });
+    });
+
+  return resultsByCardId;
 }
 
 function getNextOccurrence(

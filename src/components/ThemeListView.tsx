@@ -19,10 +19,8 @@ import { addTheme, archiveTheme, selectTheme } from '../store/themesSlice';
 import { AppDispatch, RootState } from '../store/store';
 
 export function ThemeListView({
-  onStartCardSelection,
   onThemeCreated,
 }: {
-  onStartCardSelection?: () => void;
   onThemeCreated?: (themeId: string) => void;
 }) {
   const dispatch = useDispatch<AppDispatch>();
@@ -60,13 +58,6 @@ export function ThemeListView({
     setIsCreating(false);
   };
 
-  const handleAddClick = () => {
-    setIsCreating((value) => !value);
-    if (!isCreating) {
-      onStartCardSelection?.();
-    }
-  };
-
   return (
     <Paper data-test="theme_list__panel" sx={{ p: { xs: 2, md: 3 } }}>
       <Stack data-test="theme_list__content" spacing={2.5}>
@@ -98,7 +89,7 @@ export function ThemeListView({
             data-test="theme_list__add_button"
             startIcon={<AddIcon />}
             variant="contained"
-            onClick={handleAddClick}
+            onClick={() => setIsCreating((value) => !value)}
           >
             {t(interfaceLanguage, 'add')}
           </Button>

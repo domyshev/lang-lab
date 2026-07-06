@@ -70,6 +70,17 @@ describe('createCrossword', () => {
     expectParallelEntriesToHaveAir(result.entries);
   });
 
+  it('does not start an across and down word from the same cell', () => {
+    const result = createCrossword({
+      cards: [card('1', 'cat'), card('2', 'car'), card('3', 'art')],
+      targetLanguage: 'en',
+    });
+
+    const startKeys = result.entries.map((entry) => `${entry.row}:${entry.col}`);
+
+    expect(new Set(startKeys).size).toBe(startKeys.length);
+  });
+
   it('uses only one phrase card for phrase mode', () => {
     const result = createCrossword({
       cards: [card('1', 'I would like a ticket'), card('2', 'airport')],

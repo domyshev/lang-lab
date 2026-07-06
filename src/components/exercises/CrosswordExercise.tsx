@@ -7,7 +7,14 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { ChangeEvent, useMemo, useRef, useState } from 'react';
+import {
+  ChangeEvent,
+  type ReactElement,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   CrosswordCell,
   CrosswordEntry,
@@ -24,18 +31,35 @@ export function CrosswordExercise({
   interfaceLanguage = 'en',
   onThemeOpen,
   puzzle,
+  recentResultsByCardId = {},
   themeName,
   onSubmit,
 }: {
   interfaceLanguage?: SupportedLanguage;
   onThemeOpen?: () => void;
   puzzle: CrosswordPuzzle;
+  recentResultsByCardId?: Record<
+    string,
+    Array<{ isCorrect: boolean; occurredAt: string }>
+  >;
   themeName?: string;
   onSubmit: (answers: Record<string, string>) => void;
 }) {
   const [cellValues, setCellValues] = useState<Record<string, string>>({});
+  const [submittedAnswers, setSubmittedAnswers] =
+    useState<Record<string, string> | null>(null);
   const activeEntryIdRef = useRef<string | null>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const puzzleKey = useMemo(
+    () =>
+      puzzle.entries
+        .map(
+          (entry) =>
+            `${entry.cardId}:${entry.row}:${entry.col}:${entry.direction}:${entry.answer}`,
+        )
+        .join('|'),
+    [puzzle.entries],
+  );
   const cellMap = new Map(
     puzzle.cells.map((cell) => [toCellKey(cell.row, cell.col), cell]),
   );
@@ -53,28 +77,34 @@ export function CrosswordExercise({
   const rows = range(puzzle.bounds.minRow, puzzle.bounds.maxRow);
   const cols = range(puzzle.bounds.minCol, puzzle.bounds.maxCol);
 
-  const handleSubmit = () => {
-    onSubmit(
-      Object.fromEntries(
-        puzzle.entries.map((entry) => [
-          entry.cardId,
-          entry.answer
-            .split('')
-            .map((character, index) => {
-              if (/\s/.test(character)) {
-                return character;
-              }
+  useEffect(() => {
+    setCellValues({});
+    setSubmittedAnswers(null);
+    activeEntryIdRef.current = null;
+  }, [puzzleKey]);
 
-              const row =
-                entry.direction === 'down' ? entry.row + index : entry.row;
-              const col =
-                entry.direction === 'across' ? entry.col + index : entry.col;
-              return cellValues[toCellKey(row, col)] ?? '';
-            })
-            .join(''),
-        ]),
-      ),
+  const handleSubmit = () => {
+    const answers = Object.fromEntries(
+      puzzle.entries.map((entry) => [
+        entry.cardId,
+        entry.answer
+          .split('')
+          .map((character, index) => {
+            if (/\s/.test(character)) {
+              return character;
+            }
+
+            const row =
+              entry.direction === 'down' ? entry.row + index : entry.row;
+            const col =
+              entry.direction === 'across' ? entry.col + index : entry.col;
+            return cellValues[toCellKey(row, col)] ?? '';
+          })
+          .join(''),
+      ]),
     );
+    setSubmittedAnswers(answers);
+    onSubmit(answers);
   };
 
   const handleCellChange = (
@@ -190,6 +220,17 @@ export function CrosswordExercise({
               }
 
               const startEntryNumber = startEntryNumbers.get(key);
+              const cellTone = getSubmittedCellTone({
+                cell,
+                entryMap,
+                submittedAnswers,
+              });
+              const tooltipEntry = getActiveEntryForCell(
+                cell,
+                puzzle.entries,
+                entryMap,
+                activeEntryIdRef.current,
+              );
 
               const cellInput = (
                 <Box
@@ -288,14 +329,33 @@ export function CrosswordExercise({
                     value={cellValues[key] ?? ''}
                     onChange={(event) => handleCellChange(event, cell)}
                     onFocus={() => handleCellFocus(cell)}
+                    disabled={Boolean(submittedAnswers)}
                     maxLength={1}
                     ref={(element: HTMLInputElement | null) => {
                       inputRefs.current[key] = element;
                     }}
                     sx={letterCellStyles}
+                    style={getSubmittedCellStyle(cellTone)}
                   />
                 </Box>
               );
+
+              if (submittedAnswers && tooltipEntry) {
+                return (
+                  <RecentAnswersTooltip
+                    dataTestPrefix={`crossword_exercise__cell_recent__${displayRow}_${displayCol}`}
+                    interfaceLanguage={interfaceLanguage}
+                    key={key}
+                    recentResults={
+                      recentResultsByCardId[tooltipEntry.cardId]?.slice(0, 10) ??
+                      []
+                    }
+                    subject={tooltipEntry.answer}
+                  >
+                    {cellInput}
+                  </RecentAnswersTooltip>
+                );
+              }
 
               return cellInput;
             }),
@@ -319,8 +379,159 @@ function range(from: number, to: number): number[] {
   return Array.from({ length: to - from + 1 }, (_, index) => from + index);
 }
 
+function RecentAnswersTooltip({
+  children,
+  dataTestPrefix,
+  interfaceLanguage,
+  recentResults,
+  subject,
+}: {
+  children: ReactElement;
+  dataTestPrefix: string;
+  interfaceLanguage: SupportedLanguage;
+  recentResults: Array<{ isCorrect: boolean; occurredAt: string }>;
+  subject: string;
+}) {
+  return (
+    <CursorAnchoredTooltip
+      arrowDataTest={`${dataTestPrefix}__tooltip_arrow`}
+      closeOnOtherOpen
+      leaveDelay={0}
+      transitionTimeout={0}
+      tooltipSx={recentAnswersTooltipStyles}
+      title={
+        <Stack data-test={`${dataTestPrefix}__recent_tooltip`} spacing={0.75}>
+          <Typography
+            data-test={`${dataTestPrefix}__recent_tooltip_title`}
+            sx={{ color: '#203015', fontSize: 14, fontWeight: 850 }}
+          >
+            {t(interfaceLanguage, 'recentAnswersTitle')}
+          </Typography>
+          <Typography
+            data-test={`${dataTestPrefix}__recent_tooltip_subject`}
+            sx={{
+              color: 'rgba(32, 48, 21, 0.68)',
+              fontSize: 11,
+              fontWeight: 750,
+              lineHeight: 1.25,
+            }}
+          >
+            {subject}
+          </Typography>
+          <Stack data-test={`${dataTestPrefix}__recent_results`} spacing={0.5}>
+            {recentResults.map((result, index) => (
+              <Stack
+                data-test={`${dataTestPrefix}__recent_result__${index}`}
+                direction="row"
+                key={`${result.occurredAt}-${index}`}
+                spacing={0.75}
+                sx={{ alignItems: 'center' }}
+              >
+                <Chip
+                  data-test={`${dataTestPrefix}__recent_result_chip__${index}`}
+                  label={t(
+                    interfaceLanguage,
+                    result.isCorrect
+                      ? 'metricCorrectSuffix'
+                      : 'metricIncorrectSuffix',
+                  )}
+                  size="small"
+                  sx={{
+                    bgcolor: result.isCorrect
+                      ? 'rgb(235, 247, 225)'
+                      : 'rgb(253, 235, 238)',
+                    border: '1px solid',
+                    borderColor: result.isCorrect ? '#8fc773' : '#f2a7b4',
+                    color: '#111111',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    height: 24,
+                  }}
+                />
+                <Typography
+                  data-test={`${dataTestPrefix}__recent_result_date__${index}`}
+                  sx={{ color: 'rgba(32, 48, 21, 0.72)', fontSize: 11 }}
+                >
+                  {formatAttemptDate(result.occurredAt)}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
+        </Stack>
+      }
+    >
+      {children}
+    </CursorAnchoredTooltip>
+  );
+}
+
 function toCellKey(row: number, col: number): string {
   return `${row}:${col}`;
+}
+
+function normalizeAnswer(value: string): string {
+  return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+}
+
+function getSubmittedCellTone({
+  cell,
+  entryMap,
+  submittedAnswers,
+}: {
+  cell: CrosswordCell;
+  entryMap: Map<string, CrosswordEntry>;
+  submittedAnswers: Record<string, string> | null;
+}): 'correct' | 'incorrect' | undefined {
+  if (!submittedAnswers) {
+    return undefined;
+  }
+
+  const entryResults = cell.entryIds.map((entryId) => {
+    const entry = entryMap.get(entryId);
+    return entry
+      ? normalizeAnswer(submittedAnswers[entry.cardId] ?? '') ===
+          normalizeAnswer(entry.answer)
+      : false;
+  });
+
+  if (entryResults.some((isCorrect) => !isCorrect)) {
+    return 'incorrect';
+  }
+
+  return entryResults.length > 0 ? 'correct' : undefined;
+}
+
+function getSubmittedCellStyle(
+  tone: 'correct' | 'incorrect' | undefined,
+): { backgroundColor?: string; borderColor?: string } {
+  if (tone === 'correct') {
+    return { backgroundColor: 'rgb(235, 247, 225)', borderColor: '#8fc773' };
+  }
+
+  if (tone === 'incorrect') {
+    return { backgroundColor: 'rgb(253, 235, 238)', borderColor: '#f2a7b4' };
+  }
+
+  return {};
+}
+
+function formatAttemptDate(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return [
+    `${padDatePart(date.getMonth() + 1)}/${padDatePart(
+      date.getDate(),
+    )}/${date.getFullYear()}`,
+    `${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`,
+  ].join(' ');
+}
+
+function padDatePart(value: number): string {
+  return String(value).padStart(2, '0');
 }
 
 function getActiveEntryForCell(
@@ -442,4 +653,13 @@ const crosswordThemeTooltipContentStyles = {
   display: 'inline-block',
   fontSize: 14,
   lineHeight: 1.35,
+};
+
+const recentAnswersTooltipStyles = {
+  bgcolor: '#ffffff',
+  border: '1px solid rgba(32, 48, 21, 0.14)',
+  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
+  color: '#203015',
+  maxWidth: 280,
+  p: 1.25,
 };

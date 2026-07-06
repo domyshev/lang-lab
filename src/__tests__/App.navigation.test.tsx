@@ -404,6 +404,23 @@ describe('App navigation', () => {
     expect(getVisibleMissingLettersPrompt().answer).toBe(prompt.answer);
   });
 
+  it('advances missing letters after a memorize result without saving an answer', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await startExercise(user, 'Пропущенные буквы');
+
+    const firstPrompt = getVisibleMissingLettersPrompt();
+    await user.click(screen.getByRole('button', { name: 'Отправить' }));
+
+    expect(screen.getByRole('button', { name: 'Запомнить!' })).toBeInTheDocument();
+    expect(getVisibleMissingLettersPrompt().answer).toBe(firstPrompt.answer);
+
+    await user.click(screen.getByRole('button', { name: 'Запомнить!' }));
+
+    expect(getVisibleMissingLettersPrompt().answer).not.toBe(firstPrompt.answer);
+  });
+
   it('keeps a correct missing letters result visible when submitted with Enter from the last cell', async () => {
     const user = userEvent.setup();
     renderApp();
@@ -540,7 +557,7 @@ describe('App navigation', () => {
     expect(screen.getByTestId('assistant_profile__sticker__studyTroll')).toBeInTheDocument();
   });
 
-  it('asks for a theme before selecting cards and then adds selected cards to the created theme', async () => {
+  it('creates a theme and edits its card list from the theme detail view', async () => {
     const user = userEvent.setup();
     const store = renderApp();
 
@@ -549,25 +566,16 @@ describe('App navigation', () => {
 
     expect(screen.getByTestId('theme_list__create_form')).toBeInTheDocument();
     expect(
-      screen.getByTestId('theme_detail__selection_mode_banner'),
-    ).toBeInTheDocument();
-
-    await user.click(
-      screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
-    );
-
-    expect(
-      screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
-    ).not.toBeChecked();
-    expect(
-      screen.getByTestId('theme_detail__card_selection_warning__card-airport'),
-    ).toHaveTextContent(
-      'нужно сначала придумать название для темы и нажать "Создать" а потом продолжить выбор слов',
-    );
-    expect(screen.getByRole('button', { name: 'Добавить в тему' })).toBeDisabled();
+      screen.queryByTestId('theme_detail__selection_mode_banner'),
+    ).not.toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Новая тема'), 'Дорога');
     await user.click(screen.getByRole('button', { name: 'Создать' }));
+
+    expect(screen.getByRole('button', { name: 'Добавить слова' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Добавить в тему' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Добавить слова' }));
 
     await user.click(
       screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
@@ -576,12 +584,12 @@ describe('App navigation', () => {
       screen.getByTestId('theme_detail__card_select_checkbox__card-impede'),
     );
 
-    const addToThemeButton = screen.getByRole('button', {
-      name: 'Добавить в тему',
+    const saveWordsButton = screen.getByRole('button', {
+      name: 'Сохранить слова',
     });
-    expect(addToThemeButton).toBeEnabled();
-    expect(addToThemeButton).toHaveClass('MuiButton-outlined');
-    await user.click(addToThemeButton);
+    expect(saveWordsButton).toBeEnabled();
+    expect(saveWordsButton).toHaveClass('MuiButton-outlined');
+    await user.click(saveWordsButton);
 
     const createdTheme = store
       .getState()
@@ -589,21 +597,18 @@ describe('App navigation', () => {
     expect(createdTheme?.cardIds).toEqual(
       expect.arrayContaining(['card-airport', 'card-impede']),
     );
-    expect(
-      screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
-    ).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Добавить в тему' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Добавить слова' })).toBeEnabled();
 
-    await user.click(
-      screen.getByTestId('theme_detail__card_select_checkbox__card-vehicle'),
-    );
-    await user.click(screen.getByRole('button', { name: 'Добавить в тему' }));
+    await user.click(screen.getByRole('button', { name: 'Добавить слова' }));
+    await user.click(screen.getByTestId('theme_detail__card_select_checkbox__card-airport'));
+    await user.click(screen.getByTestId('theme_detail__card_select_checkbox__card-vehicle'));
+    await user.click(screen.getByRole('button', { name: 'Сохранить слова' }));
 
     expect(
       store
         .getState()
         .themes.themes.find((theme) => theme.name === 'Дорога')?.cardIds,
-    ).toEqual(expect.arrayContaining(['card-airport', 'card-impede', 'card-vehicle']));
+    ).toEqual(['card-vehicle', 'card-impede']);
   });
 
   it('closes an unanswered exercise without a finish confirmation dialog', async () => {
@@ -767,6 +772,27 @@ describe('App navigation', () => {
     expect(screen.queryByText('Ваш ответ:')).not.toBeInTheDocument();
   });
 
+  it('shows crossword word-level result formula without the correct answers block', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await startExercise(user, 'Кроссворд');
+    await user.click(screen.getByRole('button', { name: 'Отправить кроссворд' }));
+
+    expect(
+      getByDataTestPrefix('attempt_summary__expected_answers_label__'),
+    ).toHaveLength(0);
+    expect(
+      getByDataTestPrefix('attempt_summary__crossword_formula__')[0],
+    ).toBeInTheDocument();
+    expect(
+      getByDataTestPrefix('attempt_summary__crossword_formula__')[0],
+    ).toHaveTextContent(/отвечено/);
+    expect(
+      getByDataTestPrefix('attempt_summary__crossword_formula__')[0],
+    ).toHaveTextContent(/неверно/);
+  });
+
   it('uses phrases for missing word practice', async () => {
     const user = userEvent.setup();
     renderApp();
@@ -803,6 +829,27 @@ describe('App navigation', () => {
     expect(
       screen.getByLabelText('Статистика по фразе: Верно 0, Неверно 0'),
     ).toBeInTheDocument();
+  });
+
+  it('advances missing word after memorize and correct results', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await startExercise(user, 'Пропущенное слово');
+
+    const firstPromptText = getVisibleMissingWordSentence();
+    await user.click(screen.getByRole('button', { name: 'Отправить' }));
+    expect(screen.getByRole('button', { name: 'Запомнить!' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Запомнить!' }));
+    expect(getVisibleMissingWordSentence()).not.toBe(firstPromptText);
+
+    const secondPromptText = getVisibleMissingWordSentence();
+    await answerMissingWordCorrect(user, secondPromptText);
+    expect(
+      screen.queryByRole('button', { name: 'Отправить' }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Правильно!' }));
+    expect(getVisibleMissingWordSentence()).not.toBe(secondPromptText);
   });
 
   it('shows word statistics after a multiple choice answer', async () => {
@@ -922,6 +969,39 @@ async function answerMissingWordWrong(user: ReturnType<typeof userEvent.setup>) 
     await user.type(input, 'x');
   }
   await user.click(screen.getByRole('button', { name: 'Отправить' }));
+}
+
+async function answerMissingWordCorrect(
+  user: ReturnType<typeof userEvent.setup>,
+  sentence: string,
+) {
+  const answer = sentence === 'It is worth it today.' ? 'worth it' : 'look forward';
+  const editableIndexes = getMissingWordEditableIndexes(answer);
+  const inputs = screen.getAllByLabelText(/Missing word letter/);
+  for (const [index, input] of inputs.entries()) {
+    await user.type(input, answer[editableIndexes[index]]);
+  }
+  await user.click(screen.getByRole('button', { name: 'Отправить' }));
+}
+
+function getMissingWordEditableIndexes(answer: string): number[] {
+  const editableIndexes: number[] = [];
+  let indexInWord = 0;
+
+  answer.split('').forEach((character, index) => {
+    if (character.trim() === '') {
+      indexInWord = 0;
+      return;
+    }
+
+    if (indexInWord % 2 === 1) {
+      editableIndexes.push(index);
+    }
+
+    indexInWord += 1;
+  });
+
+  return editableIndexes;
 }
 
 function getMultipleChoiceOptionText(): string[] {

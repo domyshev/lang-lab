@@ -156,7 +156,17 @@ function placeEntry(input: {
           col,
         });
 
-        return placement ? [{ row, col, direction, ...placement }] : [];
+        if (
+          !placement ||
+          input.existingEntries.some(
+            (existingEntry) =>
+              existingEntry.row === row && existingEntry.col === col,
+          )
+        ) {
+          return [];
+        }
+
+        return [{ row, col, direction, ...placement }];
       }),
     ),
   );

@@ -37,6 +37,9 @@ type I18nKey =
   | 'allWords'
   | 'add'
   | 'addToTheme'
+  | 'addWords'
+  | 'saveWords'
+  | 'searchCards'
   | 'archive'
   | 'newTheme'
   | 'create'
@@ -178,6 +181,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     allWords: 'All words',
     add: 'Add',
     addToTheme: 'Add to theme',
+    addWords: 'Add words',
+    saveWords: 'Save words',
+    searchCards: 'Search cards',
     archive: 'Archive',
     newTheme: 'New theme',
     create: 'Create',
@@ -325,6 +331,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     allWords: 'Все слова',
     add: 'Добавить',
     addToTheme: 'Добавить в тему',
+    addWords: 'Добавить слова',
+    saveWords: 'Сохранить слова',
+    searchCards: 'Поиск карточек',
     archive: 'В архив',
     newTheme: 'Новая тема',
     create: 'Создать',
@@ -473,6 +482,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     allWords: 'Todas las palabras',
     add: 'Anadir',
     addToTheme: 'Anadir al tema',
+    addWords: 'Anadir palabras',
+    saveWords: 'Guardar palabras',
+    searchCards: 'Buscar tarjetas',
     archive: 'Archivar',
     newTheme: 'Nuevo tema',
     create: 'Crear',
