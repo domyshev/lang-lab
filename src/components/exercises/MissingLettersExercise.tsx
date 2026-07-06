@@ -1,6 +1,6 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
-import { Box, Button, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import type {
   CSSProperties,
   KeyboardEvent,
@@ -11,20 +11,31 @@ import { useEffect, useRef, useState } from 'react';
 import { MissingLettersPrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
+import {
+  ExerciseProgressChip,
+  ExerciseRepeatChip,
+  ExerciseThemeChip,
+} from './ExerciseThemeChip';
 
 type SubmissionOutcome = 'correct' | 'incorrect' | 'memorize';
 
 export function MissingLettersExercise({
   interfaceLanguage,
+  isRepeatedPrompt = false,
   onNext,
+  progressCompletedCount,
+  progressTotalCount,
   prompt,
   onAnswer,
   themeName,
 }: {
   interfaceLanguage: SupportedLanguage;
+  isRepeatedPrompt?: boolean;
   prompt: MissingLettersPrompt;
   onAnswer: (answer: string) => void;
   onNext: () => void;
+  progressCompletedCount?: number;
+  progressTotalCount?: number;
   themeName?: string;
 }) {
   const [letters, setLetters] = useState<Record<number, string>>({});
@@ -143,16 +154,39 @@ export function MissingLettersExercise({
             {t(interfaceLanguage, 'missingLetters')}
           </Typography>
           {themeName && (
-            <Chip
-              data-test={`missing_letters_exercise__theme_chip__${prompt.cardId}`}
-              label={themeName}
+            <ExerciseThemeChip
+              dataTest={`missing_letters_exercise__theme_chip__${prompt.cardId}`}
+              interfaceLanguage={interfaceLanguage}
               sx={exerciseThemeChipStyles}
+              themeName={themeName}
+            />
+          )}
+          {progressCompletedCount !== undefined &&
+            progressTotalCount !== undefined && (
+              <ExerciseProgressChip
+                completed={progressCompletedCount}
+                dataTest={`missing_letters_exercise__progress_chip__${prompt.cardId}`}
+                interfaceLanguage={interfaceLanguage}
+                total={progressTotalCount}
+              />
+            )}
+        </Stack>
+        <Stack
+          data-test={`missing_letters_exercise__prompt_row__${prompt.cardId}`}
+          direction="row"
+          spacing={1}
+          sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+        >
+          <Typography data-test={`missing_letters_exercise__prompt__${prompt.cardId}`}>
+            {prompt.prompt}
+          </Typography>
+          {isRepeatedPrompt && (
+            <ExerciseRepeatChip
+              dataTest={`missing_letters_exercise__repeat_chip__${prompt.cardId}`}
+              interfaceLanguage={interfaceLanguage}
             />
           )}
         </Stack>
-        <Typography data-test={`missing_letters_exercise__prompt__${prompt.cardId}`}>
-          {prompt.prompt}
-        </Typography>
         {prompt.definitionHint && (
           <Typography data-test={`missing_letters_exercise__definition_hint__${prompt.cardId}`}>
             {prompt.definitionHint}

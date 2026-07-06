@@ -217,8 +217,17 @@ export function ThemeDetailView() {
             <Chip
               data-test={`theme_detail__card_count_chip__${selectedTheme.id}`}
               label={formatCardCount(interfaceLanguage, themeCards.length)}
-              color="primary"
+              color={isAllWordsSelected ? 'primary' : 'default'}
               variant="outlined"
+              sx={
+                isAllWordsSelected
+                  ? undefined
+                  : {
+                      borderColor: '#6f4bd8',
+                      color: '#5e3fc0',
+                      fontWeight: 750,
+                    }
+              }
             />
           </Stack>
         </Stack>

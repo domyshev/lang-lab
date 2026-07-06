@@ -49,6 +49,7 @@ export function StatsFormula({
   inline = false,
   interfaceLanguage,
   labelDisplay,
+  valueGroupJustify = 'flex-start',
   showLabel = true,
   total,
   totalLabel,
@@ -59,6 +60,7 @@ export function StatsFormula({
   inline?: boolean;
   interfaceLanguage: SupportedLanguage;
   labelDisplay?: ReactNode;
+  valueGroupJustify?: 'center' | 'flex-start';
   showLabel?: boolean;
   total: number;
   totalLabel: string;
@@ -100,7 +102,7 @@ export function StatsFormula({
         alignItems="center"
         flexWrap="wrap"
         useFlexGap
-        sx={{ justifyContent: 'flex-start' }}
+        sx={{ justifyContent: valueGroupJustify }}
       >
         <MetricChip
           ariaLabel={`${totalLabel}: ${total}`}
@@ -168,7 +170,7 @@ function MetricLabel({
   );
 }
 
-function MetricChip({
+export function MetricChip({
   ariaLabel,
   dataTest,
   label,

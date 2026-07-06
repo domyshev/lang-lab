@@ -36,6 +36,7 @@ export interface ExerciseAttempt {
   answers: Record<string, string>;
   correctness: Record<string, boolean>;
   hintsUsed: Record<string, number>;
+  isExerciseCompleted?: boolean;
   weightedScore?: number;
   coachComment?: string;
 }

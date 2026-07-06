@@ -8,6 +8,8 @@ export interface ExerciseHistorySummary {
   targetLanguage: SupportedLanguage;
   createdAt: string;
   completedAt?: string;
+  exerciseCompletedAt?: string;
+  isExerciseCompleted: boolean;
   attempts: ExerciseAttempt[];
   total: number;
   correct: number;
@@ -44,6 +46,10 @@ export function summarizeExerciseHistory(
           targetLanguage: attempt.targetLanguage,
           createdAt: attempt.createdAt,
           completedAt: attempt.completedAt,
+          exerciseCompletedAt: attempt.isExerciseCompleted
+            ? attempt.completedAt ?? attempt.createdAt
+            : undefined,
+          isExerciseCompleted: Boolean(attempt.isExerciseCompleted),
           attempts: [attempt],
           total: totals.total,
           correct: totals.correct,
@@ -56,6 +62,10 @@ export function summarizeExerciseHistory(
       existing.total += totals.total;
       existing.correct += totals.correct;
       existing.incorrect += totals.incorrect;
+      if (attempt.isExerciseCompleted) {
+        existing.isExerciseCompleted = true;
+        existing.exerciseCompletedAt = attempt.completedAt ?? attempt.createdAt;
+      }
       if (Date.parse(attempt.createdAt) < Date.parse(existing.createdAt)) {
         existing.createdAt = attempt.createdAt;
       }

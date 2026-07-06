@@ -7,11 +7,12 @@ describe('CrosswordExercise', () => {
   it('renders a cell grid and submits answers assembled from cells', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
+    const onFinish = vi.fn();
 
     render(
       <CrosswordExercise
         interfaceLanguage="ru"
-        themeName="Все слова"
+        themeName="Все карточки"
         onThemeOpen={vi.fn()}
         puzzle={{
           mode: 'words',
@@ -42,13 +43,25 @@ describe('CrosswordExercise', () => {
             },
           ],
         }}
+        onFinish={onFinish}
         onSubmit={onSubmit}
       />,
     );
 
     expect(screen.getByRole('heading', { name: 'Кроссворд' })).toBeInTheDocument();
     expect(screen.getByTestId('crossword_exercise__theme_chip')).toHaveTextContent(
-      'Все слова',
+      'Тема: Все карточки',
+    );
+    expect(
+      screen.getByTestId('crossword_exercise__theme_chip__prefix'),
+    ).toHaveStyle({
+      fontSize: '11px',
+    });
+    expect(
+      screen.getByTestId('crossword_exercise__theme_chip__prefix').textContent,
+    ).toBe('Тема: ');
+    expect(screen.getByTestId('crossword_exercise__progress_chip')).toHaveTextContent(
+      '0 пройдено / 2 всего',
     );
     expect(screen.queryByText('До 6 слов из выбранной темы')).not.toBeInTheDocument();
     expect(screen.queryByTestId('crossword_exercise__clues')).not.toBeInTheDocument();
@@ -74,11 +87,22 @@ describe('CrosswordExercise', () => {
     expect(screen.getByLabelText('Crossword cell 1 2')).toHaveFocus();
     await user.type(screen.getByLabelText('Crossword cell 1 2'), 'a');
     await user.type(screen.getByLabelText('Crossword cell 1 3'), 't');
+    expect(screen.getByTestId('crossword_exercise__progress_chip')).toHaveTextContent(
+      '1 пройдено / 2 всего',
+    );
     await user.type(screen.getByLabelText('Crossword cell 2 3'), 'e');
     await user.type(screen.getByLabelText('Crossword cell 3 3'), 'a');
+    expect(screen.getByTestId('crossword_exercise__progress_chip')).toHaveTextContent(
+      '2 пройдено / 2 всего',
+    );
     await user.click(screen.getByRole('button', { name: 'Отправить кроссворд' }));
 
     expect(onSubmit).toHaveBeenCalledWith({ cat: 'cat', tea: 'tea' });
+    expect(screen.getByRole('button', { name: 'Пройдено!' })).toBeInTheDocument();
+    expect(screen.getByTestId('crossword_exercise__completed_button_icon')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Пройдено!' }));
+    expect(onFinish).toHaveBeenCalledOnce();
   });
 
   it('colors submitted words and shows recent answer history from submitted cells', async () => {
@@ -87,7 +111,7 @@ describe('CrosswordExercise', () => {
     render(
       <CrosswordExercise
         interfaceLanguage="ru"
-        themeName="Все слова"
+        themeName="Все карточки"
         recentResultsByCardId={{
           cat: [
             {
@@ -164,7 +188,7 @@ describe('CrosswordExercise', () => {
     render(
       <CrosswordExercise
         interfaceLanguage="ru"
-        themeName="Все слова"
+        themeName="Все карточки"
         puzzle={{
           mode: 'words',
           bounds: { minRow: 0, maxRow: 2, minCol: 0, maxCol: 3 },
@@ -214,7 +238,7 @@ describe('CrosswordExercise', () => {
     render(
       <CrosswordExercise
         interfaceLanguage="ru"
-        themeName="Все слова"
+        themeName="Все карточки"
         onThemeOpen={onThemeOpen}
         puzzle={{
           mode: 'words',

@@ -1269,5 +1269,32 @@
     },
     "tags": ["daily-life", "phrases"],
     "difficulty": "easy"
+  },
+  {
+    "translations": {
+      "en": "I seem to be infatuated by you",
+      "ru": "кажется, я увлечен тобой",
+      "es": "parece que estoy encaprichado de ti"
+    },
+    "tags": ["phrases", "romance"],
+    "difficulty": "medium"
+  },
+  {
+    "translations": {
+      "en": "I seem to be smitten by you",
+      "ru": "кажется, я очарован тобой",
+      "es": "parece que estoy prendado de ti"
+    },
+    "tags": ["phrases", "romance"],
+    "difficulty": "medium"
+  },
+  {
+    "translations": {
+      "en": "I seem to not get you out of my head",
+      "ru": "кажется, я не могу выбросить тебя из головы",
+      "es": "parece que no puedo sacarte de mi cabeza"
+    },
+    "tags": ["phrases", "romance"],
+    "difficulty": "medium"
   }
 ]

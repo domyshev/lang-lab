@@ -175,6 +175,10 @@ describe('ThemeDetailView', () => {
     );
 
     expect(screen.queryByTestId('theme_detail__add_card_form__theme-road')).not.toBeInTheDocument();
+    expect(screen.getByTestId('theme_detail__card_count_chip__theme-road')).toHaveStyle({
+      borderColor: '#6f4bd8',
+      color: '#5e3fc0',
+    });
     expect(screen.getByTestId('theme_detail__card_language_note__card-airport')).toHaveTextContent(
       'ru: аэропорт / es: aeropuerto',
     );
@@ -185,7 +189,7 @@ describe('ThemeDetailView', () => {
     expect(screen.getByText('worth it')).toBeInTheDocument();
 
     await user.clear(screen.getByRole('textbox', { name: 'Поиск карточек' }));
-    await user.click(screen.getByRole('button', { name: 'Добавить слова' }));
+    await user.click(screen.getByRole('button', { name: 'Редактировать слова' }));
 
     expect(screen.getByText('impede')).toBeInTheDocument();
     expect(

@@ -1,13 +1,16 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
-import { Button, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Button, Paper, Stack, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { MultipleChoicePrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
+import { ExerciseProgressChip, ExerciseThemeChip } from './ExerciseThemeChip';
 
 export function MultipleChoiceExercise({
   interfaceLanguage,
+  progressCompletedCount,
+  progressTotalCount,
   prompt,
   onAnswer,
   onNext,
@@ -17,6 +20,8 @@ export function MultipleChoiceExercise({
   prompt: MultipleChoicePrompt;
   onAnswer: (answer: string) => void;
   onNext: () => void;
+  progressCompletedCount?: number;
+  progressTotalCount?: number;
   themeName?: string;
 }) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -50,12 +55,22 @@ export function MultipleChoiceExercise({
             {t(interfaceLanguage, 'multipleChoice')}
           </Typography>
           {themeName && (
-            <Chip
-              data-test={`multiple_choice_exercise__theme_chip__${prompt.cardId}`}
-              label={themeName}
+            <ExerciseThemeChip
+              dataTest={`multiple_choice_exercise__theme_chip__${prompt.cardId}`}
+              interfaceLanguage={interfaceLanguage}
               sx={exerciseThemeChipStyles}
+              themeName={themeName}
             />
           )}
+          {progressCompletedCount !== undefined &&
+            progressTotalCount !== undefined && (
+              <ExerciseProgressChip
+                completed={progressCompletedCount}
+                dataTest={`multiple_choice_exercise__progress_chip__${prompt.cardId}`}
+                interfaceLanguage={interfaceLanguage}
+                total={progressTotalCount}
+              />
+            )}
         </Stack>
         <Typography data-test={`multiple_choice_exercise__prompt__${prompt.cardId}`}>
           {prompt.prompt}

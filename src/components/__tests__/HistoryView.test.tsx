@@ -173,6 +173,36 @@ describe('HistoryView', () => {
     });
   });
 
+  it('marks completed games with a trophy tooltip', async () => {
+    const user = userEvent.setup();
+    const { container } = renderHistoryView();
+
+    const attemptCards = getByDataTestPrefix(
+      container,
+      'history_view__attempt_card__',
+    );
+    const completedCard = attemptCards.find((card) =>
+      card.textContent?.includes('Пропущенные буквы'),
+    );
+
+    expect(completedCard).toBeDefined();
+    const trophy = within(completedCard!).getByTestId(
+      'history_view__completed_trophy__session-missing',
+    );
+    expect(trophy).toBeInTheDocument();
+
+    await user.hover(trophy);
+
+    expect(
+      await screen.findByText(/Игра пройдена 07\/05\/2026 \d{2}:00/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(
+        'history_view__completed_trophy__session-missing__tooltip_arrow',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('keeps the recent answers tooltip fixed and interactive after opening at the cursor', async () => {
     renderHistoryView();
 
@@ -271,6 +301,21 @@ function renderHistoryView() {
       },
       hintsUsed: { 'card-airport': 0, 'card-vehicle': 0 },
     },
+    {
+      id: 'attempt-missing-completed',
+      exerciseSessionId: 'session-missing',
+      exerciseType: 'missingLetters',
+      themeId: 'all-words',
+      targetLanguage: 'en',
+      createdAt: now,
+      completedAt: now,
+      cardSnapshots: [],
+      prompts: [],
+      answers: {},
+      correctness: {},
+      hintsUsed: {},
+      isExerciseCompleted: true,
+    } as ExerciseAttempt & { isExerciseCompleted: true },
     {
       id: 'attempt-choice-1',
       exerciseSessionId: 'session-choice',

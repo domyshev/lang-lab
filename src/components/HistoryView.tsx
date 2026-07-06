@@ -1,4 +1,5 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import {
   Accordion,
   AccordionDetails,
@@ -7,7 +8,6 @@ import {
   Chip,
   Paper,
   Stack,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import { type ReactElement, useMemo } from 'react';
@@ -19,7 +19,7 @@ import {
 } from '../domain/exerciseHistory';
 import { t } from '../domain/i18n';
 import { RootState } from '../store/store';
-import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
+import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
 import { StatsFormula } from './StatsFormula';
 
 export function HistoryView() {
@@ -113,12 +113,26 @@ function AttemptHistoryCard({
           spacing={1.25}
           sx={{ width: '100%', pr: 1 }}
         >
-          <Typography
-            data-test={`history_view__attempt_type__${attemptDomKey}`}
-            variant="h6"
+          <Stack
+            data-test={`history_view__attempt_title_row__${attemptDomKey}`}
+            direction="row"
+            spacing={1}
+            sx={{ alignItems: 'center' }}
           >
-            {t(interfaceLanguage, attempt.exerciseType)}
-          </Typography>
+            <Typography
+              data-test={`history_view__attempt_type__${attemptDomKey}`}
+              variant="h6"
+            >
+              {t(interfaceLanguage, attempt.exerciseType)}
+            </Typography>
+            {attempt.isExerciseCompleted && attempt.exerciseCompletedAt && (
+              <CompletedExerciseTrophy
+                completedAt={attempt.exerciseCompletedAt}
+                dataTest={`history_view__completed_trophy__${attemptDomKey}`}
+                interfaceLanguage={interfaceLanguage}
+              />
+            )}
+          </Stack>
           <StatsFormula
             correct={attempt.correct}
             dataTestPrefix={`history_view__attempt_formula__${attemptDomKey}`}
@@ -199,6 +213,50 @@ function AttemptHistoryCard({
         </Stack>
       </AccordionDetails>
     </Accordion>
+  );
+}
+
+function CompletedExerciseTrophy({
+  completedAt,
+  dataTest,
+  interfaceLanguage,
+}: {
+  completedAt: string;
+  dataTest: string;
+  interfaceLanguage: RootState['app']['interfaceLanguage'];
+}) {
+  const label = `${t(interfaceLanguage, 'exerciseCompleted')} ${formatAttemptDate(
+    completedAt,
+  )}`;
+  const trophy = (
+    <Box
+      aria-label={label}
+      component="span"
+      data-test={dataTest}
+      role="img"
+      sx={{
+        alignItems: 'center',
+        color: '#9f7a21',
+        display: 'inline-flex',
+        fontSize: 24,
+        lineHeight: 1,
+      }}
+    >
+      <EmojiEventsOutlinedIcon fontSize="inherit" />
+    </Box>
+  );
+
+  return (
+    <CursorAnchoredTooltip
+      arrowDataTest={`${dataTest}__tooltip_arrow`}
+      closeOnOtherOpen
+      leaveDelay={0}
+      title={<TooltipContent sx={completedTrophyTooltipContentStyles}>{label}</TooltipContent>}
+      transitionTimeout={0}
+      tooltipSx={completedTrophyTooltipStyles}
+    >
+      {trophy}
+    </CursorAnchoredTooltip>
   );
 }
 
@@ -485,6 +543,27 @@ const recentAnswersTooltipStyles = {
   boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
   color: '#203015',
   p: 1.25,
+};
+
+const completedTrophyTooltipStyles = {
+  bgcolor: '#ffffff',
+  border: '1px solid rgba(32, 48, 21, 0.14)',
+  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
+  color: '#203015',
+  fontSize: 14,
+  lineHeight: 1.35,
+  maxWidth: 280,
+  px: 1.25,
+  py: 1,
+};
+
+const completedTrophyTooltipContentStyles = {
+  bgcolor: '#ffffff',
+  color: '#203015',
+  display: 'inline-block',
+  fontSize: 14,
+  fontWeight: 800,
+  lineHeight: 1.35,
 };
 
 function getPromptOptions(prompt: ExercisePrompt): string[] {

@@ -7,6 +7,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import {
   ChangeEvent,
   type ReactElement,
@@ -26,6 +27,7 @@ import {
   CursorAnchoredTooltip,
   TooltipContent,
 } from '../CursorAnchoredTooltip';
+import { ExerciseProgressChip, ExerciseThemeChip } from './ExerciseThemeChip';
 
 export function CrosswordExercise({
   interfaceLanguage = 'en',
@@ -33,6 +35,7 @@ export function CrosswordExercise({
   puzzle,
   recentResultsByCardId = {},
   themeName,
+  onFinish,
   onSubmit,
 }: {
   interfaceLanguage?: SupportedLanguage;
@@ -43,6 +46,7 @@ export function CrosswordExercise({
     Array<{ isCorrect: boolean; occurredAt: string }>
   >;
   themeName?: string;
+  onFinish?: () => void;
   onSubmit: (answers: Record<string, string>) => void;
 }) {
   const [cellValues, setCellValues] = useState<Record<string, string>>({});
@@ -76,6 +80,8 @@ export function CrosswordExercise({
   );
   const rows = range(puzzle.bounds.minRow, puzzle.bounds.maxRow);
   const cols = range(puzzle.bounds.minCol, puzzle.bounds.maxCol);
+  const filledEntryCount = getFilledEntryCount(puzzle, cellValues);
+  const hasSubmittedAnswers = Boolean(submittedAnswers);
 
   useEffect(() => {
     setCellValues({});
@@ -84,6 +90,11 @@ export function CrosswordExercise({
   }, [puzzleKey]);
 
   const handleSubmit = () => {
+    if (submittedAnswers) {
+      onFinish?.();
+      return;
+    }
+
     const answers = Object.fromEntries(
       puzzle.entries.map((entry) => [
         entry.cardId,
@@ -177,15 +188,22 @@ export function CrosswordExercise({
               }
               tooltipSx={crosswordThemeTooltipStyles}
             >
-              <Chip
+              <ExerciseThemeChip
                 clickable={Boolean(onThemeOpen)}
-                data-test="crossword_exercise__theme_chip"
-                label={themeName}
+                dataTest="crossword_exercise__theme_chip"
+                interfaceLanguage={interfaceLanguage}
                 onClick={onThemeOpen}
                 sx={crosswordThemeChipStyles}
+                themeName={themeName}
               />
             </CursorAnchoredTooltip>
           )}
+          <ExerciseProgressChip
+            completed={filledEntryCount}
+            dataTest="crossword_exercise__progress_chip"
+            interfaceLanguage={interfaceLanguage}
+            total={puzzle.entries.length}
+          />
         </Stack>
 
         <Box
@@ -329,7 +347,7 @@ export function CrosswordExercise({
                     value={cellValues[key] ?? ''}
                     onChange={(event) => handleCellChange(event, cell)}
                     onFocus={() => handleCellFocus(cell)}
-                    disabled={Boolean(submittedAnswers)}
+                    disabled={hasSubmittedAnswers}
                     maxLength={1}
                     ref={(element: HTMLInputElement | null) => {
                       inputRefs.current[key] = element;
@@ -366,9 +384,16 @@ export function CrosswordExercise({
           data-test="crossword_exercise__submit_button"
           variant="contained"
           onClick={handleSubmit}
+          startIcon={
+            hasSubmittedAnswers ? (
+              <EmojiEventsOutlinedIcon data-test="crossword_exercise__completed_button_icon" />
+            ) : undefined
+          }
           sx={{ alignSelf: 'flex-start' }}
         >
-          {t(interfaceLanguage, 'submitCrossword')}
+          {hasSubmittedAnswers
+            ? t(interfaceLanguage, 'completedResult')
+            : t(interfaceLanguage, 'submitCrossword')}
         </Button>
       </Stack>
     </Paper>
@@ -467,6 +492,23 @@ function RecentAnswersTooltip({
 
 function toCellKey(row: number, col: number): string {
   return `${row}:${col}`;
+}
+
+function getFilledEntryCount(
+  puzzle: CrosswordPuzzle,
+  cellValues: Record<string, string>,
+): number {
+  return puzzle.entries.filter((entry) =>
+    entry.answer.split('').every((character, index) => {
+      if (/\s/.test(character)) {
+        return true;
+      }
+
+      const row = entry.direction === 'down' ? entry.row + index : entry.row;
+      const col = entry.direction === 'across' ? entry.col + index : entry.col;
+      return Boolean(cellValues[toCellKey(row, col)]?.trim());
+    }),
+  ).length;
 }
 
 function normalizeAnswer(value: string): string {

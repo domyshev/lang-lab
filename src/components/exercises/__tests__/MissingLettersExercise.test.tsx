@@ -51,6 +51,31 @@ describe('MissingLettersExercise', () => {
     expect(onNext).toHaveBeenCalledOnce();
   });
 
+  it('marks an in-session repeated prompt with a repeat chip', () => {
+    render(
+      <MissingLettersExercise
+        interfaceLanguage="ru"
+        isRepeatedPrompt
+        prompt={{
+          cardId: 'impede',
+          prompt: 'ru: препятствовать',
+          expectedAnswer: 'impede',
+          maskedAnswer: 'i_p_d_',
+          translationHints: [{ language: 'ru', value: 'препятствовать' }],
+        }}
+        onAnswer={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByTestId('missing_letters_exercise__repeat_chip__impede'),
+    ).toHaveTextContent('повтор');
+    expect(
+      screen.getByTestId('missing_letters_exercise__repeat_icon__impede'),
+    ).toBeInTheDocument();
+  });
+
   it('shows the correct answer as green word cells after a mistake', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();

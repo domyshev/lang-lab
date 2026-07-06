@@ -11,6 +11,32 @@ import { statsReducer } from '../../../store/statsSlice';
 import { themesReducer } from '../../../store/themesSlice';
 
 describe('MissingWordExercise', () => {
+  it('marks an in-session repeated phrase with a repeat chip', () => {
+    render(
+      <Provider store={createStore()}>
+        <MissingWordExercise
+          isRepeatedPrompt
+          prompt={{
+            cardId: 'worth-it',
+            prompt: 'ru: оно того стоит',
+            expectedAnswer: 'worth it',
+            sentenceWithGap: 'It is _____ today.',
+            translationHints: [{ language: 'ru', value: 'оно того стоит' }],
+          }}
+          onAnswer={vi.fn()}
+          onNext={vi.fn()}
+        />
+      </Provider>,
+    );
+
+    expect(
+      screen.getByTestId('missing_word_exercise__repeat_chip__worth-it'),
+    ).toHaveTextContent('повтор');
+    expect(
+      screen.getByTestId('missing_word_exercise__repeat_icon__worth-it'),
+    ).toBeInTheDocument();
+  });
+
   it('shows a memorize state without saving stats for an empty answer', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();

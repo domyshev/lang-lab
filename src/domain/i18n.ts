@@ -45,6 +45,7 @@ type I18nKey =
   | 'create'
   | 'chooseTheme'
   | 'chooseExercise'
+  | 'cannotStartGame'
   | 'createThemeToAddCards'
   | 'createThemeBeforeSelectingCards'
   | 'fileImport'
@@ -59,8 +60,11 @@ type I18nKey =
   | 'importAction'
   | 'answer'
   | 'next'
+  | 'finish'
   | 'finishExercise'
   | 'finishExerciseNotice'
+  | 'exerciseCompleted'
+  | 'completedResult'
   | 'answeredWords'
   | 'fillAllGapsWarning'
   | 'gameHelpTitle'
@@ -103,6 +107,8 @@ type I18nKey =
   | 'metricCompletedSuffix'
   | 'metricCorrectSuffix'
   | 'metricIncorrectSuffix'
+  | 'metricTotalSuffix'
+  | 'repeatPrompt'
   | 'totalExercisesTooltip'
   | 'targetAnswerLabel'
   | 'themeCardSelectionMode'
@@ -135,6 +141,7 @@ type I18nKey =
   | 'crosswordWordsDescription'
   | 'crosswordPhraseDescription'
   | 'crosswordThemeLabel'
+  | 'themeChipPrefix'
   | 'crosswordThemeCardsTooltip'
   | 'submitCrossword';
 
@@ -178,10 +185,10 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     downloadCardFormat: 'Download agent JSON requirements',
     startLearning: 'Start learning',
     start: 'Play',
-    allWords: 'All words',
+    allWords: 'All cards',
     add: 'Add',
     addToTheme: 'Add to theme',
-    addWords: 'Add words',
+    addWords: 'Edit words',
     saveWords: 'Save words',
     searchCards: 'Search cards',
     archive: 'Archive',
@@ -189,6 +196,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     create: 'Create',
     chooseTheme: 'Choose theme',
     chooseExercise: 'Choose game',
+    cannotStartGame:
+      'Import cards or choose a theme with cards for the current target language.',
     createThemeToAddCards: 'create a theme so the words can be added to it',
     createThemeBeforeSelectingCards:
       'first give the theme a name and press "Create", then continue selecting words',
@@ -204,9 +213,12 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     importAction: 'Import',
     answer: 'Answer',
     next: 'Next',
+    finish: 'Finish',
     finishExercise: 'Finish exercise',
     finishExerciseNotice:
       'Exercise results will be counted and the exercise will end.',
+    exerciseCompleted: 'Game completed',
+    completedResult: 'Completed!',
     answeredWords: 'Answered words',
     fillAllGapsWarning: 'Fill all gaps',
     gameHelpTitle: 'Help',
@@ -254,6 +266,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     metricCompletedSuffix: 'completed',
     metricCorrectSuffix: 'correct',
     metricIncorrectSuffix: 'incorrect',
+    metricTotalSuffix: 'total',
+    repeatPrompt: 'repeat',
     totalExercisesTooltip: 'Total number of completed exercises.',
     targetAnswerLabel: 'Target answer',
     themeCardSelectionMode: 'Select cards for the theme.',
@@ -286,6 +300,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     crosswordWordsDescription: 'Up to 6 words from the selected theme',
     crosswordPhraseDescription: 'Single phrase challenge',
     crosswordThemeLabel: 'Theme',
+    themeChipPrefix: 'Theme',
     crosswordThemeCardsTooltip: 'Click to open the theme card list.',
     submitCrossword: 'Submit crossword',
   },
@@ -328,10 +343,10 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     downloadCardFormat: 'Скачать требования к JSON для агентов',
     startLearning: 'Начать учиться',
     start: 'Играть',
-    allWords: 'Все слова',
+    allWords: 'Все карточки',
     add: 'Добавить',
     addToTheme: 'Добавить в тему',
-    addWords: 'Добавить слова',
+    addWords: 'Редактировать слова',
     saveWords: 'Сохранить слова',
     searchCards: 'Поиск карточек',
     archive: 'В архив',
@@ -339,6 +354,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     create: 'Создать',
     chooseTheme: 'Выберите тему',
     chooseExercise: 'Выберите игру',
+    cannotStartGame:
+      'Импортируйте карточки или выберите тему с карточками для текущего целевого языка.',
     createThemeToAddCards: 'создайте тему чтобы слова добавились в нее',
     createThemeBeforeSelectingCards:
       'нужно сначала придумать название для темы и нажать "Создать" а потом продолжить выбор слов',
@@ -354,9 +371,12 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     importAction: 'Импортировать',
     answer: 'Ответ',
     next: 'Следующий',
+    finish: 'Закончить',
     finishExercise: 'Закончить упражнение',
     finishExerciseNotice:
       'Результаты упражнения будут зачтены, а упражнение закончено.',
+    exerciseCompleted: 'Игра пройдена',
+    completedResult: 'Пройдено!',
     answeredWords: 'Отвечено слов',
     fillAllGapsWarning: 'Заполните все пропуски',
     gameHelpTitle: 'Помощь',
@@ -405,6 +425,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     metricCompletedSuffix: 'пройдено',
     metricCorrectSuffix: 'правильно',
     metricIncorrectSuffix: 'неверно',
+    metricTotalSuffix: 'всего',
+    repeatPrompt: 'повтор',
     totalExercisesTooltip: 'Общее количество пройденных упражнений.',
     targetAnswerLabel: 'Целевой ответ',
     themeCardSelectionMode: 'Выберите карточки для темы.',
@@ -437,6 +459,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     crosswordWordsDescription: 'До 6 слов из выбранной темы',
     crosswordPhraseDescription: 'Задание с одной фразой',
     crosswordThemeLabel: 'Тема',
+    themeChipPrefix: 'Тема',
     crosswordThemeCardsTooltip: 'Кликните чтобы перейти к списку карточек темы.',
     submitCrossword: 'Отправить кроссворд',
   },
@@ -479,10 +502,10 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     downloadCardFormat: 'Descargar requisitos JSON para agentes',
     startLearning: 'Empezar',
     start: 'Jugar',
-    allWords: 'Todas las palabras',
+    allWords: 'Todas las tarjetas',
     add: 'Anadir',
     addToTheme: 'Anadir al tema',
-    addWords: 'Anadir palabras',
+    addWords: 'Editar palabras',
     saveWords: 'Guardar palabras',
     searchCards: 'Buscar tarjetas',
     archive: 'Archivar',
@@ -490,6 +513,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     create: 'Crear',
     chooseTheme: 'Elegir tema',
     chooseExercise: 'Elegir juego',
+    cannotStartGame:
+      'Importa tarjetas o elige un tema con tarjetas para el idioma objetivo actual.',
     createThemeToAddCards: 'crea un tema para que las palabras se anadan a el',
     createThemeBeforeSelectingCards:
       'primero pon nombre al tema y pulsa "Crear"; despues sigue seleccionando palabras',
@@ -505,9 +530,12 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     importAction: 'Importar',
     answer: 'Respuesta',
     next: 'Siguiente',
+    finish: 'Terminar',
     finishExercise: 'Terminar ejercicio',
     finishExerciseNotice:
       'Los resultados del ejercicio se guardaran y el ejercicio terminara.',
+    exerciseCompleted: 'Juego completado',
+    completedResult: 'Completado!',
     answeredWords: 'Palabras respondidas',
     fillAllGapsWarning: 'Rellena todos los huecos',
     gameHelpTitle: 'Ayuda',
@@ -555,6 +583,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     metricCompletedSuffix: 'completados',
     metricCorrectSuffix: 'correctas',
     metricIncorrectSuffix: 'incorrectas',
+    metricTotalSuffix: 'total',
+    repeatPrompt: 'repeticion',
     totalExercisesTooltip: 'Numero total de ejercicios completados.',
     targetAnswerLabel: 'Respuesta objetivo',
     themeCardSelectionMode: 'Selecciona tarjetas para el tema.',
@@ -587,6 +617,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     crosswordWordsDescription: 'Hasta 6 palabras del tema elegido',
     crosswordPhraseDescription: 'Reto de una sola frase',
     crosswordThemeLabel: 'Tema',
+    themeChipPrefix: 'Tema',
     crosswordThemeCardsTooltip: 'Haz clic para abrir la lista de tarjetas del tema.',
     submitCrossword: 'Enviar crucigrama',
   },
