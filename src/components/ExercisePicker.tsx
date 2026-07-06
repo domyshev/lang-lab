@@ -1,5 +1,5 @@
 import {
-  Paper,
+  Box,
   Stack,
   ToggleButton,
   ToggleButtonGroup,
@@ -32,9 +32,13 @@ export function ExercisePicker({
   );
 
   return (
-    <Paper data-test="exercise_picker__panel" sx={{ p: 2 }}>
+    <Box data-test="exercise_picker__panel">
       <Stack data-test="exercise_picker__content" spacing={2}>
-        <Typography data-test="exercise_picker__title" variant="h6">
+        <Typography
+          component="h2"
+          data-test="exercise_picker__title"
+          variant="h6"
+        >
           {t(interfaceLanguage, 'chooseExercise')}
         </Typography>
         <ToggleButtonGroup
@@ -70,6 +74,6 @@ export function ExercisePicker({
           ))}
         </ToggleButtonGroup>
       </Stack>
-    </Paper>
+    </Box>
   );
 }

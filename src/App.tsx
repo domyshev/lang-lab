@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
-  InputLabel,
   MenuItem,
   Paper,
   Select,
@@ -108,6 +107,7 @@ export function App() {
     useState<AppShellSection>('game');
   const [selectedExerciseType, setSelectedExerciseType] =
     useState<ExerciseType>('crossword');
+  const [selectedGameThemeId, setSelectedGameThemeId] = useState('');
   const [isExerciseStarted, setIsExerciseStarted] = useState(false);
   const [generationSeed, setGenerationSeed] = useState(() => Date.now());
   const [lastSavedAttemptId, setLastSavedAttemptId] = useState<string | null>(
@@ -461,6 +461,16 @@ export function App() {
   }
 
   function handleNavigate(section: AppShellSection) {
+    if (section === 'game') {
+      setProfileAssistantId(null);
+      if (isExerciseStarted) {
+        openFinishDialog('home');
+        return;
+      }
+      setActiveSection('game');
+      return;
+    }
+
     if (section !== 'assistant') {
       setProfileAssistantId(null);
     }
@@ -817,14 +827,17 @@ export function App() {
   }
 
   function GameSetup() {
-    const currentThemeId = selectedTheme?.id ?? ALL_WORDS_THEME_ID;
+    const currentThemeId = selectedGameThemeId;
     const canStart =
+      Boolean(currentThemeId) &&
       Boolean(selectedTheme) &&
       eligibleCards.length > 0 &&
       (selectedExerciseType !== 'multipleChoice' || eligibleCards.length >= 3);
 
     const handleThemeChange = (event: SelectChangeEvent<string>) => {
-      dispatch(selectTheme(event.target.value));
+      const nextThemeId = event.target.value;
+      setSelectedGameThemeId(nextThemeId);
+      dispatch(selectTheme(nextThemeId));
       resetExerciseState();
     };
 
@@ -834,34 +847,48 @@ export function App() {
         sx={{ p: { xs: 2, md: 3 }, maxWidth: 760, mx: 'auto' }}
       >
         <Stack data-test="game_setup__content" spacing={3}>
-          <FormControl data-test="game_setup__theme_control" fullWidth>
-            <InputLabel data-test="game_setup__theme_label" id="game-theme-label">
-              {t(interfaceLanguage, 'chooseTheme')}
-            </InputLabel>
-            <Select
-              data-test="game_setup__theme_select"
-              labelId="game-theme-label"
-              label={t(interfaceLanguage, 'chooseTheme')}
-              value={currentThemeId}
-              onChange={handleThemeChange}
+          <Stack data-test="game_setup__theme_section" spacing={2}>
+            <Typography
+              component="h2"
+              data-test="game_setup__theme_title"
+              variant="h6"
             >
-              <MenuItem
-                data-test="game_setup__theme_option__all_words"
-                value={ALL_WORDS_THEME_ID}
+              {t(interfaceLanguage, 'chooseTheme')}
+            </Typography>
+            <FormControl data-test="game_setup__theme_control" fullWidth>
+              <Select
+                data-test="game_setup__theme_select"
+                displayEmpty
+                inputProps={{
+                  'aria-label': t(interfaceLanguage, 'chooseTheme'),
+                }}
+                value={currentThemeId}
+                onChange={handleThemeChange}
               >
-                {t(interfaceLanguage, 'allWords')} ({cards.length})
-              </MenuItem>
-              {visibleThemes.map((theme) => (
                 <MenuItem
-                  data-test={`game_setup__theme_option__${theme.id}`}
-                  key={theme.id}
-                  value={theme.id}
+                  data-test="game_setup__theme_option__empty"
+                  disabled
+                  value=""
+                  sx={{ display: 'none' }}
+                />
+                <MenuItem
+                  data-test="game_setup__theme_option__all_words"
+                  value={ALL_WORDS_THEME_ID}
                 >
-                  {theme.name} ({theme.cardIds.length})
+                  {t(interfaceLanguage, 'allWords')} ({cards.length})
                 </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+                {visibleThemes.map((theme) => (
+                  <MenuItem
+                    data-test={`game_setup__theme_option__${theme.id}`}
+                    key={theme.id}
+                    value={theme.id}
+                  >
+                    {theme.name} ({theme.cardIds.length})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Stack>
 
           <ExercisePicker
             selectedExerciseType={selectedExerciseType}
@@ -956,6 +983,7 @@ export function App() {
           key={`${exercisePreview.prompt.cardId}:${generationSeed}`}
           interfaceLanguage={interfaceLanguage}
           prompt={exercisePreview.prompt}
+          themeName={selectedTheme.name}
           onAnswer={(answer) =>
             savePromptAttempt('multipleChoice', exercisePreview.prompt, answer, {
               advance: false,
@@ -992,6 +1020,7 @@ export function App() {
           key={missingLettersPrompt.practiceKey}
           interfaceLanguage={interfaceLanguage}
           prompt={missingLettersPrompt}
+          themeName={selectedTheme.name}
           onAnswer={(answer) =>
             savePromptAttempt('missingLetters', missingLettersPrompt, answer, {
               advance: false,
@@ -1024,6 +1053,7 @@ export function App() {
       <MissingWordExercise
         key={missingWordPrompt.practiceKey}
         prompt={missingWordPrompt}
+        themeName={selectedTheme.name}
         onAnswer={(answer) =>
           savePromptAttempt('missingWord', missingWordPrompt, answer, {
             advance: false,
@@ -1073,9 +1103,19 @@ export function App() {
           >
             {t(interfaceLanguage, 'resultsTitle')}
           </Typography>
-          <Stack data-test="target_stats__metrics" spacing={2.25}>
+          <Box
+            data-test="target_stats__metrics"
+            sx={{
+              alignItems: 'center',
+              columnGap: 3,
+              display: 'flex',
+              flexWrap: 'wrap',
+              rowGap: 1.25,
+            }}
+          >
             <CountMetric
               dataTestPrefix="target_stats__total_exercises"
+              inline
               label={t(interfaceLanguage, 'totalExercises')}
               suffix={t(interfaceLanguage, 'metricCompletedSuffix')}
               tooltip={t(interfaceLanguage, 'totalExercisesTooltip')}
@@ -1085,6 +1125,7 @@ export function App() {
               correct={correct}
               dataTestPrefix="target_stats__answered_formula"
               incorrect={incorrect}
+              inline
               interfaceLanguage={interfaceLanguage}
               labelDisplay={
                 interfaceLanguage === 'ru' ? (
@@ -1109,7 +1150,7 @@ export function App() {
               total={totalAnswered}
               totalLabel={t(interfaceLanguage, 'totalAnsweredQuestions')}
             />
-          </Stack>
+          </Box>
         </Stack>
       </Paper>
     );

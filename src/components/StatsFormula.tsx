@@ -8,12 +8,14 @@ import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
 
 export function CountMetric({
   dataTestPrefix = 'count_metric',
+  inline = false,
   label,
   suffix,
   tooltip,
   value,
 }: {
   dataTestPrefix?: string;
+  inline?: boolean;
   label: string;
   suffix?: string;
   tooltip?: string;
@@ -23,7 +25,7 @@ export function CountMetric({
     <Stack
       aria-label={`${label}: ${value}`}
       data-test={`${dataTestPrefix}__root`}
-      sx={metricGridStyles}
+      sx={inline ? inlineMetricStyles : metricGridStyles}
     >
       <MetricLabel dataTest={`${dataTestPrefix}__label`}>{label}:</MetricLabel>
       <Box data-test={`${dataTestPrefix}__value_group`}>
@@ -44,6 +46,7 @@ export function StatsFormula({
   correct,
   dataTestPrefix = 'stats_formula',
   incorrect,
+  inline = false,
   interfaceLanguage,
   labelDisplay,
   showLabel = true,
@@ -53,6 +56,7 @@ export function StatsFormula({
   correct: number;
   dataTestPrefix?: string;
   incorrect: number;
+  inline?: boolean;
   interfaceLanguage: SupportedLanguage;
   labelDisplay?: ReactNode;
   showLabel?: boolean;
@@ -76,7 +80,13 @@ export function StatsFormula({
     <Stack
       aria-label={ariaLabel}
       data-test={`${dataTestPrefix}__root`}
-      sx={showLabel ? metricGridStyles : formulaRowStyles}
+      sx={
+        showLabel
+          ? inline
+            ? inlineMetricStyles
+            : metricGridStyles
+          : formulaRowStyles
+      }
     >
       {showLabel && (
         <MetricLabel dataTest={`${dataTestPrefix}__label`}>
@@ -291,6 +301,14 @@ const metricGridStyles = {
   gridTemplateColumns: '220px minmax(0, 1fr)',
   rowGap: 0.75,
   width: '100%',
+};
+
+const inlineMetricStyles = {
+  alignItems: 'center',
+  display: 'inline-flex',
+  flexWrap: 'wrap',
+  gap: 0.75,
+  width: 'auto',
 };
 
 const formulaRowStyles = {

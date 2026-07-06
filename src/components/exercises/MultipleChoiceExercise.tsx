@@ -1,6 +1,6 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
-import { Button, Paper, Stack, Typography } from '@mui/material';
+import { Button, Chip, Paper, Stack, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { MultipleChoicePrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
@@ -11,11 +11,13 @@ export function MultipleChoiceExercise({
   prompt,
   onAnswer,
   onNext,
+  themeName,
 }: {
   interfaceLanguage: SupportedLanguage;
   prompt: MultipleChoicePrompt;
   onAnswer: (answer: string) => void;
   onNext: () => void;
+  themeName?: string;
 }) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const isSubmitted = selectedAnswer !== null;
@@ -34,12 +36,27 @@ export function MultipleChoiceExercise({
         data-test={`multiple_choice_exercise__content__${prompt.cardId}`}
         spacing={2}
       >
-        <Typography
-          data-test={`multiple_choice_exercise__title__${prompt.cardId}`}
-          variant="h6"
+        <Stack
+          data-test={`multiple_choice_exercise__header__${prompt.cardId}`}
+          direction="row"
+          spacing={1.25}
+          sx={{ alignItems: 'center', flexWrap: 'wrap' }}
         >
-          {t(interfaceLanguage, 'multipleChoice')}
-        </Typography>
+          <Typography
+            component="h2"
+            data-test={`multiple_choice_exercise__title__${prompt.cardId}`}
+            variant="h6"
+          >
+            {t(interfaceLanguage, 'multipleChoice')}
+          </Typography>
+          {themeName && (
+            <Chip
+              data-test={`multiple_choice_exercise__theme_chip__${prompt.cardId}`}
+              label={themeName}
+              sx={exerciseThemeChipStyles}
+            />
+          )}
+        </Stack>
         <Typography data-test={`multiple_choice_exercise__prompt__${prompt.cardId}`}>
           {prompt.prompt}
         </Typography>
@@ -171,3 +188,11 @@ function getOptionStyles({
     WebkitTextFillColor: '#757575',
   };
 }
+
+const exerciseThemeChipStyles = {
+  bgcolor: '#e7eefc',
+  border: '1px solid rgba(68, 94, 150, 0.26)',
+  color: '#203015',
+  fontWeight: 850,
+  height: 30,
+};

@@ -1,6 +1,6 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
-import { Box, Button, Paper, Stack, Typography } from '@mui/material';
+import { Box, Button, Chip, Paper, Stack, Typography } from '@mui/material';
 import type {
   CSSProperties,
   KeyboardEvent,
@@ -19,11 +19,13 @@ export function MissingLettersExercise({
   onNext,
   prompt,
   onAnswer,
+  themeName,
 }: {
   interfaceLanguage: SupportedLanguage;
   prompt: MissingLettersPrompt;
   onAnswer: (answer: string) => void;
   onNext: () => void;
+  themeName?: string;
 }) {
   const [letters, setLetters] = useState<Record<number, string>>({});
   const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
@@ -127,12 +129,27 @@ export function MissingLettersExercise({
         data-test={`missing_letters_exercise__content__${prompt.cardId}`}
         spacing={2}
       >
-        <Typography
-          data-test={`missing_letters_exercise__title__${prompt.cardId}`}
-          variant="h6"
+        <Stack
+          data-test={`missing_letters_exercise__header__${prompt.cardId}`}
+          direction="row"
+          spacing={1.25}
+          sx={{ alignItems: 'center', flexWrap: 'wrap' }}
         >
-          {t(interfaceLanguage, 'missingLetters')}
-        </Typography>
+          <Typography
+            component="h2"
+            data-test={`missing_letters_exercise__title__${prompt.cardId}`}
+            variant="h6"
+          >
+            {t(interfaceLanguage, 'missingLetters')}
+          </Typography>
+          {themeName && (
+            <Chip
+              data-test={`missing_letters_exercise__theme_chip__${prompt.cardId}`}
+              label={themeName}
+              sx={exerciseThemeChipStyles}
+            />
+          )}
+        </Stack>
         <Typography data-test={`missing_letters_exercise__prompt__${prompt.cardId}`}>
           {prompt.prompt}
         </Typography>
@@ -322,6 +339,14 @@ const typedLetterCellStyles = {
   ...letterCellStyles,
   color: '#203015',
   WebkitTextFillColor: '#203015',
+};
+
+const exerciseThemeChipStyles = {
+  bgcolor: '#e7eefc',
+  border: '1px solid rgba(68, 94, 150, 0.26)',
+  color: '#203015',
+  fontWeight: 850,
+  height: 30,
 };
 
 function getLetterCellInlineStyle(

@@ -119,6 +119,7 @@ export function AppShell({
               data-test="app_shell__tab__game"
               value="game"
               label={t(interfaceLanguage, 'game')}
+              onClick={() => onNavigate?.('game')}
             />
             <Tab
               data-test="app_shell__tab__cards"

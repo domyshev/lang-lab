@@ -150,7 +150,7 @@ describe('App navigation', () => {
       expect(store.getState().cards.cards).toHaveLength(138);
     });
 
-    expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
   });
 
   it('starts in Russian and shows a simple game setup tab before starting', () => {
@@ -162,8 +162,36 @@ describe('App navigation', () => {
     expect(screen.getByRole('tab', { name: 'Карточки' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Статистика' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Агенты LLM' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
+    const setupPanel = screen.getByTestId('game_setup__panel');
+    expect(
+      within(setupPanel).getByRole('heading', { name: 'Выберите тему' }),
+    ).toBeInTheDocument();
+    expect(
+      within(setupPanel).getByRole('heading', { name: 'Выберите игру' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('game_setup__theme_label')).not.toBeInTheDocument();
+    expect(screen.getByTestId('game_setup__theme_select')).not.toHaveTextContent(
+      'Все слова',
+    );
+    expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Начать' })).not.toBeInTheDocument();
     expect(screen.queryByText('worth it')).not.toBeInTheDocument();
+  });
+
+  it('starts an exercise only after a theme is selected and shows the theme chip', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
+
+    await selectAllWordsTheme(user);
+    await user.click(screen.getByRole('button', { name: 'Играть' }));
+
+    expect(screen.getByRole('heading', { name: 'Пропущенные буквы' })).toBeInTheDocument();
+    expect(getByDataTestPrefix('missing_letters_exercise__theme_chip__')[0]).toHaveTextContent(
+      'Все слова',
+    );
   });
 
   it('describes agent features and keeps import controls on the agents tab', async () => {
@@ -301,8 +329,7 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенные буквы');
 
     expect(screen.getByRole('heading', { name: 'Пропущенные буквы' })).toBeInTheDocument();
     expect(screen.getByLabelText('Мысль персонажа')).toBeInTheDocument();
@@ -351,8 +378,7 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенные буквы');
 
     const answered = new Set<string>();
     for (let index = 0; index < 3; index += 1) {
@@ -369,8 +395,7 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенные буквы');
 
     const prompt = getVisibleMissingLettersPrompt();
     await answerMissingLettersCorrect(user, prompt.answer);
@@ -383,8 +408,7 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенные буквы');
 
     const prompt = getVisibleMissingLettersPrompt();
     await answerMissingLettersCorrectWithEnter(user, prompt.answer);
@@ -405,8 +429,7 @@ describe('App navigation', () => {
       ],
     });
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенные буквы');
 
     expect(getVisibleMissingLettersPrompt().answer).toBe('airport');
     expect(
@@ -429,8 +452,7 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенные буквы');
 
     const prompt = getVisibleMissingLettersPrompt();
     await answerMissingLettersCorrect(user, prompt.answer);
@@ -459,8 +481,7 @@ describe('App navigation', () => {
       ),
     });
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенные буквы');
 
     const prompt = getVisibleMissingLettersPrompt();
     await answerMissingLettersCorrect(user, prompt.answer);
@@ -486,8 +507,7 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенные буквы');
     await user.hover(
       screen.getByTestId('coach_panel__assistant_sticker_wrapper__studyTroll'),
     );
@@ -590,20 +610,18 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенные буквы');
     await user.click(screen.getByRole('button', { name: 'Закончить упражнение' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
   });
 
   it('finishes an active exercise through a styled confirmation dialog', async () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенные буквы');
     await answerMissingLettersWrong(user);
 
     const toolbar = screen.getByTestId('app__exercise_toolbar');
@@ -612,7 +630,7 @@ describe('App navigation', () => {
       within(toolbar).getByRole('button', { name: 'Закончить упражнение' }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Выберите упражнение' }),
+      screen.queryByRole('button', { name: 'Выберите игру' }),
     ).not.toBeInTheDocument();
 
     await user.click(
@@ -634,7 +652,34 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Закончить упражнение' }));
     await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
 
-    expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
+  });
+
+  it('returns to the game setup through the Game tab and confirms answered exercises', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await startExercise(user, 'Пропущенные буквы');
+    await answerMissingLettersWrong(user);
+
+    await user.click(screen.getByRole('tab', { name: 'Игра' }));
+
+    expect(
+      screen.getByText('Результаты упражнения будут зачтены, а упражнение закончено.'),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Отмена' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+    expect(screen.getByRole('heading', { name: 'Пропущенные буквы' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Игра' }));
+    await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
+
+    expect(screen.getByRole('heading', { name: 'Выберите тему' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Выберите игру' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
   });
 
   it('returns to the main game screen through the logo without a dialog for an unanswered exercise', async () => {
@@ -644,24 +689,22 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('tab', { name: 'Карточки' }));
     await user.click(screen.getByRole('button', { name: 'Language Lab' }));
 
-    expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенные буквы');
     expect(screen.getByRole('heading', { name: 'Пропущенные буквы' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Language Lab' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Начать' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
   });
 
   it('shows localized result formulas in statistics', async () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенные буквы');
 
     await answerMissingLettersWrong(user);
     await user.click(screen.getByRole('button', { name: 'Неверно' }));
@@ -690,6 +733,10 @@ describe('App navigation', () => {
     expect(screen.getByTestId('target_stats__answered_formula__incorrect_chip')).toHaveTextContent(
       '2 неверно',
     );
+    expect(screen.getByTestId('target_stats__metrics')).toHaveStyle({
+      display: 'flex',
+      flexWrap: 'wrap',
+    });
 
     expect(screen.getByTestId('app__statistics_section')).toHaveStyle({
       overflow: 'hidden',
@@ -724,8 +771,7 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенное слово' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенное слово');
 
     expect(screen.queryByText(/I need to remember/)).not.toBeInTheDocument();
     expect(screen.getAllByLabelText(/Missing word letter/).length).toBeGreaterThan(0);
@@ -735,8 +781,7 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Пропущенное слово' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Пропущенное слово');
 
     const firstPromptText = getVisibleMissingWordSentence();
     expect(
@@ -764,8 +809,7 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Вопрос с 3 вариантами' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Вопрос с 3 вариантами');
     await user.click(getByDataTestPrefix('multiple_choice_exercise__option__')[0]);
 
     expect(screen.getByText('Статистика по слову')).toBeInTheDocument();
@@ -778,8 +822,7 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Вопрос с 3 вариантами' }));
-    await user.click(screen.getByRole('button', { name: 'Начать' }));
+    await startExercise(user, 'Вопрос с 3 вариантами');
 
     const firstTriple = getMultipleChoiceOptionText();
     await user.click(getByDataTestPrefix('multiple_choice_exercise__option__')[0]);
@@ -806,6 +849,20 @@ function getVisibleMissingLettersPrompt(): { answer: string; prompt: RegExp } {
   }
 
   return visiblePrompt;
+}
+
+async function selectAllWordsTheme(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('combobox', { name: 'Выберите тему' }));
+  await user.click(await screen.findByRole('option', { name: /Все слова/ }));
+}
+
+async function startExercise(
+  user: ReturnType<typeof userEvent.setup>,
+  exerciseName: string,
+) {
+  await user.click(screen.getByRole('button', { name: exerciseName }));
+  await selectAllWordsTheme(user);
+  await user.click(screen.getByRole('button', { name: 'Играть' }));
 }
 
 async function answerMissingLettersWrong(
