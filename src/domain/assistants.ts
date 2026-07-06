@@ -17,11 +17,11 @@ export interface AssistantCharacter {
 export const assistantCharacters: AssistantCharacter[] = [
   {
     id: 'studyTroll',
-    label: 'Study Troll',
+    label: 'Cheerful Leaf',
     name: {
-      en: 'Moss Minder',
-      ru: 'Моховой Смотритель',
-      es: 'Guarda Musgo',
+      en: 'Cheerful Leaf',
+      ru: 'Веселый листочек',
+      es: 'Hojita Alegre',
     },
     superpower: {
       en: 'Notices stubborn mistakes and brings them back before they fossilize.',
@@ -31,10 +31,10 @@ export const assistantCharacters: AssistantCharacter[] = [
   },
   {
     id: 'trollMama',
-    label: 'Troll Mama',
+    label: 'Mnemo-Mama',
     name: {
-      en: 'Mama Mnemo',
-      ru: 'Мама Мнемо',
+      en: 'Mnemo-Mama',
+      ru: 'Мнемо-мама',
       es: 'Mama Mnemo',
     },
     superpower: {
@@ -45,11 +45,11 @@ export const assistantCharacters: AssistantCharacter[] = [
   },
   {
     id: 'capeChampion',
-    label: 'Cape Champion',
+    label: 'Captain Knowledge',
     name: {
-      en: 'Captain Context',
-      ru: 'Капитан Контекст',
-      es: 'Capitan Contexto',
+      en: 'Captain Knowledge',
+      ru: 'Капитан знаний',
+      es: 'Capitan Saber',
     },
     superpower: {
       en: 'Connects a word to its clue so the answer is easier to retrieve.',
@@ -59,11 +59,11 @@ export const assistantCharacters: AssistantCharacter[] = [
   },
   {
     id: 'greenPower',
-    label: 'Green Power',
+    label: 'Memory Hulk',
     name: {
-      en: 'Pattern Hulk',
-      ru: 'Халк Паттернов',
-      es: 'Hulk de Patrones',
+      en: 'Memory Hulk',
+      ru: 'Халк запоминания',
+      es: 'Hulk de Memoria',
     },
     superpower: {
       en: 'Crushes long words into visible chunks and rhythm.',
@@ -73,11 +73,11 @@ export const assistantCharacters: AssistantCharacter[] = [
   },
   {
     id: 'webRunner',
-    label: 'Web Runner',
+    label: 'Wise Spider',
     name: {
-      en: 'Web Sprinter',
-      ru: 'Веб-Спринтер',
-      es: 'Velocista Web',
+      en: 'Wise Spider',
+      ru: 'Мудрый паучок',
+      es: 'Aranita Sabia',
     },
     superpower: {
       en: 'Spots fast associations between similar words without rushing the answer.',

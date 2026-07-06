@@ -1,7 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { fireEvent } from '@testing-library/react';
 import { render, screen, within } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
+import type { ExerciseAttempt } from '../../domain/exercises';
 import { appReducer } from '../../store/appSlice';
 import { attemptsReducer } from '../../store/attemptsSlice';
 import { cardsReducer } from '../../store/cardsSlice';
@@ -12,7 +14,7 @@ import { ThemeDetailView } from '../ThemeDetailView';
 const now = '2026-07-04T00:00:00.000Z';
 
 describe('ThemeDetailView', () => {
-  it('sorts cards by total target attempts and centers the kind chip', () => {
+  it('sorts cards by total target attempts and shows compact kind chips with recent stats tooltips', async () => {
     const { container } = render(
       <Provider store={createStore()}>
         <ThemeDetailView />
@@ -28,9 +30,35 @@ describe('ThemeDetailView', () => {
       'theme_detail__card_kind_chip__card-worth-it',
     );
     expect(phraseChip.parentElement).toHaveStyle({ alignItems: 'center' });
+    expect(phraseChip).toHaveStyle({ height: '30px' });
     expect(screen.getByTestId('theme_detail__cards_list__all-words')).toHaveStyle({
       overflowY: 'auto',
     });
+
+    const statsChip = within(items[0]).getByTestId(
+      'theme_detail__card_stats__card-impede__root',
+    );
+
+    fireEvent.mouseOver(statsChip, { clientX: 220, clientY: 120 });
+
+    const tooltip = await screen.findByTestId(
+      'theme_detail__card_stats__card-impede__recent_tooltip',
+    );
+
+    expect(within(tooltip).getByText('20 последних ответов')).toBeInTheDocument();
+    expect(
+      within(tooltip).getByTestId(
+        'theme_detail__card_stats__card-impede__recent_tooltip_subject',
+      ),
+    ).toHaveTextContent('impede');
+    expect(
+      tooltip.querySelectorAll(
+        '[data-test^="theme_detail__card_stats__card-impede__recent_result__"]',
+      ),
+    ).toHaveLength(20);
+    expect(
+      screen.getByTestId('theme_detail__card_stats__card-impede__tooltip_arrow'),
+    ).toBeInTheDocument();
   });
 });
 
@@ -102,6 +130,44 @@ function createStore() {
           },
         ],
       },
+      attempts: {
+        attempts: createCardAttempts('card-impede', 21),
+      },
     },
+  });
+}
+
+function createCardAttempts(cardId: string, count: number): ExerciseAttempt[] {
+  return Array.from({ length: count }, (_, index) => {
+    const isCorrect = index % 2 === 0;
+    const day = String(index + 1).padStart(2, '0');
+
+    return {
+      id: `attempt-${index + 1}`,
+      exerciseSessionId: `session-${index + 1}`,
+      exerciseType: 'missingLetters',
+      themeId: 'all-words',
+      targetLanguage: 'en',
+      createdAt: `2026-07-${day}T10:00:00.000Z`,
+      completedAt: `2026-07-${day}T10:00:00.000Z`,
+      cardSnapshots: [],
+      prompts: [
+        {
+          cardId,
+          expectedAnswer: 'impede',
+          prompt: 'ru: затруднять',
+          translationHints: [{ language: 'ru', value: 'затруднять' }],
+        },
+      ],
+      answers: {
+        [cardId]: isCorrect ? 'impede' : 'impide',
+      },
+      correctness: {
+        [cardId]: isCorrect,
+      },
+      hintsUsed: {
+        [cardId]: 0,
+      },
+    };
   });
 }

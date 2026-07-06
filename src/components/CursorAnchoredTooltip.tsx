@@ -17,14 +17,18 @@ type TooltipAnchorPosition = {
 export function CursorAnchoredTooltip({
   arrowDataTest,
   children,
+  leaveDelay = 420,
   placement = 'top',
   title,
+  transitionTimeout,
   tooltipSx,
 }: {
   arrowDataTest: string;
   children: ReactElement;
+  leaveDelay?: number;
   placement?: 'top' | 'top-start' | 'top-end';
   title: ReactNode;
+  transitionTimeout?: number;
   tooltipSx: SxProps<Theme>;
 }) {
   const [anchorPosition, setAnchorPosition] =
@@ -80,11 +84,18 @@ export function CursorAnchoredTooltip({
           ],
         },
       },
+      ...(transitionTimeout === undefined
+        ? {}
+        : {
+            transition: {
+              timeout: transitionTimeout,
+            },
+          }),
       tooltip: {
         sx: tooltipSx,
       },
     }),
-    [arrowDataTest, tooltipSx, virtualAnchor],
+    [arrowDataTest, tooltipSx, transitionTimeout, virtualAnchor],
   );
 
   const handleMouseOver = (event: MouseEvent<HTMLElement>) => {
@@ -97,7 +108,7 @@ export function CursorAnchoredTooltip({
   return (
     <Tooltip
       arrow
-      leaveDelay={420}
+      leaveDelay={leaveDelay}
       onClose={() => setAnchorPosition(null)}
       placement={placement}
       slotProps={tooltipSlotProps}

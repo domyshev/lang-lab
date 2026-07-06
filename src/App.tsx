@@ -868,6 +868,10 @@ export function App() {
       return (
         <CrosswordExercise
           interfaceLanguage={interfaceLanguage}
+          onThemeOpen={() => {
+            dispatch(selectTheme(selectedTheme.id));
+            setActiveSection('cards');
+          }}
           puzzle={exercisePreview.puzzle}
           themeName={selectedTheme.name}
           onSubmit={(answers) =>

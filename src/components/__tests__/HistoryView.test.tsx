@@ -62,6 +62,11 @@ describe('HistoryView', () => {
     expect(within(airportTooltip).getByText('10 последних ответов')).toBeInTheDocument();
     expect(
       within(airportTooltip).getByTestId(
+        'history_view__detail_answer__attempt-missing-1_card-airport__recent_tooltip_subject',
+      ),
+    ).toHaveTextContent('airport');
+    expect(
+      within(airportTooltip).getByTestId(
         'history_view__detail_answer__attempt-missing-1_card-airport__recent_result_chip__0',
       ),
     ).toHaveTextContent('правильно');

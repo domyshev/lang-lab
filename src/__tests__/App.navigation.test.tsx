@@ -477,7 +477,7 @@ describe('App navigation', () => {
 
     expect(screen.getByLabelText('Персонаж')).toBeInTheDocument();
     expect(
-      screen.getByLabelText(/Моховой Смотритель: Замечает упрямые ошибки/),
+      screen.getByLabelText(/Веселый листочек: Замечает упрямые ошибки/),
     ).toBeInTheDocument();
     expect(screen.queryByText('Forest Tutor')).not.toBeInTheDocument();
   });

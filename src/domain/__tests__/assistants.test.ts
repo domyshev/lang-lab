@@ -15,4 +15,21 @@ describe('assistantCharacters', () => {
       }
     }
   });
+
+  it('uses the current Russian character names', () => {
+    expect(
+      Object.fromEntries(
+        assistantCharacters.map((assistant) => [
+          assistant.id,
+          assistant.name.ru,
+        ]),
+      ),
+    ).toEqual({
+      capeChampion: 'Капитан знаний',
+      greenPower: 'Халк запоминания',
+      studyTroll: 'Веселый листочек',
+      trollMama: 'Мнемо-мама',
+      webRunner: 'Мудрый паучок',
+    });
+  });
 });

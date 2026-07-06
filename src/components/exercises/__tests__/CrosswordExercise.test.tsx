@@ -12,6 +12,7 @@ describe('CrosswordExercise', () => {
       <CrosswordExercise
         interfaceLanguage="ru"
         themeName="Все слова"
+        onThemeOpen={vi.fn()}
         puzzle={{
           mode: 'words',
           bounds: { minRow: 0, maxRow: 2, minCol: 0, maxCol: 2 },
@@ -46,7 +47,9 @@ describe('CrosswordExercise', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Кроссворд' })).toBeInTheDocument();
-    expect(screen.getByText('Тема "Все слова"')).toBeInTheDocument();
+    expect(screen.getByTestId('crossword_exercise__theme_chip')).toHaveTextContent(
+      'Все слова',
+    );
     expect(screen.queryByText('До 6 слов из выбранной темы')).not.toBeInTheDocument();
     expect(screen.queryByTestId('crossword_exercise__clues')).not.toBeInTheDocument();
     expect(screen.getByTestId('crossword_exercise__clue_number__cat')).toHaveTextContent('1');
@@ -76,5 +79,93 @@ describe('CrosswordExercise', () => {
     await user.click(screen.getByRole('button', { name: 'Отправить кроссворд' }));
 
     expect(onSubmit).toHaveBeenCalledWith({ cat: 'cat', tea: 'tea' });
+  });
+
+  it('keeps advancing in the active direction after crossing another word', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <CrosswordExercise
+        interfaceLanguage="ru"
+        themeName="Все слова"
+        puzzle={{
+          mode: 'words',
+          bounds: { minRow: 0, maxRow: 2, minCol: 0, maxCol: 3 },
+          cells: [
+            { row: 0, col: 0, solution: 'c', entryIds: ['cart'] },
+            { row: 0, col: 1, solution: 'a', entryIds: ['ape', 'cart'] },
+            { row: 0, col: 2, solution: 'r', entryIds: ['cart'] },
+            { row: 0, col: 3, solution: 't', entryIds: ['cart'] },
+            { row: 1, col: 1, solution: 'p', entryIds: ['ape'] },
+            { row: 2, col: 1, solution: 'e', entryIds: ['ape'] },
+          ],
+          entries: [
+            {
+              cardId: 'cart',
+              answer: 'cart',
+              clue: 'ru: тележка',
+              row: 0,
+              col: 0,
+              direction: 'across',
+            },
+            {
+              cardId: 'ape',
+              answer: 'ape',
+              clue: 'ru: обезьяна',
+              row: 0,
+              col: 1,
+              direction: 'down',
+            },
+          ],
+        }}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    await user.type(screen.getByLabelText('Crossword cell 1 1'), 'c');
+    expect(screen.getByLabelText('Crossword cell 1 2')).toHaveFocus();
+
+    await user.type(screen.getByLabelText('Crossword cell 1 2'), 'a');
+
+    expect(screen.getByLabelText('Crossword cell 1 3')).toHaveFocus();
+  });
+
+  it('opens the selected theme from the crossword theme chip', async () => {
+    const user = userEvent.setup();
+    const onThemeOpen = vi.fn();
+
+    render(
+      <CrosswordExercise
+        interfaceLanguage="ru"
+        themeName="Все слова"
+        onThemeOpen={onThemeOpen}
+        puzzle={{
+          mode: 'words',
+          bounds: { minRow: 0, maxRow: 0, minCol: 0, maxCol: 0 },
+          cells: [{ row: 0, col: 0, solution: 'a', entryIds: ['a'] }],
+          entries: [
+            {
+              cardId: 'a',
+              answer: 'a',
+              clue: 'ru: а',
+              row: 0,
+              col: 0,
+              direction: 'across',
+            },
+          ],
+        }}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    await user.hover(screen.getByTestId('crossword_exercise__theme_chip'));
+
+    expect(
+      await screen.findByText('Кликните чтобы перейти к списку карточек темы.'),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByTestId('crossword_exercise__theme_chip'));
+
+    expect(onThemeOpen).toHaveBeenCalled();
   });
 });

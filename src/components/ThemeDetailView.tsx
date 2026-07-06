@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { type ReactElement, useId, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import {
   Alert,
@@ -30,6 +30,7 @@ import {
 } from '../domain/languages';
 import { addCardToTheme } from '../store/themesSlice';
 import { AppDispatch, RootState } from '../store/store';
+import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
 import { SplitWordStatsChip } from './SplitWordStatsChip';
 
 export function ThemeDetailView() {
@@ -45,6 +46,9 @@ export function ThemeDetailView() {
   );
   const themes = useSelector((state: RootState) => state.themes.themes);
   const cardStats = useSelector((state: RootState) => state.stats.cardStats);
+  const allAttempts = useSelector(
+    (state: RootState) => state.attempts.attempts,
+  );
   const selectedThemeId = useSelector(
     (state: RootState) => state.themes.selectedThemeId,
   );
@@ -331,16 +335,28 @@ export function ThemeDetailView() {
                             borderColor: 'rgba(32, 48, 21, 0.28)',
                             color: '#203015',
                             fontWeight: 800,
-                            height: 38,
+                            height: 30,
                           }}
                         />
-                        <SplitWordStatsChip
-                          correct={stats?.correct ?? 0}
+                        <RecentCardStatsTooltip
                           dataTestPrefix={`theme_detail__card_stats__${card.id}`}
-                          incorrect={stats?.incorrect ?? 0}
                           interfaceLanguage={interfaceLanguage}
-                          statsLabel={statsLabel}
-                        />
+                          recentResults={getRecentCardResults({
+                            attempts: allAttempts,
+                            cardId: card.id,
+                            limit: 20,
+                            targetLanguage,
+                          })}
+                          subject={answer.text}
+                        >
+                          <SplitWordStatsChip
+                            correct={stats?.correct ?? 0}
+                            dataTestPrefix={`theme_detail__card_stats__${card.id}`}
+                            incorrect={stats?.incorrect ?? 0}
+                            interfaceLanguage={interfaceLanguage}
+                            statsLabel={statsLabel}
+                          />
+                        </RecentCardStatsTooltip>
                       </Stack>
                     </Stack>
                   </Stack>
@@ -351,6 +367,91 @@ export function ThemeDetailView() {
         )}
       </Stack>
     </Paper>
+  );
+}
+
+function RecentCardStatsTooltip({
+  children,
+  dataTestPrefix,
+  interfaceLanguage,
+  recentResults,
+  subject,
+}: {
+  children: ReactElement;
+  dataTestPrefix: string;
+  interfaceLanguage: SupportedLanguage;
+  recentResults: RecentCardResult[];
+  subject: string;
+}) {
+  return (
+    <CursorAnchoredTooltip
+      arrowDataTest={`${dataTestPrefix}__tooltip_arrow`}
+      tooltipSx={recentCardStatsTooltipStyles}
+      title={
+        <Stack data-test={`${dataTestPrefix}__recent_tooltip`} spacing={0.75}>
+          <Typography
+            data-test={`${dataTestPrefix}__recent_tooltip_title`}
+            sx={{ color: '#203015', fontSize: 14, fontWeight: 850 }}
+          >
+            {t(interfaceLanguage, 'recent20AnswersTitle')}
+          </Typography>
+          <Typography
+            data-test={`${dataTestPrefix}__recent_tooltip_subject`}
+            sx={{
+              color: 'rgba(32, 48, 21, 0.68)',
+              fontSize: 11,
+              fontWeight: 750,
+              lineHeight: 1.25,
+            }}
+          >
+            {subject}
+          </Typography>
+          <Stack data-test={`${dataTestPrefix}__recent_results`} spacing={0.5}>
+            {recentResults.map((result, index) => (
+              <Stack
+                data-test={`${dataTestPrefix}__recent_result__${index}`}
+                direction="row"
+                key={`${result.occurredAt}-${index}`}
+                spacing={0.75}
+                sx={{ alignItems: 'center' }}
+              >
+                <Chip
+                  data-test={`${dataTestPrefix}__recent_result_chip__${index}`}
+                  label={t(
+                    interfaceLanguage,
+                    result.isCorrect
+                      ? 'metricCorrectSuffix'
+                      : 'metricIncorrectSuffix',
+                  )}
+                  size="small"
+                  sx={{
+                    bgcolor: result.isCorrect
+                      ? 'rgb(235, 247, 225)'
+                      : 'rgb(253, 235, 238)',
+                    border: '1px solid',
+                    borderColor: result.isCorrect ? '#8fc773' : '#f2a7b4',
+                    color: '#111111',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    height: 24,
+                  }}
+                />
+                <Typography
+                  data-test={`${dataTestPrefix}__recent_result_date__${index}`}
+                  sx={{ color: 'rgba(32, 48, 21, 0.72)', fontSize: 11 }}
+                >
+                  {formatAttemptDate(result.occurredAt)}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
+        </Stack>
+      }
+    >
+      <Box data-test={`${dataTestPrefix}__tooltip_anchor`} sx={{ display: 'inline-flex' }}>
+        {children}
+      </Box>
+    </CursorAnchoredTooltip>
   );
 }
 
@@ -414,3 +515,64 @@ function getDisplayAnswer(
     isFallback: true,
   };
 }
+
+type RecentCardResult = {
+  isCorrect: boolean;
+  occurredAt: string;
+};
+
+function getRecentCardResults({
+  attempts,
+  cardId,
+  limit,
+  targetLanguage,
+}: {
+  attempts: RootState['attempts']['attempts'];
+  cardId: string;
+  limit: number;
+  targetLanguage: SupportedLanguage;
+}): RecentCardResult[] {
+  return [...attempts]
+    .filter(
+      (attempt) =>
+        attempt.targetLanguage === targetLanguage &&
+        Object.prototype.hasOwnProperty.call(attempt.correctness, cardId),
+    )
+    .sort(
+      (left, right) =>
+        Date.parse(right.completedAt ?? right.createdAt) -
+        Date.parse(left.completedAt ?? left.createdAt),
+    )
+    .slice(0, limit)
+    .map((attempt) => ({
+      isCorrect: Boolean(attempt.correctness[cardId]),
+      occurredAt: attempt.completedAt ?? attempt.createdAt,
+    }));
+}
+
+function formatAttemptDate(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return [
+    `${padDatePart(date.getMonth() + 1)}/${padDatePart(
+      date.getDate(),
+    )}/${date.getFullYear()}`,
+    `${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`,
+  ].join(' ');
+}
+
+function padDatePart(value: number): string {
+  return String(value).padStart(2, '0');
+}
+
+const recentCardStatsTooltipStyles = {
+  bgcolor: '#ffffff',
+  border: '1px solid rgba(32, 48, 21, 0.14)',
+  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
+  color: '#203015',
+  p: 1.25,
+};

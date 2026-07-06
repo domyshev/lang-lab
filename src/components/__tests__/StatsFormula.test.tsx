@@ -228,4 +228,37 @@ describe('StatsFormula', () => {
       ).not.toBeInTheDocument(),
     );
   });
+
+  it('closes the previous metric tooltip immediately when another metric opens', async () => {
+    render(
+      <StatsFormula
+        correct={1}
+        dataTestPrefix="single_metric_tooltip"
+        incorrect={1}
+        interfaceLanguage="ru"
+        total={2}
+        totalLabel="Всего отвечено вопросов"
+      />,
+    );
+
+    const totalChip = screen.getByTestId('single_metric_tooltip__total_chip');
+    const correctChip = screen.getByTestId('single_metric_tooltip__correct_chip');
+
+    fireEvent.mouseOver(totalChip, { clientX: 100, clientY: 80 });
+
+    expect(
+      await screen.findByText('Общее количество отвеченных вопросов в упражнении.'),
+    ).toBeInTheDocument();
+
+    fireEvent.mouseLeave(totalChip);
+    fireEvent.mouseOver(correctChip, { clientX: 180, clientY: 80 });
+
+    expect(
+      await screen.findByText('Количество вопросов, отвеченных верно.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('Общее количество отвеченных вопросов в упражнении.'),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByRole('tooltip')).toHaveLength(1);
+  });
 });

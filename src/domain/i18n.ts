@@ -122,9 +122,11 @@ type I18nKey =
   | 'incorrectAnsweredTooltip'
   | 'correctInputTooltip'
   | 'recentAnswersTitle'
+  | 'recent20AnswersTitle'
   | 'crosswordWordsDescription'
   | 'crosswordPhraseDescription'
   | 'crosswordThemeLabel'
+  | 'crosswordThemeCardsTooltip'
   | 'submitCrossword';
 
 const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
@@ -261,9 +263,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     incorrectAnsweredTooltip: 'Number of questions answered incorrectly.',
     correctInputTooltip: 'The input was completed correctly.',
     recentAnswersTitle: 'Last 10 answers',
+    recent20AnswersTitle: 'Last 20 answers',
     crosswordWordsDescription: 'Up to 6 words from the selected theme',
     crosswordPhraseDescription: 'Single phrase challenge',
     crosswordThemeLabel: 'Theme',
+    crosswordThemeCardsTooltip: 'Click to open the theme card list.',
     submitCrossword: 'Submit crossword',
   },
   ru: {
@@ -400,9 +404,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     incorrectAnsweredTooltip: 'Количество вопросов, отвеченных неверно.',
     correctInputTooltip: 'Ввод был выполнен верно.',
     recentAnswersTitle: '10 последних ответов',
+    recent20AnswersTitle: '20 последних ответов',
     crosswordWordsDescription: 'До 6 слов из выбранной темы',
     crosswordPhraseDescription: 'Задание с одной фразой',
     crosswordThemeLabel: 'Тема',
+    crosswordThemeCardsTooltip: 'Кликните чтобы перейти к списку карточек темы.',
     submitCrossword: 'Отправить кроссворд',
   },
   es: {
@@ -538,9 +544,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     incorrectAnsweredTooltip: 'Numero de preguntas respondidas incorrectamente.',
     correctInputTooltip: 'La entrada se completo correctamente.',
     recentAnswersTitle: '10 ultimas respuestas',
+    recent20AnswersTitle: '20 ultimas respuestas',
     crosswordWordsDescription: 'Hasta 6 palabras del tema elegido',
     crosswordPhraseDescription: 'Reto de una sola frase',
     crosswordThemeLabel: 'Tema',
+    crosswordThemeCardsTooltip: 'Haz clic para abrir la lista de tarjetas del tema.',
     submitCrossword: 'Enviar crucigrama',
   },
 };

@@ -293,6 +293,7 @@ function HistoryAnswer({
       dataTestPrefix={dataTestPrefix}
       interfaceLanguage={interfaceLanguage}
       recentResults={recentResults}
+      subject={expectedAnswer}
     >
       {answerContent}
     </RecentAnswersTooltip>
@@ -304,11 +305,13 @@ function RecentAnswersTooltip({
   dataTestPrefix,
   interfaceLanguage,
   recentResults,
+  subject,
 }: {
   children: ReactElement;
   dataTestPrefix: string;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   recentResults: RecentCardResult[];
+  subject: string;
 }) {
   return (
     <CursorAnchoredTooltip
@@ -321,6 +324,17 @@ function RecentAnswersTooltip({
             sx={{ color: '#203015', fontSize: 14, fontWeight: 850 }}
           >
             {t(interfaceLanguage, 'recentAnswersTitle')}
+          </Typography>
+          <Typography
+            data-test={`${dataTestPrefix}__recent_tooltip_subject`}
+            sx={{
+              color: 'rgba(32, 48, 21, 0.68)',
+              fontSize: 11,
+              fontWeight: 750,
+              lineHeight: 1.25,
+            }}
+          >
+            {subject}
           </Typography>
           <Stack data-test={`${dataTestPrefix}__recent_results`} spacing={0.5}>
             {recentResults.slice(0, 10).map((result, index) => (

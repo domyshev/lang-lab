@@ -1,4 +1,12 @@
-import { Box, Button, Paper, Stack, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Chip,
+  Paper,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import { ChangeEvent, useMemo, useRef, useState } from 'react';
 import {
   CrosswordCell,
@@ -7,19 +15,26 @@ import {
 } from '../../domain/crossword';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
+import {
+  CursorAnchoredTooltip,
+  TooltipContent,
+} from '../CursorAnchoredTooltip';
 
 export function CrosswordExercise({
   interfaceLanguage = 'en',
+  onThemeOpen,
   puzzle,
   themeName,
   onSubmit,
 }: {
   interfaceLanguage?: SupportedLanguage;
+  onThemeOpen?: () => void;
   puzzle: CrosswordPuzzle;
   themeName?: string;
   onSubmit: (answers: Record<string, string>) => void;
 }) {
   const [cellValues, setCellValues] = useState<Record<string, string>>({});
+  const activeEntryIdRef = useRef<string | null>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const cellMap = new Map(
     puzzle.cells.map((cell) => [toCellKey(cell.row, cell.col), cell]),
@@ -77,27 +92,71 @@ export function CrosswordExercise({
       return;
     }
 
-    const nextKey = getNextCellKey(cell, puzzle.entries, entryMap);
+    const activeEntry = getActiveEntryForCell(
+      cell,
+      puzzle.entries,
+      entryMap,
+      activeEntryIdRef.current,
+    );
+    activeEntryIdRef.current = activeEntry?.cardId ?? null;
+
+    const nextKey = activeEntry ? getNextCellKey(cell, activeEntry) : undefined;
     if (nextKey) {
       inputRefs.current[nextKey]?.focus();
     }
   };
 
+  const handleCellFocus = (cell: CrosswordCell) => {
+    const activeEntry = activeEntryIdRef.current
+      ? entryMap.get(activeEntryIdRef.current)
+      : undefined;
+
+    if (activeEntry && cell.entryIds.includes(activeEntry.cardId)) {
+      return;
+    }
+
+    activeEntryIdRef.current =
+      getActiveEntryForCell(cell, puzzle.entries, entryMap, null)?.cardId ??
+      null;
+  };
+
   return (
     <Paper data-test="crossword_exercise__panel" sx={{ p: 2 }}>
       <Stack data-test="crossword_exercise__content" spacing={2}>
-        <Typography
-          component="h2"
-          data-test="crossword_exercise__title"
-          variant="h6"
+        <Stack
+          data-test="crossword_exercise__header"
+          direction="row"
+          spacing={1.25}
+          sx={{ alignItems: 'center', flexWrap: 'wrap' }}
         >
-          {t(interfaceLanguage, 'crossword')}
-        </Typography>
-        {themeName && (
-          <Typography data-test="crossword_exercise__theme_name">
-            {t(interfaceLanguage, 'crosswordThemeLabel')} "{themeName}"
+          <Typography
+            component="h2"
+            data-test="crossword_exercise__title"
+            variant="h6"
+          >
+            {t(interfaceLanguage, 'crossword')}
           </Typography>
-        )}
+          {themeName && (
+            <CursorAnchoredTooltip
+              arrowDataTest="crossword_exercise__theme_chip_tooltip_arrow"
+              leaveDelay={0}
+              title={
+                <TooltipContent sx={crosswordThemeTooltipContentStyles}>
+                  {t(interfaceLanguage, 'crosswordThemeCardsTooltip')}
+                </TooltipContent>
+              }
+              tooltipSx={crosswordThemeTooltipStyles}
+            >
+              <Chip
+                clickable={Boolean(onThemeOpen)}
+                data-test="crossword_exercise__theme_chip"
+                label={themeName}
+                onClick={onThemeOpen}
+                sx={crosswordThemeChipStyles}
+              />
+            </CursorAnchoredTooltip>
+          )}
+        </Stack>
 
         <Box
           data-test="crossword_exercise__grid"
@@ -210,7 +269,11 @@ export function CrosswordExercise({
                         aria-label={`Question ${startEntryNumber.number}`}
                         component="button"
                         data-test={`crossword_exercise__clue_number__${startEntryNumber.entry.cardId}`}
-                        onClick={() => inputRefs.current[key]?.focus()}
+                        onClick={() => {
+                          activeEntryIdRef.current =
+                            startEntryNumber.entry.cardId;
+                          inputRefs.current[key]?.focus();
+                        }}
                         sx={clueNumberStyles}
                         type="button"
                       >
@@ -224,6 +287,7 @@ export function CrosswordExercise({
                     data-test={`crossword_exercise__input_cell__${displayRow}_${displayCol}`}
                     value={cellValues[key] ?? ''}
                     onChange={(event) => handleCellChange(event, cell)}
+                    onFocus={() => handleCellFocus(cell)}
                     maxLength={1}
                     ref={(element: HTMLInputElement | null) => {
                       inputRefs.current[key] = element;
@@ -259,22 +323,30 @@ function toCellKey(row: number, col: number): string {
   return `${row}:${col}`;
 }
 
-function getNextCellKey(
+function getActiveEntryForCell(
   cell: CrosswordCell,
   entries: CrosswordEntry[],
   entryMap: Map<string, CrosswordEntry>,
-): string | undefined {
+  activeEntryId: string | null,
+): CrosswordEntry | undefined {
+  const activeEntry = activeEntryId ? entryMap.get(activeEntryId) : undefined;
+  if (activeEntry && cell.entryIds.includes(activeEntry.cardId)) {
+    return activeEntry;
+  }
+
   const startEntry = entries.find(
     (entry) => entry.row === cell.row && entry.col === cell.col,
   );
-  const entry =
-    startEntry ??
-    cell.entryIds.map((entryId) => entryMap.get(entryId)).find(Boolean);
 
-  if (!entry) {
-    return undefined;
-  }
+  return (
+    startEntry ?? cell.entryIds.map((entryId) => entryMap.get(entryId)).find(Boolean)
+  );
+}
 
+function getNextCellKey(
+  cell: CrosswordCell,
+  entry: CrosswordEntry,
+): string | undefined {
   const index =
     entry.direction === 'across' ? cell.col - entry.col : cell.row - entry.row;
   const nextIndex = index + 1;
@@ -341,4 +413,33 @@ const emptyCellStyles = {
   aspectRatio: '1 / 1',
   minWidth: 0,
   width: '100%',
+};
+
+const crosswordThemeChipStyles = {
+  bgcolor: '#e7eefc',
+  border: '1px solid rgba(68, 94, 150, 0.26)',
+  color: '#203015',
+  cursor: 'pointer',
+  fontWeight: 850,
+  height: 30,
+  '&:hover': {
+    bgcolor: '#d9e5fb',
+  },
+};
+
+const crosswordThemeTooltipStyles = {
+  bgcolor: '#ffffff',
+  border: '1px solid rgba(32, 48, 21, 0.14)',
+  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
+  color: '#203015',
+  maxWidth: 280,
+  px: 1.25,
+  py: 1,
+};
+
+const crosswordThemeTooltipContentStyles = {
+  color: '#203015',
+  display: 'inline-block',
+  fontSize: 14,
+  lineHeight: 1.35,
 };
