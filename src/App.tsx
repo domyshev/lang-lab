@@ -246,6 +246,10 @@ export function App() {
       targetLanguage,
     ],
   );
+  const missingLettersPracticeCardIds = useMemo(
+    () => uniqueValues(missingLettersOrderedCards.map((card) => card.id)),
+    [missingLettersOrderedCards],
+  );
   const missingWordOrderedCards = useMemo(
     () =>
       orderCardsForMissingLettersPractice({
@@ -263,6 +267,10 @@ export function App() {
       practiceSettings,
       targetLanguage,
     ],
+  );
+  const missingWordPracticeCardIds = useMemo(
+    () => uniqueValues(missingWordOrderedCards.map((card) => card.id)),
+    [missingWordOrderedCards],
   );
   const lastSavedAttempt =
     attempts.find((attempt) => attempt.id === lastSavedAttemptId) ?? null;
@@ -1068,7 +1076,7 @@ export function App() {
             missingLettersPrompt.cardId,
           )}
           progressCompletedCount={completedMissingLettersCardIds.length}
-          progressTotalCount={missingLettersEligibleCards.length}
+          progressTotalCount={missingLettersPracticeCardIds.length}
           prompt={missingLettersPrompt}
           themeName={selectedTheme.name}
           onAnswer={(answer) =>
@@ -1082,7 +1090,7 @@ export function App() {
               missingLettersPrompt.cardId,
             ]);
             if (
-              nextCompletedCardIds.length >= missingLettersEligibleCards.length
+              nextCompletedCardIds.length >= missingLettersPracticeCardIds.length
             ) {
               setCompletedMissingLettersCardIds(nextCompletedCardIds);
               completeExerciseSession('missingLetters');
@@ -1121,7 +1129,7 @@ export function App() {
         )}
         prompt={missingWordPrompt}
         progressCompletedCount={completedMissingWordCardIds.length}
-        progressTotalCount={missingWordEligibleCards.length}
+        progressTotalCount={missingWordPracticeCardIds.length}
         themeName={selectedTheme.name}
         onAnswer={(answer) =>
           savePromptAttempt('missingWord', missingWordPrompt, answer, {
@@ -1133,7 +1141,7 @@ export function App() {
             ...completedMissingWordCardIds,
             missingWordPrompt.cardId,
           ]);
-          if (nextCompletedCardIds.length >= missingWordEligibleCards.length) {
+          if (nextCompletedCardIds.length >= missingWordPracticeCardIds.length) {
             setCompletedMissingWordCardIds(nextCompletedCardIds);
             completeExerciseSession('missingWord');
             return;

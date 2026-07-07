@@ -978,6 +978,39 @@ describe('App navigation', () => {
     expect(screen.queryByText('Статистика по фразе')).not.toBeInTheDocument();
   });
 
+  it('shows a completed game summary when available missing word prompts are exhausted by cooldowns', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      attempts: [
+        createStoredAttempt({
+          cardId: 'card-look-forward',
+          completedAt: '2026-07-01T10:00:00.000Z',
+          isCorrect: true,
+        }),
+        createStoredAttempt({
+          cardId: 'card-look-forward',
+          completedAt: '2026-07-02T10:00:00.000Z',
+          isCorrect: true,
+        }),
+        createStoredAttempt({
+          cardId: 'card-look-forward',
+          completedAt: '2026-07-03T10:00:00.000Z',
+          isCorrect: true,
+        }),
+      ],
+    });
+
+    await startExercise(user, 'Пропущенное слово');
+    await answerMissingWordWrong(user);
+    await user.click(screen.getByRole('button', { name: 'Неверно' }));
+
+    expect(screen.getByTestId('exercise_complete__panel')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Выйти' })).toHaveFocus();
+    expect(
+      screen.queryByText('Карточки для этого упражнения закончились.'),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows word statistics after a multiple choice answer', async () => {
     const user = userEvent.setup();
     renderApp();
@@ -1005,6 +1038,31 @@ describe('App navigation', () => {
     );
 
     expect(getMultipleChoiceOptionText()).not.toEqual(firstTriple);
+  });
+
+  it('shows a completed game summary after the last multiple choice prompt', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await startExercise(user, 'Вопрос с 3 вариантами');
+
+    const answered = new Set<string>();
+    for (let index = 0; index < 6; index += 1) {
+      const prompt = screen.getByTestId(/^multiple_choice_exercise__prompt__/);
+      answered.add(prompt.textContent ?? '');
+      await user.click(getByDataTestPrefix('multiple_choice_exercise__option__')[0]);
+      await user.click(
+        screen.queryByRole('button', { name: 'Правильно!' }) ??
+          screen.getByRole('button', { name: 'Неверно' }),
+      );
+    }
+
+    expect(answered.size).toBe(6);
+    expect(screen.getByTestId('exercise_complete__panel')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Выйти' })).toHaveFocus();
+    expect(
+      screen.queryByText('Карточки для этого упражнения закончились.'),
+    ).not.toBeInTheDocument();
   });
 });
 
