@@ -6,6 +6,7 @@ import type {
   KeyboardEvent,
   MouseEvent,
   MutableRefObject,
+  ReactNode,
 } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { MissingLettersPrompt } from '../../domain/exercises';
@@ -28,6 +29,7 @@ export function MissingLettersExercise({
   prompt,
   onAnswer,
   cardSetName,
+  finishAction,
 }: {
   interfaceLanguage: SupportedLanguage;
   isRepeatedPrompt?: boolean;
@@ -37,6 +39,7 @@ export function MissingLettersExercise({
   progressCompletedCount?: number;
   progressTotalCount?: number;
   cardSetName?: string;
+  finishAction?: ReactNode;
 }) {
   const [letters, setLetters] = useState<Record<number, string>>({});
   const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
@@ -142,40 +145,51 @@ export function MissingLettersExercise({
       >
         <Stack
           data-test={`missing_letters_exercise__header__${prompt.cardId}`}
-          spacing={1}
-          sx={{ alignItems: 'flex-start' }}
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={2}
+          sx={{
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            justifyContent: 'space-between',
+          }}
         >
-          <Typography
-            component="h2"
-            data-test={`missing_letters_exercise__title__${prompt.cardId}`}
-            variant="h6"
-          >
-            {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'missingLetters')}
-          </Typography>
           <Stack
-            data-test={`missing_letters_exercise__metadata_row__${prompt.cardId}`}
-            direction="row"
-            spacing={1.25}
-            sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+            data-test={`missing_letters_exercise__header_text__${prompt.cardId}`}
+            spacing={1}
+            sx={{ alignItems: 'flex-start', minWidth: 0 }}
           >
-            {cardSetName && (
-              <ExerciseCardSetChip
-                dataTest={`missing_letters_exercise__card_set_chip__${prompt.cardId}`}
-                interfaceLanguage={interfaceLanguage}
-                sx={exerciseCardSetChipStyles}
-                cardSetName={cardSetName}
-              />
-            )}
-            {progressCompletedCount !== undefined &&
-              progressTotalCount !== undefined && (
-                <ExerciseProgressChip
-                  completed={progressCompletedCount}
-                  dataTest={`missing_letters_exercise__progress_chip__${prompt.cardId}`}
+            <Typography
+              component="h2"
+              data-test={`missing_letters_exercise__title__${prompt.cardId}`}
+              variant="h6"
+            >
+              {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'missingLetters')}
+            </Typography>
+            <Stack
+              data-test={`missing_letters_exercise__metadata_row__${prompt.cardId}`}
+              direction="row"
+              spacing={1.25}
+              sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+            >
+              {cardSetName && (
+                <ExerciseCardSetChip
+                  dataTest={`missing_letters_exercise__card_set_chip__${prompt.cardId}`}
                   interfaceLanguage={interfaceLanguage}
-                  total={progressTotalCount}
+                  sx={exerciseCardSetChipStyles}
+                  cardSetName={cardSetName}
                 />
               )}
+              {progressCompletedCount !== undefined &&
+                progressTotalCount !== undefined && (
+                  <ExerciseProgressChip
+                    completed={progressCompletedCount}
+                    dataTest={`missing_letters_exercise__progress_chip__${prompt.cardId}`}
+                    interfaceLanguage={interfaceLanguage}
+                    total={progressTotalCount}
+                  />
+                )}
+            </Stack>
           </Stack>
+          {finishAction}
         </Stack>
         <Stack
           data-test={`missing_letters_exercise__prompt_row__${prompt.cardId}`}

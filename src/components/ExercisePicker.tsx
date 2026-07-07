@@ -9,7 +9,11 @@ import { useSelector } from 'react-redux';
 import { ExerciseType } from '../domain/exercises';
 import { t } from '../domain/i18n';
 import { RootState } from '../store/store';
-import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
+import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
+import {
+  GameWarningTooltipContent,
+  gameWarningTooltipStyles,
+} from './GameWarningTooltip';
 
 const exerciseOptions: Array<{
   type: ExerciseType;
@@ -65,10 +69,21 @@ export function ExercisePicker({
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
+  const selectedOption = exerciseOptions.find(
+    (option) => option.type === selectedExerciseType,
+  );
 
   return (
     <Box data-test="exercise_picker__panel">
       <Stack data-test="exercise_picker__content" spacing={1.5}>
+        <Typography
+          data-test="exercise_picker__title"
+          sx={{ color: '#203015', fontSize: 18, fontWeight: 900 }}
+        >
+          {selectedOption
+            ? t(interfaceLanguage, selectedOption.labelKey)
+            : t(interfaceLanguage, 'chooseExercise')}
+        </Typography>
         <ToggleButtonGroup
           data-test="exercise_picker__tiles"
           value={selectedExerciseType}
@@ -191,18 +206,12 @@ export function ExercisePicker({
                   closeOnOtherOpen
                   key={option.type}
                   title={
-                    <TooltipContent sx={disabledExerciseTooltipContentStyles}>
-                      <Box
-                        component="span"
-                        data-test={`exercise_picker__disabled_tooltip_icon__${option.type}`}
-                        sx={disabledExerciseTooltipIconStyles}
-                      >
-                        !
-                      </Box>
-                      <Box component="span">{disabledTooltip}</Box>
-                    </TooltipContent>
+                    <GameWarningTooltipContent
+                      iconDataTest={`exercise_picker__disabled_tooltip_icon__${option.type}`}
+                      messages={[disabledTooltip]}
+                    />
                   }
-                  tooltipSx={disabledExerciseTooltipStyles}
+                  tooltipSx={gameWarningTooltipStyles}
                 >
                   <Box
                     data-test={`exercise_picker__option_tooltip_anchor__${option.type}`}
@@ -228,55 +237,6 @@ export function ExercisePicker({
     </Box>
   );
 }
-
-const disabledExerciseTooltipStyles = {
-  bgcolor: '#ffffff',
-  border: '1px solid rgba(32, 48, 21, 0.16)',
-  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
-  color: '#203015',
-  maxWidth: 380,
-  px: 1.5,
-  py: 1.25,
-};
-
-const disabledExerciseTooltipContentStyles = {
-  alignItems: 'center',
-  bgcolor: '#ffffff',
-  color: '#203015',
-  display: 'inline-flex',
-  fontSize: 17,
-  fontWeight: 700,
-  gap: 1,
-  lineHeight: 1.35,
-};
-
-const disabledExerciseTooltipIconStyles = {
-  alignItems: 'center',
-  animation: 'disabledExerciseTooltipBlink 860ms ease-in-out infinite',
-  bgcolor: '#ffd13d',
-  border: '2px solid #ff7a00',
-  borderRadius: '999px',
-  boxShadow: '0 0 0 4px rgba(255, 122, 0, 0.16)',
-  color: '#7a2500',
-  display: 'inline-flex',
-  flex: '0 0 auto',
-  fontSize: 22,
-  fontWeight: 1000,
-  height: 32,
-  justifyContent: 'center',
-  lineHeight: 1,
-  width: 32,
-  '@keyframes disabledExerciseTooltipBlink': {
-    '0%, 100%': {
-      opacity: 1,
-      transform: 'scale(1)',
-    },
-    '50%': {
-      opacity: 0.35,
-      transform: 'scale(1.12)',
-    },
-  },
-};
 
 function GameTileArt({
   accent,

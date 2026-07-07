@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
+import TipsAndUpdatesOutlinedIcon from '@mui/icons-material/TipsAndUpdatesOutlined';
 import {
   Alert,
   Box,
@@ -11,23 +13,34 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Stack,
   Typography,
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material/Select';
 import { AppShell, AppShellSection } from './components/AppShell';
 import { AssistantProfileView } from './components/AssistantProfileView';
 import { CardSetLibraryPicker } from './components/CardSetLibraryPicker';
 import { CoachPanel } from './components/CoachPanel';
 import { ExercisePicker } from './components/ExercisePicker';
 import { GameHelpPanel } from './components/GameHelpPanel';
+import { GameWarningIcon, GameWarningTooltip } from './components/GameWarningTooltip';
 import { HistoryView } from './components/HistoryView';
 import { ImportCardsView } from './components/ImportCardsView';
 import { SplitWordStatsChip } from './components/SplitWordStatsChip';
 import { MetricChip, StatsFormula } from './components/StatsFormula';
+import { CursorAnchoredTooltip, TooltipContent } from './components/CursorAnchoredTooltip';
 import { CardSetDetailView } from './components/CardSetDetailView';
 import { CardSetListView } from './components/CardSetListView';
-import { CrosswordExercise } from './components/exercises/CrosswordExercise';
+import {
+  CrosswordExercise,
+  type CrosswordDraftState,
+} from './components/exercises/CrosswordExercise';
 import { MissingLettersExercise } from './components/exercises/MissingLettersExercise';
 import { MissingWordExercise } from './components/exercises/MissingWordExercise';
 import { MultipleChoiceExercise } from './components/exercises/MultipleChoiceExercise';
@@ -38,7 +51,11 @@ import {
   getTranslationHints,
   isPhraseValue,
 } from './domain/cards';
-import { CrosswordPuzzle, createCrossword } from './domain/crossword';
+import {
+  CrosswordEntry,
+  CrosswordPuzzle,
+  createCrossword,
+} from './domain/crossword';
 import {
   defaultVocabularyCards,
   defaultVocabularyCardSets,
@@ -56,14 +73,18 @@ import {
 } from './domain/exercises';
 import { summarizeExerciseHistory } from './domain/exerciseHistory';
 import { getLanguageDisplayName, t } from './domain/i18n';
-import { languageFlags } from './domain/languages';
+import { SupportedLanguage, languageFlags } from './domain/languages';
 import {
   getPracticeSettings,
   orderCardsForMissingLettersPractice,
 } from './domain/practiceOrdering';
 import { ALL_CARDS_CARD_SET_ID, CardSet } from './domain/cardSets';
 import { saveAttempt } from './store/attemptsSlice';
-import { acknowledgeGameHelp, markGameHelpCoachmarkShown } from './store/appSlice';
+import {
+  acknowledgeGameHelp,
+  getComplementaryLanguageForTarget,
+  markGameHelpCoachmarkShown,
+} from './store/appSlice';
 import { seedDefaultCards } from './store/cardsSlice';
 import { recordAttemptStats } from './store/statsSlice';
 import { seedDefaultCardSets, selectCardSet } from './store/cardSetsSlice';
@@ -108,6 +129,22 @@ type CompletedExerciseSummary = {
   exerciseType: ExerciseType;
   incorrect: number;
 };
+const emptyCrosswordDraftState: CrosswordDraftState = {
+  answers: {},
+  answeredCardIds: [],
+  filledEntryCount: 0,
+  hasAnyLetters: false,
+};
+type FinishExerciseJumpOption = {
+  isAnswered: boolean;
+  label: string;
+  value: string;
+};
+type FinishExerciseJumpSelector = {
+  onChange: (value: string) => void;
+  options: FinishExerciseJumpOption[];
+  value: string;
+};
 
 export function App() {
   const dispatch = useDispatch<AppDispatch>();
@@ -146,6 +183,8 @@ export function App() {
   const [currentExerciseSessionId, setCurrentExerciseSessionId] = useState(() =>
     createId('exercise-session'),
   );
+  const [crosswordDraftState, setCrosswordDraftState] =
+    useState<CrosswordDraftState>(emptyCrosswordDraftState);
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
   const [finishDialogIntent, setFinishDialogIntent] = useState<
     'finish' | 'home' | null
@@ -174,6 +213,13 @@ export function App() {
   );
   const practiceSettings = useSelector(
     (state: RootState) => state.app.practiceSettings,
+  );
+  const complementaryLanguages = useSelector(
+    (state: RootState) => state.app.complementaryLanguages,
+  );
+  const complementaryLanguage = getComplementaryLanguageForTarget(
+    complementaryLanguages,
+    targetLanguage,
   );
 
   const visibleCardSets = useMemo(
@@ -271,6 +317,48 @@ export function App() {
     () => uniqueValues(missingWordOrderedCards.map((card) => card.id)),
     [missingWordOrderedCards],
   );
+  const missingLettersPracticePrompts = useMemo(() => {
+    const occurrenceCounts = new Map<string, number>();
+    return missingLettersOrderedCards
+      .map((card) => {
+        const prompt = createMissingLettersPrompt({ card, targetLanguage });
+        const occurrence = getNextOccurrence(card.id, occurrenceCounts);
+        return prompt
+          ? {
+              ...prompt,
+              isRepeat: occurrence > 0,
+              practiceKey: createPracticeKey(card.id, occurrence),
+            }
+          : undefined;
+      })
+      .filter(
+        (
+          prompt,
+        ): prompt is PracticePrompt<ExercisePrompt & { maskedAnswer: string }> =>
+          Boolean(prompt),
+      );
+  }, [missingLettersOrderedCards, targetLanguage]);
+  const missingWordPracticePrompts = useMemo(() => {
+    const occurrenceCounts = new Map<string, number>();
+    return missingWordOrderedCards
+      .map((card) => {
+        const prompt = createMissingWordPrompt({ card, targetLanguage });
+        const occurrence = getNextOccurrence(card.id, occurrenceCounts);
+        return prompt
+          ? {
+              ...prompt,
+              isRepeat: occurrence > 0,
+              practiceKey: createPracticeKey(card.id, occurrence),
+            }
+          : undefined;
+      })
+      .filter(
+        (
+          prompt,
+        ): prompt is PracticePrompt<ExercisePrompt & { sentenceWithGap: string }> =>
+          Boolean(prompt),
+      );
+  }, [missingWordOrderedCards, targetLanguage]);
   const lastSavedAttempt =
     attempts.find((attempt) => attempt.id === lastSavedAttemptId) ?? null;
 
@@ -331,25 +419,6 @@ export function App() {
     }
 
     if (selectedExerciseType === 'missingLetters') {
-      const occurrenceCounts = new Map<string, number>();
-      const missingLettersPrompts = missingLettersOrderedCards
-        .map((card) => {
-          const prompt = createMissingLettersPrompt({ card, targetLanguage });
-          const occurrence = getNextOccurrence(card.id, occurrenceCounts);
-          return prompt
-            ? {
-                ...prompt,
-                isRepeat: occurrence > 0,
-                practiceKey: createPracticeKey(card.id, occurrence),
-              }
-            : undefined;
-        })
-        .filter(
-          (
-            prompt,
-          ): prompt is PracticePrompt<ExercisePrompt & { maskedAnswer: string }> =>
-            Boolean(prompt),
-        );
       const heldResultPrompt =
         resultPromptHold?.exerciseType === 'missingLetters'
           ? resultPromptHold.prompt
@@ -359,31 +428,12 @@ export function App() {
         prompt:
           heldResultPrompt ??
           pickPracticePrompt(
-            missingLettersPrompts,
+            missingLettersPracticePrompts,
             answeredMissingLettersPromptKeys,
           ),
       };
     }
 
-    const occurrenceCounts = new Map<string, number>();
-    const missingWordPrompts = missingWordOrderedCards
-      .map((card) => {
-        const prompt = createMissingWordPrompt({ card, targetLanguage });
-        const occurrence = getNextOccurrence(card.id, occurrenceCounts);
-        return prompt
-          ? {
-              ...prompt,
-              isRepeat: occurrence > 0,
-              practiceKey: createPracticeKey(card.id, occurrence),
-            }
-          : undefined;
-      })
-      .filter(
-        (
-          prompt,
-        ): prompt is PracticePrompt<ExercisePrompt & { sentenceWithGap: string }> =>
-          Boolean(prompt),
-      );
     const heldResultPrompt =
       resultPromptHold?.exerciseType === 'missingWord'
         ? resultPromptHold.prompt
@@ -392,14 +442,14 @@ export function App() {
       type: 'missingWord',
       prompt:
         heldResultPrompt ??
-        pickPracticePrompt(missingWordPrompts, answeredMissingWordPromptKeys),
+        pickPracticePrompt(missingWordPracticePrompts, answeredMissingWordPromptKeys),
     };
   }, [
     answeredMissingLettersPromptKeys,
     answeredMissingWordPromptKeys,
     answeredMultipleChoiceCardIds,
-    missingLettersOrderedCards,
-    missingWordOrderedCards,
+    missingLettersPracticePrompts,
+    missingWordPracticePrompts,
     randomizedEligibleCards,
     resultPromptHold,
     selectedExerciseType,
@@ -417,12 +467,19 @@ export function App() {
     setCompletedMultipleChoiceCardIds([]);
     setResultPromptHold(null);
     setCompletedExerciseSummary(null);
+    setCrosswordDraftState(emptyCrosswordDraftState);
     setCurrentExerciseAnsweredCount(0);
     setCurrentExerciseSessionId(createId('exercise-session'));
     setGenerationSeed((seed) => seed + 1);
   }
 
   function openFinishDialog(intent: 'finish' | 'home') {
+    if (selectedExerciseType === 'crossword' && isExerciseStarted) {
+      setFinishDialogIntent(intent);
+      setIsFinishDialogOpen(true);
+      return;
+    }
+
     if (currentExerciseAnsweredCount === 0) {
       resetExerciseState();
       if (intent === 'home') {
@@ -442,6 +499,15 @@ export function App() {
 
   function handleFinishDialogConfirm() {
     const shouldGoHome = finishDialogIntent === 'home';
+    if (
+      selectedExerciseType === 'crossword' &&
+      currentExerciseAnsweredCount === 0 &&
+      crosswordDraftState.filledEntryCount > 0 &&
+      exercisePreview?.type === 'crossword'
+    ) {
+      saveCrosswordDraftAttempt(exercisePreview.puzzle, crosswordDraftState);
+    }
+
     setFinishDialogIntent(null);
     setIsFinishDialogOpen(false);
     resetExerciseState();
@@ -540,7 +606,11 @@ export function App() {
     puzzle: CrosswordPuzzle,
     answers: Record<string, string>,
   ) {
-    const prompts: ExercisePrompt[] = puzzle.entries.map((entry) => ({
+    const answeredEntries = getCompletedCrosswordEntries(puzzle, answers);
+    const filteredAnswers = Object.fromEntries(
+      answeredEntries.map((entry) => [entry.cardId, answers[entry.cardId] ?? '']),
+    );
+    const prompts: ExercisePrompt[] = answeredEntries.map((entry) => ({
       cardId: entry.cardId,
       prompt: entry.clue,
       expectedAnswer: entry.answer,
@@ -553,14 +623,61 @@ export function App() {
           : [],
     }));
     const correctness = Object.fromEntries(
-      puzzle.entries.map((entry) => [
+      answeredEntries.map((entry) => [
         entry.cardId,
         normalizeAnswer(answers[entry.cardId] ?? '') ===
           normalizeAnswer(entry.answer),
       ]),
     );
     const hintsUsed = Object.fromEntries(
-      puzzle.entries.map((entry) => [entry.cardId, 0]),
+      answeredEntries.map((entry) => [entry.cardId, 0]),
+    );
+
+    persistAttempt({
+      exerciseType: 'crossword',
+      prompts,
+      answers: filteredAnswers,
+      correctness,
+      hintsUsed,
+      cardIds: answeredEntries.map((entry) => entry.cardId),
+      advance: false,
+      isExerciseCompleted: answeredEntries.length === puzzle.entries.length,
+    });
+  }
+
+  function saveCrosswordDraftAttempt(
+    puzzle: CrosswordPuzzle,
+    draft: CrosswordDraftState,
+  ) {
+    const answeredCardIds = draft.answeredCardIds;
+    const prompts: ExercisePrompt[] = puzzle.entries
+      .filter((entry) => answeredCardIds.includes(entry.cardId))
+      .map((entry) => ({
+        cardId: entry.cardId,
+        prompt: entry.clue,
+        expectedAnswer: entry.answer,
+        translationHints:
+          cardSetCards.find((card) => card.id === entry.cardId)
+            ? getTranslationHints(
+                cardSetCards.find((card) => card.id === entry.cardId)!,
+                targetLanguage,
+              )
+            : [],
+      }));
+    const answers = Object.fromEntries(
+      answeredCardIds.map((cardId) => [cardId, draft.answers[cardId] ?? '']),
+    );
+    const correctness = Object.fromEntries(
+      puzzle.entries
+        .filter((entry) => answeredCardIds.includes(entry.cardId))
+        .map((entry) => [
+          entry.cardId,
+          normalizeAnswer(draft.answers[entry.cardId] ?? '') ===
+            normalizeAnswer(entry.answer),
+        ]),
+    );
+    const hintsUsed = Object.fromEntries(
+      answeredCardIds.map((cardId) => [cardId, 0]),
     );
 
     persistAttempt({
@@ -569,9 +686,8 @@ export function App() {
       answers,
       correctness,
       hintsUsed,
-      cardIds: puzzle.entries.map((entry) => entry.cardId),
+      cardIds: answeredCardIds,
       advance: false,
-      isExerciseCompleted: true,
     });
   }
 
@@ -687,6 +803,13 @@ export function App() {
             gap: 3,
             gridTemplateColumns: { xs: '1fr', md: '320px minmax(0, 1fr)' },
             alignItems: 'start',
+            height: 'calc(100vh - 118px)',
+            minHeight: 0,
+            overflow: 'hidden',
+            '@media (max-width: 899.95px)': {
+              height: 'auto',
+              overflow: 'visible',
+            },
           }}
         >
           <CardSetListView />
@@ -717,7 +840,7 @@ export function App() {
   function renderGameContent() {
     if (!isExerciseStarted) {
       return (
-        <Stack data-test="app__game_setup_section" spacing={3}>
+        <Stack data-test="app__game_setup_section" style={{ gap: 12 }}>
           <GameHelpPanel
             hasCoachmarkBeenShown={hasGameHelpCoachmarkBeenShown}
             interfaceLanguage={interfaceLanguage}
@@ -751,21 +874,6 @@ export function App() {
             progressMessage={coachProgressMessage}
             thoughtSeed={generationSeed + currentExerciseAnsweredCount}
           />
-          {!completedExerciseSummary && (
-            <Button
-              data-test="app__finish_exercise_button"
-              variant="outlined"
-              color="error"
-              onClick={() => openFinishDialog('finish')}
-              sx={{
-                alignSelf: { xs: 'flex-start', sm: 'center' },
-                flexShrink: 0,
-                ml: { sm: 'auto' },
-              }}
-            >
-              {t(interfaceLanguage, 'finishExercise')}
-            </Button>
-          )}
         </Stack>
         {renderExercise()}
         {currentPromptStats && !completedExerciseSummary && (
@@ -792,10 +900,21 @@ export function App() {
           />
         )}
         <FinishExerciseDialog
+          hasCrosswordDraftLetters={
+            selectedExerciseType === 'crossword' &&
+            crosswordDraftState.hasAnyLetters &&
+            currentExerciseAnsweredCount === 0
+          }
           interfaceLanguage={interfaceLanguage}
+          isCrossword={selectedExerciseType === 'crossword'}
           onCancel={handleFinishDialogCancel}
           onConfirm={handleFinishDialogConfirm}
-          answeredCount={currentExerciseAnsweredCount}
+          answeredCount={
+            selectedExerciseType === 'crossword' &&
+            currentExerciseAnsweredCount === 0
+              ? crosswordDraftState.filledEntryCount
+              : currentExerciseAnsweredCount
+          }
           open={isFinishDialogOpen}
         />
       </Stack>
@@ -863,21 +982,12 @@ export function App() {
       (selectedExerciseType !== 'multipleChoice' || setupEligibleCards.length >= 3);
     const setupWarningMessages = [
       !isCardSetSelected
-        ? {
-            dataTest: 'game_setup__warning_message__card_set',
-            text: t(interfaceLanguage, 'cannotStartGame'),
-          }
+        ? t(interfaceLanguage, 'cannotStartGame')
         : null,
       !selectedExerciseType
-        ? {
-            dataTest: 'game_setup__warning_message__exercise',
-            text: t(interfaceLanguage, 'chooseExercise'),
-          }
+        ? t(interfaceLanguage, 'chooseExercise')
         : null,
-    ].filter(
-      (message): message is { dataTest: string; text: string } =>
-        Boolean(message),
-    );
+    ].filter((message): message is string => Boolean(message));
 
     const handleCardSetChange = (nextCardSetId: string) => {
       setSelectedGameCardSetId(nextCardSetId);
@@ -924,44 +1034,97 @@ export function App() {
             selectedCardSetId={currentCardSetId}
           />
 
-          {setupWarningMessages.length > 0 && (
-            <Alert data-test="game_setup__warning_alert" severity="warning">
-              <Stack data-test="game_setup__warning_messages" spacing={0.5}>
-                {setupWarningMessages.map((message) => (
-                  <Box data-test={message.dataTest} key={message.dataTest}>
-                    {message.text}
-                  </Box>
-                ))}
-              </Stack>
-            </Alert>
-          )}
-
-          <Button
-            data-test="game_setup__start_button"
-            variant="contained"
-            size="large"
-            onClick={() => {
-              setIsExerciseStarted(true);
-              setAnsweredMissingLettersPromptKeys([]);
-              setAnsweredMissingWordPromptKeys([]);
-              setAnsweredMultipleChoiceCardIds([]);
-              setCompletedMissingLettersCardIds([]);
-              setCompletedMissingWordCardIds([]);
-              setCompletedMultipleChoiceCardIds([]);
-              setResultPromptHold(null);
-              setCompletedExerciseSummary(null);
-              setCurrentExerciseAnsweredCount(0);
-              setLastSavedAttemptId(null);
-              setCurrentExerciseSessionId(createId('exercise-session'));
-              setGenerationSeed((seed) => seed + 1);
-            }}
-            disabled={!canStart}
-            sx={{ alignSelf: 'flex-start', minWidth: 160 }}
+          <Stack
+            data-test="game_setup__start_row"
+            direction="row"
+            spacing={1.5}
+            sx={{ alignItems: 'center', flexWrap: 'wrap' }}
           >
-            {t(interfaceLanguage, 'start')}
-          </Button>
+            <Button
+              data-test="game_setup__start_button"
+              variant="contained"
+              size="large"
+              onClick={() => {
+                setIsExerciseStarted(true);
+                setAnsweredMissingLettersPromptKeys([]);
+                setAnsweredMissingWordPromptKeys([]);
+                setAnsweredMultipleChoiceCardIds([]);
+                setCompletedMissingLettersCardIds([]);
+                setCompletedMissingWordCardIds([]);
+                setCompletedMultipleChoiceCardIds([]);
+                setResultPromptHold(null);
+                setCompletedExerciseSummary(null);
+                setCurrentExerciseAnsweredCount(0);
+                setLastSavedAttemptId(null);
+                setCurrentExerciseSessionId(createId('exercise-session'));
+                setGenerationSeed((seed) => seed + 1);
+              }}
+              disabled={!canStart}
+              sx={{ minWidth: 160 }}
+            >
+              {t(interfaceLanguage, 'start')}
+            </Button>
+            {!canStart && setupWarningMessages.length > 0 && (
+              <GameWarningTooltip
+                anchorDataTest="game_setup__start_warning_anchor"
+                arrowDataTest="game_setup__start_warning_tooltip_arrow"
+                iconDataTest="game_setup__start_warning_tooltip_icon"
+                messages={setupWarningMessages}
+              >
+                <GameWarningIcon dataTest="game_setup__start_warning_icon" />
+              </GameWarningTooltip>
+            )}
+          </Stack>
         </Stack>
       </Paper>
+    );
+  }
+
+  function buildMissingLettersJumpSelector(
+    currentPrompt: MissingLettersPracticePrompt,
+  ): FinishExerciseJumpSelector {
+    const jumpPrompts = missingLettersPracticePrompts.some(
+      (prompt) => prompt.practiceKey === currentPrompt.practiceKey,
+    )
+      ? missingLettersPracticePrompts
+      : [currentPrompt, ...missingLettersPracticePrompts];
+
+    return {
+      value: currentPrompt.practiceKey,
+      options: jumpPrompts.map((prompt, index) => ({
+        isAnswered: completedMissingLettersCardIds.includes(prompt.cardId),
+        label: `${index + 1}. ${getJumpComplementaryLabel(
+          prompt,
+          complementaryLanguage,
+        )}`,
+        value: prompt.practiceKey,
+      })),
+      onChange: (nextPracticeKey) => {
+        const nextPrompt = missingLettersPracticePrompts.find(
+          (prompt) => prompt.practiceKey === nextPracticeKey,
+        );
+        if (!nextPrompt) {
+          return;
+        }
+
+        setResultPromptHold({
+          exerciseType: 'missingLetters',
+          prompt: nextPrompt,
+        });
+        setLastSavedAttemptId(null);
+      },
+    };
+  }
+
+  function renderFinishExerciseAction(
+    jumpSelector?: FinishExerciseJumpSelector,
+  ) {
+    return (
+      <FinishExerciseAction
+        interfaceLanguage={interfaceLanguage}
+        jumpSelector={jumpSelector}
+        onClick={() => openFinishDialog('finish')}
+      />
     );
   }
 
@@ -1010,6 +1173,7 @@ export function App() {
       return (
         <CrosswordExercise
           interfaceLanguage={interfaceLanguage}
+          onDraftChange={setCrosswordDraftState}
           onCardSetOpen={() => {
             dispatch(selectCardSet(selectedCardSet.id));
             setActiveSection('cards');
@@ -1021,6 +1185,7 @@ export function App() {
             targetLanguage,
           })}
           cardSetName={selectedCardSet.name}
+          finishAction={renderFinishExerciseAction()}
           onFinish={resetExerciseState}
           onSubmit={(answers) =>
             saveCrosswordAttempt(exercisePreview.puzzle, answers)
@@ -1038,6 +1203,7 @@ export function App() {
           progressTotalCount={eligibleCards.length}
           prompt={exercisePreview.prompt}
           cardSetName={selectedCardSet.name}
+          finishAction={renderFinishExerciseAction()}
           onAnswer={(answer) =>
             savePromptAttempt('multipleChoice', exercisePreview.prompt, answer, {
               advance: false,
@@ -1090,6 +1256,9 @@ export function App() {
           progressTotalCount={missingLettersPracticeCardIds.length}
           prompt={missingLettersPrompt}
           cardSetName={selectedCardSet.name}
+          finishAction={renderFinishExerciseAction(
+            buildMissingLettersJumpSelector(missingLettersPrompt),
+          )}
           onAnswer={(answer) =>
             savePromptAttempt('missingLetters', missingLettersPrompt, answer, {
               advance: false,
@@ -1135,6 +1304,7 @@ export function App() {
     return (
       <MissingWordExercise
         key={missingWordPrompt.practiceKey}
+        finishAction={renderFinishExerciseAction()}
         isRepeatedPrompt={completedMissingWordCardIds.includes(
           missingWordPrompt.cardId,
         )}
@@ -1368,6 +1538,219 @@ function CurrentPromptStatsPanel({
     </Paper>
   );
 }
+
+function FinishExerciseAction({
+  interfaceLanguage,
+  jumpSelector,
+  onClick,
+}: {
+  interfaceLanguage: RootState['app']['interfaceLanguage'];
+  jumpSelector?: FinishExerciseJumpSelector;
+  onClick: () => void;
+}) {
+  return (
+    <Box
+      data-test="exercise_finish_action__root"
+      sx={{
+        alignItems: 'center',
+        display: 'grid',
+        gap: 1.25,
+        gridTemplateColumns: { xs: '1fr', md: 'minmax(260px, 1fr) auto' },
+        justifyItems: { xs: 'stretch', md: 'end' },
+        maxWidth: { xs: '100%', md: 560 },
+        ml: { sm: 'auto' },
+        width: { xs: '100%', md: 'min(560px, 100%)' },
+      }}
+    >
+      <Box
+        data-test="exercise_finish_action__thought_bubble"
+        sx={{
+          alignItems: 'flex-start',
+          bgcolor: 'rgba(250, 246, 255, 0.96)',
+          border: '1px solid rgba(113, 82, 188, 0.24)',
+          borderRadius: '18px 18px 6px 18px',
+          boxShadow: '0 12px 28px rgba(73, 48, 124, 0.10)',
+          color: '#4b3a70',
+          display: 'grid',
+          gap: 1,
+          gridTemplateColumns: 'auto minmax(0, 1fr)',
+          justifySelf: 'stretch',
+          maxWidth: 390,
+          p: 1.25,
+          position: 'relative',
+          '&::before': {
+            bgcolor: 'rgba(250, 246, 255, 0.96)',
+            border: '1px solid rgba(113, 82, 188, 0.22)',
+            borderRadius: '999px',
+            bottom: -8,
+            content: '""',
+            height: 12,
+            position: 'absolute',
+            right: 36,
+            width: 12,
+          },
+          '&::after': {
+            bgcolor: 'rgba(250, 246, 255, 0.96)',
+            border: '1px solid rgba(113, 82, 188, 0.20)',
+            borderRadius: '999px',
+            bottom: -16,
+            content: '""',
+            height: 7,
+            position: 'absolute',
+            right: 24,
+            width: 7,
+          },
+        }}
+      >
+        <TipsAndUpdatesOutlinedIcon
+          data-test="exercise_finish_action__thought_icon"
+          sx={{
+            color: '#7b5fc4',
+            fontSize: 24,
+            mt: 0.1,
+          }}
+        />
+        <Stack spacing={1} sx={{ minWidth: 0 }}>
+          <Typography
+            data-test="exercise_finish_action__note"
+            sx={{
+              color: '#4b3a70',
+              fontFamily:
+                '"Trebuchet MS", "Verdana", "Arial", sans-serif',
+              fontSize: 13.5,
+              fontStyle: 'italic',
+              fontWeight: 800,
+              letterSpacing: 0,
+              lineHeight: 1.25,
+              textAlign: 'left',
+            }}
+          >
+            {t(interfaceLanguage, 'finishExerciseAnytimeBenefit')}
+          </Typography>
+          {jumpSelector && (
+            <Stack
+              data-test="exercise_finish_action__jump_row"
+              direction="row"
+              spacing={0.75}
+              sx={{ alignItems: 'center', minWidth: 0 }}
+            >
+              <FormControl
+                data-test="exercise_finish_action__jump_control"
+                size="small"
+                sx={{ flex: '1 1 170px', minWidth: 150 }}
+              >
+                <InputLabel id="exercise-finish-jump-select-label">
+                  {t(interfaceLanguage, 'exerciseJumps')}
+                </InputLabel>
+                <Select
+                  data-test="exercise_finish_action__jump_select"
+                  labelId="exercise-finish-jump-select-label"
+                  label={t(interfaceLanguage, 'exerciseJumps')}
+                  value={jumpSelector.value}
+                  onChange={(event: SelectChangeEvent<string>) =>
+                    jumpSelector.onChange(event.target.value)
+                  }
+                  sx={{
+                    bgcolor: 'rgba(255, 255, 255, 0.72)',
+                    borderRadius: 1,
+                    '& .MuiSelect-select': {
+                      fontSize: 13,
+                      fontWeight: 800,
+                      py: 0.75,
+                    },
+                  }}
+                >
+                  {jumpSelector.options.map((option) => (
+                    <MenuItem
+                      data-test={`exercise_finish_action__jump_option__${option.value}`}
+                      key={option.value}
+                      value={option.value}
+                      sx={{
+                        fontSize: 14,
+                        fontWeight: 800,
+                        opacity: option.isAnswered ? 0.52 : 1,
+                      }}
+                    >
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <JumpInfoTooltip interfaceLanguage={interfaceLanguage} />
+            </Stack>
+          )}
+        </Stack>
+      </Box>
+      <Button
+        data-test="app__finish_exercise_button"
+        variant="outlined"
+        color="error"
+        onClick={onClick}
+        sx={{
+          alignSelf: 'center',
+          flexShrink: 0,
+          justifySelf: { xs: 'start', md: 'end' },
+        }}
+      >
+        {t(interfaceLanguage, 'finishExercise')}
+      </Button>
+    </Box>
+  );
+}
+
+function JumpInfoTooltip({
+  interfaceLanguage,
+}: {
+  interfaceLanguage: RootState['app']['interfaceLanguage'];
+}) {
+  return (
+    <CursorAnchoredTooltip
+      arrowDataTest="exercise_finish_action__jump_info_tooltip_arrow"
+      closeOnOtherOpen
+      title={
+        <TooltipContent sx={jumpInfoTooltipContentStyles}>
+          {t(interfaceLanguage, 'exerciseJumpsTooltip')}
+        </TooltipContent>
+      }
+      tooltipSx={jumpInfoTooltipStyles}
+    >
+      <IconButton
+        aria-label={t(interfaceLanguage, 'exerciseJumpsTooltip')}
+        data-test="exercise_finish_action__jump_info_anchor"
+        size="small"
+        sx={{
+          bgcolor: 'rgba(123, 95, 196, 0.10)',
+          border: '1px solid rgba(123, 95, 196, 0.28)',
+          color: '#6e56b5',
+          flex: '0 0 auto',
+          '&:hover': {
+            bgcolor: 'rgba(123, 95, 196, 0.16)',
+          },
+        }}
+      >
+        <InfoOutlinedIcon fontSize="small" />
+      </IconButton>
+    </CursorAnchoredTooltip>
+  );
+}
+
+const jumpInfoTooltipStyles = {
+  bgcolor: '#ffffff',
+  border: '1px solid rgba(32, 48, 21, 0.16)',
+  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
+  color: '#203015',
+  maxWidth: 320,
+  px: 1.5,
+  py: 1.25,
+};
+
+const jumpInfoTooltipContentStyles = {
+  bgcolor: '#ffffff',
+  color: '#203015',
+  fontSize: 15,
+  fontWeight: 750,
+  lineHeight: 1.35,
+};
 
 function ExerciseCompletePanel({
   completedAt,
@@ -1624,13 +2007,17 @@ function AttemptSummary({
 
 function FinishExerciseDialog({
   answeredCount,
+  hasCrosswordDraftLetters = false,
   interfaceLanguage,
+  isCrossword = false,
   onCancel,
   onConfirm,
   open,
 }: {
   answeredCount: number;
+  hasCrosswordDraftLetters?: boolean;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
+  isCrossword?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
   open: boolean;
@@ -1657,9 +2044,28 @@ function FinishExerciseDialog({
         {t(interfaceLanguage, 'finishExercise')}
       </DialogTitle>
       <DialogContent data-test="finish_exercise_dialog__content">
-        <Typography data-test="finish_exercise_dialog__notice">
-          {t(interfaceLanguage, 'finishExerciseNotice')}
-        </Typography>
+        <Stack spacing={1}>
+          <Typography data-test="finish_exercise_dialog__notice">
+            {isCrossword
+              ? t(interfaceLanguage, 'crosswordFinishExerciseNotice')
+              : t(interfaceLanguage, 'finishExerciseNotice')}
+          </Typography>
+          {hasCrosswordDraftLetters && (
+            <Typography data-test="finish_exercise_dialog__crossword_letters_notice">
+              {t(interfaceLanguage, 'crosswordFinishHasLetters')}
+            </Typography>
+          )}
+          {isCrossword && answeredCount === 0 && (
+            <Typography data-test="finish_exercise_dialog__crossword_empty_stats_notice">
+              {t(interfaceLanguage, 'crosswordFinishNoCompletedWords')}
+            </Typography>
+          )}
+          {isCrossword && answeredCount > 0 && (
+            <Typography data-test="finish_exercise_dialog__crossword_stats_notice">
+              {t(interfaceLanguage, 'crosswordFinishCompletedWordsWillCount')}
+            </Typography>
+          )}
+        </Stack>
         <Typography data-test="finish_exercise_dialog__answered_count" sx={{ mt: 2 }}>
           {t(interfaceLanguage, 'answeredWords')}: {answeredCount}
         </Typography>
@@ -1722,6 +2128,47 @@ function calculateWeightedScore(input: {
   }, 0);
 
   return Math.round((score / cardIds.length) * 100);
+}
+
+function getJumpComplementaryLabel(
+  prompt: ExercisePrompt,
+  complementaryLanguage: SupportedLanguage,
+): string {
+  const complementaryHint = prompt.translationHints
+    .find((hint) => hint.language === complementaryLanguage)
+    ?.value.trim();
+
+  if (complementaryHint) {
+    return complementaryHint;
+  }
+
+  const fallbackHint = prompt.translationHints.find((hint) =>
+    hint.value.trim(),
+  )?.value;
+
+  return fallbackHint ?? prompt.prompt;
+}
+
+function getCompletedCrosswordEntries(
+  puzzle: CrosswordPuzzle,
+  answers: Record<string, string>,
+): CrosswordEntry[] {
+  return puzzle.entries.filter((entry) =>
+    isCrosswordAnswerComplete(entry, answers[entry.cardId] ?? ''),
+  );
+}
+
+function isCrosswordAnswerComplete(
+  entry: CrosswordEntry,
+  answer: string,
+): boolean {
+  return entry.answer.split('').every((character, index) => {
+    if (/\s/.test(character)) {
+      return true;
+    }
+
+    return Boolean(answer[index]?.trim());
+  });
 }
 
 function normalizeAnswer(value: string): string {

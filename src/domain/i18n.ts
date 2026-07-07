@@ -14,6 +14,7 @@ type I18nKey =
   | 'assistantProfileLink'
   | 'assistantSuperpowersTitle'
   | 'practiceSettings'
+  | 'complementaryLanguage'
   | 'correctStreakCooldownFivePlus'
   | 'correctStreakCooldownFour'
   | 'correctStreakCooldownThree'
@@ -73,7 +74,14 @@ type I18nKey =
   | 'exit'
   | 'finish'
   | 'finishExercise'
+  | 'finishExerciseAnytimeBenefit'
   | 'finishExerciseNotice'
+  | 'exerciseJumps'
+  | 'exerciseJumpsTooltip'
+  | 'crosswordFinishExerciseNotice'
+  | 'crosswordFinishHasLetters'
+  | 'crosswordFinishNoCompletedWords'
+  | 'crosswordFinishCompletedWordsWillCount'
   | 'exerciseCompleted'
   | 'completedResult'
   | 'answeredWords'
@@ -160,6 +168,7 @@ type I18nKey =
   | 'crosswordCardSetLabel'
   | 'cardSetChipPrefix'
   | 'crosswordCardSetCardsTooltip'
+  | 'crosswordSubmitNeedsCompletedWord'
   | 'submitCrossword';
 
 const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
@@ -177,6 +186,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     assistantProfileLink: 'Meet them properly',
     assistantSuperpowersTitle: 'Superpowers',
     practiceSettings: 'Practice settings',
+    complementaryLanguage: 'Complementary language',
     correctStreakCooldownFivePlus: 'Last 5 or more answers correct',
     correctStreakCooldownFour: 'Last 4 answers correct',
     correctStreakCooldownThree: 'Last 3 answers correct',
@@ -243,8 +253,20 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     exit: 'Exit',
     finish: 'Finish',
     finishExercise: 'Finish exercise',
+    finishExerciseAnytimeBenefit:
+      'You can end the exercise at any moment - completed answers will still count.',
     finishExerciseNotice:
       'Exercise results will be counted and the exercise will end.',
+    exerciseJumps: 'Jumps',
+    exerciseJumpsTooltip:
+      'Do you like jumps through space? We have them too: jump to any word without losing your completed result.',
+    crosswordFinishExerciseNotice:
+      'Completed crossword words will be counted and the game will end.',
+    crosswordFinishHasLetters: 'The crossword already has entered letters.',
+    crosswordFinishNoCompletedWords:
+      'There are no complete words yet, so there is nothing to add to statistics.',
+    crosswordFinishCompletedWordsWillCount:
+      'Completed words will be added to statistics.',
     exerciseCompleted: 'Game completed',
     completedResult: 'Completed!',
     answeredWords: 'Answered words',
@@ -338,6 +360,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     crosswordCardSetLabel: 'Card set',
     cardSetChipPrefix: 'Card set',
     crosswordCardSetCardsTooltip: 'Click to open the card set list.',
+    crosswordSubmitNeedsCompletedWord:
+      'Enter at least one complete word to check the results.',
     submitCrossword: 'Submit crossword',
   },
   ru: {
@@ -354,6 +378,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     assistantProfileLink: 'Познакомиться поближе',
     assistantSuperpowersTitle: 'Супер-способности',
     practiceSettings: 'Настройки практики',
+    complementaryLanguage: 'Дополняющий язык',
     correctStreakCooldownFivePlus: 'Последние 5 и более раз верно',
     correctStreakCooldownFour: 'Последние 4 раза верно',
     correctStreakCooldownThree: 'Последние 3 раза верно',
@@ -420,8 +445,20 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     exit: 'Выйти',
     finish: 'Закончить',
     finishExercise: 'Закончить упражнение',
+    finishExerciseAnytimeBenefit:
+      'Можно закончить упражнение в любой момент - уже выполненный результат будет зачтен.',
     finishExerciseNotice:
       'Результаты упражнения будут зачтены, а упражнение закончено.',
+    exerciseJumps: 'Прыжки',
+    exerciseJumpsTooltip:
+      'Любишь прыжки в пространстве? Вот и у нас есть: прыгай к любому слову, а уже выполненный результат не потеряется.',
+    crosswordFinishExerciseNotice:
+      'Отвеченные слова попадут в статистику, а кроссворд будет закончен.',
+    crosswordFinishHasLetters: 'В кроссворде уже введены буквы.',
+    crosswordFinishNoCompletedWords:
+      'Пока нет целых слов, поэтому в статистику нечего добавить.',
+    crosswordFinishCompletedWordsWillCount:
+      'Заполненные целиком слова попадут в статистику.',
     exerciseCompleted: 'Игра пройдена',
     completedResult: 'Пройдено!',
     answeredWords: 'Отвечено слов',
@@ -516,6 +553,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     crosswordCardSetLabel: 'Набор карточек',
     cardSetChipPrefix: 'Набор карточек',
     crosswordCardSetCardsTooltip: 'Кликните чтобы перейти к списку карточек набора.',
+    crosswordSubmitNeedsCompletedWord:
+      'Введите хотя бы одно слово, чтобы проверить результаты.',
     submitCrossword: 'Отправить кроссворд',
   },
   es: {
@@ -532,6 +571,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     assistantProfileLink: 'Conocerlo mejor',
     assistantSuperpowersTitle: 'Superpoderes',
     practiceSettings: 'Ajustes de practica',
+    complementaryLanguage: 'Idioma complementario',
     correctStreakCooldownFivePlus: 'Ultimas 5 o mas respuestas correctas',
     correctStreakCooldownFour: 'Ultimas 4 respuestas correctas',
     correctStreakCooldownThree: 'Ultimas 3 respuestas correctas',
@@ -598,8 +638,20 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     exit: 'Salir',
     finish: 'Terminar',
     finishExercise: 'Terminar ejercicio',
+    finishExerciseAnytimeBenefit:
+      'Puedes terminar el ejercicio en cualquier momento: las respuestas completadas contaran.',
     finishExerciseNotice:
       'Los resultados del ejercicio se guardaran y el ejercicio terminara.',
+    exerciseJumps: 'Saltos',
+    exerciseJumpsTooltip:
+      'Te gustan los saltos por el espacio? Aqui tambien hay: salta a cualquier palabra sin perder lo ya completado.',
+    crosswordFinishExerciseNotice:
+      'Las palabras completas del crucigrama se guardaran y el juego terminara.',
+    crosswordFinishHasLetters: 'El crucigrama ya tiene letras escritas.',
+    crosswordFinishNoCompletedWords:
+      'Todavia no hay palabras completas, asi que no hay nada para estadisticas.',
+    crosswordFinishCompletedWordsWillCount:
+      'Las palabras completas se anadiran a las estadisticas.',
     exerciseCompleted: 'Juego completado',
     completedResult: 'Completado!',
     answeredWords: 'Palabras respondidas',
@@ -693,6 +745,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     crosswordCardSetLabel: 'Conjunto de tarjetas',
     cardSetChipPrefix: 'Conjunto',
     crosswordCardSetCardsTooltip: 'Haz clic para abrir la lista de tarjetas del conjunto.',
+    crosswordSubmitNeedsCompletedWord:
+      'Introduce al menos una palabra completa para comprobar resultados.',
     submitCrossword: 'Enviar crucigrama',
   },
 };

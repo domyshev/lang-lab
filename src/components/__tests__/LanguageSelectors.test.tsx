@@ -38,7 +38,7 @@ describe('LanguageSelectors', () => {
     });
   });
 
-  it('shows character selector tooltips above the icon with light theme styles', async () => {
+  it('shows character selector tooltips to the left of icons with the shared arrow style', async () => {
     const user = userEvent.setup();
 
     render(
@@ -58,13 +58,35 @@ describe('LanguageSelectors', () => {
 
     expect(tooltipRoot.closest('[data-popper-placement]')).toHaveAttribute(
       'data-popper-placement',
-      expect.stringMatching(/^top/),
+      expect.stringMatching(/^left/),
     );
+    expect(
+      screen.getByTestId(
+        'language_selectors__assistant_selected_tooltip_arrow__studyTroll',
+      ),
+    ).toBeInTheDocument();
     expect(tooltipText).toHaveStyle({
       backgroundColor: 'rgb(255, 255, 255)',
       color: 'rgb(32, 48, 21)',
       fontSize: '14px',
     });
+
+    await user.click(screen.getByRole('combobox', { name: 'Персонаж' }));
+    await user.hover(
+      screen.getByTestId('language_selectors__assistant_option_icon__webRunner'),
+    );
+
+    await screen.findByText(getAssistantTooltip('webRunner', 'ru'));
+    const tooltips = screen.getAllByRole('tooltip');
+    expect(tooltips[tooltips.length - 1].closest('[data-popper-placement]')).toHaveAttribute(
+      'data-popper-placement',
+      expect.stringMatching(/^left/),
+    );
+    expect(
+      screen.getByTestId(
+        'language_selectors__assistant_option_tooltip_arrow__webRunner',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('shows language options in their own languages', async () => {
@@ -165,6 +187,34 @@ describe('LanguageSelectors', () => {
     expect(
       store.getState().app.practiceSettings!.newCardMixFrequencyPercent,
     ).toBe(35);
+  });
+
+  it('configures complementary languages per target language without allowing the same language', async () => {
+    const user = userEvent.setup();
+    const store = createStore();
+
+    render(
+      <Provider store={store}>
+        <LanguageSelectors />
+      </Provider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Настройки практики' }));
+
+    const englishComplementary = screen.getByRole('combobox', {
+      name: 'Дополняющий язык для English',
+    });
+    expect(englishComplementary).toHaveTextContent('Русский');
+
+    await user.click(englishComplementary);
+
+    expect(screen.queryByRole('option', { name: /English/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Русский/ })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Español/ })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('option', { name: /Español/ }));
+
+    expect(store.getState().app.complementaryLanguages.en).toBe('es');
   });
 });
 

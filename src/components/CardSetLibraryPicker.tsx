@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
-import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import {
   Box,
@@ -63,7 +62,7 @@ export function CardSetLibraryPicker({
   );
   const selectedItem =
     items.find((item) => item.id === selectedCardSetId) ?? null;
-  const featuredItems = items.slice(0, 4);
+  const featuredItems = getFeaturedItems(items, selectedItem);
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const filteredItems = normalizedSearch
     ? items.filter((item) =>
@@ -132,7 +131,7 @@ export function CardSetLibraryPicker({
               '&:hover': { bgcolor: '#ffe8a3' },
             }}
           >
-            <MoreHorizRoundedIcon />
+            <SearchRoundedIcon data-test="card_set_library__open_search_icon" />
           </IconButton>
         </Stack>
 
@@ -168,26 +167,40 @@ export function CardSetLibraryPicker({
         >
           {t(interfaceLanguage, 'cardSetLibraryDialogTitle')}
         </DialogTitle>
-        <DialogContent sx={{ pt: 1 }}>
-          <Stack spacing={2}>
-            <TextField
-              fullWidth
-              label={t(interfaceLanguage, 'searchCardSetLibrary')}
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              slotProps={{
-                htmlInput: {
-                  'data-test': 'card_set_library_dialog__search_input',
-                },
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchRoundedIcon />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
+        <DialogContent
+          data-test="card_set_library_dialog__content"
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: 'min(72vh, 720px)',
+            overflow: 'hidden',
+            pt: 0.5,
+          }}
+        >
+          <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
+            <Box
+              data-test="card_set_library_dialog__search_area"
+              sx={{ flexShrink: 0, pt: '10px' }}
+            >
+              <TextField
+                fullWidth
+                label={t(interfaceLanguage, 'searchCardSetLibrary')}
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                slotProps={{
+                  htmlInput: {
+                    'data-test': 'card_set_library_dialog__search_input',
+                  },
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchRoundedIcon />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Box>
             <Box
               data-test="card_set_library_dialog__items"
               sx={{
@@ -197,6 +210,9 @@ export function CardSetLibraryPicker({
                   xs: '1fr',
                   sm: 'repeat(2, minmax(0, 1fr))',
                 },
+                minHeight: 0,
+                overflowY: 'auto',
+                pr: 0.5,
               }}
             >
               {filteredItems.map((item) => (
@@ -350,6 +366,24 @@ function cardSetMatchesSearch({
         value?.toLowerCase().includes(normalizedSearch),
       ),
     );
+}
+
+function getFeaturedItems(
+  items: CardSetLibraryItem[],
+  selectedItem: CardSetLibraryItem | null,
+): CardSetLibraryItem[] {
+  const allCardsItem = items[0];
+  if (!allCardsItem || !selectedItem || selectedItem.isAllCards) {
+    return items.slice(0, 4);
+  }
+
+  return [
+    allCardsItem,
+    selectedItem,
+    ...items
+      .slice(1)
+      .filter((item) => item.id !== selectedItem.id),
+  ].slice(0, 4);
 }
 
 function getCardSetGradient(id: string, isAllCards?: boolean) {

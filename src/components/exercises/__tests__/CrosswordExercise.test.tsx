@@ -80,6 +80,17 @@ describe('CrosswordExercise', () => {
     expect(screen.getByRole('button', { name: 'Отправить кроссворд' })).toHaveStyle({
       alignSelf: 'flex-start',
     });
+    expect(screen.getByRole('button', { name: 'Отправить кроссворд' })).toBeDisabled();
+    expect(screen.getByTestId('crossword_exercise__submit_warning_icon')).toHaveTextContent(
+      '!',
+    );
+    expect(screen.getByTestId('crossword_exercise__submit_warning_icon')).toHaveStyle({
+      animation: 'disabledExerciseTooltipBlink 860ms ease-in-out infinite',
+    });
+    await user.hover(screen.getByTestId('crossword_exercise__submit_warning_anchor'));
+    expect(
+      await screen.findByText('Введите хотя бы одно слово, чтобы проверить результаты.'),
+    ).toBeInTheDocument();
 
     await user.hover(screen.getByTestId('crossword_exercise__clue_number__cat'));
     expect(await screen.findByText('Вопрос')).toBeInTheDocument();
@@ -96,6 +107,7 @@ describe('CrosswordExercise', () => {
     expect(screen.getByTestId('crossword_exercise__progress_chip')).toHaveTextContent(
       '1 пройдено / 2 всего',
     );
+    expect(screen.getByRole('button', { name: 'Отправить кроссворд' })).toBeEnabled();
     await user.type(screen.getByLabelText('Crossword cell 2 3'), 'e');
     await user.type(screen.getByLabelText('Crossword cell 3 3'), 'a');
     expect(screen.getByTestId('crossword_exercise__progress_chip')).toHaveTextContent(
@@ -109,6 +121,61 @@ describe('CrosswordExercise', () => {
 
     await user.click(screen.getByRole('button', { name: 'Пройдено!' }));
     expect(onFinish).toHaveBeenCalledOnce();
+  });
+
+  it('submits and colors only fully filled crossword words', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+
+    render(
+      <CrosswordExercise
+        interfaceLanguage="ru"
+        cardSetName="Все карточки"
+        puzzle={{
+          mode: 'words',
+          bounds: { minRow: 0, maxRow: 2, minCol: 0, maxCol: 2 },
+          cells: [
+            { row: 0, col: 0, solution: 'c', entryIds: ['cat'] },
+            { row: 0, col: 1, solution: 'a', entryIds: ['cat'] },
+            { row: 0, col: 2, solution: 't', entryIds: ['cat', 'tea'] },
+            { row: 1, col: 2, solution: 'e', entryIds: ['tea'] },
+            { row: 2, col: 2, solution: 'a', entryIds: ['tea'] },
+          ],
+          entries: [
+            {
+              cardId: 'cat',
+              answer: 'cat',
+              clue: 'ru: кот',
+              row: 0,
+              col: 0,
+              direction: 'across',
+            },
+            {
+              cardId: 'tea',
+              answer: 'tea',
+              clue: 'ru: чай',
+              row: 0,
+              col: 2,
+              direction: 'down',
+            },
+          ],
+        }}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    await user.type(screen.getByLabelText('Crossword cell 1 1'), 'c');
+    await user.type(screen.getByLabelText('Crossword cell 1 2'), 'a');
+    await user.type(screen.getByLabelText('Crossword cell 1 3'), 't');
+    await user.click(screen.getByRole('button', { name: 'Отправить кроссворд' }));
+
+    expect(onSubmit).toHaveBeenCalledWith({ cat: 'cat' });
+    expect(screen.getByLabelText('Crossword cell 1 3')).toHaveStyle({
+      backgroundColor: 'rgb(235, 247, 225)',
+    });
+    expect(screen.getByLabelText('Crossword cell 2 3')).not.toHaveStyle({
+      backgroundColor: 'rgb(253, 235, 238)',
+    });
   });
 
   it('colors submitted words and shows recent answer history from submitted cells', async () => {

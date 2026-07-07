@@ -10,10 +10,10 @@ import {
   Select,
   Stack,
   TextField,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
+import type { ReactElement } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   AssistantId,
@@ -34,8 +34,10 @@ import {
   getPracticeSettings,
 } from '../domain/practiceOrdering';
 import {
+  getComplementaryLanguages,
   setCorrectStreakCooldownMonths,
   setAssistantId,
+  setComplementaryLanguageForTarget,
   setInterfaceLanguage,
   setNewCardMixFrequencyPercent,
   setRecentMistakeRepeatFrequencyPercent,
@@ -43,10 +45,12 @@ import {
 } from '../store/appSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { AssistantStickerIcon } from './assistantAssets';
+import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
 
 export function LanguageSelectors() {
   const dispatch = useDispatch<AppDispatch>();
   const assistantLabelId = useId();
+  const complementaryLabelPrefix = useId();
   const interfaceLabelId = useId();
   const targetLabelId = useId();
   const [settingsAnchor, setSettingsAnchor] = useState<HTMLElement | null>(
@@ -64,7 +68,13 @@ export function LanguageSelectors() {
   const storedPracticeSettings = useSelector(
     (state: RootState) => state.app.practiceSettings,
   );
+  const storedComplementaryLanguages = useSelector(
+    (state: RootState) => state.app.complementaryLanguages,
+  );
   const practiceSettings = getPracticeSettings(storedPracticeSettings);
+  const complementaryLanguages = getComplementaryLanguages(
+    storedComplementaryLanguages,
+  );
   const isSettingsOpen = Boolean(settingsAnchor);
 
   const handleInterfaceChange = (
@@ -76,6 +86,17 @@ export function LanguageSelectors() {
   const handleTargetChange = (event: SelectChangeEvent<SupportedLanguage>) => {
     dispatch(setTargetLanguage(event.target.value as SupportedLanguage));
   };
+
+  const handleComplementaryLanguageChange =
+    (target: SupportedLanguage) =>
+    (event: SelectChangeEvent<SupportedLanguage>) => {
+      dispatch(
+        setComplementaryLanguageForTarget({
+          complementaryLanguage: event.target.value as SupportedLanguage,
+          targetLanguage: target,
+        }),
+      );
+    };
 
   return (
     <Stack
@@ -111,11 +132,9 @@ export function LanguageSelectors() {
           renderValue={(value) => {
             const tooltip = getAssistantTooltip(value, interfaceLanguage);
             return (
-              <Tooltip
-                describeChild
-                placement="top"
-                slotProps={assistantTooltipSlotProps}
-                title={tooltip}
+              <AssistantSelectorTooltip
+                arrowDataTest={`language_selectors__assistant_selected_tooltip_arrow__${value}`}
+                tooltip={tooltip}
               >
                 <Box
                   component="span"
@@ -129,7 +148,7 @@ export function LanguageSelectors() {
                     size={30}
                   />
                 </Box>
-              </Tooltip>
+              </AssistantSelectorTooltip>
             );
           }}
           sx={{
@@ -150,11 +169,9 @@ export function LanguageSelectors() {
               value={assistant.id}
               sx={{ justifyContent: 'center' }}
             >
-              <Tooltip
-                describeChild
-                placement="top"
-                slotProps={assistantTooltipSlotProps}
-                title={getAssistantTooltip(assistant.id, interfaceLanguage)}
+              <AssistantSelectorTooltip
+                arrowDataTest={`language_selectors__assistant_option_tooltip_arrow__${assistant.id}`}
+                tooltip={getAssistantTooltip(assistant.id, interfaceLanguage)}
               >
                 <Box
                   component="span"
@@ -171,7 +188,7 @@ export function LanguageSelectors() {
                     size={36}
                   />
                 </Box>
-              </Tooltip>
+              </AssistantSelectorTooltip>
             </MenuItem>
           ))}
         </Select>
@@ -298,6 +315,69 @@ export function LanguageSelectors() {
           >
             {t(interfaceLanguage, 'practiceSettings')}
           </Typography>
+          <Stack
+            data-test="language_selectors__complementary_language_settings"
+            spacing={1}
+          >
+            <Typography
+              data-test="language_selectors__complementary_language_title"
+              fontSize={14}
+              fontWeight={900}
+              sx={{ color: '#5f6b59' }}
+            >
+              {t(interfaceLanguage, 'complementaryLanguage')}
+            </Typography>
+            {supportedLanguages.map((target) => {
+              const label = getComplementaryLanguageFieldLabel(
+                interfaceLanguage,
+                target,
+              );
+              const labelId = `${complementaryLabelPrefix}-${target}`;
+              return (
+                <FormControl
+                  data-test={`language_selectors__complementary_language_control__${target}`}
+                  key={target}
+                  size="small"
+                  fullWidth
+                >
+                  <InputLabel
+                    data-test={`language_selectors__complementary_language_label__${target}`}
+                    id={labelId}
+                  >
+                    {label}
+                  </InputLabel>
+                  <Select
+                    data-test={`language_selectors__complementary_language_select__${target}`}
+                    labelId={labelId}
+                    label={label}
+                    value={complementaryLanguages[target]}
+                    onChange={handleComplementaryLanguageChange(target)}
+                    renderValue={(value) => (
+                      <LanguageLabel
+                        dataTestPrefix={`language_selectors__complementary_language_selected__${target}`}
+                        language={value as SupportedLanguage}
+                      />
+                    )}
+                  >
+                    {supportedLanguages
+                      .filter((language) => language !== target)
+                      .map((language) => (
+                        <MenuItem
+                          data-test={`language_selectors__complementary_language_option__${target}__${language}`}
+                          key={language}
+                          value={language}
+                        >
+                          <LanguageLabel
+                            dataTestPrefix={`language_selectors__complementary_language_option_label__${target}__${language}`}
+                            language={language}
+                          />
+                        </MenuItem>
+                      ))}
+                  </Select>
+                </FormControl>
+              );
+            })}
+          </Stack>
           {cooldownFields.map((field) => (
             <TextField
               data-test={`language_selectors__cooldown_input__${field.key}`}
@@ -389,20 +469,62 @@ const compactSelectSx = {
   },
 };
 
-const assistantTooltipSlotProps = {
-  tooltip: {
-    sx: {
-      bgcolor: '#ffffff',
-      border: '1px solid rgba(32, 48, 21, 0.16)',
-      boxShadow: '0 10px 24px rgba(32, 48, 21, 0.14)',
-      color: '#203015',
-      fontSize: 14,
-      lineHeight: 1.35,
-      maxWidth: 280,
-      px: 1.25,
-      py: 1,
-    },
-  },
+function getComplementaryLanguageFieldLabel(
+  interfaceLanguage: SupportedLanguage,
+  targetLanguage: SupportedLanguage,
+): string {
+  if (interfaceLanguage === 'ru') {
+    return `Дополняющий язык для ${languageLabels[targetLanguage]}`;
+  }
+
+  if (interfaceLanguage === 'es') {
+    return `Idioma complementario para ${languageLabels[targetLanguage]}`;
+  }
+
+  return `Complementary language for ${languageLabels[targetLanguage]}`;
+}
+
+function AssistantSelectorTooltip({
+  arrowDataTest,
+  children,
+  tooltip,
+}: {
+  arrowDataTest: string;
+  children: ReactElement;
+  tooltip: string;
+}) {
+  return (
+    <CursorAnchoredTooltip
+      arrowDataTest={arrowDataTest}
+      closeOnOtherOpen
+      placement="left"
+      title={
+        <TooltipContent sx={assistantTooltipContentStyles}>
+          {tooltip}
+        </TooltipContent>
+      }
+      tooltipSx={assistantTooltipStyles}
+    >
+      {children}
+    </CursorAnchoredTooltip>
+  );
+}
+
+const assistantTooltipStyles = {
+  bgcolor: '#ffffff',
+  border: '1px solid rgba(32, 48, 21, 0.16)',
+  boxShadow: '0 10px 24px rgba(32, 48, 21, 0.14)',
+  color: '#203015',
+  maxWidth: 280,
+  px: 1.25,
+  py: 1,
+};
+
+const assistantTooltipContentStyles = {
+  bgcolor: '#ffffff',
+  color: '#203015',
+  fontSize: 14,
+  lineHeight: 1.35,
 };
 
 function LanguageLabel({

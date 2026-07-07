@@ -59,8 +59,24 @@ export function CardSetListView({
   };
 
   return (
-    <Paper data-test="card_set_list__panel" sx={{ p: { xs: 2, md: 3 } }}>
-      <Stack data-test="card_set_list__content" spacing={2.5}>
+    <Paper
+      data-test="card_set_list__panel"
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        maxHeight: 'calc(100vh - 118px)',
+        minHeight: 0,
+        p: { xs: 2, md: 3 },
+        '@media (max-width: 899.95px)': {
+          maxHeight: 'none',
+        },
+      }}
+    >
+      <Stack
+        data-test="card_set_list__content"
+        spacing={2.5}
+        sx={{ flex: 1, minHeight: 0 }}
+      >
         <Stack
           data-test="card_set_list__header"
           direction={{ xs: 'column', sm: 'row' }}
@@ -126,7 +142,16 @@ export function CardSetListView({
           </Stack>
         )}
 
-        <Stack data-test="card_set_list__tiles" spacing={1.25}>
+        <Stack
+          data-test="card_set_list__tiles"
+          spacing={1.25}
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            pr: 0.5,
+          }}
+        >
           <CardSetTile
             id={ALL_CARDS_CARD_SET_ID}
             name={t(interfaceLanguage, 'allCards')}
@@ -186,6 +211,7 @@ function CardSetTile({
       variant="outlined"
       sx={{
         borderColor: selected ? 'primary.main' : 'divider',
+        flexShrink: 0,
         overflow: 'hidden',
       }}
     >

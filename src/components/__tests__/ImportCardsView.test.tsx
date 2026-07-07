@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
-import { appReducer } from '../../store/appSlice';
+import { appReducer, defaultComplementaryLanguages } from '../../store/appSlice';
 import { cardsReducer } from '../../store/cardsSlice';
 import { ImportCardsView } from '../ImportCardsView';
 
@@ -16,6 +16,7 @@ function renderImportCardsView(interfaceLanguage: 'ru' | 'en' | 'es' = 'ru') {
     preloadedState: {
       app: {
         assistantId: 'studyTroll' as const,
+        complementaryLanguages: defaultComplementaryLanguages,
         interfaceLanguage,
         targetLanguage: 'en' as const,
       },

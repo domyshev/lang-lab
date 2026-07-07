@@ -1,6 +1,10 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { AssistantId, defaultAssistantId } from '../domain/assistants';
-import { SupportedLanguage } from '../domain/languages';
+import {
+  SupportedLanguage,
+  isSupportedLanguage,
+  supportedLanguages,
+} from '../domain/languages';
 import {
   CorrectStreakCooldownKey,
   PracticeSettings,
@@ -10,6 +14,7 @@ import {
 
 export interface AppState {
   assistantId: AssistantId;
+  complementaryLanguages: ComplementaryLanguages;
   hasGameHelpCoachmarkBeenShown?: boolean;
   interfaceLanguage: SupportedLanguage;
   isGameHelpCollapsed?: boolean;
@@ -17,8 +22,20 @@ export interface AppState {
   targetLanguage: SupportedLanguage;
 }
 
+export type ComplementaryLanguages = Record<
+  SupportedLanguage,
+  SupportedLanguage
+>;
+
+export const defaultComplementaryLanguages: ComplementaryLanguages = {
+  en: 'ru',
+  es: 'ru',
+  ru: 'en',
+};
+
 const initialState: AppState = {
   assistantId: defaultAssistantId,
+  complementaryLanguages: defaultComplementaryLanguages,
   hasGameHelpCoachmarkBeenShown: false,
   interfaceLanguage: 'ru',
   isGameHelpCollapsed: false,
@@ -38,6 +55,23 @@ const appSlice = createSlice({
     },
     setAssistantId(state, action: PayloadAction<AssistantId>) {
       state.assistantId = action.payload;
+    },
+    setComplementaryLanguageForTarget(
+      state,
+      action: PayloadAction<{
+        complementaryLanguage: SupportedLanguage;
+        targetLanguage: SupportedLanguage;
+      }>,
+    ) {
+      const { complementaryLanguage, targetLanguage } = action.payload;
+      if (complementaryLanguage === targetLanguage) {
+        return;
+      }
+
+      state.complementaryLanguages = {
+        ...getComplementaryLanguages(state.complementaryLanguages),
+        [targetLanguage]: complementaryLanguage,
+      };
     },
     setInterfaceLanguage(state, action: PayloadAction<SupportedLanguage>) {
       state.interfaceLanguage = action.payload;
@@ -79,6 +113,7 @@ export const {
   acknowledgeGameHelp,
   markGameHelpCoachmarkShown,
   setAssistantId,
+  setComplementaryLanguageForTarget,
   setCorrectStreakCooldownMonths,
   setInterfaceLanguage,
   setNewCardMixFrequencyPercent,
@@ -86,6 +121,34 @@ export const {
   setTargetLanguage,
 } = appSlice.actions;
 export const appReducer = appSlice.reducer;
+
+export function getComplementaryLanguages(
+  value?: Partial<Record<SupportedLanguage, SupportedLanguage>>,
+): ComplementaryLanguages {
+  const resolved: ComplementaryLanguages = {
+    ...defaultComplementaryLanguages,
+  };
+
+  supportedLanguages.forEach((targetLanguage) => {
+    const complementaryLanguage = value?.[targetLanguage];
+    if (
+      typeof complementaryLanguage === 'string' &&
+      isSupportedLanguage(complementaryLanguage) &&
+      complementaryLanguage !== targetLanguage
+    ) {
+      resolved[targetLanguage] = complementaryLanguage;
+    }
+  });
+
+  return resolved;
+}
+
+export function getComplementaryLanguageForTarget(
+  value: Partial<Record<SupportedLanguage, SupportedLanguage>> | undefined,
+  targetLanguage: SupportedLanguage,
+): SupportedLanguage {
+  return getComplementaryLanguages(value)[targetLanguage];
+}
 
 function sanitizeMonths(value: number): number {
   if (!Number.isFinite(value) || value < 0) {

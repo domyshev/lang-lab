@@ -11,6 +11,7 @@ import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import {
   ChangeEvent,
   type ReactElement,
+  type ReactNode,
   useEffect,
   useMemo,
   useRef,
@@ -27,18 +28,29 @@ import {
   CursorAnchoredTooltip,
   TooltipContent,
 } from '../CursorAnchoredTooltip';
+import { GameWarningIcon, GameWarningTooltip } from '../GameWarningTooltip';
 import { ExerciseProgressChip, ExerciseCardSetChip } from './ExerciseCardSetChip';
+
+export type CrosswordDraftState = {
+  answers: Record<string, string>;
+  answeredCardIds: string[];
+  filledEntryCount: number;
+  hasAnyLetters: boolean;
+};
 
 export function CrosswordExercise({
   interfaceLanguage = 'en',
+  onDraftChange,
   onCardSetOpen,
   puzzle,
   recentResultsByCardId = {},
   cardSetName,
+  finishAction,
   onFinish,
   onSubmit,
 }: {
   interfaceLanguage?: SupportedLanguage;
+  onDraftChange?: (state: CrosswordDraftState) => void;
   onCardSetOpen?: () => void;
   puzzle: CrosswordPuzzle;
   recentResultsByCardId?: Record<
@@ -46,6 +58,7 @@ export function CrosswordExercise({
     Array<{ isCorrect: boolean; occurredAt: string }>
   >;
   cardSetName?: string;
+  finishAction?: ReactNode;
   onFinish?: () => void;
   onSubmit: (answers: Record<string, string>) => void;
 }) {
@@ -80,8 +93,13 @@ export function CrosswordExercise({
   );
   const rows = range(puzzle.bounds.minRow, puzzle.bounds.maxRow);
   const cols = range(puzzle.bounds.minCol, puzzle.bounds.maxCol);
-  const filledEntryCount = getFilledEntryCount(puzzle, cellValues);
+  const draftState = useMemo(
+    () => getCrosswordDraftState(puzzle, cellValues),
+    [cellValues, puzzle],
+  );
+  const filledEntryCount = draftState.filledEntryCount;
   const hasSubmittedAnswers = Boolean(submittedAnswers);
+  const isSubmitDisabled = !hasSubmittedAnswers && filledEntryCount === 0;
 
   useEffect(() => {
     setCellValues({});
@@ -89,31 +107,21 @@ export function CrosswordExercise({
     activeEntryIdRef.current = null;
   }, [puzzleKey]);
 
+  useEffect(() => {
+    onDraftChange?.(draftState);
+  }, [draftState, onDraftChange]);
+
   const handleSubmit = () => {
+    if (isSubmitDisabled) {
+      return;
+    }
+
     if (submittedAnswers) {
       onFinish?.();
       return;
     }
 
-    const answers = Object.fromEntries(
-      puzzle.entries.map((entry) => [
-        entry.cardId,
-        entry.answer
-          .split('')
-          .map((character, index) => {
-            if (/\s/.test(character)) {
-              return character;
-            }
-
-            const row =
-              entry.direction === 'down' ? entry.row + index : entry.row;
-            const col =
-              entry.direction === 'across' ? entry.col + index : entry.col;
-            return cellValues[toCellKey(row, col)] ?? '';
-          })
-          .join(''),
-      ]),
-    );
+    const answers = getFilledCrosswordAnswers(draftState);
     setSubmittedAnswers(answers);
     onSubmit(answers);
   };
@@ -166,50 +174,61 @@ export function CrosswordExercise({
       <Stack data-test="crossword_exercise__content" spacing={2}>
         <Stack
           data-test="crossword_exercise__header"
-          spacing={1}
-          sx={{ alignItems: 'flex-start' }}
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={2}
+          sx={{
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            justifyContent: 'space-between',
+          }}
         >
-          <Typography
-            component="h2"
-            data-test="crossword_exercise__title"
-            variant="h6"
-          >
-            {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'crossword')}
-          </Typography>
           <Stack
-            data-test="crossword_exercise__metadata_row"
-            direction="row"
-            spacing={1.25}
-            sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+            data-test="crossword_exercise__header_text"
+            spacing={1}
+            sx={{ alignItems: 'flex-start', minWidth: 0 }}
           >
-            {cardSetName && (
-              <CursorAnchoredTooltip
-                arrowDataTest="crossword_exercise__card_set_chip_tooltip_arrow"
-                leaveDelay={0}
-                title={
-                  <TooltipContent sx={crosswordCardSetTooltipContentStyles}>
-                    {t(interfaceLanguage, 'crosswordCardSetCardsTooltip')}
-                  </TooltipContent>
-                }
-                tooltipSx={crosswordCardSetTooltipStyles}
-              >
-                <ExerciseCardSetChip
-                  clickable={Boolean(onCardSetOpen)}
-                  dataTest="crossword_exercise__card_set_chip"
-                  interfaceLanguage={interfaceLanguage}
-                  onClick={onCardSetOpen}
-                  sx={crosswordCardSetChipStyles}
-                  cardSetName={cardSetName}
-                />
-              </CursorAnchoredTooltip>
-            )}
-            <ExerciseProgressChip
-              completed={filledEntryCount}
-              dataTest="crossword_exercise__progress_chip"
-              interfaceLanguage={interfaceLanguage}
-              total={puzzle.entries.length}
-            />
+            <Typography
+              component="h2"
+              data-test="crossword_exercise__title"
+              variant="h6"
+            >
+              {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'crossword')}
+            </Typography>
+            <Stack
+              data-test="crossword_exercise__metadata_row"
+              direction="row"
+              spacing={1.25}
+              sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+            >
+              {cardSetName && (
+                <CursorAnchoredTooltip
+                  arrowDataTest="crossword_exercise__card_set_chip_tooltip_arrow"
+                  leaveDelay={0}
+                  title={
+                    <TooltipContent sx={crosswordCardSetTooltipContentStyles}>
+                      {t(interfaceLanguage, 'crosswordCardSetCardsTooltip')}
+                    </TooltipContent>
+                  }
+                  tooltipSx={crosswordCardSetTooltipStyles}
+                >
+                  <ExerciseCardSetChip
+                    clickable={Boolean(onCardSetOpen)}
+                    dataTest="crossword_exercise__card_set_chip"
+                    interfaceLanguage={interfaceLanguage}
+                    onClick={onCardSetOpen}
+                    sx={crosswordCardSetChipStyles}
+                    cardSetName={cardSetName}
+                  />
+                </CursorAnchoredTooltip>
+              )}
+              <ExerciseProgressChip
+                completed={filledEntryCount}
+                dataTest="crossword_exercise__progress_chip"
+                interfaceLanguage={interfaceLanguage}
+                total={puzzle.entries.length}
+              />
+            </Stack>
           </Stack>
+          {finishAction}
         </Stack>
 
         <Box
@@ -386,21 +405,39 @@ export function CrosswordExercise({
           )}
         </Box>
 
-        <Button
-          data-test="crossword_exercise__submit_button"
-          variant="contained"
-          onClick={handleSubmit}
-          startIcon={
-            hasSubmittedAnswers ? (
-              <EmojiEventsOutlinedIcon data-test="crossword_exercise__completed_button_icon" />
-            ) : undefined
-          }
-          sx={{ alignSelf: 'flex-start' }}
+        <Stack
+          data-test="crossword_exercise__submit_row"
+          direction="row"
+          spacing={1}
+          sx={{ alignItems: 'center', flexWrap: 'wrap' }}
         >
-          {hasSubmittedAnswers
-            ? t(interfaceLanguage, 'completedResult')
-            : t(interfaceLanguage, 'submitCrossword')}
-        </Button>
+          <Button
+            data-test="crossword_exercise__submit_button"
+            variant="contained"
+            disabled={isSubmitDisabled}
+            onClick={handleSubmit}
+            startIcon={
+              hasSubmittedAnswers ? (
+                <EmojiEventsOutlinedIcon data-test="crossword_exercise__completed_button_icon" />
+              ) : undefined
+            }
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            {hasSubmittedAnswers
+              ? t(interfaceLanguage, 'completedResult')
+              : t(interfaceLanguage, 'submitCrossword')}
+          </Button>
+          {isSubmitDisabled && (
+            <GameWarningTooltip
+              anchorDataTest="crossword_exercise__submit_warning_anchor"
+              arrowDataTest="crossword_exercise__submit_warning_tooltip_arrow"
+              iconDataTest="crossword_exercise__submit_warning_tooltip_icon"
+              messages={[t(interfaceLanguage, 'crosswordSubmitNeedsCompletedWord')]}
+            >
+              <GameWarningIcon dataTest="crossword_exercise__submit_warning_icon" />
+            </GameWarningTooltip>
+          )}
+        </Stack>
       </Stack>
     </Paper>
   );
@@ -517,6 +554,78 @@ function getFilledEntryCount(
   ).length;
 }
 
+function getCrosswordDraftState(
+  puzzle: CrosswordPuzzle,
+  cellValues: Record<string, string>,
+): CrosswordDraftState {
+  const answers = getCrosswordAnswers(puzzle, cellValues);
+  const answeredCardIds = puzzle.entries
+    .filter((entry) => isEntryFilled(entry, cellValues))
+    .map((entry) => entry.cardId);
+
+  return {
+    answers,
+    answeredCardIds,
+    filledEntryCount: answeredCardIds.length,
+    hasAnyLetters: Object.values(cellValues).some((value) =>
+      Boolean(value.trim()),
+    ),
+  };
+}
+
+function getFilledCrosswordAnswers(
+  draftState: CrosswordDraftState,
+): Record<string, string> {
+  return Object.fromEntries(
+    draftState.answeredCardIds.map((cardId) => [
+      cardId,
+      draftState.answers[cardId] ?? '',
+    ]),
+  );
+}
+
+function getCrosswordAnswers(
+  puzzle: CrosswordPuzzle,
+  cellValues: Record<string, string>,
+): Record<string, string> {
+  return Object.fromEntries(
+    puzzle.entries.map((entry) => [entry.cardId, getEntryAnswer(entry, cellValues)]),
+  );
+}
+
+function getEntryAnswer(
+  entry: CrosswordEntry,
+  cellValues: Record<string, string>,
+): string {
+  return entry.answer
+    .split('')
+    .map((character, index) => {
+      if (/\s/.test(character)) {
+        return character;
+      }
+
+      const row = entry.direction === 'down' ? entry.row + index : entry.row;
+      const col = entry.direction === 'across' ? entry.col + index : entry.col;
+      return cellValues[toCellKey(row, col)] ?? '';
+    })
+    .join('');
+}
+
+function isEntryFilled(
+  entry: CrosswordEntry,
+  cellValues: Record<string, string>,
+): boolean {
+  return entry.answer.split('').every((character, index) => {
+    if (/\s/.test(character)) {
+      return true;
+    }
+
+    const row = entry.direction === 'down' ? entry.row + index : entry.row;
+    const col = entry.direction === 'across' ? entry.col + index : entry.col;
+    return Boolean(cellValues[toCellKey(row, col)]?.trim());
+  });
+}
+
 function normalizeAnswer(value: string): string {
   return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
 }
@@ -534,13 +643,16 @@ function getSubmittedCellTone({
     return undefined;
   }
 
-  const entryResults = cell.entryIds.map((entryId) => {
-    const entry = entryMap.get(entryId);
-    return entry
-      ? normalizeAnswer(submittedAnswers[entry.cardId] ?? '') ===
-          normalizeAnswer(entry.answer)
-      : false;
-  });
+  const entryResults = cell.entryIds
+    .map((entryId) => entryMap.get(entryId))
+    .filter((entry): entry is CrosswordEntry =>
+      Boolean(entry && Object.prototype.hasOwnProperty.call(submittedAnswers, entry.cardId)),
+    )
+    .map(
+      (entry) =>
+        normalizeAnswer(submittedAnswers[entry.cardId] ?? '') ===
+        normalizeAnswer(entry.answer),
+    );
 
   if (entryResults.some((isCorrect) => !isCorrect)) {
     return 'incorrect';

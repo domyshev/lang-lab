@@ -1,6 +1,7 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import { Button, Paper, Stack, Typography } from '@mui/material';
+import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { MultipleChoicePrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
@@ -15,6 +16,7 @@ export function MultipleChoiceExercise({
   onAnswer,
   onNext,
   cardSetName,
+  finishAction,
 }: {
   interfaceLanguage: SupportedLanguage;
   prompt: MultipleChoicePrompt;
@@ -23,6 +25,7 @@ export function MultipleChoiceExercise({
   progressCompletedCount?: number;
   progressTotalCount?: number;
   cardSetName?: string;
+  finishAction?: ReactNode;
 }) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const isSubmitted = selectedAnswer !== null;
@@ -43,40 +46,51 @@ export function MultipleChoiceExercise({
       >
         <Stack
           data-test={`multiple_choice_exercise__header__${prompt.cardId}`}
-          spacing={1}
-          sx={{ alignItems: 'flex-start' }}
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={2}
+          sx={{
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            justifyContent: 'space-between',
+          }}
         >
-          <Typography
-            component="h2"
-            data-test={`multiple_choice_exercise__title__${prompt.cardId}`}
-            variant="h6"
-          >
-            {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'multipleChoice')}
-          </Typography>
           <Stack
-            data-test={`multiple_choice_exercise__metadata_row__${prompt.cardId}`}
-            direction="row"
-            spacing={1.25}
-            sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+            data-test={`multiple_choice_exercise__header_text__${prompt.cardId}`}
+            spacing={1}
+            sx={{ alignItems: 'flex-start', minWidth: 0 }}
           >
-            {cardSetName && (
-              <ExerciseCardSetChip
-                dataTest={`multiple_choice_exercise__card_set_chip__${prompt.cardId}`}
-                interfaceLanguage={interfaceLanguage}
-                sx={exerciseCardSetChipStyles}
-                cardSetName={cardSetName}
-              />
-            )}
-            {progressCompletedCount !== undefined &&
-              progressTotalCount !== undefined && (
-                <ExerciseProgressChip
-                  completed={progressCompletedCount}
-                  dataTest={`multiple_choice_exercise__progress_chip__${prompt.cardId}`}
+            <Typography
+              component="h2"
+              data-test={`multiple_choice_exercise__title__${prompt.cardId}`}
+              variant="h6"
+            >
+              {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'multipleChoice')}
+            </Typography>
+            <Stack
+              data-test={`multiple_choice_exercise__metadata_row__${prompt.cardId}`}
+              direction="row"
+              spacing={1.25}
+              sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+            >
+              {cardSetName && (
+                <ExerciseCardSetChip
+                  dataTest={`multiple_choice_exercise__card_set_chip__${prompt.cardId}`}
                   interfaceLanguage={interfaceLanguage}
-                  total={progressTotalCount}
+                  sx={exerciseCardSetChipStyles}
+                  cardSetName={cardSetName}
                 />
               )}
+              {progressCompletedCount !== undefined &&
+                progressTotalCount !== undefined && (
+                  <ExerciseProgressChip
+                    completed={progressCompletedCount}
+                    dataTest={`multiple_choice_exercise__progress_chip__${prompt.cardId}`}
+                    interfaceLanguage={interfaceLanguage}
+                    total={progressTotalCount}
+                  />
+                )}
+            </Stack>
           </Stack>
+          {finishAction}
         </Stack>
         <Typography data-test={`multiple_choice_exercise__prompt__${prompt.cardId}`}>
           {prompt.prompt}
