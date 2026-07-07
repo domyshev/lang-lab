@@ -3,6 +3,7 @@ import { SupportedLanguage } from './languages';
 type I18nKey =
   | 'appName'
   | 'game'
+  | 'gamesTab'
   | 'cards'
   | 'statistics'
   | 'cardSets'
@@ -36,7 +37,13 @@ type I18nKey =
   | 'start'
   | 'allCards'
   | 'cardSetLabel'
+  | 'cardSetLibrary'
+  | 'cardSetLibraryDialogTitle'
+  | 'cardSetLibraryNoResults'
   | 'chooseCardSetPlaceholder'
+  | 'openCardSetLibrary'
+  | 'searchCardSetLibrary'
+  | 'selectCardSetLibraryItem'
   | 'add'
   | 'addToCardSet'
   | 'addCards'
@@ -159,6 +166,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
   en: {
     appName: 'Language Lab',
     game: 'Game',
+    gamesTab: 'Games',
     cards: 'Cards',
     statistics: 'Statistics',
     cardSets: 'Card sets',
@@ -197,7 +205,13 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     start: 'Play',
     allCards: 'All cards',
     cardSetLabel: 'Card set',
+    cardSetLibrary: 'Card set library',
+    cardSetLibraryDialogTitle: 'Card set library',
+    cardSetLibraryNoResults: 'No card sets found.',
     chooseCardSetPlaceholder: 'Choose set',
+    openCardSetLibrary: 'Open card set library',
+    searchCardSetLibrary: 'Search by name or phrase',
+    selectCardSetLibraryItem: 'Choose card set',
     add: 'Add',
     addToCardSet: 'Add to card set',
     addCards: 'Add cards',
@@ -329,6 +343,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
   ru: {
     appName: 'Language Lab',
     game: 'Игра',
+    gamesTab: 'Игры',
     cards: 'Карточки',
     statistics: 'Статистика',
     cardSets: 'Наборы',
@@ -367,7 +382,13 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     start: 'Играть',
     allCards: 'Все карточки',
     cardSetLabel: 'Набор карточек',
+    cardSetLibrary: 'Библиотека наборов',
+    cardSetLibraryDialogTitle: 'Библиотека наборов карточек',
+    cardSetLibraryNoResults: 'Наборы не найдены.',
     chooseCardSetPlaceholder: 'Выберите набор',
+    openCardSetLibrary: 'Открыть библиотеку наборов',
+    searchCardSetLibrary: 'Искать по названию или фразе',
+    selectCardSetLibraryItem: 'Выбрать набор карточек',
     add: 'Добавить',
     addToCardSet: 'Добавить в набор',
     addCards: 'Добавить карточки',
@@ -500,6 +521,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
   es: {
     appName: 'Language Lab',
     game: 'Juego',
+    gamesTab: 'Juegos',
     cards: 'Tarjetas',
     statistics: 'Estadisticas',
     cardSets: 'Conjuntos',
@@ -538,7 +560,13 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     start: 'Jugar',
     allCards: 'Todas las tarjetas',
     cardSetLabel: 'Conjunto de tarjetas',
+    cardSetLibrary: 'Biblioteca de conjuntos',
+    cardSetLibraryDialogTitle: 'Biblioteca de conjuntos de tarjetas',
+    cardSetLibraryNoResults: 'No se encontraron conjuntos.',
     chooseCardSetPlaceholder: 'Elige conjunto',
+    openCardSetLibrary: 'Abrir biblioteca de conjuntos',
+    searchCardSetLibrary: 'Buscar por nombre o frase',
+    selectCardSetLibraryItem: 'Elegir conjunto de tarjetas',
     add: 'Anadir',
     addToCardSet: 'Anadir al conjunto',
     addCards: 'Anadir tarjetas',

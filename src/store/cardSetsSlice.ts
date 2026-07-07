@@ -15,6 +15,16 @@ const cardSetsSlice = createSlice({
   name: 'cardSets',
   initialState,
   reducers: {
+    seedDefaultCardSets(state, action: PayloadAction<CardSet[]>) {
+      if (state.cardSets.length > 0) {
+        return;
+      }
+
+      state.cardSets = action.payload.map((cardSet) => ({
+        ...cardSet,
+        cardIds: [...cardSet.cardIds],
+      }));
+    },
     addCardSet(state, action: PayloadAction<CardSet>) {
       state.cardSets.push(action.payload);
       state.selectedCardSetId = action.payload.id;
@@ -76,6 +86,13 @@ const cardSetsSlice = createSlice({
   },
 });
 
-export const { addCardSet, archiveCardSet, selectCardSet, addCardToCardSet, setCardSetCards } =
+export const {
+  addCardSet,
+  archiveCardSet,
+  selectCardSet,
+  addCardToCardSet,
+  seedDefaultCardSets,
+  setCardSetCards,
+} =
   cardSetsSlice.actions;
 export const cardSetsReducer = cardSetsSlice.reducer;

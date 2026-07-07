@@ -22,6 +22,28 @@ const cardsSlice = createSlice({
   name: 'cards',
   initialState,
   reducers: {
+    seedDefaultCards(state, action: PayloadAction<LanguageCard[]>) {
+      if (state.cards.length > 0) {
+        return;
+      }
+
+      state.cards = action.payload.map((card) => ({
+        ...card,
+        translations: { ...card.translations },
+        definitions: card.definitions ? { ...card.definitions } : undefined,
+        examples: card.examples
+          ? Object.fromEntries(
+              Object.entries(card.examples).map(([language, examples]) => [
+                language,
+                examples.map((example) => ({ ...example })),
+              ]),
+            )
+          : undefined,
+        tags: card.tags ? [...card.tags] : undefined,
+      }));
+      state.duplicateProcessingHistory = [];
+      state.pendingDuplicates = [];
+    },
     applyImportResult(state, action: PayloadAction<ImportResult>) {
       state.cards = action.payload.cards;
       state.duplicateProcessingHistory.push(
@@ -32,5 +54,5 @@ const cardsSlice = createSlice({
   },
 });
 
-export const { applyImportResult } = cardsSlice.actions;
+export const { applyImportResult, seedDefaultCards } = cardsSlice.actions;
 export const cardsReducer = cardsSlice.reducer;

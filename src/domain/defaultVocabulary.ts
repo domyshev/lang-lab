@@ -1,3 +1,8 @@
-import defaultVocabularyCards from '../../data/user-vocabulary-cards-2026-07-03.json';
+import defaultVocabularySeed from '../../data/default-vocabulary-seed.json';
+import { CardSet } from './cardSets';
+import { LanguageCard } from './cards';
 
-export const defaultVocabularyJson = JSON.stringify(defaultVocabularyCards);
+export const defaultVocabularyCards =
+  defaultVocabularySeed.cards as LanguageCard[];
+export const defaultVocabularyCardSets =
+  defaultVocabularySeed.cardSets as CardSet[];

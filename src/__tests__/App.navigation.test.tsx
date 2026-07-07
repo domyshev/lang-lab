@@ -160,16 +160,80 @@ describe('App navigation', () => {
     );
 
     await waitFor(() => {
-      expect(store.getState().cards.cards).toHaveLength(141);
+      expect(store.getState().cards.cards).toHaveLength(2000);
+      expect(store.getState().cardSets.cardSets).toHaveLength(20);
     });
 
+    const seededCards = store.getState().cards.cards;
+    const seededWords = seededCards.filter(
+      (card) => !/\s/.test(card.translations.en?.trim() ?? ''),
+    );
+    const seededPhrases = seededCards.filter((card) =>
+      /\s/.test(card.translations.en?.trim() ?? ''),
+    );
+    expect(seededWords).toHaveLength(1000);
+    expect(
+      new Set(
+        seededWords.map((card) => card.translations.en?.toLocaleLowerCase()),
+      ).size,
+    ).toBe(1000);
+    expect(seededPhrases).toHaveLength(1000);
+    expect(
+      store.getState().cardSets.cardSets.map((cardSet) => cardSet.name),
+    ).toEqual(
+      expect.arrayContaining(['Любовь', 'Семья', 'Глаголы действий']),
+    );
+    expect(
+      store
+        .getState()
+        .cardSets.cardSets.every((cardSet) => cardSet.cardIds.length === 100),
+    ).toBe(true);
     expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
+  });
+
+  it('keeps All cards first in the card set library after selecting another set', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      cardSets: [
+        {
+          id: 'word-set',
+          name: 'Слова',
+          cardIds: ['card-airport', 'card-vehicle'],
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'phrase-set',
+          name: 'Фразы',
+          cardIds: ['card-worth-it', 'card-look-forward'],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Набор карточек: Фразы' }));
+
+    const chipButtons = within(
+      screen.getByTestId('card_set_library__chips'),
+    ).getAllByRole('button');
+
+    expect(
+      chipButtons.map((button) => button.getAttribute('data-test')),
+    ).toEqual([
+      'card_set_library__chip_select__all-cards',
+      'card_set_library__chip_select__word-set',
+      'card_set_library__chip_select__phrase-set',
+    ]);
+    expect(screen.getByTestId('card_set_library__selected_name')).toHaveTextContent(
+      'Фразы',
+    );
   });
 
   it('starts in Russian and shows a simple game setup tab before starting', () => {
     renderApp();
 
-    expect(screen.getByRole('tab', { name: 'Игра' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Игры' })).toBeInTheDocument();
     expect(screen.getByText('Language Lab')).toBeInTheDocument();
     expect(screen.queryByText('Language Crossword Lab')).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Карточки' })).toBeInTheDocument();
@@ -182,26 +246,20 @@ describe('App navigation', () => {
     expect(
       within(setupPanel).queryByRole('heading', { name: 'Выберите игру' }),
     ).not.toBeInTheDocument();
-    expect(
-      within(setupPanel).getByLabelText('Набор карточек'),
-    ).toBeInTheDocument();
-    expect(screen.getByTestId('game_setup__card_set_label')).toHaveTextContent(
-      'Набор карточек',
+    expect(screen.getByTestId('card_set_library__panel')).toBeInTheDocument();
+    expect(screen.getByTestId('card_set_library__title')).toHaveTextContent(
+      'Библиотека наборов',
     );
-    expect(
-      screen.getByTestId('game_setup__card_set_control').querySelector('legend'),
-    ).toHaveTextContent('Набор карточек');
-    expect(screen.getByTestId('game_setup__card_set_placeholder')).toHaveTextContent(
+    expect(screen.getByTestId('card_set_library__placeholder')).toHaveTextContent(
       'Выберите набор',
     );
-    expect(screen.getByTestId('game_setup__card_set_select')).not.toHaveTextContent(
-      'Все карточки',
-    );
+    expect(screen.queryByTestId('game_setup__card_set_select')).not.toBeInTheDocument();
+    expect(screen.getByTestId('card_set_library__open_button')).toBeInTheDocument();
     expect(screen.getByTestId('exercise_picker__tiles')).toBeInTheDocument();
     expect(
       screen
         .getByTestId('exercise_picker__tiles')
-        .compareDocumentPosition(screen.getByTestId('game_setup__card_set_section')) &
+        .compareDocumentPosition(screen.getByTestId('card_set_library__panel')) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(screen.getByTestId('exercise_picker__option_art__crossword')).toBeInTheDocument();
@@ -248,9 +306,6 @@ describe('App navigation', () => {
       getComputedStyle(screen.getByTestId('exercise_picker__option_label__crossword'))
         .backgroundImage,
     );
-    expect(screen.getByTestId('game_setup__card_set_select')).toHaveStyle({
-      height: '44px',
-    });
     expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
     const setupWarning = screen.getByTestId('game_setup__warning_alert');
     expect(setupWarning).toHaveClass('MuiAlert-colorWarning');
@@ -270,6 +325,44 @@ describe('App navigation', () => {
     expect(screen.queryByTestId('game_setup__choose_game_alert')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Начать' })).not.toBeInTheDocument();
     expect(screen.queryByText('worth it')).not.toBeInTheDocument();
+  });
+
+  it('opens the card set library and filters sets by card text', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      cardSets: [
+        {
+          id: 'word-set',
+          name: 'Слова',
+          cardIds: ['card-airport', 'card-vehicle'],
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'phrase-set',
+          name: 'Фразы',
+          cardIds: ['card-worth-it', 'card-look-forward'],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    });
+
+    await user.click(screen.getByTestId('card_set_library__open_button'));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('card_set_library_dialog__title')).toHaveTextContent(
+      'Библиотека наборов карточек',
+    );
+
+    await user.type(screen.getByTestId('card_set_library_dialog__search_input'), 'worth');
+
+    expect(screen.getByTestId('card_set_library_dialog__item__phrase-set')).toBeInTheDocument();
+    expect(screen.queryByTestId('card_set_library_dialog__item__word-set')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Выбрать набор карточек: Фразы/ }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByTestId('card_set_library__selected_name')).toHaveTextContent('Фразы');
   });
 
   it('disables missing letters on the setup screen when the selected card set has no single-word cards', async () => {
@@ -462,7 +555,7 @@ describe('App navigation', () => {
     await selectCardSetByName(user, /Фразы/);
     store.dispatch(selectCardSet('word-set'));
 
-    expect(screen.getByTestId('game_setup__card_set_select')).toHaveTextContent('Фразы (2)');
+    expect(screen.getByTestId('card_set_library__selected_name')).toHaveTextContent('Фразы');
     expect(screen.getByRole('button', { name: 'Пропущенные буквы' })).toBeDisabled();
     expect(screen.getByTestId('exercise_picker__option__missingLetters')).toHaveStyle({
       filter: 'grayscale(1)',
@@ -1016,7 +1109,7 @@ describe('App navigation', () => {
     await startExercise(user, 'Пропущенные буквы');
     await answerMissingLettersWrong(user);
 
-    await user.click(screen.getByRole('tab', { name: 'Игра' }));
+    await user.click(screen.getByRole('tab', { name: 'Игры' }));
 
     expect(
       screen.getByText('Результаты упражнения будут зачтены, а упражнение закончено.'),
@@ -1028,12 +1121,12 @@ describe('App navigation', () => {
     );
     expect(screen.getByRole('heading', { name: 'Игра: Пропущенные буквы' })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: 'Игра' }));
+    await user.click(screen.getByRole('tab', { name: 'Игры' }));
     await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
 
     expect(screen.queryByRole('heading', { name: 'Выберите набор карточек' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Выберите игру' })).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Набор карточек')).toBeInTheDocument();
+    expect(screen.getByTestId('card_set_library__panel')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
   });
 
@@ -1179,7 +1272,7 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Пройдено!' }));
 
     expect(screen.queryByRole('heading', { name: 'Выберите набор карточек' })).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Набор карточек')).toBeInTheDocument();
+    expect(screen.getByTestId('card_set_library__panel')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
     expect(
       store
@@ -1412,8 +1505,14 @@ async function selectCardSetByName(
   user: ReturnType<typeof userEvent.setup>,
   name: RegExp,
 ) {
-  await user.click(screen.getByRole('combobox', { name: 'Набор карточек' }));
-  await user.click(await screen.findByRole('option', { name }));
+  const directCardSetButton = screen.queryByRole('button', { name });
+  if (directCardSetButton) {
+    await user.click(directCardSetButton);
+    return;
+  }
+
+  await user.click(screen.getByTestId('card_set_library__open_button'));
+  await user.click(await screen.findByRole('button', { name }));
 }
 
 async function startExercise(

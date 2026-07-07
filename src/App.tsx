@@ -11,17 +11,13 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
   Stack,
   Typography,
 } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material/Select';
 import { AppShell, AppShellSection } from './components/AppShell';
 import { AssistantProfileView } from './components/AssistantProfileView';
+import { CardSetLibraryPicker } from './components/CardSetLibraryPicker';
 import { CoachPanel } from './components/CoachPanel';
 import { ExercisePicker } from './components/ExercisePicker';
 import { GameHelpPanel } from './components/GameHelpPanel';
@@ -43,7 +39,10 @@ import {
   isPhraseValue,
 } from './domain/cards';
 import { CrosswordPuzzle, createCrossword } from './domain/crossword';
-import { defaultVocabularyJson } from './domain/defaultVocabulary';
+import {
+  defaultVocabularyCards,
+  defaultVocabularyCardSets,
+} from './domain/defaultVocabulary';
 import { getCoachProgressMessage } from './domain/coachProgress';
 import { AssistantId } from './domain/assistants';
 import {
@@ -56,7 +55,6 @@ import {
   getEligibleCardsForTarget,
 } from './domain/exercises';
 import { summarizeExerciseHistory } from './domain/exerciseHistory';
-import { importLanguageCards } from './domain/importCards';
 import { getLanguageDisplayName, t } from './domain/i18n';
 import { languageFlags } from './domain/languages';
 import {
@@ -66,9 +64,9 @@ import {
 import { ALL_CARDS_CARD_SET_ID, CardSet } from './domain/cardSets';
 import { saveAttempt } from './store/attemptsSlice';
 import { acknowledgeGameHelp, markGameHelpCoachmarkShown } from './store/appSlice';
-import { applyImportResult } from './store/cardsSlice';
+import { seedDefaultCards } from './store/cardsSlice';
 import { recordAttemptStats } from './store/statsSlice';
-import { selectCardSet } from './store/cardSetsSlice';
+import { seedDefaultCardSets, selectCardSet } from './store/cardSetsSlice';
 import { AppDispatch, RootState } from './store/store';
 
 type ExercisePreview =
@@ -282,15 +280,8 @@ export function App() {
     }
 
     hasSeededDefaultVocabulary.current = true;
-    const result = importLanguageCards({
-      existingCards: [],
-      pastedJson: defaultVocabularyJson,
-      now: new Date().toISOString(),
-    });
-
-    if (result.cards.length > 0) {
-      dispatch(applyImportResult(result));
-    }
+    dispatch(seedDefaultCards(defaultVocabularyCards));
+    dispatch(seedDefaultCardSets(defaultVocabularyCardSets));
   }, [cards.length, dispatch]);
 
   const exercisePreview = useMemo<ExercisePreview | null>(() => {
@@ -888,8 +879,7 @@ export function App() {
         Boolean(message),
     );
 
-    const handleCardSetChange = (event: SelectChangeEvent<string>) => {
-      const nextCardSetId = event.target.value;
+    const handleCardSetChange = (nextCardSetId: string) => {
       setSelectedGameCardSetId(nextCardSetId);
       dispatch(selectCardSet(nextCardSetId));
       resetExerciseState();
@@ -926,81 +916,13 @@ export function App() {
             }}
           />
 
-          <Stack data-test="game_setup__card_set_section" spacing={2}>
-            <FormControl data-test="game_setup__card_set_control" fullWidth size="small">
-              <InputLabel
-                data-test="game_setup__card_set_label"
-                id="game-setup-card-set-label"
-                shrink
-              >
-                {t(interfaceLanguage, 'cardSetLabel')}
-              </InputLabel>
-              <Select
-                data-test="game_setup__card_set_select"
-                displayEmpty
-                label={t(interfaceLanguage, 'cardSetLabel')}
-                labelId="game-setup-card-set-label"
-                value={currentCardSetId}
-                onChange={handleCardSetChange}
-                renderValue={(selected) => {
-                  if (!selected) {
-                    return (
-                      <Typography
-                        component="span"
-                        data-test="game_setup__card_set_placeholder"
-                        sx={{ color: 'text.secondary' }}
-                      >
-                        {t(interfaceLanguage, 'chooseCardSetPlaceholder')}
-                      </Typography>
-                    );
-                  }
-
-                  if (selected === ALL_CARDS_CARD_SET_ID) {
-                    return `${t(interfaceLanguage, 'allCards')} (${cards.length})`;
-                  }
-
-                  const visibleCardSet = visibleCardSets.find(
-                    (cardSet) => cardSet.id === selected,
-                  );
-
-                  return visibleCardSet
-                    ? `${visibleCardSet.name} (${visibleCardSet.cardIds.length})`
-                    : '';
-                }}
-                sx={{
-                  height: 44,
-                  '& .MuiSelect-select': {
-                    alignItems: 'center',
-                    display: 'flex',
-                    minHeight: '0 !important',
-                    py: 0.75,
-                  },
-                }}
-              >
-                <MenuItem
-                  data-test="game_setup__card_set_option__empty"
-                  disabled
-                  value=""
-                  sx={{ display: 'none' }}
-                />
-                <MenuItem
-                  data-test="game_setup__card_set_option__all_cards"
-                  value={ALL_CARDS_CARD_SET_ID}
-                >
-                  {t(interfaceLanguage, 'allCards')} ({cards.length})
-                </MenuItem>
-                {visibleCardSets.map((cardSet) => (
-                  <MenuItem
-                    data-test={`game_setup__card_set_option__${cardSet.id}`}
-                    key={cardSet.id}
-                    value={cardSet.id}
-                  >
-                    {cardSet.name} ({cardSet.cardIds.length})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
+          <CardSetLibraryPicker
+            cards={cards}
+            cardSets={visibleCardSets}
+            interfaceLanguage={interfaceLanguage}
+            onSelect={handleCardSetChange}
+            selectedCardSetId={currentCardSetId}
+          />
 
           {setupWarningMessages.length > 0 && (
             <Alert data-test="game_setup__warning_alert" severity="warning">
