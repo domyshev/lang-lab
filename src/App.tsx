@@ -117,7 +117,7 @@ export function App() {
   const [activeSection, setActiveSection] =
     useState<AppShellSection>('game');
   const [selectedExerciseType, setSelectedExerciseType] =
-    useState<ExerciseType>('crossword');
+    useState<ExerciseType | null>(null);
   const [selectedGameCardSetId, setSelectedGameCardSetId] = useState('');
   const [isExerciseStarted, setIsExerciseStarted] = useState(false);
   const [generationSeed, setGenerationSeed] = useState(() => Date.now());
@@ -840,11 +840,53 @@ export function App() {
 
   function GameSetup() {
     const currentCardSetId = selectedGameCardSetId;
-    const canStart =
+    const setupCardSetCards = getCardsForSelectableCardSetId({
+      cardSetId: currentCardSetId,
+      cards,
+      visibleCardSets,
+    });
+    const setupEligibleCards = getEligibleCardsForTarget(
+      setupCardSetCards,
+      targetLanguage,
+    );
+    const setupMissingLettersEligibleCards = setupEligibleCards.filter((card) =>
+      createMissingLettersPrompt({ card, targetLanguage }),
+    );
+    const setupMissingWordEligibleCards = setupEligibleCards.filter((card) =>
+      createMissingWordPrompt({ card, targetLanguage }),
+    );
+    const isCardSetSelected =
       Boolean(currentCardSetId) &&
-      Boolean(selectedCardSet) &&
-      eligibleCards.length > 0 &&
-      (selectedExerciseType !== 'multipleChoice' || eligibleCards.length >= 3);
+      (currentCardSetId === ALL_CARDS_CARD_SET_ID ||
+        visibleCardSets.some((cardSet) => cardSet.id === currentCardSetId));
+    const isMissingLettersUnavailable =
+      isCardSetSelected && setupMissingLettersEligibleCards.length === 0;
+    const isMissingWordUnavailable =
+      isCardSetSelected && setupMissingWordEligibleCards.length === 0;
+    const canStart =
+      isCardSetSelected &&
+      Boolean(selectedExerciseType) &&
+      setupEligibleCards.length > 0 &&
+      (selectedExerciseType !== 'missingLetters' || !isMissingLettersUnavailable) &&
+      (selectedExerciseType !== 'missingWord' || !isMissingWordUnavailable) &&
+      (selectedExerciseType !== 'multipleChoice' || setupEligibleCards.length >= 3);
+    const setupWarningMessages = [
+      !isCardSetSelected
+        ? {
+            dataTest: 'game_setup__warning_message__card_set',
+            text: t(interfaceLanguage, 'cannotStartGame'),
+          }
+        : null,
+      !selectedExerciseType
+        ? {
+            dataTest: 'game_setup__warning_message__exercise',
+            text: t(interfaceLanguage, 'chooseExercise'),
+          }
+        : null,
+    ].filter(
+      (message): message is { dataTest: string; text: string } =>
+        Boolean(message),
+    );
 
     const handleCardSetChange = (event: SelectChangeEvent<string>) => {
       const nextCardSetId = event.target.value;
@@ -852,6 +894,11 @@ export function App() {
       dispatch(selectCardSet(nextCardSetId));
       resetExerciseState();
     };
+    const pickerExerciseType =
+      (selectedExerciseType === 'missingLetters' && isMissingLettersUnavailable) ||
+      (selectedExerciseType === 'missingWord' && isMissingWordUnavailable)
+        ? null
+        : selectedExerciseType;
 
     return (
       <Paper
@@ -859,6 +906,26 @@ export function App() {
         sx={{ p: { xs: 2, md: 3 }, maxWidth: 760, mx: 'auto' }}
       >
         <Stack data-test="game_setup__content" spacing={3}>
+          <ExercisePicker
+            disabledExerciseTypes={{
+              missingLetters: isMissingLettersUnavailable,
+              missingWord: isMissingWordUnavailable,
+            }}
+            disabledExerciseTooltips={{
+              missingLetters: isMissingLettersUnavailable
+                ? t(interfaceLanguage, 'missingLettersNeedsWords')
+                : undefined,
+              missingWord: isMissingWordUnavailable
+                ? t(interfaceLanguage, 'missingWordNeedsPhrases')
+                : undefined,
+            }}
+            selectedExerciseType={pickerExerciseType}
+            onPick={(exerciseType) => {
+              setSelectedExerciseType(exerciseType);
+              resetExerciseState();
+            }}
+          />
+
           <Stack data-test="game_setup__card_set_section" spacing={2}>
             <FormControl data-test="game_setup__card_set_control" fullWidth size="small">
               <InputLabel
@@ -935,17 +1002,15 @@ export function App() {
             </FormControl>
           </Stack>
 
-          <ExercisePicker
-            selectedExerciseType={selectedExerciseType}
-            onPick={(exerciseType) => {
-              setSelectedExerciseType(exerciseType);
-              resetExerciseState();
-            }}
-          />
-
-          {!canStart && (
-            <Alert data-test="game_setup__cannot_start_alert" severity="info">
-              {t(interfaceLanguage, 'cannotStartGame')}
+          {setupWarningMessages.length > 0 && (
+            <Alert data-test="game_setup__warning_alert" severity="warning">
+              <Stack data-test="game_setup__warning_messages" spacing={0.5}>
+                {setupWarningMessages.map((message) => (
+                  <Box data-test={message.dataTest} key={message.dataTest}>
+                    {message.text}
+                  </Box>
+                ))}
+              </Stack>
             </Alert>
           )}
 
@@ -1258,15 +1323,22 @@ export function App() {
             </Stack>
             <Stack
               data-test="target_stats__answered_formula__root"
-              sx={{ alignItems: 'center', minWidth: 0 }}
+              sx={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: 0,
+                width: '100%',
+              }}
             >
               <Stack
                 data-test="target_stats__answered_formula__body"
                 spacing={1}
                 sx={{
                   alignItems: 'center',
+                  justifyContent: 'center',
                   maxWidth: '100%',
-                  width: '100%',
+                  textAlign: 'center',
+                  width: 'fit-content',
                 }}
               >
                 <Typography
@@ -1288,21 +1360,25 @@ export function App() {
                         data-test="target_stats__answered_formula__label_line__1"
                         sx={{ display: 'inline' }}
                       >
-                        вопросов
+                        карточек
                       </Box>
                     </>
                   ) : (
-                    t(interfaceLanguage, 'totalAnsweredQuestions')
+                    t(interfaceLanguage, 'targetAnsweredCards')
                   )}
                 </Typography>
                 <StatsFormula
                   correct={correct}
+                  correctTooltip={t(interfaceLanguage, 'targetCorrectCardsTooltip')}
                   dataTestPrefix="target_stats__answered_formula"
                   incorrect={incorrect}
+                  incorrectTooltip={t(interfaceLanguage, 'targetIncorrectCardsTooltip')}
                   interfaceLanguage={interfaceLanguage}
+                  rootDataTest="target_stats__answered_formula__stats_root"
                   showLabel={false}
                   total={totalAnswered}
-                  totalLabel={t(interfaceLanguage, 'totalAnsweredQuestions')}
+                  totalLabel={t(interfaceLanguage, 'targetAnsweredCards')}
+                  totalTooltip={t(interfaceLanguage, 'targetAnsweredCardsTooltip')}
                   valueGroupJustify="center"
                 />
               </Stack>
@@ -1790,6 +1866,33 @@ function pickPracticePrompt<T extends PracticePrompt<ExercisePrompt>>(
 
 function uniqueValues(values: string[]): string[] {
   return [...new Set(values)];
+}
+
+function getCardsForSelectableCardSetId({
+  cardSetId,
+  cards,
+  visibleCardSets,
+}: {
+  cardSetId: string;
+  cards: LanguageCard[];
+  visibleCardSets: CardSet[];
+}): LanguageCard[] {
+  if (!cardSetId) {
+    return [];
+  }
+
+  if (cardSetId === ALL_CARDS_CARD_SET_ID) {
+    return cards;
+  }
+
+  const cardSet = visibleCardSets.find((item) => item.id === cardSetId);
+  if (!cardSet) {
+    return [];
+  }
+
+  return cardSet.cardIds
+    .map((cardId) => cards.find((card) => card.id === cardId))
+    .filter((card): card is LanguageCard => Boolean(card));
 }
 
 function countExerciseSessionAnswers(

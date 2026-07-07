@@ -180,6 +180,43 @@ describe('StatsFormula', () => {
     );
   });
 
+  it('can override formula metric tooltips for target-wide card totals', async () => {
+    render(
+      <StatsFormula
+        correct={1}
+        correctTooltip="количество карточек отвеченных верно"
+        dataTestPrefix="target_formula_tooltip"
+        incorrect={1}
+        incorrectTooltip="количество карточек отвеченных неверно"
+        interfaceLanguage="ru"
+        total={2}
+        totalLabel="Всего отвечено карточек"
+        totalTooltip="всего отвечено карточек во всех упражнениях"
+      />,
+    );
+
+    const totalChip = screen.getByTestId('target_formula_tooltip__total_chip');
+    const correctChip = screen.getByTestId('target_formula_tooltip__correct_chip');
+    const incorrectChip = screen.getByTestId('target_formula_tooltip__incorrect_chip');
+
+    fireEvent.mouseOver(totalChip, { clientX: 100, clientY: 80 });
+    expect(
+      await screen.findByText('всего отвечено карточек во всех упражнениях'),
+    ).toBeInTheDocument();
+
+    fireEvent.mouseLeave(totalChip);
+    fireEvent.mouseOver(correctChip, { clientX: 180, clientY: 80 });
+    expect(
+      await screen.findByText('количество карточек отвеченных верно'),
+    ).toBeInTheDocument();
+
+    fireEvent.mouseLeave(correctChip);
+    fireEvent.mouseOver(incorrectChip, { clientX: 260, clientY: 80 });
+    expect(
+      await screen.findByText('количество карточек отвеченных неверно'),
+    ).toBeInTheDocument();
+  });
+
   it('uses an interactive cursor-anchored tooltip for the completed exercise count', async () => {
     render(
       <CountMetric

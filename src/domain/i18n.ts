@@ -97,6 +97,7 @@ type I18nKey =
   | 'resultsTitle'
   | 'totalExercises'
   | 'totalAnsweredQuestions'
+  | 'targetAnsweredCards'
   | 'resultStats'
   | 'wordStats'
   | 'phraseStats'
@@ -104,6 +105,7 @@ type I18nKey =
   | 'phraseLabel'
   | 'noMoreCardsInExercise'
   | 'missingLettersNeedsWords'
+  | 'missingWordNeedsPhrases'
   | 'correctResult'
   | 'memorizeResult'
   | 'correct'
@@ -140,6 +142,9 @@ type I18nKey =
   | 'totalAnsweredTooltip'
   | 'correctAnsweredTooltip'
   | 'incorrectAnsweredTooltip'
+  | 'targetAnsweredCardsTooltip'
+  | 'targetCorrectCardsTooltip'
+  | 'targetIncorrectCardsTooltip'
   | 'correctInputTooltip'
   | 'recentAnswersTitle'
   | 'recent20AnswersTitle'
@@ -261,6 +266,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     resultsTitle: 'Results',
     totalExercises: 'Games completed',
     totalAnsweredQuestions: 'Questions answered',
+    targetAnsweredCards: 'Cards answered',
     resultStats: 'Statistics',
     wordStats: 'Word statistics',
     phraseStats: 'Phrase statistics',
@@ -301,10 +307,15 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     coachThought: 'Character thought',
     noAttempts: 'You have not played yet, so statistics are empty.',
     missingLettersNeedsWords:
-      'Missing letters practice needs single-word cards for the target language.',
+      'Missing letters needs single-word cards, but this set does not have any.',
+    missingWordNeedsPhrases:
+      'Missing word needs phrase cards, but this set does not have any.',
     totalAnsweredTooltip: 'Total number of answered questions in this exercise.',
     correctAnsweredTooltip: 'Number of questions answered correctly.',
     incorrectAnsweredTooltip: 'Number of questions answered incorrectly.',
+    targetAnsweredCardsTooltip: 'Total cards answered across all games.',
+    targetCorrectCardsTooltip: 'Number of cards answered correctly.',
+    targetIncorrectCardsTooltip: 'Number of cards answered incorrectly.',
     correctInputTooltip: 'The input was completed correctly.',
     recentAnswersTitle: 'Last 10 answers',
     recent20AnswersTitle: 'Last 20 answers',
@@ -397,13 +408,13 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     gameHelpTitle: 'Помощь',
     gameHelpLab: 'Это лаборатория изучения языков.',
     gameHelpPlayer:
-      'Здесь вы не просто ученик: вы игрок, создающий свою игру и играющий по своим правилам!',
+      'Здесь Вы не просто ученик: Вы игрок, создающий свою игру и играющий по своим правилам!',
     gameHelpVocabulary:
       'Вы сами создаете и модифицируете свой словарный запас.',
     gameHelpTeacher:
       'Вы сами являетесь себе учителем - не снимайте с себя эту ответственность.',
     gameHelpOwnTrainer:
-      'В отличие от большинства приложений это не "тупой" тренажер, который кто-то сделал за вас. Вы сами создаете свой тренажер и играете по своим правилам!',
+      'В отличие от большинства приложений это не "мертвый" тренажер, который кто-то сделал за вас. Вы сами создаете свой тренажер и играете по своим правилам!',
     gameHelpGotIt: 'Понятно!',
     gameHelpCoachmarkTitle: 'Помощь остается здесь',
     gameHelpCoachmarkReturnTitle: 'Всегда под рукой',
@@ -426,6 +437,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     resultsTitle: 'Результаты',
     totalExercises: 'Всего пройдено игр',
     totalAnsweredQuestions: 'Всего отвечено вопросов',
+    targetAnsweredCards: 'Всего отвечено карточек',
     resultStats: 'Статистика',
     wordStats: 'Статистика по слову',
     phraseStats: 'Статистика по фразе',
@@ -466,10 +478,15 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     coachThought: 'Мысль персонажа',
     noAttempts: 'вы еще не играли, поэтому статистика пустая',
     missingLettersNeedsWords:
-      'Для игры с пропущенными буквами нужны карточки с отдельными словами для текущего целевого языка.',
+      'Для игры с пропущенными буквами в наборе должны быть карточки со словами',
+    missingWordNeedsPhrases:
+      'Для игры с пропущенным словом в наборе должны быть карточки с фразами',
     totalAnsweredTooltip: 'Общее количество отвеченных вопросов в упражнении.',
     correctAnsweredTooltip: 'Количество вопросов, отвеченных верно.',
     incorrectAnsweredTooltip: 'Количество вопросов, отвеченных неверно.',
+    targetAnsweredCardsTooltip: 'всего отвечено карточек во всех упражнениях',
+    targetCorrectCardsTooltip: 'количество карточек отвеченных верно',
+    targetIncorrectCardsTooltip: 'количество карточек отвеченных неверно',
     correctInputTooltip: 'Ввод был выполнен верно.',
     recentAnswersTitle: '10 последних ответов',
     recent20AnswersTitle: '20 последних ответов',
@@ -590,6 +607,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     resultsTitle: 'Resultados',
     totalExercises: 'Juegos completados',
     totalAnsweredQuestions: 'Preguntas respondidas',
+    targetAnsweredCards: 'Tarjetas respondidas',
     resultStats: 'Estadisticas',
     wordStats: 'Estadisticas de la palabra',
     phraseStats: 'Estadisticas de la frase',
@@ -630,10 +648,15 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     coachThought: 'Pensamiento del personaje',
     noAttempts: 'Todavia no has jugado, asi que las estadisticas estan vacias.',
     missingLettersNeedsWords:
-      'La practica de letras que faltan necesita tarjetas de una sola palabra para el idioma objetivo.',
+      'Letras que faltan necesita tarjetas de una sola palabra, pero este conjunto no tiene ninguna.',
+    missingWordNeedsPhrases:
+      'Palabra que falta necesita tarjetas con frases, pero este conjunto no tiene ninguna.',
     totalAnsweredTooltip: 'Numero total de preguntas respondidas en este ejercicio.',
     correctAnsweredTooltip: 'Numero de preguntas respondidas correctamente.',
     incorrectAnsweredTooltip: 'Numero de preguntas respondidas incorrectamente.',
+    targetAnsweredCardsTooltip: 'Total de tarjetas respondidas en todos los juegos.',
+    targetCorrectCardsTooltip: 'Numero de tarjetas respondidas correctamente.',
+    targetIncorrectCardsTooltip: 'Numero de tarjetas respondidas incorrectamente.',
     correctInputTooltip: 'La entrada se completo correctamente.',
     recentAnswersTitle: '10 ultimas respuestas',
     recent20AnswersTitle: '20 ultimas respuestas',

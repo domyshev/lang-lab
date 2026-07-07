@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import { ExerciseType } from '../domain/exercises';
 import { t } from '../domain/i18n';
 import { RootState } from '../store/store';
+import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
 
 const exerciseOptions: Array<{
   type: ExerciseType;
@@ -46,11 +47,19 @@ const exerciseOptions: Array<{
   },
 ];
 
+const disabledTileAccent = '#73786d';
+const disabledTileBackground =
+  'radial-gradient(circle at 20% 76%, rgba(255,255,255,0.50) 0 11%, transparent 12%), linear-gradient(135deg, #f2f3ee 0%, #d9ddd2 48%, #b8beb2 100%)';
+
 export function ExercisePicker({
+  disabledExerciseTypes = {},
+  disabledExerciseTooltips = {},
   selectedExerciseType,
   onPick,
 }: {
-  selectedExerciseType: ExerciseType;
+  disabledExerciseTypes?: Partial<Record<ExerciseType, boolean>>;
+  disabledExerciseTooltips?: Partial<Record<ExerciseType, string>>;
+  selectedExerciseType: ExerciseType | null;
   onPick: (exerciseType: ExerciseType) => void;
 }) {
   const interfaceLanguage = useSelector(
@@ -83,19 +92,26 @@ export function ExercisePicker({
         >
           {exerciseOptions.map((option) => {
             const optionLabel = t(interfaceLanguage, option.labelKey);
-
-            return (
+            const isDisabled = Boolean(disabledExerciseTypes[option.type]);
+            const disabledTooltip = disabledExerciseTooltips[option.type];
+            const tileAccent = isDisabled ? disabledTileAccent : option.accent;
+            const tileBackground = isDisabled
+              ? disabledTileBackground
+              : option.background;
+            const tileButton = (
               <ToggleButton
                 aria-label={optionLabel}
                 data-test={`exercise_picker__option__${option.type}`}
+                disabled={isDisabled}
                 key={option.type}
-                style={{ backgroundImage: option.background }}
+                style={{ backgroundImage: tileBackground }}
                 value={option.type}
                 sx={{
                   alignItems: 'stretch',
-                  background: option.background,
+                  background: tileBackground,
                   color: '#203015',
                   display: 'flex',
+                  filter: isDisabled ? 'grayscale(1)' : 'none',
                   height: 184,
                   justifyContent: 'stretch',
                   p: 0,
@@ -103,23 +119,29 @@ export function ExercisePicker({
                   textAlign: 'left',
                   textTransform: 'none',
                   transition: 'transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease',
+                  width: '100%',
                   '&:hover': {
-                    background: option.background,
+                    background: tileBackground,
                     boxShadow: '0 16px 30px rgba(218, 131, 36, 0.18)',
                     transform: 'translateY(-1px)',
                   },
                   '&.Mui-selected': {
-                    background: option.background,
-                    borderColor: option.accent,
-                    boxShadow: `0 0 0 2px ${option.accent}33`,
+                    background: tileBackground,
+                    borderColor: tileAccent,
+                    boxShadow: `0 0 0 2px ${tileAccent}33`,
                   },
                   '&.Mui-selected:hover': {
-                    background: option.background,
+                    background: tileBackground,
+                  },
+                  '&.Mui-disabled': {
+                    background: tileBackground,
+                    color: '#203015',
+                    opacity: 1,
                   },
                 }}
               >
                 <GameTileArt
-                  accent={option.accent}
+                  accent={tileAccent}
                   dataTest={`exercise_picker__option_art__${option.type}`}
                   type={option.type}
                 />
@@ -161,12 +183,100 @@ export function ExercisePicker({
                 </Typography>
               </ToggleButton>
             );
+
+            if (isDisabled && disabledTooltip) {
+              return (
+                <CursorAnchoredTooltip
+                  arrowDataTest={`exercise_picker__option_tooltip_arrow__${option.type}`}
+                  closeOnOtherOpen
+                  key={option.type}
+                  title={
+                    <TooltipContent sx={disabledExerciseTooltipContentStyles}>
+                      <Box
+                        component="span"
+                        data-test={`exercise_picker__disabled_tooltip_icon__${option.type}`}
+                        sx={disabledExerciseTooltipIconStyles}
+                      >
+                        !
+                      </Box>
+                      <Box component="span">{disabledTooltip}</Box>
+                    </TooltipContent>
+                  }
+                  tooltipSx={disabledExerciseTooltipStyles}
+                >
+                  <Box
+                    data-test={`exercise_picker__option_tooltip_anchor__${option.type}`}
+                    sx={{
+                      borderRadius: 1.5,
+                      display: 'flex',
+                      height: 184,
+                      minWidth: 0,
+                      overflow: 'hidden',
+                      width: '100%',
+                    }}
+                  >
+                    {tileButton}
+                  </Box>
+                </CursorAnchoredTooltip>
+              );
+            }
+
+            return tileButton;
           })}
         </ToggleButtonGroup>
       </Stack>
     </Box>
   );
 }
+
+const disabledExerciseTooltipStyles = {
+  bgcolor: '#ffffff',
+  border: '1px solid rgba(32, 48, 21, 0.16)',
+  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
+  color: '#203015',
+  maxWidth: 380,
+  px: 1.5,
+  py: 1.25,
+};
+
+const disabledExerciseTooltipContentStyles = {
+  alignItems: 'center',
+  bgcolor: '#ffffff',
+  color: '#203015',
+  display: 'inline-flex',
+  fontSize: 17,
+  fontWeight: 700,
+  gap: 1,
+  lineHeight: 1.35,
+};
+
+const disabledExerciseTooltipIconStyles = {
+  alignItems: 'center',
+  animation: 'disabledExerciseTooltipBlink 860ms ease-in-out infinite',
+  bgcolor: '#ffd13d',
+  border: '2px solid #ff7a00',
+  borderRadius: '999px',
+  boxShadow: '0 0 0 4px rgba(255, 122, 0, 0.16)',
+  color: '#7a2500',
+  display: 'inline-flex',
+  flex: '0 0 auto',
+  fontSize: 22,
+  fontWeight: 1000,
+  height: 32,
+  justifyContent: 'center',
+  lineHeight: 1,
+  width: 32,
+  '@keyframes disabledExerciseTooltipBlink': {
+    '0%, 100%': {
+      opacity: 1,
+      transform: 'scale(1)',
+    },
+    '50%': {
+      opacity: 0.35,
+      transform: 'scale(1.12)',
+    },
+  },
+};
 
 function GameTileArt({
   accent,

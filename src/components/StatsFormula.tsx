@@ -44,22 +44,30 @@ export function CountMetric({
 
 export function StatsFormula({
   correct,
+  correctTooltip,
   dataTestPrefix = 'stats_formula',
   incorrect,
+  incorrectTooltip,
   inline = false,
   interfaceLanguage,
   labelDisplay,
+  rootDataTest,
+  totalTooltip,
   valueGroupJustify = 'flex-start',
   showLabel = true,
   total,
   totalLabel,
 }: {
   correct: number;
+  correctTooltip?: string;
   dataTestPrefix?: string;
   incorrect: number;
+  incorrectTooltip?: string;
   inline?: boolean;
   interfaceLanguage: SupportedLanguage;
   labelDisplay?: ReactNode;
+  rootDataTest?: string;
+  totalTooltip?: string;
   valueGroupJustify?: 'center' | 'flex-start';
   showLabel?: boolean;
   total: number;
@@ -81,7 +89,7 @@ export function StatsFormula({
   return (
     <Stack
       aria-label={ariaLabel}
-      data-test={`${dataTestPrefix}__root`}
+      data-test={rootDataTest ?? `${dataTestPrefix}__root`}
       sx={
         showLabel
           ? inline
@@ -110,7 +118,7 @@ export function StatsFormula({
           label={total}
           suffix={t(interfaceLanguage, 'metricAnsweredSuffix')}
           tone="total"
-          tooltip={t(interfaceLanguage, 'totalAnsweredTooltip')}
+          tooltip={totalTooltip ?? t(interfaceLanguage, 'totalAnsweredTooltip')}
         />
         {resultParts.length > 0 && (
           <FormulaIcon dataTest={`${dataTestPrefix}__equals_icon`} label="=">
@@ -124,7 +132,7 @@ export function StatsFormula({
             label={correct}
             suffix={t(interfaceLanguage, 'metricCorrectSuffix')}
             tone="correct"
-            tooltip={t(interfaceLanguage, 'correctAnsweredTooltip')}
+            tooltip={correctTooltip ?? t(interfaceLanguage, 'correctAnsweredTooltip')}
           />
         )}
         {hasCorrect && hasIncorrect && (
@@ -139,7 +147,7 @@ export function StatsFormula({
             label={incorrect}
             suffix={t(interfaceLanguage, 'metricIncorrectSuffix')}
             tone="incorrect"
-            tooltip={t(interfaceLanguage, 'incorrectAnsweredTooltip')}
+            tooltip={incorrectTooltip ?? t(interfaceLanguage, 'incorrectAnsweredTooltip')}
           />
         )}
       </Stack>

@@ -9,7 +9,7 @@ import { appReducer } from '../store/appSlice';
 import { attemptsReducer } from '../store/attemptsSlice';
 import { cardsReducer } from '../store/cardsSlice';
 import { statsReducer } from '../store/statsSlice';
-import { cardSetsReducer } from '../store/cardSetsSlice';
+import { cardSetsReducer, selectCardSet } from '../store/cardSetsSlice';
 
 const now = '2026-07-03T12:00:00.000Z';
 
@@ -198,6 +198,12 @@ describe('App navigation', () => {
       'Все карточки',
     );
     expect(screen.getByTestId('exercise_picker__tiles')).toBeInTheDocument();
+    expect(
+      screen
+        .getByTestId('exercise_picker__tiles')
+        .compareDocumentPosition(screen.getByTestId('game_setup__card_set_section')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(screen.getByTestId('exercise_picker__option_art__crossword')).toBeInTheDocument();
     expect(screen.getByTestId('exercise_picker__option_art__multipleChoice')).toBeInTheDocument();
     expect(screen.getByTestId('exercise_picker__option_art__missingLetters')).toBeInTheDocument();
@@ -207,6 +213,22 @@ describe('App navigation', () => {
     });
     expect(screen.getByTestId('exercise_picker__option_label__crossword')).toHaveTextContent(
       'Кроссворд',
+    );
+    expect(screen.getByRole('button', { name: 'Кроссворд' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    expect(screen.getByRole('button', { name: 'Вопрос с 3 вариантами' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    expect(screen.getByRole('button', { name: 'Пропущенные буквы' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    expect(screen.getByRole('button', { name: 'Пропущенное слово' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
     );
     expect(screen.getByTestId('exercise_picker__option_label__crossword')).toHaveStyle({
       borderRadius: '999px',
@@ -230,11 +252,224 @@ describe('App navigation', () => {
       height: '44px',
     });
     expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
-    expect(screen.getByTestId('game_setup__cannot_start_alert')).toHaveTextContent(
+    const setupWarning = screen.getByTestId('game_setup__warning_alert');
+    expect(setupWarning).toHaveClass('MuiAlert-colorWarning');
+    expect(setupWarning).toContainElement(
+      screen.getByTestId('game_setup__warning_message__card_set'),
+    );
+    expect(setupWarning).toContainElement(
+      screen.getByTestId('game_setup__warning_message__exercise'),
+    );
+    expect(screen.getByTestId('game_setup__warning_message__card_set')).toHaveTextContent(
       'Выберите набор карточек',
     );
+    expect(screen.getByTestId('game_setup__warning_message__exercise')).toHaveTextContent(
+      'Выберите игру',
+    );
+    expect(screen.queryByTestId('game_setup__cannot_start_alert')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('game_setup__choose_game_alert')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Начать' })).not.toBeInTheDocument();
     expect(screen.queryByText('worth it')).not.toBeInTheDocument();
+  });
+
+  it('disables missing letters on the setup screen when the selected card set has no single-word cards', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      cardSets: [
+        {
+          id: 'phrase-set',
+          name: 'Фразы',
+          cardIds: ['card-worth-it', 'card-look-forward'],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    });
+
+    await selectCardSetByName(user, /Фразы/);
+
+    const missingLettersTile = screen.getByRole('button', { name: 'Пропущенные буквы' });
+    expect(missingLettersTile).toBeDisabled();
+    const missingLettersTileVisual = screen.getByTestId('exercise_picker__option__missingLetters');
+    expect(missingLettersTileVisual).toHaveStyle({
+      filter: 'grayscale(1)',
+    });
+    expect(missingLettersTileVisual.getAttribute('style')).not.toContain('#f5ff69');
+    expect(missingLettersTileVisual.getAttribute('style')).toContain('#f2f3ee');
+    expect(screen.getByTestId('exercise_picker__option_art__missingLetters')).toBeInTheDocument();
+    expect(screen.getByTestId('exercise_picker__option_label__missingLetters')).toHaveTextContent(
+      'Пропущенные буквы',
+    );
+    expect(
+      screen.queryByTestId('game_setup__missing_letters_needs_words_alert'),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(
+      'Для игры с пропущенными буквами в наборе должны быть карточки со словами',
+    )).not.toBeInTheDocument();
+
+    await user.hover(screen.getByTestId('exercise_picker__option_tooltip_anchor__missingLetters'));
+
+    expect(await screen.findByText(
+      'Для игры с пропущенными буквами в наборе должны быть карточки со словами',
+    )).toBeInTheDocument();
+    expect(
+      await screen.findByTestId('exercise_picker__disabled_tooltip_icon__missingLetters'),
+    ).toBeInTheDocument();
+  });
+
+  it('disables missing word on the setup screen when the selected card set has no phrase cards', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      cardSets: [
+        {
+          id: 'word-set',
+          name: 'Слова',
+          cardIds: ['card-airport', 'card-vehicle'],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    });
+
+    await selectCardSetByName(user, /Слова/);
+
+    const missingWordTile = screen.getByRole('button', { name: 'Пропущенное слово' });
+    expect(missingWordTile).toBeDisabled();
+    expect(screen.queryByTestId('game_setup__missing_word_needs_phrases_alert')).not.toBeInTheDocument();
+    expect(screen.queryByText(
+      'Для игры с пропущенным словом в наборе должны быть карточки с фразами',
+    )).not.toBeInTheDocument();
+
+    await user.hover(screen.getByTestId('exercise_picker__option_tooltip_anchor__missingWord'));
+
+    expect(await screen.findByText(
+      'Для игры с пропущенным словом в наборе должны быть карточки с фразами',
+    )).toBeInTheDocument();
+    expect(
+      await screen.findByTestId('exercise_picker__disabled_tooltip_icon__missingWord'),
+    ).toBeInTheDocument();
+  });
+
+  it('reactively disables missing letters when the card set selector changes to phrase-only cards', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      cardSets: [
+        {
+          id: 'word-set',
+          name: 'Слова',
+          cardIds: ['card-airport', 'card-vehicle'],
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'phrase-set',
+          name: 'Фразы',
+          cardIds: ['card-worth-it', 'card-look-forward'],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    });
+
+    await selectCardSetByName(user, /Слова/);
+
+    expect(screen.getByRole('button', { name: 'Пропущенные буквы' })).not.toBeDisabled();
+    expect(screen.queryByTestId('game_setup__missing_letters_needs_words_alert')).not.toBeInTheDocument();
+
+    await selectCardSetByName(user, /Фразы/);
+
+    expect(screen.getByRole('button', { name: 'Пропущенные буквы' })).toBeDisabled();
+    const disabledMissingLettersTile = screen.getByTestId('exercise_picker__option__missingLetters');
+    expect(disabledMissingLettersTile).toHaveStyle({
+      filter: 'grayscale(1)',
+    });
+    expect(disabledMissingLettersTile.getAttribute('style')).not.toContain('#f5ff69');
+    expect(disabledMissingLettersTile.getAttribute('style')).toContain('#f2f3ee');
+    expect(
+      screen.queryByTestId('game_setup__missing_letters_needs_words_alert'),
+    ).not.toBeInTheDocument();
+
+    await selectCardSetByName(user, /Слова/);
+
+    expect(screen.getByRole('button', { name: 'Пропущенные буквы' })).not.toBeDisabled();
+    expect(screen.queryByTestId('game_setup__missing_letters_needs_words_alert')).not.toBeInTheDocument();
+  });
+
+  it('reactively disables an already selected missing letters tile after switching to phrase-only cards', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      cardSets: [
+        {
+          id: 'word-set',
+          name: 'Слова',
+          cardIds: ['card-airport', 'card-vehicle'],
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'phrase-set',
+          name: 'Фразы',
+          cardIds: ['card-worth-it', 'card-look-forward'],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    });
+
+    await selectCardSetByName(user, /Слова/);
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+
+    expect(screen.getByRole('button', { name: 'Играть' })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Пропущенные буквы' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    await selectCardSetByName(user, /Фразы/);
+
+    expect(screen.getByRole('button', { name: 'Пропущенные буквы' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Пропущенные буквы' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
+    expect(
+      screen.queryByTestId('game_setup__missing_letters_needs_words_alert'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps missing letters disabled according to the card set selector even if the global card set changes', async () => {
+    const user = userEvent.setup();
+    const store = renderApp({
+      cardSets: [
+        {
+          id: 'word-set',
+          name: 'Слова',
+          cardIds: ['card-airport', 'card-vehicle'],
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'phrase-set',
+          name: 'Фразы',
+          cardIds: ['card-worth-it', 'card-look-forward'],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    });
+
+    await selectCardSetByName(user, /Фразы/);
+    store.dispatch(selectCardSet('word-set'));
+
+    expect(screen.getByTestId('game_setup__card_set_select')).toHaveTextContent('Фразы (2)');
+    expect(screen.getByRole('button', { name: 'Пропущенные буквы' })).toBeDisabled();
+    expect(screen.getByTestId('exercise_picker__option__missingLetters')).toHaveStyle({
+      filter: 'grayscale(1)',
+    });
+    expect(
+      screen.queryByTestId('game_setup__missing_letters_needs_words_alert'),
+    ).not.toBeInTheDocument();
   });
 
   it('starts an exercise only after a card set is selected and shows the card set chip', async () => {
@@ -296,11 +531,17 @@ describe('App navigation', () => {
       screen.getByText(/лаборатория изучения языков/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/вы игрок, создающий свою игру/i),
+      screen.getByText(/Вы игрок, создающий свою игру/),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/не снимайте с себя эту ответственность/i),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(/"мертвый" тренажер/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/"тупой" тренажер/),
+    ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Понятно!' }));
 
@@ -844,7 +1085,7 @@ describe('App navigation', () => {
     ).toHaveTextContent('Всего отвечено');
     expect(
       screen.getByTestId('target_stats__answered_formula__label_line__1'),
-    ).toHaveTextContent('вопросов');
+    ).toHaveTextContent('карточек');
     expect(screen.getByTestId('target_stats__answered_formula__label')).not.toHaveTextContent(
       ':',
     );
@@ -856,6 +1097,15 @@ describe('App navigation', () => {
     expect(screen.getByTestId('target_stats__answered_formula__incorrect_chip')).toHaveTextContent(
       '2 неверно',
     );
+    await user.hover(screen.getByTestId('target_stats__answered_formula__total_chip'));
+    expect(
+      await screen.findByText('всего отвечено карточек во всех упражнениях'),
+    ).toBeInTheDocument();
+    await user.unhover(screen.getByTestId('target_stats__answered_formula__total_chip'));
+    await user.hover(screen.getByTestId('target_stats__answered_formula__incorrect_chip'));
+    expect(
+      await screen.findByText('количество карточек отвеченных неверно'),
+    ).toBeInTheDocument();
     expect(screen.getByTestId('target_stats__metrics')).toHaveStyle({
       display: 'grid',
       gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
@@ -863,8 +1113,17 @@ describe('App navigation', () => {
     expect(screen.getByTestId('target_stats__answered_formula__value_group')).toHaveStyle({
       justifyContent: 'center',
     });
-    expect(screen.getByTestId('target_stats__answered_formula__body')).toHaveStyle({
+    expect(screen.getByTestId('target_stats__answered_formula__root')).toHaveStyle({
+      alignItems: 'center',
+      justifyContent: 'center',
       width: '100%',
+    });
+    expect(screen.getByTestId('target_stats__answered_formula__body')).toHaveStyle({
+      alignItems: 'center',
+      justifyContent: 'center',
+      maxWidth: '100%',
+      textAlign: 'center',
+      width: 'fit-content',
     });
 
     expect(screen.getByTestId('app__statistics_section')).toHaveStyle({
@@ -942,7 +1201,7 @@ describe('App navigation', () => {
     expect(screen.getAllByLabelText(/Missing word letter/).length).toBeGreaterThan(0);
   });
 
-  it('shows a localized notice when missing letters has only phrase cards', async () => {
+  it('shows a localized setup warning when missing letters has only phrase cards', async () => {
     const user = userEvent.setup();
     renderApp({
       cards: [
@@ -959,13 +1218,17 @@ describe('App navigation', () => {
       ],
     });
 
-    await startExercise(user, 'Пропущенные буквы');
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    await selectAllCardsCardSet(user);
 
+    expect(screen.getByRole('button', { name: 'Пропущенные буквы' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
     expect(
-      screen.getByTestId('exercise_area__missing_letters_needs_words_alert'),
-    ).toHaveTextContent(
-      'Для игры с пропущенными буквами нужны карточки с отдельными словами для текущего целевого языка.',
-    );
+      screen.queryByTestId('game_setup__missing_letters_needs_words_alert'),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(
+      'Для игры с пропущенными буквами в наборе должны быть карточки со словами',
+    )).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Missing letters practice needs single-word cards/),
     ).not.toBeInTheDocument();
@@ -1142,8 +1405,15 @@ function cardIdByAnswer(answer: string): string {
 }
 
 async function selectAllCardsCardSet(user: ReturnType<typeof userEvent.setup>) {
+  await selectCardSetByName(user, /Все карточки/);
+}
+
+async function selectCardSetByName(
+  user: ReturnType<typeof userEvent.setup>,
+  name: RegExp,
+) {
   await user.click(screen.getByRole('combobox', { name: 'Набор карточек' }));
-  await user.click(await screen.findByRole('option', { name: /Все карточки/ }));
+  await user.click(await screen.findByRole('option', { name }));
 }
 
 async function startExercise(
