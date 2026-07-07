@@ -9,7 +9,7 @@ import { appReducer } from '../store/appSlice';
 import { attemptsReducer } from '../store/attemptsSlice';
 import { cardsReducer } from '../store/cardsSlice';
 import { statsReducer } from '../store/statsSlice';
-import { themesReducer } from '../store/themesSlice';
+import { cardSetsReducer } from '../store/cardSetsSlice';
 
 const now = '2026-07-03T12:00:00.000Z';
 
@@ -17,23 +17,23 @@ function renderApp({
   app = {},
   attempts = [],
   cards,
-  selectedThemeId,
-  themes,
+  selectedCardSetId,
+  cardSets,
 }: {
   app?: Partial<ReturnType<typeof appReducer>>;
   attempts?: ExerciseAttempt[];
   cards?: ReturnType<typeof cardsReducer>['cards'];
-  selectedThemeId?: string;
-  themes?: ReturnType<typeof themesReducer>['themes'];
+  selectedCardSetId?: string;
+  cardSets?: ReturnType<typeof cardSetsReducer>['cardSets'];
 } = {}) {
   const appState = {
     ...appReducer(undefined, { type: 'test/init' }),
     ...app,
   };
-  const themesState = {
-    ...themesReducer(undefined, { type: 'test/init' }),
-    ...(themes ? { themes } : {}),
-    ...(selectedThemeId !== undefined ? { selectedThemeId } : {}),
+  const cardSetsState = {
+    ...cardSetsReducer(undefined, { type: 'test/init' }),
+    ...(cardSets ? { cardSets } : {}),
+    ...(selectedCardSetId !== undefined ? { selectedCardSetId } : {}),
   };
   const appCards = cards ?? [
     {
@@ -116,7 +116,7 @@ function renderApp({
       attempts: attemptsReducer,
       cards: cardsReducer,
       stats: statsReducer,
-      themes: themesReducer,
+      cardSets: cardSetsReducer,
     },
     preloadedState: {
       app: appState,
@@ -128,7 +128,7 @@ function renderApp({
       attempts: {
         attempts,
       },
-      themes: themesState,
+      cardSets: cardSetsState,
     },
   });
 
@@ -149,7 +149,7 @@ describe('App navigation', () => {
         attempts: attemptsReducer,
         cards: cardsReducer,
         stats: statsReducer,
-        themes: themesReducer,
+        cardSets: cardSetsReducer,
       },
     });
 
@@ -177,44 +177,85 @@ describe('App navigation', () => {
     expect(screen.getByRole('tab', { name: 'Агенты LLM' })).toBeInTheDocument();
     const setupPanel = screen.getByTestId('game_setup__panel');
     expect(
-      within(setupPanel).getByRole('heading', { name: 'Выберите тему' }),
-    ).toBeInTheDocument();
+      within(setupPanel).queryByRole('heading', { name: 'Выберите набор карточек' }),
+    ).not.toBeInTheDocument();
     expect(
-      within(setupPanel).getByRole('heading', { name: 'Выберите игру' }),
+      within(setupPanel).queryByRole('heading', { name: 'Выберите игру' }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(setupPanel).getByLabelText('Набор карточек'),
     ).toBeInTheDocument();
-    expect(screen.queryByTestId('game_setup__theme_label')).not.toBeInTheDocument();
-    expect(screen.getByTestId('game_setup__theme_select')).not.toHaveTextContent(
+    expect(screen.getByTestId('game_setup__card_set_label')).toHaveTextContent(
+      'Набор карточек',
+    );
+    expect(
+      screen.getByTestId('game_setup__card_set_control').querySelector('legend'),
+    ).toHaveTextContent('Набор карточек');
+    expect(screen.getByTestId('game_setup__card_set_placeholder')).toHaveTextContent(
+      'Выберите набор',
+    );
+    expect(screen.getByTestId('game_setup__card_set_select')).not.toHaveTextContent(
       'Все карточки',
     );
-    expect(screen.getByTestId('game_setup__theme_select')).toHaveStyle({
-      height: '40px',
+    expect(screen.getByTestId('exercise_picker__tiles')).toBeInTheDocument();
+    expect(screen.getByTestId('exercise_picker__option_art__crossword')).toBeInTheDocument();
+    expect(screen.getByTestId('exercise_picker__option_art__multipleChoice')).toBeInTheDocument();
+    expect(screen.getByTestId('exercise_picker__option_art__missingLetters')).toBeInTheDocument();
+    expect(screen.getByTestId('exercise_picker__option_art__missingWord')).toBeInTheDocument();
+    expect(screen.getByTestId('exercise_picker__option__crossword')).toHaveStyle({
+      height: '184px',
+    });
+    expect(screen.getByTestId('exercise_picker__option_label__crossword')).toHaveTextContent(
+      'Кроссворд',
+    );
+    expect(screen.getByTestId('exercise_picker__option_label__crossword')).toHaveStyle({
+      borderRadius: '999px',
+    });
+    const tileBackgrounds = [
+      screen.getByTestId('exercise_picker__option__crossword'),
+      screen.getByTestId('exercise_picker__option__multipleChoice'),
+      screen.getByTestId('exercise_picker__option__missingLetters'),
+      screen.getByTestId('exercise_picker__option__missingWord'),
+    ].map((tile) => getComputedStyle(tile).backgroundImage);
+    expect(new Set(tileBackgrounds).size).toBe(4);
+    expect(tileBackgrounds.every((background) => background.includes('linear-gradient'))).toBe(true);
+    expect(screen.getByTestId('exercise_picker__option_label__crossword')).toHaveStyle({
+      background: 'linear-gradient(135deg, #fffdf4 0%, #fff0c8 100%)',
+    });
+    expect(tileBackgrounds).not.toContain(
+      getComputedStyle(screen.getByTestId('exercise_picker__option_label__crossword'))
+        .backgroundImage,
+    );
+    expect(screen.getByTestId('game_setup__card_set_select')).toHaveStyle({
+      height: '44px',
     });
     expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
     expect(screen.getByTestId('game_setup__cannot_start_alert')).toHaveTextContent(
-      'Импортируйте карточки или выберите тему с карточками для текущего целевого языка.',
+      'Выберите набор карточек',
     );
-    expect(
-      screen.queryByText(
-        /Import cards or choose a theme with cards for the current target language/i,
-      ),
-    ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Начать' })).not.toBeInTheDocument();
     expect(screen.queryByText('worth it')).not.toBeInTheDocument();
   });
 
-  it('starts an exercise only after a theme is selected and shows the theme chip', async () => {
+  it('starts an exercise only after a card set is selected and shows the card set chip', async () => {
     const user = userEvent.setup();
     renderApp();
 
     await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
     expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
 
-    await selectAllWordsTheme(user);
+    await selectAllCardsCardSet(user);
     await user.click(screen.getByRole('button', { name: 'Играть' }));
 
-    expect(screen.getByRole('heading', { name: 'Пропущенные буквы' })).toBeInTheDocument();
-    expect(getByDataTestPrefix('missing_letters_exercise__theme_chip__')[0]).toHaveTextContent(
-      'Тема: Все карточки',
+    expect(screen.getByRole('heading', { name: 'Игра: Пропущенные буквы' })).toBeInTheDocument();
+    expect(getByDataTestPrefix('missing_letters_exercise__metadata_row__')[0]).toContainElement(
+      getByDataTestPrefix('missing_letters_exercise__card_set_chip__')[0],
+    );
+    expect(getByDataTestPrefix('missing_letters_exercise__metadata_row__')[0]).toContainElement(
+      getByDataTestPrefix('missing_letters_exercise__progress_chip__')[0],
+    );
+    expect(getByDataTestPrefix('missing_letters_exercise__card_set_chip__')[0]).toHaveTextContent(
+      'Набор карточек: Все карточки',
     );
     expect(
       getByDataTestPrefix('missing_letters_exercise__progress_chip__')[0],
@@ -323,15 +364,15 @@ describe('App navigation', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Карточки' }));
 
-    const allWordsTopic = screen.getByRole('button', { name: /Все карточки/ });
-    expect(allWordsTopic).toBeInTheDocument();
-    expect(allWordsTopic).toHaveTextContent('6');
+    const allCardsTopic = screen.getByRole('button', { name: /Все карточки/ });
+    expect(allCardsTopic).toBeInTheDocument();
+    expect(allCardsTopic).toHaveTextContent('6');
     expect(
       screen.queryByRole('button', { name: 'В архив: Все карточки' }),
     ).not.toBeInTheDocument();
 
-    await user.click(allWordsTopic);
-    expect(screen.getByText('1 тема')).toBeInTheDocument();
+    await user.click(allCardsTopic);
+    expect(screen.getByText('1 набор')).toBeInTheDocument();
     expect(screen.getAllByText('6 карточек').length).toBeGreaterThan(0);
     expect(screen.getByText('Целевой ответ: 🇬🇧 Английский')).toBeInTheDocument();
     expect(screen.queryByText('1 topics')).not.toBeInTheDocument();
@@ -346,7 +387,7 @@ describe('App navigation', () => {
     expect(screen.queryByText('easy')).not.toBeInTheDocument();
     expect(screen.getAllByText('Фраза').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Слово').length).toBeGreaterThan(0);
-    expect(getByDataTestPrefix('theme_detail__card_item__')).toHaveLength(6);
+    expect(getByDataTestPrefix('card_set_detail__card_item__')).toHaveLength(6);
     expect(
       screen.getAllByLabelText('Статистика по слову: Верно 0, Неверно 0').length,
     ).toBeGreaterThan(0);
@@ -358,7 +399,7 @@ describe('App navigation', () => {
 
     await startExercise(user, 'Пропущенные буквы');
 
-    expect(screen.getByRole('heading', { name: 'Пропущенные буквы' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Игра: Пропущенные буквы' })).toBeInTheDocument();
     expect(screen.getByLabelText('Мысль персонажа')).toBeInTheDocument();
     const firstPrompt = getVisibleMissingLettersPrompt();
     expect(
@@ -573,7 +614,7 @@ describe('App navigation', () => {
       exerciseSessionId: expect.any(String),
       exerciseType: 'missingLetters',
       isExerciseCompleted: true,
-      themeId: 'all-words',
+      cardSetId: 'all-cards',
     });
   });
 
@@ -624,57 +665,57 @@ describe('App navigation', () => {
     expect(screen.getByTestId('assistant_profile__sticker__studyTroll')).toBeInTheDocument();
   });
 
-  it('creates a theme and edits its card list from the theme detail view', async () => {
+  it('creates a card set and edits its card list from the card set detail view', async () => {
     const user = userEvent.setup();
     const store = renderApp();
 
     await user.click(screen.getByRole('tab', { name: 'Карточки' }));
     await user.click(screen.getByRole('button', { name: 'Добавить' }));
 
-    expect(screen.getByTestId('theme_list__create_form')).toBeInTheDocument();
+    expect(screen.getByTestId('card_set_list__create_form')).toBeInTheDocument();
     expect(
-      screen.queryByTestId('theme_detail__selection_mode_banner'),
+      screen.queryByTestId('card_set_detail__selection_mode_banner'),
     ).not.toBeInTheDocument();
 
-    await user.type(screen.getByLabelText('Новая тема'), 'Дорога');
+    await user.type(screen.getByLabelText('Новый набор карточек'), 'Дорога');
     await user.click(screen.getByRole('button', { name: 'Создать' }));
 
     expect(screen.getByRole('button', { name: 'Добавить карточки' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Добавить в тему' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Добавить в набор' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Добавить карточки' }));
 
     await user.click(
-      screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
+      screen.getByTestId('card_set_detail__card_select_checkbox__card-airport'),
     );
     await user.click(
-      screen.getByTestId('theme_detail__card_select_checkbox__card-impede'),
+      screen.getByTestId('card_set_detail__card_select_checkbox__card-impede'),
     );
 
-    const saveWordsButton = screen.getByRole('button', {
-      name: 'Сохранить слова',
+    const saveCardsInSetButton = screen.getByRole('button', {
+      name: 'Сохранить карточки',
     });
-    expect(saveWordsButton).toBeEnabled();
-    expect(saveWordsButton).toHaveClass('MuiButton-outlined');
-    await user.click(saveWordsButton);
+    expect(saveCardsInSetButton).toBeEnabled();
+    expect(saveCardsInSetButton).toHaveClass('MuiButton-outlined');
+    await user.click(saveCardsInSetButton);
 
-    const createdTheme = store
+    const createdCardSet = store
       .getState()
-      .themes.themes.find((theme) => theme.name === 'Дорога');
-    expect(createdTheme?.cardIds).toEqual(
+      .cardSets.cardSets.find((cardSet) => cardSet.name === 'Дорога');
+    expect(createdCardSet?.cardIds).toEqual(
       expect.arrayContaining(['card-airport', 'card-impede']),
     );
     expect(screen.getByRole('button', { name: 'Редактировать карточки' })).toBeEnabled();
 
     await user.click(screen.getByRole('button', { name: 'Редактировать карточки' }));
-    await user.click(screen.getByTestId('theme_detail__card_select_checkbox__card-airport'));
-    await user.click(screen.getByTestId('theme_detail__card_select_checkbox__card-vehicle'));
-    await user.click(screen.getByRole('button', { name: 'Сохранить слова' }));
+    await user.click(screen.getByTestId('card_set_detail__card_select_checkbox__card-airport'));
+    await user.click(screen.getByTestId('card_set_detail__card_select_checkbox__card-vehicle'));
+    await user.click(screen.getByRole('button', { name: 'Сохранить карточки' }));
 
     expect(
       store
         .getState()
-        .themes.themes.find((theme) => theme.name === 'Дорога')?.cardIds,
+        .cardSets.cardSets.find((cardSet) => cardSet.name === 'Дорога')?.cardIds,
     ).toEqual(['card-vehicle', 'card-impede']);
   });
 
@@ -744,13 +785,14 @@ describe('App navigation', () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
-    expect(screen.getByRole('heading', { name: 'Пропущенные буквы' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Игра: Пропущенные буквы' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: 'Игра' }));
     await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
 
-    expect(screen.getByRole('heading', { name: 'Выберите тему' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Выберите игру' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Выберите набор карточек' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Выберите игру' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Набор карточек')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
   });
 
@@ -764,7 +806,7 @@ describe('App navigation', () => {
     expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
 
     await startExercise(user, 'Пропущенные буквы');
-    expect(screen.getByRole('heading', { name: 'Пропущенные буквы' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Игра: Пропущенные буквы' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Language Lab' }));
 
@@ -877,7 +919,8 @@ describe('App navigation', () => {
 
     await user.click(screen.getByRole('button', { name: 'Пройдено!' }));
 
-    expect(screen.getByRole('heading', { name: 'Выберите тему' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Выберите набор карточек' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Набор карточек')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
     expect(
       store
@@ -1098,8 +1141,8 @@ function cardIdByAnswer(answer: string): string {
   return cardId;
 }
 
-async function selectAllWordsTheme(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('combobox', { name: 'Выберите тему' }));
+async function selectAllCardsCardSet(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('combobox', { name: 'Набор карточек' }));
   await user.click(await screen.findByRole('option', { name: /Все карточки/ }));
 }
 
@@ -1108,7 +1151,7 @@ async function startExercise(
   exerciseName: string,
 ) {
   await user.click(screen.getByRole('button', { name: exerciseName }));
-  await selectAllWordsTheme(user);
+  await selectAllCardsCardSet(user);
   await user.click(screen.getByRole('button', { name: 'Играть' }));
 }
 
@@ -1227,7 +1270,7 @@ function createStoredAttempt({
   return {
     id: `attempt-${cardId}-${completedAt}`,
     exerciseType: 'missingLetters',
-    themeId: 'all-words',
+    cardSetId: 'all-cards',
     targetLanguage: 'en',
     createdAt: completedAt,
     completedAt,

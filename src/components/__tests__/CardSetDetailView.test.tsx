@@ -10,60 +10,60 @@ import { appReducer } from '../../store/appSlice';
 import { attemptsReducer } from '../../store/attemptsSlice';
 import { cardsReducer } from '../../store/cardsSlice';
 import { statsReducer } from '../../store/statsSlice';
-import { themesReducer } from '../../store/themesSlice';
-import { ThemeDetailView } from '../ThemeDetailView';
+import { cardSetsReducer } from '../../store/cardSetsSlice';
+import { CardSetDetailView } from '../CardSetDetailView';
 
 const now = '2026-07-04T00:00:00.000Z';
 
-describe('ThemeDetailView', () => {
+describe('CardSetDetailView', () => {
   it('sorts cards by total target attempts and shows compact kind chips with recent stats tooltips', async () => {
     const { container } = render(
       <Provider store={createStore()}>
-        <ThemeDetailView />
+        <CardSetDetailView />
       </Provider>,
     );
 
-    const items = getByDataTestPrefix(container, 'theme_detail__card_item__');
+    const items = getByDataTestPrefix(container, 'card_set_detail__card_item__');
     expect(within(items[0]).getByText('impede')).toBeInTheDocument();
     expect(within(items[1]).getByText('worth it')).toBeInTheDocument();
     expect(within(items[2]).getByText('airport')).toBeInTheDocument();
 
     const phraseChip = within(items[1]).getByTestId(
-      'theme_detail__card_kind_chip__card-worth-it',
+      'card_set_detail__card_kind_chip__card-worth-it',
     );
     expect(phraseChip.parentElement).toHaveStyle({ alignItems: 'center' });
     expect(phraseChip).toHaveStyle({ height: '30px' });
-    expect(screen.getByTestId('theme_detail__cards_list__all-words')).toHaveStyle({
+    expect(screen.getByTestId('card_set_detail__cards_list__all-cards')).toHaveStyle({
       overflowY: 'auto',
     });
 
     const statsChip = within(items[0]).getByTestId(
-      'theme_detail__card_stats__card-impede__root',
+      'card_set_detail__card_stats__card-impede__root',
     );
 
     fireEvent.mouseOver(statsChip, { clientX: 220, clientY: 120 });
 
     const tooltip = await screen.findByTestId(
-      'theme_detail__card_stats__card-impede__recent_tooltip',
+      'card_set_detail__card_stats__card-impede__recent_tooltip',
     );
 
     expect(within(tooltip).getByText('20 последних ответов')).toBeInTheDocument();
     expect(
       within(tooltip).getByTestId(
-        'theme_detail__card_stats__card-impede__recent_tooltip_subject',
+        'card_set_detail__card_stats__card-impede__recent_tooltip_subject',
       ),
     ).toHaveTextContent('impede');
     expect(
       tooltip.querySelectorAll(
-        '[data-test^="theme_detail__card_stats__card-impede__recent_result__"]',
+        '[data-test^="card_set_detail__card_stats__card-impede__recent_result__"]',
       ),
     ).toHaveLength(20);
     expect(
-      screen.getByTestId('theme_detail__card_stats__card-impede__tooltip_arrow'),
+      screen.getByTestId('card_set_detail__card_stats__card-impede__tooltip_arrow'),
     ).toBeInTheDocument();
     expect(
       screen.getByTestId(
-        'theme_detail__card_stats__card-impede__recent_results',
+        'card_set_detail__card_stats__card-impede__recent_results',
       ),
     ).toHaveStyle({ overflowY: 'auto' });
     expect(screen.getByRole('tooltip')).toHaveAttribute(
@@ -73,18 +73,18 @@ describe('ThemeDetailView', () => {
 
     fireEvent.mouseLeave(statsChip);
     fireEvent.mouseOver(
-      within(items[1]).getByTestId('theme_detail__card_stats__card-worth-it__root'),
+      within(items[1]).getByTestId('card_set_detail__card_stats__card-worth-it__root'),
       { clientX: 240, clientY: 120 },
     );
 
     expect(
       screen.queryByTestId(
-        'theme_detail__card_stats__card-impede__recent_tooltip',
+        'card_set_detail__card_stats__card-impede__recent_tooltip',
       ),
     ).not.toBeInTheDocument();
     expect(
       await screen.findByTestId(
-        'theme_detail__card_stats__card-worth-it__recent_tooltip',
+        'card_set_detail__card_stats__card-worth-it__recent_tooltip',
       ),
     ).toBeInTheDocument();
   });
@@ -92,29 +92,29 @@ describe('ThemeDetailView', () => {
   it('keeps the card stats tooltip open while the pointer moves from the chip into the tooltip', async () => {
     const { container } = render(
       <Provider store={createStore()}>
-        <ThemeDetailView />
+        <CardSetDetailView />
       </Provider>,
     );
 
-    const items = getByDataTestPrefix(container, 'theme_detail__card_item__');
+    const items = getByDataTestPrefix(container, 'card_set_detail__card_item__');
     const statsChip = within(items[0]).getByTestId(
-      'theme_detail__card_stats__card-impede__root',
+      'card_set_detail__card_stats__card-impede__root',
     );
     const tooltipAnchor = within(items[0]).getByTestId(
-      'theme_detail__card_stats__card-impede__tooltip_anchor',
+      'card_set_detail__card_stats__card-impede__tooltip_anchor',
     );
 
     fireEvent.mouseOver(statsChip, { clientX: 220, clientY: 120 });
 
     const tooltip = await screen.findByTestId(
-      'theme_detail__card_stats__card-impede__recent_tooltip',
+      'card_set_detail__card_stats__card-impede__recent_tooltip',
     );
 
     expect(tooltipAnchor).toHaveAttribute('data-anchor-x', '220');
     expect(tooltipAnchor).toHaveAttribute('data-anchor-y', '120');
     expect(
       screen.queryByTestId(
-        'theme_detail__card_stats__card-impede__tooltip_arrow__hover_bridge',
+        'card_set_detail__card_stats__card-impede__tooltip_arrow__hover_bridge',
       ),
     ).not.toBeInTheDocument();
 
@@ -124,7 +124,7 @@ describe('ThemeDetailView', () => {
     expect(tooltipAnchor).toHaveAttribute('data-anchor-y', '120');
     expect(
       screen.queryByTestId(
-        'theme_detail__card_stats__card-impede__tooltip_arrow__hover_bridge',
+        'card_set_detail__card_stats__card-impede__tooltip_arrow__hover_bridge',
       ),
     ).not.toBeInTheDocument();
 
@@ -132,7 +132,7 @@ describe('ThemeDetailView', () => {
     expect(tooltip).toBeInTheDocument();
     expect(
       screen.getByTestId(
-        'theme_detail__card_stats__card-impede__tooltip_arrow__hover_bridge',
+        'card_set_detail__card_stats__card-impede__tooltip_arrow__hover_bridge',
       ),
     ).toHaveStyle({
       left: '216px',
@@ -147,19 +147,19 @@ describe('ThemeDetailView', () => {
     await waitFor(() =>
       expect(
         screen.queryByTestId(
-          'theme_detail__card_stats__card-impede__recent_tooltip',
+          'card_set_detail__card_stats__card-impede__recent_tooltip',
         ),
       ).not.toBeInTheDocument(),
     );
   });
 
-  it('edits a custom theme with checkboxes, filters by search, and shows non-target translations', async () => {
+  it('edits a custom card set with checkboxes, filters by search, and shows non-target translations', async () => {
     const user = userEvent.setup();
     const store = createStore({
-      selectedThemeId: 'theme-road',
-      themes: [
+      selectedCardSetId: 'card-set-road',
+      cardSets: [
         {
-          id: 'theme-road',
+          id: 'card-set-road',
           name: 'Road',
           cardIds: ['card-airport', 'card-worth-it'],
           createdAt: now,
@@ -170,16 +170,16 @@ describe('ThemeDetailView', () => {
 
     render(
       <Provider store={store}>
-        <ThemeDetailView />
+        <CardSetDetailView />
       </Provider>,
     );
 
-    expect(screen.queryByTestId('theme_detail__add_card_form__theme-road')).not.toBeInTheDocument();
-    expect(screen.getByTestId('theme_detail__card_count_chip__theme-road')).toHaveStyle({
+    expect(screen.queryByTestId('card_set_detail__add_card_form__card-set-road')).not.toBeInTheDocument();
+    expect(screen.getByTestId('card_set_detail__card_count_chip__card-set-road')).toHaveStyle({
       borderColor: '#6f4bd8',
       color: '#5e3fc0',
     });
-    expect(screen.getByTestId('theme_detail__card_language_note__card-airport')).toHaveTextContent(
+    expect(screen.getByTestId('card_set_detail__card_language_note__card-airport')).toHaveTextContent(
       'ru: аэропорт / es: aeropuerto',
     );
 
@@ -193,39 +193,42 @@ describe('ThemeDetailView', () => {
 
     expect(screen.getByText('impede')).toBeInTheDocument();
     expect(
-      screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
+      screen.getByTestId('card_set_detail__card_select_checkbox__card-airport'),
     ).toBeChecked();
     expect(
-      screen.getByTestId('theme_detail__card_select_checkbox__card-impede'),
+      screen.getByTestId('card_set_detail__card_select_checkbox__card-impede'),
     ).not.toBeChecked();
-    expect(screen.getByRole('button', { name: 'Сохранить слова' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Сохранить карточки' })).toBeDisabled();
 
     await user.click(
-      screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
+      screen.getByTestId('card_set_detail__card_select_checkbox__card-airport'),
     );
     await user.click(
-      screen.getByTestId('theme_detail__card_select_checkbox__card-impede'),
+      screen.getByTestId('card_set_detail__card_select_checkbox__card-impede'),
     );
 
-    expect(screen.getByRole('button', { name: 'Сохранить слова' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Сохранить карточки' })).toBeEnabled();
 
-    await user.click(screen.getByRole('button', { name: 'Сохранить слова' }));
+    await user.click(screen.getByRole('button', { name: 'Сохранить карточки' }));
 
     expect(
-      store.getState().themes.themes.find((theme) => theme.id === 'theme-road')?.cardIds,
+      store
+        .getState()
+        .cardSets.cardSets.find((cardSet) => cardSet.id === 'card-set-road')
+        ?.cardIds,
     ).toEqual(['card-worth-it', 'card-impede']);
     expect(screen.queryByText('airport')).not.toBeInTheDocument();
     expect(screen.getByText('impede')).toBeInTheDocument();
   });
 
-  it('offers to add cards for an empty custom theme and wraps long phrase cards', () => {
+  it('offers to add cards for an empty custom card set and wraps long phrase cards', () => {
     const { unmount } = render(
       <Provider
         store={createStore({
-          selectedThemeId: 'theme-empty',
-          themes: [
+          selectedCardSetId: 'card-set-empty',
+          cardSets: [
             {
-              id: 'theme-empty',
+              id: 'card-set-empty',
               name: 'Empty',
               cardIds: [],
               createdAt: now,
@@ -234,7 +237,7 @@ describe('ThemeDetailView', () => {
           ],
         })}
       >
-        <ThemeDetailView />
+        <CardSetDetailView />
       </Provider>,
     );
 
@@ -244,10 +247,10 @@ describe('ThemeDetailView', () => {
     render(
       <Provider
         store={createStore({
-          selectedThemeId: 'theme-long',
-          themes: [
+          selectedCardSetId: 'card-set-long',
+          cardSets: [
             {
-              id: 'theme-long',
+              id: 'card-set-long',
               name: 'Long phrases',
               cardIds: ['card-long-phrase'],
               createdAt: now,
@@ -256,18 +259,18 @@ describe('ThemeDetailView', () => {
           ],
         })}
       >
-        <ThemeDetailView />
+        <CardSetDetailView />
       </Provider>,
     );
 
     expect(
-      screen.getByTestId('theme_detail__card_header__card-long-phrase'),
+      screen.getByTestId('card_set_detail__card_header__card-long-phrase'),
     ).toHaveStyle({ flexWrap: 'wrap' });
     expect(
-      screen.getByTestId('theme_detail__card_text_block__card-long-phrase'),
+      screen.getByTestId('card_set_detail__card_text_block__card-long-phrase'),
     ).toHaveStyle({ minWidth: '0' });
     expect(
-      screen.getByTestId('theme_detail__card_answer__card-long-phrase'),
+      screen.getByTestId('card_set_detail__card_answer__card-long-phrase'),
     ).toHaveStyle({
       overflowWrap: 'anywhere',
       wordBreak: 'break-word',
@@ -282,11 +285,11 @@ function getByDataTestPrefix(container: HTMLElement, prefix: string): HTMLElemen
 }
 
 function createStore({
-  selectedThemeId,
-  themes = [],
+  selectedCardSetId,
+  cardSets = [],
 }: {
-  selectedThemeId?: string;
-  themes?: Array<{
+  selectedCardSetId?: string;
+  cardSets?: Array<{
     id: string;
     name: string;
     cardIds: string[];
@@ -300,7 +303,7 @@ function createStore({
       attempts: attemptsReducer,
       cards: cardsReducer,
       stats: statsReducer,
-      themes: themesReducer,
+      cardSets: cardSetsReducer,
     },
     preloadedState: {
       cards: {
@@ -372,9 +375,9 @@ function createStore({
       attempts: {
         attempts: createCardAttempts('card-impede', 21),
       },
-      themes: {
-        themes,
-        selectedThemeId,
+      cardSets: {
+        cardSets,
+        selectedCardSetId,
       },
     },
   });
@@ -389,7 +392,7 @@ function createCardAttempts(cardId: string, count: number): ExerciseAttempt[] {
       id: `attempt-${index + 1}`,
       exerciseSessionId: `session-${index + 1}`,
       exerciseType: 'missingLetters',
-      themeId: 'all-words',
+      cardSetId: 'all-cards',
       targetLanguage: 'en',
       createdAt: `2026-07-${day}T10:00:00.000Z`,
       completedAt: `2026-07-${day}T10:00:00.000Z`,

@@ -18,7 +18,7 @@ Redux Toolkit state
 Redux Persist + localStorage
         |
         v
-Imported language cards, themes, attempts, statistics, pending duplicates
+Imported language cards, card sets, attempts, statistics, pending duplicates
 ```
 
 ## Technology Stack
@@ -63,18 +63,18 @@ Supported languages are:
 - `en`;
 - `es`.
 
-### Themes
+### Card Sets
 
-A theme is a learner-created collection of card ids. Themes are persistent and can be created freely. An exercise is always generated from exactly one selected theme.
+A card set is a learner-created collection of card ids. Card sets are persistent and can be created freely. An exercise is always generated from exactly one selected card set.
 
-Themes are deliberately lightweight because they represent short-term learning focus rather than permanent taxonomy.
+Card sets are deliberately lightweight because they represent short-term learning focus rather than permanent taxonomy. A future optional topic label can be added as card-set metadata without making it part of the card-set identity.
 
 ### Attempts
 
 An exercise attempt stores:
 
 - exercise type;
-- theme id;
+- card set id;
 - target language;
 - card snapshots;
 - prompts;
@@ -135,7 +135,7 @@ Hints use translations from the other available languages. Definitions use only 
 
 ## Crossword Rules
 
-Crosswords are generated from one theme.
+Crosswords are generated from one card set.
 
 Current constraints:
 
@@ -143,7 +143,7 @@ Current constraints:
 - if single words are used, a crossword contains up to six cards;
 - generated ordering is randomized by the frontend seed and does not depend on previous history.
 
-The current grid is intentionally simple. A future crossword engine can replace the layout algorithm while keeping the same card, theme, attempt, and statistics contracts.
+The current grid is intentionally simple. A future crossword engine can replace the layout algorithm while keeping the same card set, attempt, and statistics contracts.
 
 ## Language Settings
 
@@ -181,7 +181,7 @@ Persisted data includes:
 - imported cards;
 - duplicate processing history;
 - pending duplicates;
-- themes;
+- card sets;
 - attempts;
 - card statistics.
 

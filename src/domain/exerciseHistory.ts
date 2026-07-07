@@ -4,7 +4,7 @@ import { SupportedLanguage } from './languages';
 export interface ExerciseHistorySummary {
   id: string;
   exerciseType: ExerciseType;
-  themeId: string;
+  cardSetId: string;
   targetLanguage: SupportedLanguage;
   createdAt: string;
   completedAt?: string;
@@ -42,7 +42,7 @@ export function summarizeExerciseHistory(
         summaries.set(id, {
           id,
           exerciseType: attempt.exerciseType,
-          themeId: attempt.themeId,
+          cardSetId: attempt.cardSetId,
           targetLanguage: attempt.targetLanguage,
           createdAt: attempt.createdAt,
           completedAt: attempt.completedAt,
@@ -95,7 +95,7 @@ function getSummaryId(
 
   const key = [
     attempt.targetLanguage,
-    attempt.themeId,
+    attempt.cardSetId,
     attempt.exerciseType,
   ].join(':');
   const completedAt = attempt.completedAt ?? attempt.createdAt;

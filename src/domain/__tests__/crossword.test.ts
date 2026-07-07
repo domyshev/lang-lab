@@ -92,7 +92,7 @@ describe('createCrossword', () => {
     expect(result.entries[0].answer).toBe('I would like a ticket');
   });
 
-  it('prefers a real word crossword when a theme also contains phrases', () => {
+  it('prefers a real word crossword when a card set also contains phrases', () => {
     const result = createCrossword({
       cards: [
         card('phrase', 'I would like a ticket'),

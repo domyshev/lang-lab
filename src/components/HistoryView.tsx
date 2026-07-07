@@ -186,26 +186,6 @@ function AttemptHistoryCard({
                   recentResults={row.recentResults}
                   type={row.exerciseType}
                 />
-                {row.exerciseType === 'multipleChoice' && (
-                  <Chip
-                    data-test={`history_view__detail_result_chip__${rowDomKey}`}
-                    label={t(
-                      interfaceLanguage,
-                      row.isCorrect ? 'correct' : 'incorrect',
-                    )}
-                    size="small"
-                    variant="outlined"
-                    sx={{
-                      alignSelf: 'flex-start',
-                      bgcolor: row.isCorrect
-                        ? 'rgb(235, 247, 225)'
-                        : 'rgb(253, 235, 238)',
-                      borderColor: row.isCorrect ? '#8fc773' : '#f2a7b4',
-                      color: '#111111',
-                      fontWeight: 800,
-                    }}
-                  />
-                )}
               </Stack>
             </Box>
             );

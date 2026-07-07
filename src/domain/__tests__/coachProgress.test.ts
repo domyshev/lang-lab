@@ -45,7 +45,7 @@ function createAttempt(
   return {
     id,
     exerciseType: 'missingLetters',
-    themeId: 'all-words',
+    cardSetId: 'all-cards',
     targetLanguage: 'en',
     createdAt,
     completedAt: createdAt,

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { MultipleChoicePrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
-import { ExerciseProgressChip, ExerciseThemeChip } from './ExerciseThemeChip';
+import { ExerciseProgressChip, ExerciseCardSetChip } from './ExerciseCardSetChip';
 
 export function MultipleChoiceExercise({
   interfaceLanguage,
@@ -14,7 +14,7 @@ export function MultipleChoiceExercise({
   prompt,
   onAnswer,
   onNext,
-  themeName,
+  cardSetName,
 }: {
   interfaceLanguage: SupportedLanguage;
   prompt: MultipleChoicePrompt;
@@ -22,7 +22,7 @@ export function MultipleChoiceExercise({
   onNext: () => void;
   progressCompletedCount?: number;
   progressTotalCount?: number;
-  themeName?: string;
+  cardSetName?: string;
 }) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const isSubmitted = selectedAnswer !== null;
@@ -43,34 +43,40 @@ export function MultipleChoiceExercise({
       >
         <Stack
           data-test={`multiple_choice_exercise__header__${prompt.cardId}`}
-          direction="row"
-          spacing={1.25}
-          sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+          spacing={1}
+          sx={{ alignItems: 'flex-start' }}
         >
           <Typography
             component="h2"
             data-test={`multiple_choice_exercise__title__${prompt.cardId}`}
             variant="h6"
           >
-            {t(interfaceLanguage, 'multipleChoice')}
+            {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'multipleChoice')}
           </Typography>
-          {themeName && (
-            <ExerciseThemeChip
-              dataTest={`multiple_choice_exercise__theme_chip__${prompt.cardId}`}
-              interfaceLanguage={interfaceLanguage}
-              sx={exerciseThemeChipStyles}
-              themeName={themeName}
-            />
-          )}
-          {progressCompletedCount !== undefined &&
-            progressTotalCount !== undefined && (
-              <ExerciseProgressChip
-                completed={progressCompletedCount}
-                dataTest={`multiple_choice_exercise__progress_chip__${prompt.cardId}`}
+          <Stack
+            data-test={`multiple_choice_exercise__metadata_row__${prompt.cardId}`}
+            direction="row"
+            spacing={1.25}
+            sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+          >
+            {cardSetName && (
+              <ExerciseCardSetChip
+                dataTest={`multiple_choice_exercise__card_set_chip__${prompt.cardId}`}
                 interfaceLanguage={interfaceLanguage}
-                total={progressTotalCount}
+                sx={exerciseCardSetChipStyles}
+                cardSetName={cardSetName}
               />
             )}
+            {progressCompletedCount !== undefined &&
+              progressTotalCount !== undefined && (
+                <ExerciseProgressChip
+                  completed={progressCompletedCount}
+                  dataTest={`multiple_choice_exercise__progress_chip__${prompt.cardId}`}
+                  interfaceLanguage={interfaceLanguage}
+                  total={progressTotalCount}
+                />
+              )}
+          </Stack>
         </Stack>
         <Typography data-test={`multiple_choice_exercise__prompt__${prompt.cardId}`}>
           {prompt.prompt}
@@ -204,7 +210,7 @@ function getOptionStyles({
   };
 }
 
-const exerciseThemeChipStyles = {
+const exerciseCardSetChipStyles = {
   bgcolor: '#e7eefc',
   border: '1px solid rgba(68, 94, 150, 0.26)',
   color: '#203015',

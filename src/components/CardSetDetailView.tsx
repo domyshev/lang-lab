@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCardAnswer, isPhraseValue, LanguageCard } from '../domain/cards';
-import { ALL_WORDS_THEME_ID } from '../domain/themes';
+import { ALL_CARDS_CARD_SET_ID } from '../domain/cardSets';
 import {
   formatCardCount,
   getLanguageDisplayName,
@@ -26,12 +26,12 @@ import {
   supportedLanguages,
   SupportedLanguage,
 } from '../domain/languages';
-import { setThemeCards } from '../store/themesSlice';
+import { setCardSetCards } from '../store/cardSetsSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
 import { SplitWordStatsChip } from './SplitWordStatsChip';
 
-export function ThemeDetailView() {
+export function CardSetDetailView() {
   const dispatch = useDispatch<AppDispatch>();
   const [isEditingCards, setIsEditingCards] = useState(false);
   const [draftCardIds, setDraftCardIds] = useState<string[]>([]);
@@ -43,63 +43,63 @@ export function ThemeDetailView() {
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
-  const themes = useSelector((state: RootState) => state.themes.themes);
+  const cardSets = useSelector((state: RootState) => state.cardSets.cardSets);
   const cardStats = useSelector((state: RootState) => state.stats.cardStats);
   const allAttempts = useSelector(
     (state: RootState) => state.attempts.attempts,
   );
-  const selectedThemeId = useSelector(
-    (state: RootState) => state.themes.selectedThemeId,
+  const selectedCardSetId = useSelector(
+    (state: RootState) => state.cardSets.selectedCardSetId,
   );
-  const isAllWordsSelected =
-    selectedThemeId === ALL_WORDS_THEME_ID || !selectedThemeId;
-  const selectedTheme = isAllWordsSelected
+  const isAllCardsSelected =
+    selectedCardSetId === ALL_CARDS_CARD_SET_ID || !selectedCardSetId;
+  const selectedCardSet = isAllCardsSelected
     ? {
-        id: ALL_WORDS_THEME_ID,
-        name: t(interfaceLanguage, 'allWords'),
+        id: ALL_CARDS_CARD_SET_ID,
+        name: t(interfaceLanguage, 'allCards'),
         cardIds: cards.map((card) => card.id),
         createdAt: '',
         updatedAt: '',
       }
-    : themes.find(
-        (theme) => theme.id === selectedThemeId && !theme.archivedAt,
+    : cardSets.find(
+        (cardSet) => cardSet.id === selectedCardSetId && !cardSet.archivedAt,
       );
 
-  if (!selectedTheme) {
+  if (!selectedCardSet) {
     return (
       <Paper
-        data-test="theme_detail__empty_panel"
+        data-test="card_set_detail__empty_panel"
         sx={{ p: { xs: 2, md: 3 } }}
       >
-        <Alert data-test="theme_detail__select_theme_alert" severity="info">
-          {t(interfaceLanguage, 'selectThemeToManage')}
+        <Alert data-test="card_set_detail__select_card_set_alert" severity="info">
+          {t(interfaceLanguage, 'selectCardSetToManage')}
         </Alert>
       </Paper>
     );
   }
 
-  const themeCards = selectedTheme.cardIds
+  const cardSetCards = selectedCardSet.cardIds
     .map((cardId) => cards.find((card) => card.id === cardId))
     .filter((card): card is LanguageCard => Boolean(card));
-  const cardsForList = isEditingCards && !isAllWordsSelected ? cards : themeCards;
-  const existingThemeCardIds = new Set(
-    isAllWordsSelected ? [] : selectedTheme.cardIds,
+  const cardsForList = isEditingCards && !isAllCardsSelected ? cards : cardSetCards;
+  const existingCardSetCardIds = new Set(
+    isAllCardsSelected ? [] : selectedCardSet.cardIds,
   );
   const draftCardIdSet = new Set(
-    isEditingCards ? draftCardIds : selectedTheme.cardIds,
+    isEditingCards ? draftCardIds : selectedCardSet.cardIds,
   );
   const hasDraftChanges = isEditingCards
-    ? !areCardIdSetsEqual(draftCardIds, selectedTheme.cardIds)
+    ? !areCardIdSetsEqual(draftCardIds, selectedCardSet.cardIds)
     : false;
   const editButtonLabelKey = isEditingCards
-    ? 'saveWords'
-    : themeCards.length === 0
+    ? 'saveCardsInSet'
+    : cardSetCards.length === 0
       ? 'addCards'
-      : 'addWords';
+      : 'addCardsToSet';
   const filteredCardsForList = cardsForList.filter((card) =>
     cardMatchesSearch(card, searchQuery),
   );
-  const sortedThemeCards = [...filteredCardsForList].sort((left, right) => {
+  const sortedCardSetCards = [...filteredCardsForList].sort((left, right) => {
     const leftAttempts = getCardAttempts(left.id, cardStats, targetLanguage);
     const rightAttempts = getCardAttempts(right.id, cardStats, targetLanguage);
 
@@ -113,12 +113,12 @@ export function ThemeDetailView() {
   });
 
   const handleEditButtonClick = () => {
-    if (isAllWordsSelected) {
+    if (isAllCardsSelected) {
       return;
     }
 
     if (!isEditingCards) {
-      setDraftCardIds(selectedTheme.cardIds);
+      setDraftCardIds(selectedCardSet.cardIds);
       setIsEditingCards(true);
       return;
     }
@@ -128,8 +128,8 @@ export function ThemeDetailView() {
     }
 
     dispatch(
-      setThemeCards({
-        themeId: selectedTheme.id,
+      setCardSetCards({
+        cardSetId: selectedCardSet.id,
         cardIds: cards
           .filter((card) => draftCardIdSet.has(card.id))
           .map((card) => card.id),
@@ -150,7 +150,7 @@ export function ThemeDetailView() {
 
   return (
     <Paper
-      data-test={`theme_detail__panel__${selectedTheme.id}`}
+      data-test={`card_set_detail__panel__${selectedCardSet.id}`}
       sx={{
         display: 'flex',
         flexDirection: 'column',
@@ -160,29 +160,29 @@ export function ThemeDetailView() {
       }}
     >
       <Stack
-        data-test={`theme_detail__content__${selectedTheme.id}`}
+        data-test={`card_set_detail__content__${selectedCardSet.id}`}
         spacing={2.5}
         sx={{ flex: 1, minHeight: 0 }}
       >
         <Stack
-          data-test={`theme_detail__header__${selectedTheme.id}`}
+          data-test={`card_set_detail__header__${selectedCardSet.id}`}
           direction={{ xs: 'column', sm: 'row' }}
           spacing={1.5}
           alignItems={{ xs: 'flex-start', sm: 'center' }}
           justifyContent="space-between"
         >
-          <Box data-test={`theme_detail__header_text__${selectedTheme.id}`}>
+          <Box data-test={`card_set_detail__header_text__${selectedCardSet.id}`}>
             <Typography
-              data-test={`theme_detail__title__${selectedTheme.id}`}
+              data-test={`card_set_detail__title__${selectedCardSet.id}`}
               variant="h5"
               component="h2"
               sx={{ fontWeight: 800 }}
             >
-              {selectedTheme.name}
+              {selectedCardSet.name}
             </Typography>
             <Typography
               color="text.secondary"
-              data-test={`theme_detail__target_answer__${selectedTheme.id}`}
+              data-test={`card_set_detail__target_answer__${selectedCardSet.id}`}
               sx={{ mt: 0.5 }}
             >
               {t(interfaceLanguage, 'targetAnswerLabel')}:{' '}
@@ -191,15 +191,15 @@ export function ThemeDetailView() {
             </Typography>
           </Box>
           <Stack
-            data-test={`theme_detail__header_actions__${selectedTheme.id}`}
+            data-test={`card_set_detail__header_actions__${selectedCardSet.id}`}
             direction="row"
             spacing={1}
             sx={{ alignItems: 'center', flexWrap: 'wrap' }}
             useFlexGap
           >
-            {!isAllWordsSelected && (
+            {!isAllCardsSelected && (
               <Button
-                data-test={`theme_detail__edit_cards_button__${selectedTheme.id}`}
+                data-test={`card_set_detail__edit_cards_button__${selectedCardSet.id}`}
                 disabled={isEditingCards && !hasDraftChanges}
                 onClick={handleEditButtonClick}
                 startIcon={
@@ -220,12 +220,12 @@ export function ThemeDetailView() {
               </Button>
             )}
             <Chip
-              data-test={`theme_detail__card_count_chip__${selectedTheme.id}`}
-              label={formatCardCount(interfaceLanguage, themeCards.length)}
-              color={isAllWordsSelected ? 'primary' : 'default'}
+              data-test={`card_set_detail__card_count_chip__${selectedCardSet.id}`}
+              label={formatCardCount(interfaceLanguage, cardSetCards.length)}
+              color={isAllCardsSelected ? 'primary' : 'default'}
               variant="outlined"
               sx={
-                isAllWordsSelected
+                isAllCardsSelected
                   ? undefined
                   : {
                       borderColor: '#6f4bd8',
@@ -239,7 +239,7 @@ export function ThemeDetailView() {
 
         {cards.length > 0 && (
           <TextField
-            data-test={`theme_detail__search_input__${selectedTheme.id}`}
+            data-test={`card_set_detail__search_input__${selectedCardSet.id}`}
             fullWidth
             label={t(interfaceLanguage, 'searchCards')}
             value={searchQuery}
@@ -247,12 +247,12 @@ export function ThemeDetailView() {
           />
         )}
 
-        {!isAllWordsSelected && cards.length === 0 && (
+        {!isAllCardsSelected && cards.length === 0 && (
           <Alert
-            data-test={`theme_detail__import_cards_alert__${selectedTheme.id}`}
+            data-test={`card_set_detail__import_cards_alert__${selectedCardSet.id}`}
             severity="info"
           >
-            {t(interfaceLanguage, 'importCardsBeforeTheme')}
+            {t(interfaceLanguage, 'importCardsBeforeCardSet')}
           </Alert>
         )}
 
@@ -261,15 +261,15 @@ export function ThemeDetailView() {
         {cardsForList.length === 0 ? (
           <Typography
             color="text.secondary"
-            data-test={`theme_detail__empty_cards_message__${selectedTheme.id}`}
+            data-test={`card_set_detail__empty_cards_message__${selectedCardSet.id}`}
           >
-            {isAllWordsSelected
+            {isAllCardsSelected
               ? t(interfaceLanguage, 'importCardsToFillList')
-              : t(interfaceLanguage, 'addImportedCardsToStartTheme')}
+              : t(interfaceLanguage, 'addImportedCardsToStartCardSet')}
           </Typography>
         ) : (
           <Stack
-            data-test={`theme_detail__cards_list__${selectedTheme.id}`}
+            data-test={`card_set_detail__cards_list__${selectedCardSet.id}`}
             spacing={1.25}
             sx={{
               flex: 1,
@@ -278,7 +278,7 @@ export function ThemeDetailView() {
               pr: 0.5,
             }}
           >
-            {sortedThemeCards.map((card) => {
+            {sortedCardSetCards.map((card) => {
               const answer = getDisplayAnswer(
                 card,
                 targetLanguage,
@@ -291,9 +291,9 @@ export function ThemeDetailView() {
               });
               const isPhrase = isPhraseCard(card, targetLanguage);
               const isDraftSelected = draftCardIdSet.has(card.id);
-              const isAlreadyInTheme = isEditingCards
+              const isAlreadyInCardSet = isEditingCards
                 ? isDraftSelected
-                : existingThemeCardIds.has(card.id);
+                : existingCardSetCardIds.has(card.id);
               const stats = cardStats.find(
                 (item) =>
                   item.cardId === card.id &&
@@ -306,27 +306,27 @@ export function ThemeDetailView() {
 
               return (
                 <Box
-                  data-test={`theme_detail__card_item__${card.id}`}
+                  data-test={`card_set_detail__card_item__${card.id}`}
                   key={card.id}
                   sx={{
                     border: '1px solid',
-                    borderColor: isAlreadyInTheme
+                    borderColor: isAlreadyInCardSet
                       ? 'rgba(111, 75, 216, 0.52)'
                       : 'rgba(32, 48, 21, 0.14)',
                     borderLeft: '4px solid',
-                    borderLeftColor: isAlreadyInTheme
+                    borderLeftColor: isAlreadyInCardSet
                       ? '#6f4bd8'
                       : 'primary.main',
                     borderRadius: 1,
-                    bgcolor: isAlreadyInTheme
+                    bgcolor: isAlreadyInCardSet
                       ? 'rgba(111, 75, 216, 0.045)'
                       : 'background.paper',
                     p: 1.5,
                   }}
                 >
-                  <Stack data-test={`theme_detail__card_content__${card.id}`} spacing={1}>
+                  <Stack data-test={`card_set_detail__card_content__${card.id}`} spacing={1}>
                     <Stack
-                      data-test={`theme_detail__card_header__${card.id}`}
+                      data-test={`card_set_detail__card_header__${card.id}`}
                       direction={{ xs: 'column', sm: 'row' }}
                       spacing={1}
                       alignItems={{ xs: 'flex-start', sm: 'center' }}
@@ -335,7 +335,7 @@ export function ThemeDetailView() {
                       sx={{ flexWrap: 'wrap', minWidth: 0, width: '100%' }}
                     >
                       <Stack
-                        data-test={`theme_detail__card_identity__${card.id}`}
+                        data-test={`card_set_detail__card_identity__${card.id}`}
                         direction="row"
                         spacing={1}
                         sx={{
@@ -344,9 +344,9 @@ export function ThemeDetailView() {
                           minWidth: 0,
                         }}
                       >
-                        {isEditingCards && !isAllWordsSelected && (
+                        {isEditingCards && !isAllCardsSelected && (
                           <Stack
-                            data-test={`theme_detail__card_select_control__${card.id}`}
+                            data-test={`card_set_detail__card_select_control__${card.id}`}
                             direction="row"
                             spacing={0.75}
                             sx={{ alignItems: 'center', flexShrink: 0 }}
@@ -356,7 +356,7 @@ export function ThemeDetailView() {
                               onChange={() => handleDraftCardToggle(card.id)}
                               slotProps={{
                                 input: {
-                                  'data-test': `theme_detail__card_select_checkbox__${card.id}`,
+                                  'data-test': `card_set_detail__card_select_checkbox__${card.id}`,
                                 } as Record<string, string>,
                               }}
                               sx={{
@@ -368,11 +368,11 @@ export function ThemeDetailView() {
                           </Stack>
                         )}
                         <Box
-                          data-test={`theme_detail__card_text_block__${card.id}`}
+                          data-test={`card_set_detail__card_text_block__${card.id}`}
                           sx={{ minWidth: 0 }}
                         >
                           <Typography
-                            data-test={`theme_detail__card_answer__${card.id}`}
+                            data-test={`card_set_detail__card_answer__${card.id}`}
                             fontWeight={800}
                             sx={{
                               overflowWrap: 'anywhere',
@@ -383,7 +383,7 @@ export function ThemeDetailView() {
                           </Typography>
                           <Typography
                             color="text.secondary"
-                            data-test={`theme_detail__card_language_note__${card.id}`}
+                            data-test={`card_set_detail__card_language_note__${card.id}`}
                             sx={{
                               overflowWrap: 'anywhere',
                               wordBreak: 'break-word',
@@ -397,7 +397,7 @@ export function ThemeDetailView() {
                         </Box>
                       </Stack>
                       <Stack
-                        data-test={`theme_detail__card_meta__${card.id}`}
+                        data-test={`card_set_detail__card_meta__${card.id}`}
                         direction="row"
                         spacing={1}
                         flexWrap="wrap"
@@ -411,7 +411,7 @@ export function ThemeDetailView() {
                         }}
                       >
                         <Chip
-                          data-test={`theme_detail__card_kind_chip__${card.id}`}
+                          data-test={`card_set_detail__card_kind_chip__${card.id}`}
                           label={t(
                             interfaceLanguage,
                             isPhrase ? 'phraseLabel' : 'wordLabel',
@@ -426,7 +426,7 @@ export function ThemeDetailView() {
                           }}
                         />
                         <RecentCardStatsTooltip
-                          dataTestPrefix={`theme_detail__card_stats__${card.id}`}
+                          dataTestPrefix={`card_set_detail__card_stats__${card.id}`}
                           interfaceLanguage={interfaceLanguage}
                           recentResults={getRecentCardResults({
                             attempts: allAttempts,
@@ -438,7 +438,7 @@ export function ThemeDetailView() {
                         >
                           <SplitWordStatsChip
                             correct={stats?.correct ?? 0}
-                            dataTestPrefix={`theme_detail__card_stats__${card.id}`}
+                            dataTestPrefix={`card_set_detail__card_stats__${card.id}`}
                             incorrect={stats?.incorrect ?? 0}
                             interfaceLanguage={interfaceLanguage}
                             statsLabel={statsLabel}

@@ -45,7 +45,7 @@ function attempt(
 ): ExerciseAttempt {
   return {
     exerciseType: 'missingLetters',
-    themeId: 'all-words',
+    cardSetId: 'all-cards',
     targetLanguage: 'en',
     completedAt: overrides.createdAt,
     cardSnapshots: [],

@@ -9,7 +9,7 @@ import { appReducer } from '../../store/appSlice';
 import { attemptsReducer } from '../../store/attemptsSlice';
 import { cardsReducer } from '../../store/cardsSlice';
 import { statsReducer } from '../../store/statsSlice';
-import { themesReducer } from '../../store/themesSlice';
+import { cardSetsReducer } from '../../store/cardSetsSlice';
 
 describe('HistoryView', () => {
   it('shows a localized empty statistics message before any games are played', () => {
@@ -179,6 +179,11 @@ describe('HistoryView', () => {
     expect(options[1]).toHaveStyle({
       backgroundColor: 'rgb(235, 247, 225)',
     });
+    expect(
+      within(multipleChoiceCard!).queryByTestId(
+        'history_view__detail_result_chip__attempt-choice-1_card-vehicle',
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it('uses a full letter-cell width for phrase spaces in statistics details', async () => {
@@ -187,7 +192,7 @@ describe('HistoryView', () => {
       id: 'attempt-word-1',
       exerciseSessionId: 'session-word',
       exerciseType: 'missingWord',
-      themeId: 'all-words',
+      cardSetId: 'all-cards',
       targetLanguage: 'en',
       createdAt: '2026-07-05T12:00:00.000Z',
       completedAt: '2026-07-05T12:00:00.000Z',
@@ -327,7 +332,7 @@ function renderHistoryView(customAttempts?: ExerciseAttempt[]) {
       id: 'attempt-missing-1',
       exerciseSessionId: 'session-missing',
       exerciseType: 'missingLetters',
-      themeId: 'all-words',
+      cardSetId: 'all-cards',
       targetLanguage: 'en',
       createdAt: now,
       completedAt: now,
@@ -360,7 +365,7 @@ function renderHistoryView(customAttempts?: ExerciseAttempt[]) {
       id: 'attempt-missing-completed',
       exerciseSessionId: 'session-missing',
       exerciseType: 'missingLetters',
-      themeId: 'all-words',
+      cardSetId: 'all-cards',
       targetLanguage: 'en',
       createdAt: now,
       completedAt: now,
@@ -375,7 +380,7 @@ function renderHistoryView(customAttempts?: ExerciseAttempt[]) {
       id: 'attempt-choice-1',
       exerciseSessionId: 'session-choice',
       exerciseType: 'multipleChoice',
-      themeId: 'all-words',
+      cardSetId: 'all-cards',
       targetLanguage: 'en',
       createdAt: '2026-07-05T11:00:00.000Z',
       completedAt: '2026-07-05T11:00:00.000Z',
@@ -392,7 +397,7 @@ function renderHistoryView(customAttempts?: ExerciseAttempt[]) {
       attempts: attemptsReducer,
       cards: cardsReducer,
       stats: statsReducer,
-      themes: themesReducer,
+      cardSets: cardSetsReducer,
     },
     preloadedState: {
       attempts: {

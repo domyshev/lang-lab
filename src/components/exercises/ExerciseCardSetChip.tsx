@@ -1,31 +1,31 @@
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import { Box, Chip } from '@mui/material';
 import type { ChipProps } from '@mui/material/Chip';
-import type { SxProps, Theme } from '@mui/material/styles';
+import type { SxProps, Theme as MuiTheme } from '@mui/material/styles';
 import { forwardRef } from 'react';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
 
-type ExerciseThemeChipProps = {
+type ExerciseCardSetChipProps = {
   clickable?: boolean;
   dataTest: string;
   interfaceLanguage: SupportedLanguage;
   onClick?: ChipProps['onClick'];
-  sx?: SxProps<Theme>;
-  themeName: string;
+  sx?: SxProps<MuiTheme>;
+  cardSetName: string;
 } & Omit<ChipProps, 'clickable' | 'label' | 'onClick' | 'sx'>;
 
-export const ExerciseThemeChip = forwardRef<
+export const ExerciseCardSetChip = forwardRef<
   HTMLDivElement,
-  ExerciseThemeChipProps
->(function ExerciseThemeChip(
+  ExerciseCardSetChipProps
+>(function ExerciseCardSetChip(
   {
     clickable = false,
     dataTest,
     interfaceLanguage,
     onClick,
     sx,
-    themeName,
+    cardSetName,
     ...chipProps
   },
   ref,
@@ -52,14 +52,14 @@ export const ExerciseThemeChip = forwardRef<
               whiteSpace: 'pre',
             }}
           >
-            {t(interfaceLanguage, 'themeChipPrefix')}:{' '}
+            {t(interfaceLanguage, 'cardSetChipPrefix')}:{' '}
           </Box>
           <Box
             component="span"
             data-test={`${dataTest}__name`}
             sx={{ fontSize: 13, fontWeight: 850, lineHeight: 1 }}
           >
-            {themeName}
+            {cardSetName}
           </Box>
         </Box>
       }

@@ -4,9 +4,9 @@ Challenge requirements: [../TASK_REQUIREMENTS.md](../TASK_REQUIREMENTS.md)
 
 ## Product Summary
 
-Language Crossword Lab is a local browser app for self-directed vocabulary practice. A learner imports language cards, creates themes, and generates exercises from a selected theme.
+Language Crossword Lab is a local browser app for self-directed vocabulary practice. A learner imports language cards, creates card sets, and generates exercises from a selected card set.
 
-The learner acts as both student and teacher: they choose the source material, import cards, create short-term themes, and practice the target language that matters now.
+The learner acts as both student and teacher: they choose the source material, import cards, create card sets, and practice the target language that matters now.
 
 ## Supported Languages
 
@@ -62,20 +62,20 @@ If an incoming duplicate contains both safe missing information and conflicting 
 
 Future backend work may use an AI agent to review pending duplicates and add dictionary entries.
 
-## Themes
+## Card Sets
 
-Themes are learner-created groups of card ids.
+Card sets are learner-created groups of card ids.
 
 Requirements:
 
-- a learner can create many themes;
-- themes persist locally;
-- themes are not deleted automatically;
-- a theme may contain words and phrases at the same time;
-- each exercise is generated from exactly one selected theme;
-- when there are no themes, the app should lead directly into theme creation.
+- a learner can create many card sets;
+- card sets persist locally;
+- card sets are not deleted automatically;
+- a card set may contain words and phrases at the same time;
+- each exercise is generated from exactly one selected card set;
+- when there are no card sets, the app should lead directly into card set creation.
 
-Themes are important for short learning periods such as a few days or weeks. They should remain available, but they are not meant to be a strict permanent taxonomy.
+Card sets are important for short learning periods such as a few days or weeks. They should remain available, but they are not meant to be a strict permanent taxonomy. A future version may add an optional topic label to a card set, but the label is not required.
 
 ## Exercise Types
 
@@ -104,7 +104,7 @@ Translations used as hints must come from languages other than the current targe
 
 ## Crossword Requirements
 
-Crosswords are generated from one theme.
+Crosswords are generated from one card set.
 
 Rules:
 
@@ -123,7 +123,7 @@ History records include:
 
 - exercise type;
 - target language;
-- theme id;
+- card set id;
 - card snapshots;
 - prompts;
 - submitted answers;
@@ -190,7 +190,7 @@ Persisted state includes:
 - imported language cards;
 - duplicate history;
 - pending duplicates;
-- themes;
+- card sets;
 - exercise attempts;
 - card statistics.
 
@@ -207,4 +207,4 @@ The app should handle empty storage and restored persisted state gracefully.
 - full analytics dashboard;
 - mobile-native app.
 
-Arcade-style modules can be added later as separate modules that reuse the same language-card, theme, attempt, and statistics data.
+Arcade-style modules can be added later as separate modules that reuse the same language-card, card-set, attempt, and statistics data.

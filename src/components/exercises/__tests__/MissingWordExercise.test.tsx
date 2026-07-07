@@ -8,7 +8,7 @@ import { appReducer } from '../../../store/appSlice';
 import { attemptsReducer } from '../../../store/attemptsSlice';
 import { cardsReducer } from '../../../store/cardsSlice';
 import { statsReducer } from '../../../store/statsSlice';
-import { themesReducer } from '../../../store/themesSlice';
+import { cardSetsReducer } from '../../../store/cardSetsSlice';
 
 describe('MissingWordExercise', () => {
   it('marks an in-session repeated phrase with a repeat chip', () => {
@@ -356,7 +356,7 @@ function createStore() {
       attempts: attemptsReducer,
       cards: cardsReducer,
       stats: statsReducer,
-      themes: themesReducer,
+      cardSets: cardSetsReducer,
     },
   });
 }

@@ -1,5 +1,5 @@
 import { Box } from '@mui/material';
-import type { SxProps, Theme } from '@mui/material';
+import type { SxProps, Theme as MuiTheme } from '@mui/material';
 import capeChampion from '../assets/characters/cape-champion.svg';
 import greenPower from '../assets/characters/green-power.svg';
 import studyTroll from '../assets/characters/study-troll.svg';
@@ -28,7 +28,7 @@ export function AssistantStickerIcon({
   className?: string;
   dataTest?: string;
   size?: number;
-  sx?: SxProps<Theme>;
+  sx?: SxProps<MuiTheme>;
 }) {
   const resolvedAssistantId = resolveAssistantId(assistantId);
 

@@ -27,7 +27,7 @@ export interface ExerciseAttempt {
   id: string;
   exerciseSessionId?: string;
   exerciseType: ExerciseType;
-  themeId: string;
+  cardSetId: string;
   targetLanguage: SupportedLanguage;
   createdAt: string;
   completedAt?: string;

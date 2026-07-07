@@ -12,6 +12,7 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  InputLabel,
   MenuItem,
   Paper,
   Select,
@@ -28,8 +29,8 @@ import { HistoryView } from './components/HistoryView';
 import { ImportCardsView } from './components/ImportCardsView';
 import { SplitWordStatsChip } from './components/SplitWordStatsChip';
 import { MetricChip, StatsFormula } from './components/StatsFormula';
-import { ThemeDetailView } from './components/ThemeDetailView';
-import { ThemeListView } from './components/ThemeListView';
+import { CardSetDetailView } from './components/CardSetDetailView';
+import { CardSetListView } from './components/CardSetListView';
 import { CrosswordExercise } from './components/exercises/CrosswordExercise';
 import { MissingLettersExercise } from './components/exercises/MissingLettersExercise';
 import { MissingWordExercise } from './components/exercises/MissingWordExercise';
@@ -62,12 +63,12 @@ import {
   getPracticeSettings,
   orderCardsForMissingLettersPractice,
 } from './domain/practiceOrdering';
-import { ALL_WORDS_THEME_ID, Theme } from './domain/themes';
+import { ALL_CARDS_CARD_SET_ID, CardSet } from './domain/cardSets';
 import { saveAttempt } from './store/attemptsSlice';
 import { acknowledgeGameHelp, markGameHelpCoachmarkShown } from './store/appSlice';
 import { applyImportResult } from './store/cardsSlice';
 import { recordAttemptStats } from './store/statsSlice';
-import { selectTheme } from './store/themesSlice';
+import { selectCardSet } from './store/cardSetsSlice';
 import { AppDispatch, RootState } from './store/store';
 
 type ExercisePreview =
@@ -82,7 +83,7 @@ type ExercisePreview =
       prompt?: MissingWordPracticePrompt;
     };
 
-type SelectableTheme = Theme & { isAllWords?: boolean };
+type SelectableCardSet = CardSet & { isAllCards?: boolean };
 
 type PracticePrompt<T extends ExercisePrompt> = T & {
   isRepeat: boolean;
@@ -117,7 +118,7 @@ export function App() {
     useState<AppShellSection>('game');
   const [selectedExerciseType, setSelectedExerciseType] =
     useState<ExerciseType>('crossword');
-  const [selectedGameThemeId, setSelectedGameThemeId] = useState('');
+  const [selectedGameCardSetId, setSelectedGameCardSetId] = useState('');
   const [isExerciseStarted, setIsExerciseStarted] = useState(false);
   const [generationSeed, setGenerationSeed] = useState(() => Date.now());
   const [lastSavedAttemptId, setLastSavedAttemptId] = useState<string | null>(
@@ -155,9 +156,9 @@ export function App() {
     useState<AssistantId | null>(null);
 
   const cards = useSelector((state: RootState) => state.cards.cards);
-  const themes = useSelector((state: RootState) => state.themes.themes);
-  const selectedThemeId = useSelector(
-    (state: RootState) => state.themes.selectedThemeId,
+  const cardSets = useSelector((state: RootState) => state.cardSets.cardSets);
+  const selectedCardSetId = useSelector(
+    (state: RootState) => state.cardSets.selectedCardSetId,
   );
   const attempts = useSelector((state: RootState) => state.attempts.attempts);
   const cardStats = useSelector((state: RootState) => state.stats.cardStats);
@@ -177,36 +178,36 @@ export function App() {
     (state: RootState) => state.app.practiceSettings,
   );
 
-  const visibleThemes = useMemo(
-    () => themes.filter((theme) => !theme.archivedAt),
-    [themes],
+  const visibleCardSets = useMemo(
+    () => cardSets.filter((cardSet) => !cardSet.archivedAt),
+    [cardSets],
   );
-  const selectedTheme = useMemo<SelectableTheme | undefined>(() => {
-    if (!selectedThemeId || selectedThemeId === ALL_WORDS_THEME_ID) {
+  const selectedCardSet = useMemo<SelectableCardSet | undefined>(() => {
+    if (!selectedCardSetId || selectedCardSetId === ALL_CARDS_CARD_SET_ID) {
       return {
-        id: ALL_WORDS_THEME_ID,
-        name: t(interfaceLanguage, 'allWords'),
+        id: ALL_CARDS_CARD_SET_ID,
+        name: t(interfaceLanguage, 'allCards'),
         cardIds: cards.map((card) => card.id),
         createdAt: '',
         updatedAt: '',
-        isAllWords: true,
+        isAllCards: true,
       };
     }
 
-    return visibleThemes.find((theme) => theme.id === selectedThemeId);
-  }, [cards, interfaceLanguage, selectedThemeId, visibleThemes]);
-  const themeCards = useMemo(() => {
-    if (!selectedTheme) {
+    return visibleCardSets.find((cardSet) => cardSet.id === selectedCardSetId);
+  }, [cards, interfaceLanguage, selectedCardSetId, visibleCardSets]);
+  const cardSetCards = useMemo(() => {
+    if (!selectedCardSet) {
       return [];
     }
 
-    return selectedTheme.cardIds
+    return selectedCardSet.cardIds
       .map((cardId) => cards.find((card) => card.id === cardId))
       .filter((card): card is LanguageCard => Boolean(card));
-  }, [cards, selectedTheme]);
+  }, [cards, selectedCardSet]);
   const eligibleCards = useMemo(
-    () => getEligibleCardsForTarget(themeCards, targetLanguage),
-    [targetLanguage, themeCards],
+    () => getEligibleCardsForTarget(cardSetCards, targetLanguage),
+    [targetLanguage, cardSetCards],
   );
   const randomizedEligibleCards = useMemo(
     () => shuffleCards(eligibleCards, generationSeed),
@@ -553,9 +554,9 @@ export function App() {
       prompt: entry.clue,
       expectedAnswer: entry.answer,
       translationHints:
-        themeCards.find((card) => card.id === entry.cardId)
+        cardSetCards.find((card) => card.id === entry.cardId)
           ? getTranslationHints(
-              themeCards.find((card) => card.id === entry.cardId)!,
+              cardSetCards.find((card) => card.id === entry.cardId)!,
               targetLanguage,
             )
           : [],
@@ -593,7 +594,7 @@ export function App() {
     advance: boolean;
     isExerciseCompleted?: boolean;
   }) {
-    if (!selectedTheme) {
+    if (!selectedCardSet) {
       return;
     }
 
@@ -607,11 +608,11 @@ export function App() {
       id: createId('attempt'),
       exerciseSessionId: currentExerciseSessionId,
       exerciseType: input.exerciseType,
-      themeId: selectedTheme.id,
+      cardSetId: selectedCardSet.id,
       targetLanguage,
       createdAt: now,
       completedAt: now,
-      cardSnapshots: themeCards
+      cardSnapshots: cardSetCards
         .filter((card) => input.cardIds.includes(card.id))
         .map(createCardSnapshot),
       prompts: input.prompts,
@@ -632,7 +633,7 @@ export function App() {
   }
 
   function completeExerciseSession(exerciseType: ExerciseType) {
-    if (!selectedTheme) {
+    if (!selectedCardSet) {
       return;
     }
 
@@ -641,7 +642,7 @@ export function App() {
       id: createId('attempt'),
       exerciseSessionId: currentExerciseSessionId,
       exerciseType,
-      themeId: selectedTheme.id,
+      cardSetId: selectedCardSet.id,
       targetLanguage,
       createdAt: now,
       completedAt: now,
@@ -697,8 +698,8 @@ export function App() {
             alignItems: 'start',
           }}
         >
-          <ThemeListView />
-          <ThemeDetailView />
+          <CardSetListView />
+          <CardSetDetailView />
         </Box>
       );
     }
@@ -838,17 +839,17 @@ export function App() {
   }
 
   function GameSetup() {
-    const currentThemeId = selectedGameThemeId;
+    const currentCardSetId = selectedGameCardSetId;
     const canStart =
-      Boolean(currentThemeId) &&
-      Boolean(selectedTheme) &&
+      Boolean(currentCardSetId) &&
+      Boolean(selectedCardSet) &&
       eligibleCards.length > 0 &&
       (selectedExerciseType !== 'multipleChoice' || eligibleCards.length >= 3);
 
-    const handleThemeChange = (event: SelectChangeEvent<string>) => {
-      const nextThemeId = event.target.value;
-      setSelectedGameThemeId(nextThemeId);
-      dispatch(selectTheme(nextThemeId));
+    const handleCardSetChange = (event: SelectChangeEvent<string>) => {
+      const nextCardSetId = event.target.value;
+      setSelectedGameCardSetId(nextCardSetId);
+      dispatch(selectCardSet(nextCardSetId));
       resetExerciseState();
     };
 
@@ -858,25 +859,49 @@ export function App() {
         sx={{ p: { xs: 2, md: 3 }, maxWidth: 760, mx: 'auto' }}
       >
         <Stack data-test="game_setup__content" spacing={3}>
-          <Stack data-test="game_setup__theme_section" spacing={2}>
-            <Typography
-              component="h2"
-              data-test="game_setup__theme_title"
-              variant="h6"
-            >
-              {t(interfaceLanguage, 'chooseTheme')}
-            </Typography>
-            <FormControl data-test="game_setup__theme_control" fullWidth>
+          <Stack data-test="game_setup__card_set_section" spacing={2}>
+            <FormControl data-test="game_setup__card_set_control" fullWidth size="small">
+              <InputLabel
+                data-test="game_setup__card_set_label"
+                id="game-setup-card-set-label"
+                shrink
+              >
+                {t(interfaceLanguage, 'cardSetLabel')}
+              </InputLabel>
               <Select
-                data-test="game_setup__theme_select"
+                data-test="game_setup__card_set_select"
                 displayEmpty
-                inputProps={{
-                  'aria-label': t(interfaceLanguage, 'chooseTheme'),
+                label={t(interfaceLanguage, 'cardSetLabel')}
+                labelId="game-setup-card-set-label"
+                value={currentCardSetId}
+                onChange={handleCardSetChange}
+                renderValue={(selected) => {
+                  if (!selected) {
+                    return (
+                      <Typography
+                        component="span"
+                        data-test="game_setup__card_set_placeholder"
+                        sx={{ color: 'text.secondary' }}
+                      >
+                        {t(interfaceLanguage, 'chooseCardSetPlaceholder')}
+                      </Typography>
+                    );
+                  }
+
+                  if (selected === ALL_CARDS_CARD_SET_ID) {
+                    return `${t(interfaceLanguage, 'allCards')} (${cards.length})`;
+                  }
+
+                  const visibleCardSet = visibleCardSets.find(
+                    (cardSet) => cardSet.id === selected,
+                  );
+
+                  return visibleCardSet
+                    ? `${visibleCardSet.name} (${visibleCardSet.cardIds.length})`
+                    : '';
                 }}
-                value={currentThemeId}
-                onChange={handleThemeChange}
                 sx={{
-                  height: 40,
+                  height: 44,
                   '& .MuiSelect-select': {
                     alignItems: 'center',
                     display: 'flex',
@@ -886,24 +911,24 @@ export function App() {
                 }}
               >
                 <MenuItem
-                  data-test="game_setup__theme_option__empty"
+                  data-test="game_setup__card_set_option__empty"
                   disabled
                   value=""
                   sx={{ display: 'none' }}
                 />
                 <MenuItem
-                  data-test="game_setup__theme_option__all_words"
-                  value={ALL_WORDS_THEME_ID}
+                  data-test="game_setup__card_set_option__all_cards"
+                  value={ALL_CARDS_CARD_SET_ID}
                 >
-                  {t(interfaceLanguage, 'allWords')} ({cards.length})
+                  {t(interfaceLanguage, 'allCards')} ({cards.length})
                 </MenuItem>
-                {visibleThemes.map((theme) => (
+                {visibleCardSets.map((cardSet) => (
                   <MenuItem
-                    data-test={`game_setup__theme_option__${theme.id}`}
-                    key={theme.id}
-                    value={theme.id}
+                    data-test={`game_setup__card_set_option__${cardSet.id}`}
+                    key={cardSet.id}
+                    value={cardSet.id}
                   >
-                    {theme.name} ({theme.cardIds.length})
+                    {cardSet.name} ({cardSet.cardIds.length})
                   </MenuItem>
                 ))}
               </Select>
@@ -966,10 +991,10 @@ export function App() {
       );
     }
 
-    if (!selectedTheme) {
+    if (!selectedCardSet) {
       return (
-        <Alert data-test="exercise_area__missing_theme_alert" severity="info">
-          Select a theme to start a practice set.
+        <Alert data-test="exercise_area__missing_card_set_alert" severity="info">
+          {t(interfaceLanguage, 'chooseCardSet')}
         </Alert>
       );
     }
@@ -977,8 +1002,7 @@ export function App() {
     if (eligibleCards.length === 0) {
       return (
         <Alert data-test="exercise_area__no_target_cards_alert" severity="warning">
-          This theme has no cards for{' '}
-          {getLanguageDisplayName(interfaceLanguage, targetLanguage)} yet.
+          {t(interfaceLanguage, 'cannotStartGame')}
         </Alert>
       );
     }
@@ -999,8 +1023,8 @@ export function App() {
       return (
         <CrosswordExercise
           interfaceLanguage={interfaceLanguage}
-          onThemeOpen={() => {
-            dispatch(selectTheme(selectedTheme.id));
+          onCardSetOpen={() => {
+            dispatch(selectCardSet(selectedCardSet.id));
             setActiveSection('cards');
           }}
           puzzle={exercisePreview.puzzle}
@@ -1009,7 +1033,7 @@ export function App() {
             cardIds: exercisePreview.puzzle.entries.map((entry) => entry.cardId),
             targetLanguage,
           })}
-          themeName={selectedTheme.name}
+          cardSetName={selectedCardSet.name}
           onFinish={resetExerciseState}
           onSubmit={(answers) =>
             saveCrosswordAttempt(exercisePreview.puzzle, answers)
@@ -1026,7 +1050,7 @@ export function App() {
           progressCompletedCount={completedMultipleChoiceCardIds.length}
           progressTotalCount={eligibleCards.length}
           prompt={exercisePreview.prompt}
-          themeName={selectedTheme.name}
+          cardSetName={selectedCardSet.name}
           onAnswer={(answer) =>
             savePromptAttempt('multipleChoice', exercisePreview.prompt, answer, {
               advance: false,
@@ -1078,7 +1102,7 @@ export function App() {
           progressCompletedCount={completedMissingLettersCardIds.length}
           progressTotalCount={missingLettersPracticeCardIds.length}
           prompt={missingLettersPrompt}
-          themeName={selectedTheme.name}
+          cardSetName={selectedCardSet.name}
           onAnswer={(answer) =>
             savePromptAttempt('missingLetters', missingLettersPrompt, answer, {
               advance: false,
@@ -1130,7 +1154,7 @@ export function App() {
         prompt={missingWordPrompt}
         progressCompletedCount={completedMissingWordCardIds.length}
         progressTotalCount={missingWordPracticeCardIds.length}
-        themeName={selectedTheme.name}
+        cardSetName={selectedCardSet.name}
         onAnswer={(answer) =>
           savePromptAttempt('missingWord', missingWordPrompt, answer, {
             advance: false,

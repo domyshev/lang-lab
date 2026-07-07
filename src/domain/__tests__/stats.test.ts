@@ -5,7 +5,7 @@ import { updateStatsFromAttempt } from '../stats';
 const attempt: ExerciseAttempt = {
   id: 'attempt-1',
   exerciseType: 'crossword',
-  themeId: 'theme-1',
+  cardSetId: 'card-set-1',
   targetLanguage: 'en',
   createdAt: '2026-07-03T00:00:00.000Z',
   completedAt: '2026-07-03T00:05:00.000Z',

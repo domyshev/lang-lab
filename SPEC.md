@@ -6,7 +6,7 @@ Detailed application requirements: [docs/APP_REQUIREMENTS.md](docs/APP_REQUIREME
 
 ## Project Goal
 
-Build a small but complete browser language-learning game where learners create their own practice material from JSON language cards, organize cards into themes, and practice through generated exercises.
+Build a small but complete browser language-learning game where learners create their own practice material from JSON language cards, organize cards into card sets, and practice through generated exercises.
 
 The first implementation focuses on Russian, English, and Spanish. The architecture should remain language-card based rather than hard-coded to one source-target pair.
 
@@ -17,8 +17,8 @@ The learner is both student and teacher.
 They can:
 
 - import language cards;
-- create many short-term themes;
-- add cards to themes;
+- create many card sets;
+- add cards to card sets;
 - choose a target language;
 - practice generated exercises;
 - review target-language history and statistics.
@@ -72,19 +72,19 @@ Requirements:
 - store conflicting duplicate records in pending duplicates;
 - persist all imported and duplicate-processing data locally.
 
-## Themes
+## Card Sets
 
-Themes are learner-created card groups.
+Card sets are learner-created card groups.
 
 Requirements:
 
-- a learner can create many themes;
-- themes persist locally;
-- a theme may contain words and phrases together;
-- each exercise is generated from exactly one selected theme;
-- when no themes exist, the app should guide directly into theme creation.
+- a learner can create many card sets;
+- card sets persist locally;
+- a card set may contain words and phrases together;
+- each exercise is generated from exactly one selected card set;
+- when no card sets exist, the app should guide directly into card set creation.
 
-Themes are intended as flexible short-term learning focus areas rather than permanent taxonomy.
+Card sets are intended as flexible short-term learning focus areas rather than permanent taxonomy. A later version may add an optional topic label to a card set, but a card set must remain valid without one.
 
 ## Exercise Modes
 
@@ -99,7 +99,7 @@ All exercise modes use the same language cards and selected target language.
 
 ## Crossword Rules
 
-Crosswords are generated from one theme.
+Crosswords are generated from one card set.
 
 Rules:
 
@@ -177,7 +177,7 @@ This data should later help analyze a learner's vocabulary knowledge, repeated w
 - Redux Persist over `localStorage`.
 - JSON language card import.
 - Duplicate detection, safe merge, and pending duplicates.
-- Learner-created persistent themes.
+- Learner-created persistent card sets.
 - Target and interface language settings.
 - Four exercise modes.
 - Target-language scoped history.
@@ -196,7 +196,7 @@ This data should later help analyze a learner's vocabulary knowledge, repeated w
 - full analytics dashboard;
 - mobile-native app.
 
-Arcade modules can be added later as separate modules that reuse the same card, theme, attempt, and statistics model.
+Arcade modules can be added later as separate modules that reuse the same card set, attempt, and statistics model.
 
 ## Acceptance Criteria
 
@@ -205,8 +205,8 @@ Arcade modules can be added later as separate modules that reuse the same card, 
 - Duplicate cards are detected by any translation match.
 - Safe duplicate data is merged and recorded.
 - Conflicting duplicates are persisted as pending.
-- A learner can create and persist multiple themes.
-- A learner can add cards to a selected theme.
+- A learner can create and persist multiple card sets.
+- A learner can add cards to a selected card set.
 - A learner can switch target language.
 - Exercises use only cards eligible for the current target language.
 - The learner can submit each MVP exercise type.

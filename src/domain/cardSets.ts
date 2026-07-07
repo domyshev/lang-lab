@@ -1,6 +1,6 @@
-export const ALL_WORDS_THEME_ID = 'all-words';
+export const ALL_CARDS_CARD_SET_ID = 'all-cards';
 
-export interface Theme {
+export interface CardSet {
   id: string;
   name: string;
   cardIds: string[];

@@ -12,8 +12,8 @@ describe('CrosswordExercise', () => {
     render(
       <CrosswordExercise
         interfaceLanguage="ru"
-        themeName="Все карточки"
-        onThemeOpen={vi.fn()}
+        cardSetName="Все карточки"
+        onCardSetOpen={vi.fn()}
         puzzle={{
           mode: 'words',
           bounds: { minRow: 0, maxRow: 2, minCol: 0, maxCol: 2 },
@@ -48,22 +48,28 @@ describe('CrosswordExercise', () => {
       />,
     );
 
-    expect(screen.getByRole('heading', { name: 'Кроссворд' })).toBeInTheDocument();
-    expect(screen.getByTestId('crossword_exercise__theme_chip')).toHaveTextContent(
-      'Тема: Все карточки',
+    expect(screen.getByRole('heading', { name: 'Игра: Кроссворд' })).toBeInTheDocument();
+    expect(screen.getByTestId('crossword_exercise__metadata_row')).toContainElement(
+      screen.getByTestId('crossword_exercise__card_set_chip'),
+    );
+    expect(screen.getByTestId('crossword_exercise__metadata_row')).toContainElement(
+      screen.getByTestId('crossword_exercise__progress_chip'),
+    );
+    expect(screen.getByTestId('crossword_exercise__card_set_chip')).toHaveTextContent(
+      'Набор карточек: Все карточки',
     );
     expect(
-      screen.getByTestId('crossword_exercise__theme_chip__prefix'),
+      screen.getByTestId('crossword_exercise__card_set_chip__prefix'),
     ).toHaveStyle({
       fontSize: '11px',
     });
     expect(
-      screen.getByTestId('crossword_exercise__theme_chip__prefix').textContent,
-    ).toBe('Тема: ');
+      screen.getByTestId('crossword_exercise__card_set_chip__prefix').textContent,
+    ).toBe('Набор карточек: ');
     expect(screen.getByTestId('crossword_exercise__progress_chip')).toHaveTextContent(
       '0 пройдено / 2 всего',
     );
-    expect(screen.queryByText('До 6 слов из выбранной темы')).not.toBeInTheDocument();
+    expect(screen.queryByText('До 6 слов из выбранной набора')).not.toBeInTheDocument();
     expect(screen.queryByTestId('crossword_exercise__clues')).not.toBeInTheDocument();
     expect(screen.getByTestId('crossword_exercise__clue_number__cat')).toHaveTextContent('1');
     expect(screen.getByTestId('crossword_exercise__clue_number__tea')).toHaveTextContent('2');
@@ -111,7 +117,7 @@ describe('CrosswordExercise', () => {
     render(
       <CrosswordExercise
         interfaceLanguage="ru"
-        themeName="Все карточки"
+        cardSetName="Все карточки"
         recentResultsByCardId={{
           cat: [
             {
@@ -188,7 +194,7 @@ describe('CrosswordExercise', () => {
     render(
       <CrosswordExercise
         interfaceLanguage="ru"
-        themeName="Все карточки"
+        cardSetName="Все карточки"
         puzzle={{
           mode: 'words',
           bounds: { minRow: 0, maxRow: 2, minCol: 0, maxCol: 3 },
@@ -231,15 +237,15 @@ describe('CrosswordExercise', () => {
     expect(screen.getByLabelText('Crossword cell 1 3')).toHaveFocus();
   });
 
-  it('opens the selected theme from the crossword theme chip', async () => {
+  it('opens the selected card set from the crossword card set chip', async () => {
     const user = userEvent.setup();
-    const onThemeOpen = vi.fn();
+    const onCardSetOpen = vi.fn();
 
     render(
       <CrosswordExercise
         interfaceLanguage="ru"
-        themeName="Все карточки"
-        onThemeOpen={onThemeOpen}
+        cardSetName="Все карточки"
+        onCardSetOpen={onCardSetOpen}
         puzzle={{
           mode: 'words',
           bounds: { minRow: 0, maxRow: 0, minCol: 0, maxCol: 0 },
@@ -259,14 +265,14 @@ describe('CrosswordExercise', () => {
       />,
     );
 
-    await user.hover(screen.getByTestId('crossword_exercise__theme_chip'));
+    await user.hover(screen.getByTestId('crossword_exercise__card_set_chip'));
 
     expect(
-      await screen.findByText('Кликните чтобы перейти к списку карточек темы.'),
+      await screen.findByText('Кликните чтобы перейти к списку карточек набора.'),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByTestId('crossword_exercise__theme_chip'));
+    await user.click(screen.getByTestId('crossword_exercise__card_set_chip'));
 
-    expect(onThemeOpen).toHaveBeenCalled();
+    expect(onCardSetOpen).toHaveBeenCalled();
   });
 });

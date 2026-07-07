@@ -14,12 +14,12 @@ import { appReducer } from './appSlice';
 import { attemptsReducer } from './attemptsSlice';
 import { cardsReducer } from './cardsSlice';
 import { statsReducer } from './statsSlice';
-import { themesReducer } from './themesSlice';
+import { cardSetsReducer } from './cardSetsSlice';
 
 const rootReducer = combineReducers({
   app: appReducer,
   cards: cardsReducer,
-  themes: themesReducer,
+  cardSets: cardSetsReducer,
   attempts: attemptsReducer,
   stats: statsReducer,
 });

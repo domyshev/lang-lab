@@ -13,64 +13,64 @@ import {
   Typography,
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { ALL_WORDS_THEME_ID } from '../domain/themes';
-import { formatCardCount, formatTopicCount, t } from '../domain/i18n';
-import { addTheme, archiveTheme, selectTheme } from '../store/themesSlice';
+import { ALL_CARDS_CARD_SET_ID } from '../domain/cardSets';
+import { formatCardCount, formatCardSetCount, t } from '../domain/i18n';
+import { addCardSet, archiveCardSet, selectCardSet } from '../store/cardSetsSlice';
 import { AppDispatch, RootState } from '../store/store';
 
-export function ThemeListView({
-  onThemeCreated,
+export function CardSetListView({
+  onCardSetCreated,
 }: {
-  onThemeCreated?: (themeId: string) => void;
+  onCardSetCreated?: (cardSetId: string) => void;
 }) {
   const dispatch = useDispatch<AppDispatch>();
   const cards = useSelector((state: RootState) => state.cards.cards);
-  const themes = useSelector((state: RootState) => state.themes.themes);
-  const selectedThemeId = useSelector(
-    (state: RootState) => state.themes.selectedThemeId,
+  const cardSets = useSelector((state: RootState) => state.cardSets.cardSets);
+  const selectedCardSetId = useSelector(
+    (state: RootState) => state.cardSets.selectedCardSetId,
   );
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
   const [name, setName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const visibleThemes = themes.filter((theme) => !theme.archivedAt);
+  const visibleCardSets = cardSets.filter((cardSet) => !cardSet.archivedAt);
 
-  const createTheme = () => {
+  const createCardSet = () => {
     const trimmedName = name.trim();
     if (!trimmedName) {
       return;
     }
 
     const now = new Date().toISOString();
-    const themeId = createThemeId();
+    const cardSetId = createCardSetId();
     dispatch(
-      addTheme({
-        id: themeId,
+      addCardSet({
+        id: cardSetId,
         name: trimmedName,
         cardIds: [],
         createdAt: now,
         updatedAt: now,
       }),
     );
-    onThemeCreated?.(themeId);
+    onCardSetCreated?.(cardSetId);
     setName('');
     setIsCreating(false);
   };
 
   return (
-    <Paper data-test="theme_list__panel" sx={{ p: { xs: 2, md: 3 } }}>
-      <Stack data-test="theme_list__content" spacing={2.5}>
+    <Paper data-test="card_set_list__panel" sx={{ p: { xs: 2, md: 3 } }}>
+      <Stack data-test="card_set_list__content" spacing={2.5}>
         <Stack
-          data-test="theme_list__header"
+          data-test="card_set_list__header"
           direction={{ xs: 'column', sm: 'row' }}
           spacing={1.5}
           alignItems={{ xs: 'stretch', sm: 'center' }}
           justifyContent="space-between"
         >
-          <Box data-test="theme_list__header_text">
+          <Box data-test="card_set_list__header_text">
             <Typography
-              data-test="theme_list__title"
+              data-test="card_set_list__title"
               variant="h5"
               component="h2"
               sx={{ fontWeight: 800 }}
@@ -79,14 +79,14 @@ export function ThemeListView({
             </Typography>
             <Typography
               color="text.secondary"
-              data-test="theme_list__topic_count"
+              data-test="card_set_list__card_set_count"
               sx={{ mt: 0.5 }}
             >
-              {formatTopicCount(interfaceLanguage, visibleThemes.length + 1)}
+              {formatCardSetCount(interfaceLanguage, visibleCardSets.length + 1)}
             </Typography>
           </Box>
           <Button
-            data-test="theme_list__add_button"
+            data-test="card_set_list__add_button"
             startIcon={<AddIcon />}
             variant="contained"
             onClick={() => setIsCreating((value) => !value)}
@@ -97,27 +97,27 @@ export function ThemeListView({
 
         {isCreating && (
           <Stack
-            data-test="theme_list__create_form"
+            data-test="card_set_list__create_form"
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1.5}
             sx={{ width: '100%' }}
           >
             <TextField
-              data-test="theme_list__create_name_input"
-              label={t(interfaceLanguage, 'newTheme')}
+              data-test="card_set_list__create_name_input"
+              label={t(interfaceLanguage, 'newCardSet')}
               value={name}
               onChange={(event) => setName(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
-                  createTheme();
+                  createCardSet();
                 }
               }}
               fullWidth
             />
             <Button
-              data-test="theme_list__create_submit_button"
+              data-test="card_set_list__create_submit_button"
               variant="contained"
-              onClick={createTheme}
+              onClick={createCardSet}
               disabled={!name.trim()}
               sx={{ minWidth: 150 }}
             >
@@ -126,35 +126,35 @@ export function ThemeListView({
           </Stack>
         )}
 
-        <Stack data-test="theme_list__tiles" spacing={1.25}>
-          <ThemeTile
-            id={ALL_WORDS_THEME_ID}
-            name={t(interfaceLanguage, 'allWords')}
+        <Stack data-test="card_set_list__tiles" spacing={1.25}>
+          <CardSetTile
+            id={ALL_CARDS_CARD_SET_ID}
+            name={t(interfaceLanguage, 'allCards')}
             cardCount={cards.length}
             interfaceLanguage={interfaceLanguage}
             selected={
-              selectedThemeId === ALL_WORDS_THEME_ID || !selectedThemeId
+              selectedCardSetId === ALL_CARDS_CARD_SET_ID || !selectedCardSetId
             }
-            onSelect={() => dispatch(selectTheme(ALL_WORDS_THEME_ID))}
+            onSelect={() => dispatch(selectCardSet(ALL_CARDS_CARD_SET_ID))}
           />
 
-          {visibleThemes.map((theme) => (
-            <ThemeTile
-              id={theme.id}
-              key={theme.id}
-              name={theme.name}
-              cardCount={theme.cardIds.length}
+          {visibleCardSets.map((cardSet) => (
+            <CardSetTile
+              id={cardSet.id}
+              key={cardSet.id}
+              name={cardSet.name}
+              cardCount={cardSet.cardIds.length}
               interfaceLanguage={interfaceLanguage}
-              selected={theme.id === selectedThemeId}
+              selected={cardSet.id === selectedCardSetId}
               onArchive={() =>
                 dispatch(
-                  archiveTheme({
-                    themeId: theme.id,
+                  archiveCardSet({
+                    cardSetId: cardSet.id,
                     archivedAt: new Date().toISOString(),
                   }),
                 )
               }
-              onSelect={() => dispatch(selectTheme(theme.id))}
+              onSelect={() => dispatch(selectCardSet(cardSet.id))}
             />
           ))}
         </Stack>
@@ -163,7 +163,7 @@ export function ThemeListView({
   );
 }
 
-function ThemeTile({
+function CardSetTile({
   cardCount,
   id,
   interfaceLanguage,
@@ -182,7 +182,7 @@ function ThemeTile({
 }) {
   return (
     <Paper
-      data-test={`theme_list__tile__${id}`}
+      data-test={`card_set_list__tile__${id}`}
       variant="outlined"
       sx={{
         borderColor: selected ? 'primary.main' : 'divider',
@@ -191,7 +191,7 @@ function ThemeTile({
     >
       <Stack direction="row" alignItems="center">
         <Box
-          data-test={`theme_list__tile_select_area__${id}`}
+          data-test={`card_set_list__tile_select_area__${id}`}
           role="button"
           tabIndex={0}
           onClick={onSelect}
@@ -209,14 +209,14 @@ function ThemeTile({
           }}
         >
           <Typography
-            data-test={`theme_list__tile_name__${id}`}
+            data-test={`card_set_list__tile_name__${id}`}
             fontWeight={800}
             noWrap
           >
             {name}
           </Typography>
           <Chip
-            data-test={`theme_list__tile_card_count__${id}`}
+            data-test={`card_set_list__tile_card_count__${id}`}
             label={formatCardCount(interfaceLanguage, cardCount)}
             size="small"
             variant="outlined"
@@ -228,7 +228,7 @@ function ThemeTile({
           <Tooltip title={t(interfaceLanguage, 'archive')}>
             <IconButton
               aria-label={`В архив: ${name}`}
-              data-test={`theme_list__tile_archive_button__${id}`}
+              data-test={`card_set_list__tile_archive_button__${id}`}
               onClick={onArchive}
               sx={{ mx: 1 }}
             >
@@ -241,10 +241,10 @@ function ThemeTile({
   );
 }
 
-function createThemeId(): string {
+function createCardSetId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
   }
 
-  return `theme-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return `card-set-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }

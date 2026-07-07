@@ -93,7 +93,7 @@ function createAttempt(
   return {
     id: `attempt-${cardId}-${createdAt}`,
     exerciseType: 'missingLetters',
-    themeId: 'all-words',
+    cardSetId: 'all-cards',
     targetLanguage: 'en',
     createdAt,
     completedAt: createdAt,

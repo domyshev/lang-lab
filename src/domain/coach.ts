@@ -18,12 +18,12 @@ export function buildCoachComment(input: {
   ).length;
 
   if (input.interfaceLanguage === 'ru') {
-    return `Точность: ${percent}%. Слабые карточки: ${weakCount}. Повтори их перед новой темой.`;
+    return `Точность: ${percent}%. Слабые карточки: ${weakCount}. Повтори их перед новым набором.`;
   }
 
   if (input.interfaceLanguage === 'es') {
-    return `Precisión: ${percent}%. Tarjetas débiles: ${weakCount}. Repítelas antes de un tema nuevo.`;
+    return `Precisión: ${percent}%. Tarjetas débiles: ${weakCount}. Repítelas antes de un conjunto nuevo.`;
   }
 
-  return `Accuracy: ${percent}%. Weak cards: ${weakCount}. Repeat them before starting a new theme.`;
+  return `Accuracy: ${percent}%. Weak cards: ${weakCount}. Repeat them before starting a new card set.`;
 }

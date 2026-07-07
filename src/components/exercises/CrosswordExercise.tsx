@@ -27,25 +27,25 @@ import {
   CursorAnchoredTooltip,
   TooltipContent,
 } from '../CursorAnchoredTooltip';
-import { ExerciseProgressChip, ExerciseThemeChip } from './ExerciseThemeChip';
+import { ExerciseProgressChip, ExerciseCardSetChip } from './ExerciseCardSetChip';
 
 export function CrosswordExercise({
   interfaceLanguage = 'en',
-  onThemeOpen,
+  onCardSetOpen,
   puzzle,
   recentResultsByCardId = {},
-  themeName,
+  cardSetName,
   onFinish,
   onSubmit,
 }: {
   interfaceLanguage?: SupportedLanguage;
-  onThemeOpen?: () => void;
+  onCardSetOpen?: () => void;
   puzzle: CrosswordPuzzle;
   recentResultsByCardId?: Record<
     string,
     Array<{ isCorrect: boolean; occurredAt: string }>
   >;
-  themeName?: string;
+  cardSetName?: string;
   onFinish?: () => void;
   onSubmit: (answers: Record<string, string>) => void;
 }) {
@@ -166,44 +166,50 @@ export function CrosswordExercise({
       <Stack data-test="crossword_exercise__content" spacing={2}>
         <Stack
           data-test="crossword_exercise__header"
-          direction="row"
-          spacing={1.25}
-          sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+          spacing={1}
+          sx={{ alignItems: 'flex-start' }}
         >
           <Typography
             component="h2"
             data-test="crossword_exercise__title"
             variant="h6"
           >
-            {t(interfaceLanguage, 'crossword')}
+            {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'crossword')}
           </Typography>
-          {themeName && (
-            <CursorAnchoredTooltip
-              arrowDataTest="crossword_exercise__theme_chip_tooltip_arrow"
-              leaveDelay={0}
-              title={
-                <TooltipContent sx={crosswordThemeTooltipContentStyles}>
-                  {t(interfaceLanguage, 'crosswordThemeCardsTooltip')}
-                </TooltipContent>
-              }
-              tooltipSx={crosswordThemeTooltipStyles}
-            >
-              <ExerciseThemeChip
-                clickable={Boolean(onThemeOpen)}
-                dataTest="crossword_exercise__theme_chip"
-                interfaceLanguage={interfaceLanguage}
-                onClick={onThemeOpen}
-                sx={crosswordThemeChipStyles}
-                themeName={themeName}
-              />
-            </CursorAnchoredTooltip>
-          )}
-          <ExerciseProgressChip
-            completed={filledEntryCount}
-            dataTest="crossword_exercise__progress_chip"
-            interfaceLanguage={interfaceLanguage}
-            total={puzzle.entries.length}
-          />
+          <Stack
+            data-test="crossword_exercise__metadata_row"
+            direction="row"
+            spacing={1.25}
+            sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+          >
+            {cardSetName && (
+              <CursorAnchoredTooltip
+                arrowDataTest="crossword_exercise__card_set_chip_tooltip_arrow"
+                leaveDelay={0}
+                title={
+                  <TooltipContent sx={crosswordCardSetTooltipContentStyles}>
+                    {t(interfaceLanguage, 'crosswordCardSetCardsTooltip')}
+                  </TooltipContent>
+                }
+                tooltipSx={crosswordCardSetTooltipStyles}
+              >
+                <ExerciseCardSetChip
+                  clickable={Boolean(onCardSetOpen)}
+                  dataTest="crossword_exercise__card_set_chip"
+                  interfaceLanguage={interfaceLanguage}
+                  onClick={onCardSetOpen}
+                  sx={crosswordCardSetChipStyles}
+                  cardSetName={cardSetName}
+                />
+              </CursorAnchoredTooltip>
+            )}
+            <ExerciseProgressChip
+              completed={filledEntryCount}
+              dataTest="crossword_exercise__progress_chip"
+              interfaceLanguage={interfaceLanguage}
+              total={puzzle.entries.length}
+            />
+          </Stack>
         </Stack>
 
         <Box
@@ -668,7 +674,7 @@ const emptyCellStyles = {
   width: '100%',
 };
 
-const crosswordThemeChipStyles = {
+const crosswordCardSetChipStyles = {
   bgcolor: '#e7eefc',
   border: '1px solid rgba(68, 94, 150, 0.26)',
   color: '#203015',
@@ -680,7 +686,7 @@ const crosswordThemeChipStyles = {
   },
 };
 
-const crosswordThemeTooltipStyles = {
+const crosswordCardSetTooltipStyles = {
   bgcolor: '#ffffff',
   border: '1px solid rgba(32, 48, 21, 0.14)',
   boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
@@ -690,7 +696,7 @@ const crosswordThemeTooltipStyles = {
   py: 1,
 };
 
-const crosswordThemeTooltipContentStyles = {
+const crosswordCardSetTooltipContentStyles = {
   color: '#203015',
   display: 'inline-block',
   fontSize: 14,

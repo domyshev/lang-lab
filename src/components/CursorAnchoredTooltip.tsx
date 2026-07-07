@@ -1,5 +1,5 @@
 import { Box, Tooltip } from '@mui/material';
-import type { SxProps, Theme } from '@mui/material/styles';
+import type { SxProps, Theme as MuiTheme } from '@mui/material/styles';
 import {
   cloneElement,
   type MouseEvent as ReactMouseEvent,
@@ -60,7 +60,7 @@ export function CursorAnchoredTooltip({
   preventOverflow?: boolean;
   title: ReactNode;
   transitionTimeout?: number;
-  tooltipSx: SxProps<Theme>;
+  tooltipSx: SxProps<MuiTheme>;
 }) {
   const instanceId = useId();
   const bridgeHoveredRef = useRef(false);
@@ -282,7 +282,7 @@ const cursorTooltipClosers = new Map<string, () => void>();
 function getTooltipBridgeSx(
   anchorPosition: TooltipAnchorPosition,
   placement: TooltipPlacement,
-): SxProps<Theme> {
+): SxProps<MuiTheme> {
   const bridgeSize = 118;
   const crossAxisSize = 72;
   const halfCrossAxis = crossAxisSize / 2;
@@ -381,7 +381,7 @@ export function TooltipContent({
   sx,
 }: {
   children: ReactNode;
-  sx: SxProps<Theme>;
+  sx: SxProps<MuiTheme>;
 }) {
   return (
     <Box component="span" sx={sx}>

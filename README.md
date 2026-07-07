@@ -1,6 +1,6 @@
 # Language Crossword Lab
 
-Language Crossword Lab is a local browser app for building a personal language-learning practice set from JSON language cards. The learner imports cards, groups them into temporary themes, chooses a target language, and practices with generated drills.
+Language Crossword Lab is a local browser app for building a personal language-learning practice set from JSON language cards. The learner imports cards, groups them into card sets, chooses a target language, and practices with generated drills.
 
 
 
@@ -21,7 +21,7 @@ The current app supports:
 - duplicate detection by any matching translation value;
 - safe merging of missing duplicate data;
 - pending duplicate records for conflicts;
-- learner-created themes that persist locally;
+- learner-created card sets that persist locally;
 - target-language scoped practice history;
 - per-card target-language statistics;
 - weighted exercise results;
@@ -30,13 +30,15 @@ The current app supports:
 ## Learning Flow
 
 1. Import language cards as JSON.
-2. Create one or more themes.
-3. Add imported cards to a theme.
+2. Create one or more card sets.
+3. Add imported cards to a card set.
 4. Choose a target language.
-5. Start a generated exercise from the selected theme.
+5. Start a generated exercise from the selected card set.
 6. Review the saved attempt in target-language history.
 
-Themes are intentionally lightweight and learner-owned. A learner can create many themes and keep them for later, but each exercise is generated from exactly one selected theme.
+Card sets are intentionally lightweight and learner-owned. A learner can create many card sets and keep them for later, but each exercise is generated from exactly one selected card set.
+
+A later version may let a card set carry an optional topic label. That label should be metadata, not the required identity of the set.
 
 ## Exercise Modes
 
@@ -47,7 +49,7 @@ The MVP includes four exercise modes:
 - missing letters in a word or phrase;
 - missing word or phrase in a sentence.
 
-Crosswords are generated from a single theme. If a phrase is selected for a crossword, the crossword uses only that phrase. If the crossword uses single words, it includes up to six theme cards.
+Crosswords are generated from a single card set. If a phrase is selected for a crossword, the crossword uses only that phrase. If the crossword uses single words, it includes up to six card set cards.
 
 ## Practice Ordering
 

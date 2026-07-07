@@ -14,8 +14,8 @@ import { SupportedLanguage } from '../../domain/languages';
 import {
   ExerciseProgressChip,
   ExerciseRepeatChip,
-  ExerciseThemeChip,
-} from './ExerciseThemeChip';
+  ExerciseCardSetChip,
+} from './ExerciseCardSetChip';
 
 type SubmissionOutcome = 'correct' | 'incorrect' | 'memorize';
 
@@ -27,7 +27,7 @@ export function MissingLettersExercise({
   progressTotalCount,
   prompt,
   onAnswer,
-  themeName,
+  cardSetName,
 }: {
   interfaceLanguage: SupportedLanguage;
   isRepeatedPrompt?: boolean;
@@ -36,7 +36,7 @@ export function MissingLettersExercise({
   onNext: () => void;
   progressCompletedCount?: number;
   progressTotalCount?: number;
-  themeName?: string;
+  cardSetName?: string;
 }) {
   const [letters, setLetters] = useState<Record<number, string>>({});
   const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
@@ -142,34 +142,40 @@ export function MissingLettersExercise({
       >
         <Stack
           data-test={`missing_letters_exercise__header__${prompt.cardId}`}
-          direction="row"
-          spacing={1.25}
-          sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+          spacing={1}
+          sx={{ alignItems: 'flex-start' }}
         >
           <Typography
             component="h2"
             data-test={`missing_letters_exercise__title__${prompt.cardId}`}
             variant="h6"
           >
-            {t(interfaceLanguage, 'missingLetters')}
+            {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'missingLetters')}
           </Typography>
-          {themeName && (
-            <ExerciseThemeChip
-              dataTest={`missing_letters_exercise__theme_chip__${prompt.cardId}`}
-              interfaceLanguage={interfaceLanguage}
-              sx={exerciseThemeChipStyles}
-              themeName={themeName}
-            />
-          )}
-          {progressCompletedCount !== undefined &&
-            progressTotalCount !== undefined && (
-              <ExerciseProgressChip
-                completed={progressCompletedCount}
-                dataTest={`missing_letters_exercise__progress_chip__${prompt.cardId}`}
+          <Stack
+            data-test={`missing_letters_exercise__metadata_row__${prompt.cardId}`}
+            direction="row"
+            spacing={1.25}
+            sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+          >
+            {cardSetName && (
+              <ExerciseCardSetChip
+                dataTest={`missing_letters_exercise__card_set_chip__${prompt.cardId}`}
                 interfaceLanguage={interfaceLanguage}
-                total={progressTotalCount}
+                sx={exerciseCardSetChipStyles}
+                cardSetName={cardSetName}
               />
             )}
+            {progressCompletedCount !== undefined &&
+              progressTotalCount !== undefined && (
+                <ExerciseProgressChip
+                  completed={progressCompletedCount}
+                  dataTest={`missing_letters_exercise__progress_chip__${prompt.cardId}`}
+                  interfaceLanguage={interfaceLanguage}
+                  total={progressTotalCount}
+                />
+              )}
+          </Stack>
         </Stack>
         <Stack
           data-test={`missing_letters_exercise__prompt_row__${prompt.cardId}`}
@@ -375,7 +381,7 @@ const typedLetterCellStyles = {
   WebkitTextFillColor: '#203015',
 };
 
-const exerciseThemeChipStyles = {
+const exerciseCardSetChipStyles = {
   bgcolor: '#e7eefc',
   border: '1px solid rgba(68, 94, 150, 0.26)',
   color: '#203015',

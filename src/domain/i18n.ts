@@ -5,7 +5,7 @@ type I18nKey =
   | 'game'
   | 'cards'
   | 'statistics'
-  | 'themes'
+  | 'cardSets'
   | 'history'
   | 'interfaceLanguage'
   | 'targetLanguage'
@@ -34,21 +34,23 @@ type I18nKey =
   | 'downloadCardFormat'
   | 'startLearning'
   | 'start'
-  | 'allWords'
+  | 'allCards'
+  | 'cardSetLabel'
+  | 'chooseCardSetPlaceholder'
   | 'add'
-  | 'addToTheme'
+  | 'addToCardSet'
   | 'addCards'
-  | 'addWords'
-  | 'saveWords'
+  | 'addCardsToSet'
+  | 'saveCardsInSet'
   | 'searchCards'
   | 'archive'
-  | 'newTheme'
+  | 'newCardSet'
   | 'create'
-  | 'chooseTheme'
+  | 'chooseCardSet'
   | 'chooseExercise'
   | 'cannotStartGame'
-  | 'createThemeToAddCards'
-  | 'createThemeBeforeSelectingCards'
+  | 'createCardSetToAddCards'
+  | 'createCardSetBeforeSelectingCards'
   | 'fileImport'
   | 'pasteJson'
   | 'chooseJsonFile'
@@ -114,14 +116,14 @@ type I18nKey =
   | 'repeatPrompt'
   | 'totalExercisesTooltip'
   | 'targetAnswerLabel'
-  | 'themeCardSelectionMode'
+  | 'cardSetCardSelectionMode'
   | 'targetLanguageAnswer'
   | 'fallbackTranslationShown'
-  | 'selectThemeToManage'
-  | 'importCardsBeforeTheme'
-  | 'allImportedCardsInTheme'
+  | 'selectCardSetToManage'
+  | 'importCardsBeforeCardSet'
+  | 'allImportedCardsInCardSet'
   | 'importCardsToFillList'
-  | 'addImportedCardsToStartTheme'
+  | 'addImportedCardsToStartCardSet'
   | 'noTranslationAvailable'
   | 'fileImported'
   | 'couldNotReadFile'
@@ -143,9 +145,9 @@ type I18nKey =
   | 'recent20AnswersTitle'
   | 'crosswordWordsDescription'
   | 'crosswordPhraseDescription'
-  | 'crosswordThemeLabel'
-  | 'themeChipPrefix'
-  | 'crosswordThemeCardsTooltip'
+  | 'crosswordCardSetLabel'
+  | 'cardSetChipPrefix'
+  | 'crosswordCardSetCardsTooltip'
   | 'submitCrossword';
 
 const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
@@ -154,7 +156,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     game: 'Game',
     cards: 'Cards',
     statistics: 'Statistics',
-    themes: 'Themes',
+    cardSets: 'Card sets',
     history: 'History',
     interfaceLanguage: 'Interface',
     targetLanguage: 'Target',
@@ -178,7 +180,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsTrialKeyNotice:
       'A default trial Open Router key is available with a limited quota. When the quota is reached, Agents features will be unavailable until you enter your own key.',
     agentsCapabilitiesTitle: 'What agents can help with',
-    agentsAnalyzeStatsCapability: 'Analyze statistics and create new themes.',
+    agentsAnalyzeStatsCapability: 'Analyze statistics and create new card sets.',
     agentsVocabularyCapability: 'Create and add vocabulary.',
     agentsRollbackNotice:
       'Everything created by agents will be marked as agent-created, and the agent work history will keep a matching record so changes can be rolled back. No worries, the agent will not spoil your work :)',
@@ -188,23 +190,25 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     downloadCardFormat: 'Download agent JSON requirements',
     startLearning: 'Start learning',
     start: 'Play',
-    allWords: 'All cards',
+    allCards: 'All cards',
+    cardSetLabel: 'Card set',
+    chooseCardSetPlaceholder: 'Choose set',
     add: 'Add',
-    addToTheme: 'Add to theme',
+    addToCardSet: 'Add to card set',
     addCards: 'Add cards',
-    addWords: 'Edit cards',
-    saveWords: 'Save words',
+    addCardsToSet: 'Edit cards',
+    saveCardsInSet: 'Save cards',
     searchCards: 'Search cards',
     archive: 'Archive',
-    newTheme: 'New theme',
+    newCardSet: 'New card set',
     create: 'Create',
-    chooseTheme: 'Choose theme',
+    chooseCardSet: 'Choose card set',
     chooseExercise: 'Choose game',
     cannotStartGame:
-      'Import cards or choose a theme with cards for the current target language.',
-    createThemeToAddCards: 'create a theme so the words can be added to it',
-    createThemeBeforeSelectingCards:
-      'first give the theme a name and press "Create", then continue selecting words',
+      'Choose a card set',
+    createCardSetToAddCards: 'create a card set so the cards can be added to it',
+    createCardSetBeforeSelectingCards:
+      'first give the card set a name and press "Create", then continue selecting cards',
     fileImport: 'Import from file',
     pasteJson: 'Paste JSON',
     chooseJsonFile: 'Choose JSON file',
@@ -275,14 +279,14 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     repeatPrompt: 'repeat',
     totalExercisesTooltip: 'Total number of completed games.',
     targetAnswerLabel: 'Target answer',
-    themeCardSelectionMode: 'Select cards for the theme.',
+    cardSetCardSelectionMode: 'Select cards for the card set.',
     targetLanguageAnswer: 'answer',
     fallbackTranslationShown: 'Fallback translation shown',
-    selectThemeToManage: 'Select a theme to manage its cards.',
-    importCardsBeforeTheme: 'Import cards before adding them to a theme.',
-    allImportedCardsInTheme: 'All imported cards are in this theme.',
+    selectCardSetToManage: 'Select a card set to manage its cards.',
+    importCardsBeforeCardSet: 'Import cards before adding them to a card set.',
+    allImportedCardsInCardSet: 'All imported cards are in this card set.',
     importCardsToFillList: 'Import cards to fill this list.',
-    addImportedCardsToStartTheme: 'Add imported cards to start this theme.',
+    addImportedCardsToStartCardSet: 'Add imported cards to start this card set.',
     noTranslationAvailable: 'No translation available',
     fileImported: 'imported',
     couldNotReadFile: 'Could not read this file.',
@@ -304,11 +308,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctInputTooltip: 'The input was completed correctly.',
     recentAnswersTitle: 'Last 10 answers',
     recent20AnswersTitle: 'Last 20 answers',
-    crosswordWordsDescription: 'Up to 6 words from the selected theme',
+    crosswordWordsDescription: 'Up to 6 words from the selected card set',
     crosswordPhraseDescription: 'Single phrase challenge',
-    crosswordThemeLabel: 'Theme',
-    themeChipPrefix: 'Theme',
-    crosswordThemeCardsTooltip: 'Click to open the theme card list.',
+    crosswordCardSetLabel: 'Card set',
+    cardSetChipPrefix: 'Card set',
+    crosswordCardSetCardsTooltip: 'Click to open the card set list.',
     submitCrossword: 'Submit crossword',
   },
   ru: {
@@ -316,7 +320,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     game: 'Игра',
     cards: 'Карточки',
     statistics: 'Статистика',
-    themes: 'Темы',
+    cardSets: 'Наборы',
     history: 'История',
     interfaceLanguage: 'Интерфейс',
     targetLanguage: 'Цель',
@@ -340,7 +344,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsTrialKeyNotice:
       'По умолчанию доступен триальный ключ Open Router с ограниченным лимитом. Когда лимит будет достигнут, функции Агенты станут недоступны до ввода своего ключа.',
     agentsCapabilitiesTitle: 'Что позволяют агенты',
-    agentsAnalyzeStatsCapability: 'Анализировать статистику и создавать новые темы.',
+    agentsAnalyzeStatsCapability: 'Анализировать статистику и создавать новые наборы карточек.',
     agentsVocabularyCapability: 'Создавать и добавлять словарный запас.',
     agentsRollbackNotice:
       'Все, что создано агентами в приложении, будет помечено как созданное агентами, а в истории работы агента появится соответствующая запись. Это позволит откатить внесенные изменения. Не переживайте, агент не испортит ваши наработки :)',
@@ -350,23 +354,25 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     downloadCardFormat: 'Скачать требования к JSON для агентов',
     startLearning: 'Начать учиться',
     start: 'Играть',
-    allWords: 'Все карточки',
+    allCards: 'Все карточки',
+    cardSetLabel: 'Набор карточек',
+    chooseCardSetPlaceholder: 'Выберите набор',
     add: 'Добавить',
-    addToTheme: 'Добавить в тему',
+    addToCardSet: 'Добавить в набор',
     addCards: 'Добавить карточки',
-    addWords: 'Редактировать карточки',
-    saveWords: 'Сохранить слова',
+    addCardsToSet: 'Редактировать карточки',
+    saveCardsInSet: 'Сохранить карточки',
     searchCards: 'Поиск карточек',
     archive: 'В архив',
-    newTheme: 'Новая тема',
+    newCardSet: 'Новый набор карточек',
     create: 'Создать',
-    chooseTheme: 'Выберите тему',
+    chooseCardSet: 'Выберите набор карточек',
     chooseExercise: 'Выберите игру',
     cannotStartGame:
-      'Импортируйте карточки или выберите тему с карточками для текущего целевого языка.',
-    createThemeToAddCards: 'создайте тему чтобы слова добавились в нее',
-    createThemeBeforeSelectingCards:
-      'нужно сначала придумать название для темы и нажать "Создать" а потом продолжить выбор слов',
+      'Выберите набор карточек',
+    createCardSetToAddCards: 'создайте набор карточек чтобы карточки добавились в него',
+    createCardSetBeforeSelectingCards:
+      'нужно сначала придумать название набора карточек и нажать "Создать" а потом продолжить выбор карточек',
     fileImport: 'Импорт из файла',
     pasteJson: 'Вставить JSON',
     chooseJsonFile: 'Выбрать JSON-файл',
@@ -438,14 +444,14 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     repeatPrompt: 'повтор',
     totalExercisesTooltip: 'Общее количество пройденных игр.',
     targetAnswerLabel: 'Целевой ответ',
-    themeCardSelectionMode: 'Выберите карточки для темы.',
+    cardSetCardSelectionMode: 'Выберите карточки для набора.',
     targetLanguageAnswer: 'ответ',
     fallbackTranslationShown: 'Показан запасной перевод',
-    selectThemeToManage: 'Выберите тему, чтобы управлять карточками.',
-    importCardsBeforeTheme: 'Импортируйте карточки, прежде чем добавлять их в тему.',
-    allImportedCardsInTheme: 'Все импортированные карточки уже в этой теме.',
+    selectCardSetToManage: 'Выберите набор карточек, чтобы управлять карточками.',
+    importCardsBeforeCardSet: 'Импортируйте карточки, прежде чем добавлять их в набор.',
+    allImportedCardsInCardSet: 'Все импортированные карточки уже в этом наборе.',
     importCardsToFillList: 'Импортируйте карточки, чтобы заполнить список.',
-    addImportedCardsToStartTheme: 'Добавьте импортированные карточки, чтобы начать тему.',
+    addImportedCardsToStartCardSet: 'Добавьте импортированные карточки, чтобы начать набор.',
     noTranslationAvailable: 'Перевод пока не указан',
     fileImported: 'импортирован',
     couldNotReadFile: 'Не удалось прочитать этот файл.',
@@ -467,11 +473,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctInputTooltip: 'Ввод был выполнен верно.',
     recentAnswersTitle: '10 последних ответов',
     recent20AnswersTitle: '20 последних ответов',
-    crosswordWordsDescription: 'До 6 слов из выбранной темы',
+    crosswordWordsDescription: 'До 6 слов из выбранного набора карточек',
     crosswordPhraseDescription: 'Задание с одной фразой',
-    crosswordThemeLabel: 'Тема',
-    themeChipPrefix: 'Тема',
-    crosswordThemeCardsTooltip: 'Кликните чтобы перейти к списку карточек темы.',
+    crosswordCardSetLabel: 'Набор карточек',
+    cardSetChipPrefix: 'Набор карточек',
+    crosswordCardSetCardsTooltip: 'Кликните чтобы перейти к списку карточек набора.',
     submitCrossword: 'Отправить кроссворд',
   },
   es: {
@@ -479,7 +485,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     game: 'Juego',
     cards: 'Tarjetas',
     statistics: 'Estadisticas',
-    themes: 'Temas',
+    cardSets: 'Conjuntos',
     history: 'Historial',
     interfaceLanguage: 'Interfaz',
     targetLanguage: 'Objetivo',
@@ -503,7 +509,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsTrialKeyNotice:
       'Hay una clave de prueba de Open Router por defecto con limite reducido. Cuando se alcance el limite, las funciones de Agentes no estaran disponibles hasta que introduzcas tu propia clave.',
     agentsCapabilitiesTitle: 'Que pueden hacer los agentes',
-    agentsAnalyzeStatsCapability: 'Analizar estadisticas y crear temas nuevos.',
+    agentsAnalyzeStatsCapability: 'Analizar estadisticas y crear conjuntos de tarjetas nuevos.',
     agentsVocabularyCapability: 'Crear y anadir vocabulario.',
     agentsRollbackNotice:
       'Todo lo creado por agentes se marcara como creado por agentes, y el historial de trabajo guardara un registro correspondiente para poder deshacer los cambios. No te preocupes, el agente no estropeara tu trabajo :)',
@@ -513,23 +519,25 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     downloadCardFormat: 'Descargar requisitos JSON para agentes',
     startLearning: 'Empezar',
     start: 'Jugar',
-    allWords: 'Todas las tarjetas',
+    allCards: 'Todas las tarjetas',
+    cardSetLabel: 'Conjunto de tarjetas',
+    chooseCardSetPlaceholder: 'Elige conjunto',
     add: 'Anadir',
-    addToTheme: 'Anadir al tema',
+    addToCardSet: 'Anadir al conjunto',
     addCards: 'Anadir tarjetas',
-    addWords: 'Editar tarjetas',
-    saveWords: 'Guardar palabras',
+    addCardsToSet: 'Editar tarjetas',
+    saveCardsInSet: 'Guardar tarjetas',
     searchCards: 'Buscar tarjetas',
     archive: 'Archivar',
-    newTheme: 'Nuevo tema',
+    newCardSet: 'Nuevo conjunto de tarjetas',
     create: 'Crear',
-    chooseTheme: 'Elegir tema',
+    chooseCardSet: 'Elegir conjunto de tarjetas',
     chooseExercise: 'Elegir juego',
     cannotStartGame:
-      'Importa tarjetas o elige un tema con tarjetas para el idioma objetivo actual.',
-    createThemeToAddCards: 'crea un tema para que las palabras se anadan a el',
-    createThemeBeforeSelectingCards:
-      'primero pon nombre al tema y pulsa "Crear"; despues sigue seleccionando palabras',
+      'Elige un conjunto de tarjetas',
+    createCardSetToAddCards: 'crea un conjunto de tarjetas para poder anadirlas',
+    createCardSetBeforeSelectingCards:
+      'primero pon nombre al conjunto y pulsa "Crear"; despues sigue seleccionando tarjetas',
     fileImport: 'Importar desde archivo',
     pasteJson: 'Pegar JSON',
     chooseJsonFile: 'Elegir archivo JSON',
@@ -600,14 +608,14 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     repeatPrompt: 'repeticion',
     totalExercisesTooltip: 'Numero total de juegos completados.',
     targetAnswerLabel: 'Respuesta objetivo',
-    themeCardSelectionMode: 'Selecciona tarjetas para el tema.',
+    cardSetCardSelectionMode: 'Selecciona tarjetas para el conjunto.',
     targetLanguageAnswer: 'respuesta',
     fallbackTranslationShown: 'Traduccion alternativa mostrada',
-    selectThemeToManage: 'Elige un tema para gestionar sus tarjetas.',
-    importCardsBeforeTheme: 'Importa tarjetas antes de anadirlas a un tema.',
-    allImportedCardsInTheme: 'Todas las tarjetas importadas estan en este tema.',
+    selectCardSetToManage: 'Elige un conjunto para gestionar sus tarjetas.',
+    importCardsBeforeCardSet: 'Importa tarjetas antes de anadirlas a un conjunto.',
+    allImportedCardsInCardSet: 'Todas las tarjetas importadas estan en este conjunto.',
     importCardsToFillList: 'Importa tarjetas para llenar esta lista.',
-    addImportedCardsToStartTheme: 'Anade tarjetas importadas para empezar este tema.',
+    addImportedCardsToStartCardSet: 'Anade tarjetas importadas para empezar este conjunto.',
     noTranslationAvailable: 'No hay traduccion disponible',
     fileImported: 'importado',
     couldNotReadFile: 'No se pudo leer este archivo.',
@@ -629,11 +637,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctInputTooltip: 'La entrada se completo correctamente.',
     recentAnswersTitle: '10 ultimas respuestas',
     recent20AnswersTitle: '20 ultimas respuestas',
-    crosswordWordsDescription: 'Hasta 6 palabras del tema elegido',
+    crosswordWordsDescription: 'Hasta 6 palabras del conjunto elegido',
     crosswordPhraseDescription: 'Reto de una sola frase',
-    crosswordThemeLabel: 'Tema',
-    themeChipPrefix: 'Tema',
-    crosswordThemeCardsTooltip: 'Haz clic para abrir la lista de tarjetas del tema.',
+    crosswordCardSetLabel: 'Conjunto de tarjetas',
+    cardSetChipPrefix: 'Conjunto',
+    crosswordCardSetCardsTooltip: 'Haz clic para abrir la lista de tarjetas del conjunto.',
     submitCrossword: 'Enviar crucigrama',
   },
 };
@@ -670,19 +678,19 @@ export function getLanguageDisplayName(
   return languageNames[interfaceLanguage][language];
 }
 
-export function formatTopicCount(
+export function formatCardSetCount(
   language: SupportedLanguage,
   value: number,
 ): string {
   if (language === 'ru') {
-    return formatRussianCount(value, ['тема', 'темы', 'тем']);
+    return formatRussianCount(value, ['набор', 'набора', 'наборов']);
   }
 
   if (language === 'es') {
-    return `${value} ${value === 1 ? 'tema' : 'temas'}`;
+    return `${value} ${value === 1 ? 'conjunto' : 'conjuntos'}`;
   }
 
-  return `${value} ${value === 1 ? 'topic' : 'topics'}`;
+  return `${value} ${value === 1 ? 'card set' : 'card sets'}`;
 }
 
 export function formatCardCount(
