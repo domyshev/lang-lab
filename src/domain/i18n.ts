@@ -37,6 +37,7 @@ type I18nKey =
   | 'allWords'
   | 'add'
   | 'addToTheme'
+  | 'addCards'
   | 'addWords'
   | 'saveWords'
   | 'searchCards'
@@ -60,6 +61,7 @@ type I18nKey =
   | 'importAction'
   | 'answer'
   | 'next'
+  | 'exit'
   | 'finish'
   | 'finishExercise'
   | 'finishExerciseNotice'
@@ -99,6 +101,7 @@ type I18nKey =
   | 'wordLabel'
   | 'phraseLabel'
   | 'noMoreCardsInExercise'
+  | 'missingLettersNeedsWords'
   | 'correctResult'
   | 'memorizeResult'
   | 'correct'
@@ -188,7 +191,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     allWords: 'All cards',
     add: 'Add',
     addToTheme: 'Add to theme',
-    addWords: 'Edit words',
+    addCards: 'Add cards',
+    addWords: 'Edit cards',
     saveWords: 'Save words',
     searchCards: 'Search cards',
     archive: 'Archive',
@@ -213,6 +217,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     importAction: 'Import',
     answer: 'Answer',
     next: 'Next',
+    exit: 'Exit',
     finish: 'Finish',
     finishExercise: 'Finish exercise',
     finishExerciseNotice:
@@ -250,7 +255,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     userAnswer: 'Your answer',
     noAnswer: 'No answer',
     resultsTitle: 'Results',
-    totalExercises: 'Exercises completed',
+    totalExercises: 'Games completed',
     totalAnsweredQuestions: 'Questions answered',
     resultStats: 'Statistics',
     wordStats: 'Word statistics',
@@ -268,7 +273,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     metricIncorrectSuffix: 'incorrect',
     metricTotalSuffix: 'total',
     repeatPrompt: 'repeat',
-    totalExercisesTooltip: 'Total number of completed exercises.',
+    totalExercisesTooltip: 'Total number of completed games.',
     targetAnswerLabel: 'Target answer',
     themeCardSelectionMode: 'Select cards for the theme.',
     targetLanguageAnswer: 'answer',
@@ -290,7 +295,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     row: 'Row',
     selectedAssistant: 'Selected character',
     coachThought: 'Character thought',
-    noAttempts: 'No attempts for this target language yet.',
+    noAttempts: 'You have not played yet, so statistics are empty.',
+    missingLettersNeedsWords:
+      'Missing letters practice needs single-word cards for the target language.',
     totalAnsweredTooltip: 'Total number of answered questions in this exercise.',
     correctAnsweredTooltip: 'Number of questions answered correctly.',
     incorrectAnsweredTooltip: 'Number of questions answered incorrectly.',
@@ -346,7 +353,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     allWords: 'Все карточки',
     add: 'Добавить',
     addToTheme: 'Добавить в тему',
-    addWords: 'Редактировать слова',
+    addCards: 'Добавить карточки',
+    addWords: 'Редактировать карточки',
     saveWords: 'Сохранить слова',
     searchCards: 'Поиск карточек',
     archive: 'В архив',
@@ -371,6 +379,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     importAction: 'Импортировать',
     answer: 'Ответ',
     next: 'Следующий',
+    exit: 'Выйти',
     finish: 'Закончить',
     finishExercise: 'Закончить упражнение',
     finishExerciseNotice:
@@ -409,7 +418,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     userAnswer: 'Ваш ответ',
     noAnswer: 'Нет ответа',
     resultsTitle: 'Результаты',
-    totalExercises: 'Всего пройдено упражнений',
+    totalExercises: 'Всего пройдено игр',
     totalAnsweredQuestions: 'Всего отвечено вопросов',
     resultStats: 'Статистика',
     wordStats: 'Статистика по слову',
@@ -427,7 +436,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     metricIncorrectSuffix: 'неверно',
     metricTotalSuffix: 'всего',
     repeatPrompt: 'повтор',
-    totalExercisesTooltip: 'Общее количество пройденных упражнений.',
+    totalExercisesTooltip: 'Общее количество пройденных игр.',
     targetAnswerLabel: 'Целевой ответ',
     themeCardSelectionMode: 'Выберите карточки для темы.',
     targetLanguageAnswer: 'ответ',
@@ -449,7 +458,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     row: 'Строка',
     selectedAssistant: 'Выбранный персонаж',
     coachThought: 'Мысль персонажа',
-    noAttempts: 'Пока нет упражнений для этого языка-цели.',
+    noAttempts: 'вы еще не играли, поэтому статистика пустая',
+    missingLettersNeedsWords:
+      'Для игры с пропущенными буквами нужны карточки с отдельными словами для текущего целевого языка.',
     totalAnsweredTooltip: 'Общее количество отвеченных вопросов в упражнении.',
     correctAnsweredTooltip: 'Количество вопросов, отвеченных верно.',
     incorrectAnsweredTooltip: 'Количество вопросов, отвеченных неверно.',
@@ -505,7 +516,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     allWords: 'Todas las tarjetas',
     add: 'Anadir',
     addToTheme: 'Anadir al tema',
-    addWords: 'Editar palabras',
+    addCards: 'Anadir tarjetas',
+    addWords: 'Editar tarjetas',
     saveWords: 'Guardar palabras',
     searchCards: 'Buscar tarjetas',
     archive: 'Archivar',
@@ -530,6 +542,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     importAction: 'Importar',
     answer: 'Respuesta',
     next: 'Siguiente',
+    exit: 'Salir',
     finish: 'Terminar',
     finishExercise: 'Terminar ejercicio',
     finishExerciseNotice:
@@ -567,7 +580,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     userAnswer: 'Tu respuesta',
     noAnswer: 'Sin respuesta',
     resultsTitle: 'Resultados',
-    totalExercises: 'Ejercicios completados',
+    totalExercises: 'Juegos completados',
     totalAnsweredQuestions: 'Preguntas respondidas',
     resultStats: 'Estadisticas',
     wordStats: 'Estadisticas de la palabra',
@@ -585,7 +598,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     metricIncorrectSuffix: 'incorrectas',
     metricTotalSuffix: 'total',
     repeatPrompt: 'repeticion',
-    totalExercisesTooltip: 'Numero total de ejercicios completados.',
+    totalExercisesTooltip: 'Numero total de juegos completados.',
     targetAnswerLabel: 'Respuesta objetivo',
     themeCardSelectionMode: 'Selecciona tarjetas para el tema.',
     targetLanguageAnswer: 'respuesta',
@@ -607,7 +620,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     row: 'Fila',
     selectedAssistant: 'Personaje seleccionado',
     coachThought: 'Pensamiento del personaje',
-    noAttempts: 'Todavia no hay intentos para este idioma objetivo.',
+    noAttempts: 'Todavia no has jugado, asi que las estadisticas estan vacias.',
+    missingLettersNeedsWords:
+      'La practica de letras que faltan necesita tarjetas de una sola palabra para el idioma objetivo.',
     totalAnsweredTooltip: 'Numero total de preguntas respondidas en este ejercicio.',
     correctAnsweredTooltip: 'Numero de preguntas respondidas correctamente.',
     incorrectAnsweredTooltip: 'Numero de preguntas respondidas incorrectamente.',

@@ -1054,8 +1054,7 @@ export function App() {
       if (!exercisePreview.prompt) {
         return (
           <Alert data-test="exercise_area__missing_letters_needs_words_alert" severity="info">
-            Missing letters practice needs single-word cards for the target
-            language.
+            {t(interfaceLanguage, 'missingLettersNeedsWords')}
           </Alert>
         );
       }
@@ -1234,10 +1233,8 @@ export function App() {
                 spacing={1}
                 sx={{
                   alignItems: 'center',
-                  marginLeft: 'auto',
-                  marginRight: 'auto',
                   maxWidth: '100%',
-                  width: 'fit-content',
+                  width: '100%',
                 }}
               >
                 <Typography
@@ -1355,6 +1352,12 @@ function ExerciseCompletePanel({
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   onFinish: () => void;
 }) {
+  const finishButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    finishButtonRef.current?.focus();
+  }, []);
+
   return (
     <Paper
       data-test="exercise_complete__panel"
@@ -1405,11 +1408,12 @@ function ExerciseCompletePanel({
         />
         <Button
           data-test="exercise_complete__finish_button"
+          ref={finishButtonRef}
           variant="contained"
           onClick={onFinish}
           sx={{ minWidth: 150 }}
         >
-          {t(interfaceLanguage, 'finish')}
+          {t(interfaceLanguage, 'exit')}
         </Button>
       </Stack>
     </Paper>

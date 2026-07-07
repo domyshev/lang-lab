@@ -446,7 +446,7 @@ function AnswerSpace({ dataTest }: { dataTest: string }) {
       aria-hidden="true"
       component="span"
       data-test={dataTest}
-      sx={{ display: 'inline-flex', height: 38, width: 10 }}
+      sx={{ display: 'inline-flex', height: 38, width: 38 }}
     />
   );
 }

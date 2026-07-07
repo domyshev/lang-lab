@@ -60,7 +60,7 @@ describe('StatsFormula', () => {
       <>
         <CountMetric
           dataTestPrefix="stats_grid_count"
-          label="Всего пройдено упражнений"
+          label="Всего пройдено игр"
           value={3}
         />
         <StatsFormula
@@ -111,7 +111,7 @@ describe('StatsFormula', () => {
       <>
         <CountMetric
           dataTestPrefix="stats_count_with_suffix"
-          label="Всего пройдено упражнений"
+          label="Всего пройдено игр"
           suffix="пройдено"
           value={3}
         />
@@ -184,9 +184,9 @@ describe('StatsFormula', () => {
     render(
       <CountMetric
         dataTestPrefix="completed_count_metric"
-        label="Всего пройдено упражнений"
+        label="Всего пройдено игр"
         suffix="пройдено"
-        tooltip="Общее количество пройденных упражнений."
+        tooltip="Общее количество пройденных игр."
         value={4}
       />,
     );
@@ -198,7 +198,7 @@ describe('StatsFormula', () => {
     fireEvent.mouseOver(chip, { clientX: 180, clientY: 90 });
 
     expect(
-      await screen.findByText('Общее количество пройденных упражнений.'),
+      await screen.findByText('Общее количество пройденных игр.'),
     ).toHaveStyle({
       backgroundColor: 'rgb(255, 255, 255)',
       color: 'rgb(32, 48, 21)',
@@ -218,13 +218,13 @@ describe('StatsFormula', () => {
     fireEvent.mouseLeave(chip);
     fireEvent.mouseOver(screen.getByRole('tooltip'));
 
-    expect(screen.getByText('Общее количество пройденных упражнений.')).toBeInTheDocument();
+    expect(screen.getByText('Общее количество пройденных игр.')).toBeInTheDocument();
 
     fireEvent.mouseLeave(screen.getByRole('tooltip'));
 
     await waitFor(() =>
       expect(
-        screen.queryByText('Общее количество пройденных упражнений.'),
+        screen.queryByText('Общее количество пройденных игр.'),
       ).not.toBeInTheDocument(),
     );
   });

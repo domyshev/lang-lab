@@ -482,7 +482,7 @@ function AnswerCells({
             component="span"
             data-test={`${dataTestPrefix}__space__${index}`}
             key={`space-${index}`}
-            sx={{ display: 'inline-flex', height: 34, width: 10 }}
+            sx={{ display: 'inline-flex', height: 34, width: 34 }}
           />
         ) : (
           <Box

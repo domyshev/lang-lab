@@ -108,6 +108,9 @@ describe('MissingWordExercise', () => {
     expect(screen.getByText('r')).toBeInTheDocument();
     expect(screen.getByText('h')).toBeInTheDocument();
     expect(screen.getByText('i')).toBeInTheDocument();
+    expect(screen.getByTestId('missing_word_exercise__answer_cells__worth-it__space__5')).toHaveStyle({
+      width: '38px',
+    });
     expect(screen.queryByRole('textbox', { name: 'Ответ' })).not.toBeInTheDocument();
 
     const inputs = screen.getAllByLabelText(/Missing word letter/);
@@ -123,6 +126,9 @@ describe('MissingWordExercise', () => {
     expect(correctAnswer).toBeInTheDocument();
     expect(within(correctAnswer).getByText('w')).toHaveStyle({
       color: 'rgb(32, 48, 21)',
+    });
+    expect(screen.getByTestId('missing_word_exercise__correct_answer_space__worth-it__5')).toHaveStyle({
+      width: '38px',
     });
 
     await user.click(screen.getByRole('button', { name: 'Неверно' }));

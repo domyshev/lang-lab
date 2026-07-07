@@ -16,14 +16,99 @@ const now = '2026-07-03T12:00:00.000Z';
 function renderApp({
   app = {},
   attempts = [],
+  cards,
+  selectedThemeId,
+  themes,
 }: {
   app?: Partial<ReturnType<typeof appReducer>>;
   attempts?: ExerciseAttempt[];
+  cards?: ReturnType<typeof cardsReducer>['cards'];
+  selectedThemeId?: string;
+  themes?: ReturnType<typeof themesReducer>['themes'];
 } = {}) {
   const appState = {
     ...appReducer(undefined, { type: 'test/init' }),
     ...app,
   };
+  const themesState = {
+    ...themesReducer(undefined, { type: 'test/init' }),
+    ...(themes ? { themes } : {}),
+    ...(selectedThemeId !== undefined ? { selectedThemeId } : {}),
+  };
+  const appCards = cards ?? [
+    {
+      id: 'card-worth-it',
+      translations: {
+        en: 'worth it',
+        ru: 'оно того стоит',
+        es: 'vale la pena',
+      },
+      examples: {
+        en: [{ sentence: 'It is worth it today.', answer: 'worth it' }],
+      },
+      difficulty: 'easy' as const,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: 'card-look-forward',
+      translations: {
+        en: 'look forward',
+        ru: 'с нетерпением ждать',
+        es: 'esperar con ganas',
+      },
+      examples: {
+        en: [
+          {
+            sentence: 'I look forward to tomorrow.',
+            answer: 'look forward',
+          },
+        ],
+      },
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: 'card-airport',
+      translations: {
+        en: 'airport',
+        ru: 'аэропорт',
+        es: 'aeropuerto',
+      },
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: 'card-vehicle',
+      translations: {
+        en: 'vehicle',
+        ru: 'транспортное средство',
+        es: 'vehiculo',
+      },
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: 'card-impede',
+      translations: {
+        en: 'impede',
+        ru: 'препятствовать',
+        es: 'impedir',
+      },
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: 'card-meditation',
+      translations: {
+        en: 'meditation',
+        ru: 'медитация',
+        es: 'meditacion',
+      },
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
 
   const store = configureStore({
     reducer: {
@@ -36,86 +121,14 @@ function renderApp({
     preloadedState: {
       app: appState,
       cards: {
-        cards: [
-          {
-            id: 'card-worth-it',
-            translations: {
-              en: 'worth it',
-              ru: 'оно того стоит',
-              es: 'vale la pena',
-            },
-            examples: {
-              en: [{ sentence: 'It is worth it today.', answer: 'worth it' }],
-            },
-            difficulty: 'easy' as const,
-            createdAt: now,
-            updatedAt: now,
-          },
-          {
-            id: 'card-look-forward',
-            translations: {
-              en: 'look forward',
-              ru: 'с нетерпением ждать',
-              es: 'esperar con ganas',
-            },
-            examples: {
-              en: [
-                {
-                  sentence: 'I look forward to tomorrow.',
-                  answer: 'look forward',
-                },
-              ],
-            },
-            createdAt: now,
-            updatedAt: now,
-          },
-          {
-            id: 'card-airport',
-            translations: {
-              en: 'airport',
-              ru: 'аэропорт',
-              es: 'aeropuerto',
-            },
-            createdAt: now,
-            updatedAt: now,
-          },
-          {
-            id: 'card-vehicle',
-            translations: {
-              en: 'vehicle',
-              ru: 'транспортное средство',
-              es: 'vehiculo',
-            },
-            createdAt: now,
-            updatedAt: now,
-          },
-          {
-            id: 'card-impede',
-            translations: {
-              en: 'impede',
-              ru: 'препятствовать',
-              es: 'impedir',
-            },
-            createdAt: now,
-            updatedAt: now,
-          },
-          {
-            id: 'card-meditation',
-            translations: {
-              en: 'meditation',
-              ru: 'медитация',
-              es: 'meditacion',
-            },
-            createdAt: now,
-            updatedAt: now,
-          },
-        ],
+        cards: appCards,
         duplicateProcessingHistory: [],
         pendingDuplicates: [],
       },
       attempts: {
         attempts,
       },
+      themes: themesState,
     },
   });
 
@@ -545,7 +558,9 @@ describe('App navigation', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText('Статистика по слову')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Закончить упражнение' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Закончить' })).toBeInTheDocument();
+    const exitButton = screen.getByRole('button', { name: 'Выйти' });
+    expect(exitButton).toBeInTheDocument();
+    expect(exitButton).toHaveFocus();
 
     const completedMarker = store
       .getState()
@@ -624,10 +639,10 @@ describe('App navigation', () => {
     await user.type(screen.getByLabelText('Новая тема'), 'Дорога');
     await user.click(screen.getByRole('button', { name: 'Создать' }));
 
-    expect(screen.getByRole('button', { name: 'Редактировать слова' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Добавить карточки' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Добавить в тему' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Редактировать слова' }));
+    await user.click(screen.getByRole('button', { name: 'Добавить карточки' }));
 
     await user.click(
       screen.getByTestId('theme_detail__card_select_checkbox__card-airport'),
@@ -649,9 +664,9 @@ describe('App navigation', () => {
     expect(createdTheme?.cardIds).toEqual(
       expect.arrayContaining(['card-airport', 'card-impede']),
     );
-    expect(screen.getByRole('button', { name: 'Редактировать слова' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Редактировать карточки' })).toBeEnabled();
 
-    await user.click(screen.getByRole('button', { name: 'Редактировать слова' }));
+    await user.click(screen.getByRole('button', { name: 'Редактировать карточки' }));
     await user.click(screen.getByTestId('theme_detail__card_select_checkbox__card-airport'));
     await user.click(screen.getByTestId('theme_detail__card_select_checkbox__card-vehicle'));
     await user.click(screen.getByRole('button', { name: 'Сохранить слова' }));
@@ -771,7 +786,7 @@ describe('App navigation', () => {
 
     expect(screen.getByRole('heading', { name: 'Результаты' })).toBeInTheDocument();
     expect(screen.getByTestId('target_stats__total_exercises__label')).toHaveTextContent(
-      'Всего пройдено упражнений',
+      'Всего пройдено игр',
     );
     expect(screen.getByTestId('target_stats__total_exercises__label')).not.toHaveTextContent(
       ':',
@@ -807,9 +822,7 @@ describe('App navigation', () => {
       justifyContent: 'center',
     });
     expect(screen.getByTestId('target_stats__answered_formula__body')).toHaveStyle({
-      marginLeft: 'auto',
-      marginRight: 'auto',
-      width: 'fit-content',
+      width: '100%',
     });
 
     expect(screen.getByTestId('app__statistics_section')).toHaveStyle({
@@ -884,6 +897,35 @@ describe('App navigation', () => {
 
     expect(screen.queryByText(/I need to remember/)).not.toBeInTheDocument();
     expect(screen.getAllByLabelText(/Missing word letter/).length).toBeGreaterThan(0);
+  });
+
+  it('shows a localized notice when missing letters has only phrase cards', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      cards: [
+        {
+          id: 'card-phrase-only',
+          translations: {
+            en: 'worth it',
+            ru: 'оно того стоит',
+            es: 'vale la pena',
+          },
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    });
+
+    await startExercise(user, 'Пропущенные буквы');
+
+    expect(
+      screen.getByTestId('exercise_area__missing_letters_needs_words_alert'),
+    ).toHaveTextContent(
+      'Для игры с пропущенными буквами нужны карточки с отдельными словами для текущего целевого языка.',
+    );
+    expect(
+      screen.queryByText(/Missing letters practice needs single-word cards/),
+    ).not.toBeInTheDocument();
   });
 
   it('does not repeat missing word cards inside the same exercise session', async () => {

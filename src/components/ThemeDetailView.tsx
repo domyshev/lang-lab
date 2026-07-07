@@ -91,6 +91,11 @@ export function ThemeDetailView() {
   const hasDraftChanges = isEditingCards
     ? !areCardIdSetsEqual(draftCardIds, selectedTheme.cardIds)
     : false;
+  const editButtonLabelKey = isEditingCards
+    ? 'saveWords'
+    : themeCards.length === 0
+      ? 'addCards'
+      : 'addWords';
   const filteredCardsForList = cardsForList.filter((card) =>
     cardMatchesSearch(card, searchQuery),
   );
@@ -211,7 +216,7 @@ export function ThemeDetailView() {
                   },
                 }}
               >
-                {t(interfaceLanguage, isEditingCards ? 'saveWords' : 'addWords')}
+                {t(interfaceLanguage, editButtonLabelKey)}
               </Button>
             )}
             <Chip
@@ -326,12 +331,18 @@ export function ThemeDetailView() {
                       spacing={1}
                       alignItems={{ xs: 'flex-start', sm: 'center' }}
                       justifyContent="space-between"
+                      useFlexGap
+                      sx={{ flexWrap: 'wrap', minWidth: 0, width: '100%' }}
                     >
                       <Stack
                         data-test={`theme_detail__card_identity__${card.id}`}
                         direction="row"
                         spacing={1}
-                        sx={{ alignItems: 'flex-start', minWidth: 0 }}
+                        sx={{
+                          alignItems: 'flex-start',
+                          flex: '1 1 360px',
+                          minWidth: 0,
+                        }}
                       >
                         {isEditingCards && !isAllWordsSelected && (
                           <Stack
@@ -356,16 +367,27 @@ export function ThemeDetailView() {
                             />
                           </Stack>
                         )}
-                        <Box data-test={`theme_detail__card_text_block__${card.id}`}>
+                        <Box
+                          data-test={`theme_detail__card_text_block__${card.id}`}
+                          sx={{ minWidth: 0 }}
+                        >
                           <Typography
                             data-test={`theme_detail__card_answer__${card.id}`}
                             fontWeight={800}
+                            sx={{
+                              overflowWrap: 'anywhere',
+                              wordBreak: 'break-word',
+                            }}
                           >
                             {answer.text}
                           </Typography>
                           <Typography
                             color="text.secondary"
                             data-test={`theme_detail__card_language_note__${card.id}`}
+                            sx={{
+                              overflowWrap: 'anywhere',
+                              wordBreak: 'break-word',
+                            }}
                             variant="body2"
                           >
                             {answer.isFallback
@@ -380,7 +402,13 @@ export function ThemeDetailView() {
                         spacing={1}
                         flexWrap="wrap"
                         useFlexGap
-                        sx={{ alignItems: 'center' }}
+                        sx={{
+                          alignItems: 'center',
+                          flex: '0 1 auto',
+                          justifyContent: 'flex-end',
+                          maxWidth: '100%',
+                          minWidth: 0,
+                        }}
                       >
                         <Chip
                           data-test={`theme_detail__card_kind_chip__${card.id}`}

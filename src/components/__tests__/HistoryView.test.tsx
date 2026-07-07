@@ -12,6 +12,14 @@ import { statsReducer } from '../../store/statsSlice';
 import { themesReducer } from '../../store/themesSlice';
 
 describe('HistoryView', () => {
+  it('shows a localized empty statistics message before any games are played', () => {
+    renderHistoryView([]);
+
+    expect(screen.getByTestId('history_view__empty_text')).toHaveTextContent(
+      'вы еще не играли, поэтому статистика пустая',
+    );
+  });
+
   it('renders formula chips without a visible total label and shows word answers as cells', async () => {
     const user = userEvent.setup();
     const { container } = renderHistoryView();
@@ -173,6 +181,53 @@ describe('HistoryView', () => {
     });
   });
 
+  it('uses a full letter-cell width for phrase spaces in statistics details', async () => {
+    const user = userEvent.setup();
+    const phraseAttempt: ExerciseAttempt = {
+      id: 'attempt-word-1',
+      exerciseSessionId: 'session-word',
+      exerciseType: 'missingWord',
+      themeId: 'all-words',
+      targetLanguage: 'en',
+      createdAt: '2026-07-05T12:00:00.000Z',
+      completedAt: '2026-07-05T12:00:00.000Z',
+      cardSnapshots: [],
+      prompts: [
+        {
+          cardId: 'card-worth-it',
+          prompt: 'ru: оно того стоит',
+          expectedAnswer: 'worth it',
+          translationHints: [{ language: 'ru', value: 'оно того стоит' }],
+        },
+      ],
+      answers: { 'card-worth-it': 'worth it' },
+      correctness: { 'card-worth-it': true },
+      hintsUsed: { 'card-worth-it': 0 },
+    };
+
+    const { container } = renderHistoryView([phraseAttempt]);
+    const attemptCards = getByDataTestPrefix(
+      container,
+      'history_view__attempt_card__',
+    );
+    const missingWordCard = attemptCards.find((card) =>
+      card.textContent?.includes('Пропущенное слово'),
+    );
+
+    expect(missingWordCard).toBeDefined();
+    await user.click(
+      within(missingWordCard!).getByRole('button', {
+        name: /Пропущенное слово/,
+      }),
+    );
+
+    expect(
+      screen.getByTestId(
+        'history_view__detail_answer__attempt-word-1_card-worth-it__correct_cells__space__5',
+      ),
+    ).toHaveStyle({ width: '34px' });
+  });
+
   it('marks completed games with a trophy tooltip', async () => {
     const user = userEvent.setup();
     const { container } = renderHistoryView();
@@ -258,7 +313,7 @@ describe('HistoryView', () => {
   });
 });
 
-function renderHistoryView() {
+function renderHistoryView(customAttempts?: ExerciseAttempt[]) {
   const now = '2026-07-05T10:00:00.000Z';
   const multipleChoicePrompt: MultipleChoicePrompt = {
     cardId: 'card-vehicle',
@@ -267,7 +322,7 @@ function renderHistoryView() {
     options: ['airport', 'vehicle', 'impede'],
     translationHints: [{ language: 'ru', value: 'транспорт' }],
   };
-  const attempts: ExerciseAttempt[] = [
+  const attempts: ExerciseAttempt[] = customAttempts ?? [
     {
       id: 'attempt-missing-1',
       exerciseSessionId: 'session-missing',

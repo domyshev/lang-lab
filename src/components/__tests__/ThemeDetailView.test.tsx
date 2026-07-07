@@ -189,7 +189,7 @@ describe('ThemeDetailView', () => {
     expect(screen.getByText('worth it')).toBeInTheDocument();
 
     await user.clear(screen.getByRole('textbox', { name: 'Поиск карточек' }));
-    await user.click(screen.getByRole('button', { name: 'Редактировать слова' }));
+    await user.click(screen.getByRole('button', { name: 'Редактировать карточки' }));
 
     expect(screen.getByText('impede')).toBeInTheDocument();
     expect(
@@ -216,6 +216,62 @@ describe('ThemeDetailView', () => {
     ).toEqual(['card-worth-it', 'card-impede']);
     expect(screen.queryByText('airport')).not.toBeInTheDocument();
     expect(screen.getByText('impede')).toBeInTheDocument();
+  });
+
+  it('offers to add cards for an empty custom theme and wraps long phrase cards', () => {
+    const { unmount } = render(
+      <Provider
+        store={createStore({
+          selectedThemeId: 'theme-empty',
+          themes: [
+            {
+              id: 'theme-empty',
+              name: 'Empty',
+              cardIds: [],
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+        })}
+      >
+        <ThemeDetailView />
+      </Provider>,
+    );
+
+    expect(screen.getByRole('button', { name: 'Добавить карточки' })).toBeInTheDocument();
+    unmount();
+
+    render(
+      <Provider
+        store={createStore({
+          selectedThemeId: 'theme-long',
+          themes: [
+            {
+              id: 'theme-long',
+              name: 'Long phrases',
+              cardIds: ['card-long-phrase'],
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+        })}
+      >
+        <ThemeDetailView />
+      </Provider>,
+    );
+
+    expect(
+      screen.getByTestId('theme_detail__card_header__card-long-phrase'),
+    ).toHaveStyle({ flexWrap: 'wrap' });
+    expect(
+      screen.getByTestId('theme_detail__card_text_block__card-long-phrase'),
+    ).toHaveStyle({ minWidth: '0' });
+    expect(
+      screen.getByTestId('theme_detail__card_answer__card-long-phrase'),
+    ).toHaveStyle({
+      overflowWrap: 'anywhere',
+      wordBreak: 'break-word',
+    });
   });
 });
 
@@ -268,6 +324,16 @@ function createStore({
           {
             id: 'card-impede',
             translations: { en: 'impede', ru: 'затруднять', es: 'impedir' },
+            createdAt: now,
+            updatedAt: now,
+          },
+          {
+            id: 'card-long-phrase',
+            translations: {
+              en: 'I seem to not get you out of my head',
+              ru: 'кажется, я не могу выбросить тебя из головы',
+              es: 'parece que no puedo sacarte de mi cabeza',
+            },
             createdAt: now,
             updatedAt: now,
           },
