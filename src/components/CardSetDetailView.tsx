@@ -1,4 +1,4 @@
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, useMemo, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import {
@@ -16,6 +16,11 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { getCardAnswer, isPhraseValue, LanguageCard } from '../domain/cards';
 import { ALL_CARDS_CARD_SET_ID } from '../domain/cardSets';
+import {
+  createCardById,
+  createCardStatsByTarget,
+  getCardsByIds,
+} from '../domain/cardIndexes';
 import {
   formatCardCount,
   getLanguageDisplayName,
@@ -51,6 +56,11 @@ export function CardSetDetailView() {
   const selectedCardSetId = useSelector(
     (state: RootState) => state.cardSets.selectedCardSetId,
   );
+  const cardById = useMemo(() => createCardById(cards), [cards]);
+  const cardStatsById = useMemo(
+    () => createCardStatsByTarget(cardStats, targetLanguage),
+    [cardStats, targetLanguage],
+  );
   const isAllCardsSelected =
     selectedCardSetId === ALL_CARDS_CARD_SET_ID || !selectedCardSetId;
   const selectedCardSet = isAllCardsSelected
@@ -78,9 +88,9 @@ export function CardSetDetailView() {
     );
   }
 
-  const cardSetCards = selectedCardSet.cardIds
-    .map((cardId) => cards.find((card) => card.id === cardId))
-    .filter((card): card is LanguageCard => Boolean(card));
+  const cardSetCards = isAllCardsSelected
+    ? cards
+    : getCardsByIds(cardById, selectedCardSet.cardIds);
   const cardsForList = isEditingCards && !isAllCardsSelected ? cards : cardSetCards;
   const existingCardSetCardIds = new Set(
     isAllCardsSelected ? [] : selectedCardSet.cardIds,
@@ -294,11 +304,7 @@ export function CardSetDetailView() {
               const isAlreadyInCardSet = isEditingCards
                 ? isDraftSelected
                 : existingCardSetCardIds.has(card.id);
-              const stats = cardStats.find(
-                (item) =>
-                  item.cardId === card.id &&
-                  item.targetLanguage === targetLanguage,
-              );
+              const stats = cardStatsById.get(card.id);
               const statsLabel = t(
                 interfaceLanguage,
                 isPhrase ? 'phraseStats' : 'wordStats',

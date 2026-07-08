@@ -80,6 +80,7 @@ import {
   orderCardsForMissingLettersPractice,
 } from './domain/practiceOrdering';
 import { ALL_CARDS_CARD_SET_ID, CardSet } from './domain/cardSets';
+import { createCardById, getCardsByIds } from './domain/cardIndexes';
 import { forgetExerciseSession, saveAttempt } from './store/attemptsSlice';
 import {
   acknowledgeGameHelp,
@@ -226,6 +227,7 @@ export function App() {
     complementaryLanguages,
     targetLanguage,
   );
+  const cardById = useMemo(() => createCardById(cards), [cards]);
   const practiceOrderingAttempts = useMemo(
     () =>
       isExerciseStarted
@@ -259,10 +261,10 @@ export function App() {
       return [];
     }
 
-    return selectedCardSet.cardIds
-      .map((cardId) => cards.find((card) => card.id === cardId))
-      .filter((card): card is LanguageCard => Boolean(card));
-  }, [cards, selectedCardSet]);
+    return selectedCardSet.isAllCards
+      ? cards
+      : getCardsByIds(cardById, selectedCardSet.cardIds);
+  }, [cardById, cards, selectedCardSet]);
   const eligibleCards = useMemo(
     () => getEligibleCardsForTarget(cardSetCards, targetLanguage),
     [targetLanguage, cardSetCards],
@@ -992,6 +994,7 @@ export function App() {
   function GameSetup() {
     const currentCardSetId = selectedGameCardSetId;
     const setupCardSetCards = getCardsForSelectableCardSetId({
+      cardById,
       cardSetId: currentCardSetId,
       cards,
       visibleCardSets,
@@ -2574,10 +2577,12 @@ function uniqueValues(values: string[]): string[] {
 }
 
 function getCardsForSelectableCardSetId({
+  cardById,
   cardSetId,
   cards,
   visibleCardSets,
 }: {
+  cardById: Map<string, LanguageCard>;
   cardSetId: string;
   cards: LanguageCard[];
   visibleCardSets: CardSet[];
@@ -2595,9 +2600,7 @@ function getCardsForSelectableCardSetId({
     return [];
   }
 
-  return cardSet.cardIds
-    .map((cardId) => cards.find((card) => card.id === cardId))
-    .filter((card): card is LanguageCard => Boolean(card));
+  return getCardsByIds(cardById, cardSet.cardIds);
 }
 
 function countExerciseSessionAnswers(
