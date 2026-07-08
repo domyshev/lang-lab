@@ -465,7 +465,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     finishExerciseAnytimeBenefit:
       'Можно делать гиперзвуковые прыжки между карточками.',
     finishExerciseAnytimeTooltip:
-      'Можно закончить упражнение в любой момент - уже выполненный результат будет зачтен.',
+      'Можно закончить упражнение в любой момент - уже достигнутый результат будет зачтен.',
     finishExerciseHypersonicJumpTooltip:
       'Гиперзвуковой прыжок переносит тебя в пространстве и меняет ход времени: следующей карточкой станет та, которая идет сразу после выбранной.',
     finishExerciseNotice:
