@@ -4,6 +4,7 @@ import { ExerciseAttempt } from '../exercises';
 import {
   defaultPracticeSettings,
   orderCardsForMissingLettersPractice,
+  summarizePracticeByCardId,
 } from '../practiceOrdering';
 
 const now = '2026-07-04T00:00:00.000Z';
@@ -16,6 +17,22 @@ const cards: LanguageCard[] = [
 ];
 
 describe('orderCardsForMissingLettersPractice', () => {
+  it('summarizes practice for many cards from a single attempt pass', () => {
+    const summaries = summarizePracticeByCardId({
+      attempts: [
+        makePracticeAttempt('a1', { 'card-1': true, 'card-2': false }),
+        makePracticeAttempt('a2', { 'card-2': false }),
+      ],
+      now: '2026-07-08T00:00:00.000Z',
+      settings: undefined,
+      targetLanguage: 'en',
+    });
+
+    expect(summaries.get('card-1')?.correct).toBe(1);
+    expect(summaries.get('card-2')?.incorrect).toBe(2);
+    expect(summaries.get('card-2')?.recentIncorrectCount).toBe(2);
+  });
+
   it('prioritizes recent mistakes, then new cards, and hides fresh correct streaks', () => {
     const ordered = orderCardsForMissingLettersPractice({
       attempts: [
@@ -102,6 +119,27 @@ function createAttempt(
     answers: { [cardId]: isCorrect ? 'ok' : 'wrong' },
     correctness: { [cardId]: isCorrect },
     hintsUsed: { [cardId]: 0 },
+  };
+}
+
+function makePracticeAttempt(
+  id: string,
+  correctness: Record<string, boolean>,
+): ExerciseAttempt {
+  const day = id === 'a1' ? '01' : '02';
+
+  return {
+    id,
+    exerciseType: 'missingLetters',
+    cardSetId: 'all-cards',
+    targetLanguage: 'en',
+    createdAt: `2026-07-${day}T00:00:00.000Z`,
+    completedAt: `2026-07-${day}T00:00:00.000Z`,
+    cardSnapshots: [],
+    prompts: [],
+    answers: {},
+    correctness,
+    hintsUsed: {},
   };
 }
 

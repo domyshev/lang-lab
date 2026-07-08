@@ -289,46 +289,52 @@ export function App() {
       }),
     [eligibleCards, targetLanguage],
   );
-  const missingLettersOrderedCards = useMemo(
-    () =>
-      orderCardsForMissingLettersPractice({
-        attempts: practiceOrderingAttempts,
-        cards: missingLettersEligibleCards,
-        now: new Date().toISOString(),
-        seed: generationSeed,
-        settings: getPracticeSettings(practiceSettings),
-        targetLanguage,
-      }),
-    [
-      generationSeed,
-      missingLettersEligibleCards,
-      practiceOrderingAttempts,
-      practiceSettings,
+  const missingLettersOrderedCards = useMemo(() => {
+    if (selectedExerciseType !== 'missingLetters') {
+      return [];
+    }
+
+    return orderCardsForMissingLettersPractice({
+      attempts: practiceOrderingAttempts,
+      cards: missingLettersEligibleCards,
+      now: new Date().toISOString(),
+      seed: generationSeed,
+      settings: getPracticeSettings(practiceSettings),
       targetLanguage,
-    ],
-  );
+    });
+  }, [
+    generationSeed,
+    missingLettersEligibleCards,
+    practiceOrderingAttempts,
+    practiceSettings,
+    selectedExerciseType,
+    targetLanguage,
+  ]);
   const missingLettersPracticeCardIds = useMemo(
     () => uniqueValues(missingLettersOrderedCards.map((card) => card.id)),
     [missingLettersOrderedCards],
   );
-  const missingWordOrderedCards = useMemo(
-    () =>
-      orderCardsForMissingLettersPractice({
-        attempts: practiceOrderingAttempts,
-        cards: missingWordEligibleCards,
-        now: new Date().toISOString(),
-        seed: generationSeed,
-        settings: getPracticeSettings(practiceSettings),
-        targetLanguage,
-      }),
-    [
-      generationSeed,
-      missingWordEligibleCards,
-      practiceOrderingAttempts,
-      practiceSettings,
+  const missingWordOrderedCards = useMemo(() => {
+    if (selectedExerciseType !== 'missingWord') {
+      return [];
+    }
+
+    return orderCardsForMissingLettersPractice({
+      attempts: practiceOrderingAttempts,
+      cards: missingWordEligibleCards,
+      now: new Date().toISOString(),
+      seed: generationSeed,
+      settings: getPracticeSettings(practiceSettings),
       targetLanguage,
-    ],
-  );
+    });
+  }, [
+    generationSeed,
+    missingWordEligibleCards,
+    practiceOrderingAttempts,
+    practiceSettings,
+    selectedExerciseType,
+    targetLanguage,
+  ]);
   const missingWordPracticeCardIds = useMemo(
     () => uniqueValues(missingWordOrderedCards.map((card) => card.id)),
     [missingWordOrderedCards],
@@ -1003,12 +1009,14 @@ export function App() {
       setupCardSetCards,
       targetLanguage,
     );
-    const setupMissingLettersEligibleCards = setupEligibleCards.filter((card) =>
-      createMissingLettersPrompt({ card, targetLanguage }),
-    );
-    const setupMissingWordEligibleCards = setupEligibleCards.filter((card) =>
-      createMissingWordPrompt({ card, targetLanguage }),
-    );
+    const setupMissingLettersEligibleCards = setupEligibleCards.filter((card) => {
+      const answer = getCardAnswer(card, targetLanguage);
+      return Boolean(answer && !isPhraseValue(answer));
+    });
+    const setupMissingWordEligibleCards = setupEligibleCards.filter((card) => {
+      const answer = getCardAnswer(card, targetLanguage);
+      return Boolean(answer && isPhraseValue(answer));
+    });
     const isCardSetSelected =
       Boolean(currentCardSetId) &&
       (currentCardSetId === ALL_CARDS_CARD_SET_ID ||

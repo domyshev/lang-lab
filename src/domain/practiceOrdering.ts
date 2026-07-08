@@ -34,6 +34,11 @@ export const defaultPracticeSettings: PracticeSettings = {
 
 const recentWindowSize = 5;
 
+type PracticeEvent = {
+  at: string;
+  isCorrect: boolean;
+};
+
 export function getPracticeSettings(
   settings: PracticeSettings | undefined,
 ): PracticeSettings {
@@ -58,7 +63,6 @@ export function summarizeCardPractice(input: {
   settings: PracticeSettings | undefined;
   targetLanguage: SupportedLanguage;
 }): CardPracticeSummary {
-  const settings = getPracticeSettings(input.settings);
   const events = input.attempts
     .filter(
       (attempt) =>
@@ -67,10 +71,60 @@ export function summarizeCardPractice(input: {
     )
     .map((attempt) => ({
       at: attempt.completedAt ?? attempt.createdAt,
-      isCorrect: attempt.correctness[input.cardId],
+      isCorrect: Boolean(attempt.correctness[input.cardId]),
     }))
     .sort((left, right) => left.at.localeCompare(right.at));
 
+  return summarizePracticeEvents({
+    cardId: input.cardId,
+    events,
+    now: input.now,
+    settings: input.settings,
+  });
+}
+
+export function summarizePracticeByCardId(input: {
+  attempts: ExerciseAttempt[];
+  now: string;
+  settings: PracticeSettings | undefined;
+  targetLanguage: SupportedLanguage;
+}): Map<string, CardPracticeSummary> {
+  const eventsByCardId = new Map<string, PracticeEvent[]>();
+
+  input.attempts
+    .filter((attempt) => attempt.targetLanguage === input.targetLanguage)
+    .forEach((attempt) => {
+      Object.entries(attempt.correctness).forEach(([cardId, isCorrect]) => {
+        const events = eventsByCardId.get(cardId) ?? [];
+        events.push({
+          at: attempt.completedAt ?? attempt.createdAt,
+          isCorrect: Boolean(isCorrect),
+        });
+        eventsByCardId.set(cardId, events);
+      });
+    });
+
+  return new Map(
+    Array.from(eventsByCardId.entries()).map(([cardId, events]) => [
+      cardId,
+      summarizePracticeEvents({
+        cardId,
+        events: events.sort((left, right) => left.at.localeCompare(right.at)),
+        now: input.now,
+        settings: input.settings,
+      }),
+    ]),
+  );
+}
+
+function summarizePracticeEvents(input: {
+  cardId: string;
+  events: PracticeEvent[];
+  now: string;
+  settings: PracticeSettings | undefined;
+}): CardPracticeSummary {
+  const settings = getPracticeSettings(input.settings);
+  const events = input.events;
   const correct = events.filter((event) => event.isCorrect).length;
   const incorrect = events.length - correct;
   const recentEvents = events.slice(-recentWindowSize);
@@ -106,15 +160,22 @@ export function orderCardsForMissingLettersPractice(input: {
   settings: PracticeSettings | undefined;
   targetLanguage: SupportedLanguage;
 }): LanguageCard[] {
+  const summariesByCardId = summarizePracticeByCardId({
+    attempts: input.attempts,
+    now: input.now,
+    settings: input.settings,
+    targetLanguage: input.targetLanguage,
+  });
   const summaries = input.cards.map((card) => ({
     card,
-    summary: summarizeCardPractice({
-      attempts: input.attempts,
-      cardId: card.id,
-      now: input.now,
-      settings: input.settings,
-      targetLanguage: input.targetLanguage,
-    }),
+    summary:
+      summariesByCardId.get(card.id) ??
+      summarizePracticeEvents({
+        cardId: card.id,
+        events: [],
+        now: input.now,
+        settings: input.settings,
+      }),
   }));
   const dueCards = summaries.filter((item) => !item.summary.isCoolingDown);
   const recentMistakeCards = dueCards
