@@ -926,6 +926,46 @@ describe('App navigation', () => {
     expect(getVisibleMissingLettersPrompt().answer).toBe(firstPrompt.answer);
   });
 
+  it('continues from the latest selected missing letters jump', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await startExercise(user, 'Пропущенные буквы');
+
+    const initialJumpOrder = await getMissingLettersJumpOrder(user);
+    const firstJumpKey = initialJumpOrder[1];
+    const expectedAfterFirstJumpKey = initialJumpOrder[2];
+    if (!firstJumpKey || !expectedAfterFirstJumpKey) {
+      throw new Error('Missing letters jump order needs at least three prompts.');
+    }
+
+    await selectMissingLettersJump(user, firstJumpKey);
+    expect(getVisibleMissingLettersPrompt().answer).toBe(
+      answerByPracticeKey(firstJumpKey),
+    );
+    await memorizeCurrentMissingLettersPrompt(user);
+
+    expect(getVisibleMissingLettersPrompt().answer).toBe(
+      answerByPracticeKey(expectedAfterFirstJumpKey),
+    );
+
+    const secondJumpKey = initialJumpOrder[3];
+    const expectedAfterSecondJumpKey = initialJumpOrder[0];
+    if (!secondJumpKey || !expectedAfterSecondJumpKey) {
+      throw new Error('Missing letters jump order needs at least four prompts.');
+    }
+
+    await selectMissingLettersJump(user, secondJumpKey);
+    expect(getVisibleMissingLettersPrompt().answer).toBe(
+      answerByPracticeKey(secondJumpKey),
+    );
+    await memorizeCurrentMissingLettersPrompt(user);
+
+    expect(getVisibleMissingLettersPrompt().answer).toBe(
+      answerByPracticeKey(expectedAfterSecondJumpKey),
+    );
+  });
+
   it('uses the configured complementary language in missing letters jumps', async () => {
     const user = userEvent.setup();
     renderApp();
@@ -1880,6 +1920,60 @@ async function answerMissingLettersWrong(
   await user.click(screen.getByRole('button', { name: 'Отправить' }));
 
   return missingLetterInputs;
+}
+
+async function memorizeCurrentMissingLettersPrompt(
+  user: ReturnType<typeof userEvent.setup>,
+) {
+  await user.click(screen.getByRole('button', { name: 'Отправить' }));
+  await user.click(screen.getByRole('button', { name: 'Запомнить!' }));
+}
+
+async function getMissingLettersJumpOrder(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<string[]> {
+  await user.click(screen.getByRole('combobox', { name: 'Прыжки' }));
+  const practiceKeys = getByDataTestPrefix('exercise_finish_action__jump_option__')
+    .map((option) =>
+      option
+        .getAttribute('data-test')
+        ?.replace('exercise_finish_action__jump_option__', ''),
+    )
+    .filter((practiceKey): practiceKey is string => Boolean(practiceKey));
+
+  await user.keyboard('{Escape}');
+  await waitFor(() =>
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument(),
+  );
+
+  return practiceKeys;
+}
+
+async function selectMissingLettersJump(
+  user: ReturnType<typeof userEvent.setup>,
+  practiceKey: string,
+) {
+  await user.click(screen.getByRole('combobox', { name: 'Прыжки' }));
+  await user.click(
+    screen.getByTestId(`exercise_finish_action__jump_option__${practiceKey}`),
+  );
+}
+
+function answerByPracticeKey(practiceKey: string): string {
+  const cardId = practiceKey.replace(/__\d+$/, '');
+  const answersByCardId: Record<string, string> = {
+    'card-airport': 'airport',
+    'card-vehicle': 'vehicle',
+    'card-impede': 'impede',
+    'card-meditation': 'meditation',
+  };
+  const answer = answersByCardId[cardId];
+
+  if (!answer) {
+    throw new Error(`Unknown practice key: ${practiceKey}`);
+  }
+
+  return answer;
 }
 
 async function answerMissingLettersCorrect(

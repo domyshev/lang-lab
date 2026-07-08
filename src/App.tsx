@@ -2411,14 +2411,23 @@ function pickPracticePrompt<T extends PracticePrompt<ExercisePrompt>>(
   answeredPromptKeys: string[],
 ): T | undefined {
   const lastAnsweredPromptKey = answeredPromptKeys[answeredPromptKeys.length - 1];
-  const lastAnsweredPrompt = prompts.find(
+  const lastAnsweredPromptIndex = prompts.findIndex(
     (prompt) => prompt.practiceKey === lastAnsweredPromptKey,
   );
+  const lastAnsweredPrompt =
+    lastAnsweredPromptIndex >= 0 ? prompts[lastAnsweredPromptIndex] : undefined;
   const blockedPromptKeys =
     answeredPromptKeys.length >= prompts.length
       ? [lastAnsweredPromptKey]
       : answeredPromptKeys;
-  const availablePrompts = prompts.filter(
+  const orderedPrompts =
+    lastAnsweredPromptIndex >= 0
+      ? [
+          ...prompts.slice(lastAnsweredPromptIndex + 1),
+          ...prompts.slice(0, lastAnsweredPromptIndex + 1),
+        ]
+      : prompts;
+  const availablePrompts = orderedPrompts.filter(
     (prompt) => !blockedPromptKeys.includes(prompt.practiceKey),
   );
   const promptsForDifferentCard = lastAnsweredPrompt
