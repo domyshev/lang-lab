@@ -69,21 +69,10 @@ export function ExercisePicker({
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
-  const selectedOption = exerciseOptions.find(
-    (option) => option.type === selectedExerciseType,
-  );
 
   return (
     <Box data-test="exercise_picker__panel">
       <Stack data-test="exercise_picker__content" spacing={1.5}>
-        <Typography
-          data-test="exercise_picker__title"
-          sx={{ color: '#203015', fontSize: 18, fontWeight: 900 }}
-        >
-          {selectedOption
-            ? t(interfaceLanguage, selectedOption.labelKey)
-            : t(interfaceLanguage, 'chooseExercise')}
-        </Typography>
         <ToggleButtonGroup
           data-test="exercise_picker__tiles"
           value={selectedExerciseType}
@@ -96,7 +85,8 @@ export function ExercisePicker({
           sx={{
             display: 'grid',
             gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
-            gap: 1.25,
+            columnGap: 1.25,
+            rowGap: 1.25,
             '& .MuiToggleButtonGroup-grouped': {
               border: '1px solid rgba(32, 48, 21, 0.16)',
               borderRadius: 1.5,

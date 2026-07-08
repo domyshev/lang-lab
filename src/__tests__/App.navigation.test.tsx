@@ -231,7 +231,6 @@ describe('App navigation', () => {
       'card_set_library__chip_select__all-cards',
       'card_set_library__chip_select__phrase-set',
       'card_set_library__chip_select__word-set',
-      'card_set_library__chip_select__extra-set',
     ]);
     expect(screen.getByTestId('card_set_library__selected_name')).toHaveTextContent(
       'Фразы',
@@ -252,6 +251,10 @@ describe('App navigation', () => {
     expect(screen.getByRole('tab', { name: 'Статистика' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Агенты LLM' })).toBeInTheDocument();
     const setupPanel = screen.getByTestId('game_setup__panel');
+    expect(setupPanel).toHaveStyle({
+      maxWidth: '760px',
+      width: '100%',
+    });
     expect(
       within(setupPanel).queryByRole('heading', { name: 'Выберите набор карточек' }),
     ).not.toBeInTheDocument();
@@ -259,19 +262,29 @@ describe('App navigation', () => {
       within(setupPanel).queryByRole('heading', { name: 'Выберите игру' }),
     ).not.toBeInTheDocument();
     expect(screen.getByTestId('card_set_library__panel')).toBeInTheDocument();
+    expect(screen.getByTestId('card_set_library__chips')).toHaveStyle({
+      display: 'grid',
+    });
     expect(screen.getByTestId('card_set_library__title')).toHaveTextContent(
-      'Библиотека наборов',
+      'Библиотека карточек',
     );
     expect(screen.getByTestId('card_set_library__placeholder')).toHaveTextContent(
-      'Выберите набор',
+      'Выберите набор карточек',
     );
     expect(screen.queryByTestId('game_setup__card_set_select')).not.toBeInTheDocument();
     expect(screen.getByTestId('card_set_library__open_button')).toBeInTheDocument();
     expect(screen.getByTestId('card_set_library__open_search_icon')).toBeInTheDocument();
-    expect(screen.getByTestId('exercise_picker__tiles')).toBeInTheDocument();
-    expect(screen.getByTestId('exercise_picker__title')).toHaveTextContent(
+    expect(screen.getByTestId('game_library__title')).toHaveTextContent(
+      'Библиотека игр',
+    );
+    expect(screen.getByTestId('game_library__placeholder')).toHaveTextContent(
       'Выберите игру',
     );
+    expect(screen.getByTestId('game_library__section')).toHaveStyle({
+      gap: '12px',
+    });
+    expect(screen.getByTestId('exercise_picker__tiles')).toBeInTheDocument();
+    expect(screen.queryByTestId('exercise_picker__title')).not.toBeInTheDocument();
     expect(
       screen
         .getByTestId('exercise_picker__tiles')
@@ -284,6 +297,10 @@ describe('App navigation', () => {
     expect(screen.getByTestId('exercise_picker__option_art__missingWord')).toBeInTheDocument();
     expect(screen.getByTestId('exercise_picker__option__crossword')).toHaveStyle({
       height: '184px',
+    });
+    expect(screen.getByTestId('exercise_picker__tiles')).toHaveStyle({
+      columnGap: '10px',
+      rowGap: '10px',
     });
     expect(screen.getByTestId('exercise_picker__option_label__crossword')).toHaveTextContent(
       'Кроссворд',
@@ -329,7 +346,11 @@ describe('App navigation', () => {
       animation: 'disabledExerciseTooltipBlink 860ms ease-in-out infinite',
     });
     await user.hover(screen.getByTestId('game_setup__start_warning_anchor'));
-    expect(await screen.findByText('Выберите набор карточек')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getAllByText('Выберите набор карточек').length).toBeGreaterThan(
+        1,
+      ),
+    );
     await waitFor(() =>
       expect(screen.getAllByText('Выберите игру').length).toBeGreaterThan(1),
     );
@@ -339,8 +360,13 @@ describe('App navigation', () => {
     expect(screen.queryByText('worth it')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Кроссворд' }));
-    expect(screen.getByTestId('exercise_picker__title')).toHaveTextContent(
+    expect(screen.queryByTestId('exercise_picker__title')).not.toBeInTheDocument();
+    expect(screen.getByTestId('game_library__selected_name')).toHaveTextContent(
       'Кроссворд',
+    );
+    expect(screen.getByRole('button', { name: 'Кроссворд' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
     );
   });
 
@@ -371,6 +397,7 @@ describe('App navigation', () => {
       'Библиотека наборов карточек',
     );
     expect(screen.getByTestId('card_set_library_dialog__content')).toHaveStyle({
+      height: 'min(72vh, 720px)',
       overflow: 'hidden',
     });
     expect(screen.getByTestId('card_set_library_dialog__search_area')).toHaveStyle({
@@ -383,6 +410,9 @@ describe('App navigation', () => {
 
     await user.type(screen.getByTestId('card_set_library_dialog__search_input'), 'worth');
 
+    expect(screen.getByTestId('card_set_library_dialog__content')).toHaveStyle({
+      height: 'min(72vh, 720px)',
+    });
     expect(screen.getByTestId('card_set_library_dialog__item__phrase-set')).toBeInTheDocument();
     expect(screen.queryByTestId('card_set_library_dialog__item__word-set')).not.toBeInTheDocument();
 

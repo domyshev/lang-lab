@@ -999,32 +999,61 @@ export function App() {
       (selectedExerciseType === 'missingWord' && isMissingWordUnavailable)
         ? null
         : selectedExerciseType;
+    const selectedExerciseLabel = pickerExerciseType
+      ? t(interfaceLanguage, pickerExerciseType)
+      : null;
 
     return (
       <Paper
         data-test="game_setup__panel"
-        sx={{ p: { xs: 2, md: 3 }, maxWidth: 760, mx: 'auto' }}
+        sx={{ p: { xs: 2, md: 3 }, maxWidth: 760, mx: 'auto', width: '100%' }}
       >
         <Stack data-test="game_setup__content" spacing={3}>
-          <ExercisePicker
-            disabledExerciseTypes={{
-              missingLetters: isMissingLettersUnavailable,
-              missingWord: isMissingWordUnavailable,
-            }}
-            disabledExerciseTooltips={{
-              missingLetters: isMissingLettersUnavailable
-                ? t(interfaceLanguage, 'missingLettersNeedsWords')
-                : undefined,
-              missingWord: isMissingWordUnavailable
-                ? t(interfaceLanguage, 'missingWordNeedsPhrases')
-                : undefined,
-            }}
-            selectedExerciseType={pickerExerciseType}
-            onPick={(exerciseType) => {
-              setSelectedExerciseType(exerciseType);
-              resetExerciseState();
-            }}
-          />
+          <Stack data-test="game_library__section" style={{ gap: 12 }}>
+            <Box data-test="game_library__header" sx={{ minWidth: 0 }}>
+              <Typography
+                data-test="game_library__title"
+                sx={{ color: '#203015', fontSize: 18, fontWeight: 900 }}
+              >
+                {t(interfaceLanguage, 'gameLibrary')}
+              </Typography>
+              {selectedExerciseLabel ? (
+                <Typography
+                  data-test="game_library__selected_name"
+                  sx={{ color: 'text.secondary', fontSize: 14, mt: 0.25 }}
+                >
+                  {selectedExerciseLabel}
+                </Typography>
+              ) : (
+                <Typography
+                  data-test="game_library__placeholder"
+                  sx={{ color: 'text.secondary', fontSize: 14, mt: 0.25 }}
+                >
+                  {t(interfaceLanguage, 'chooseExercise')}
+                </Typography>
+              )}
+            </Box>
+
+            <ExercisePicker
+              disabledExerciseTypes={{
+                missingLetters: isMissingLettersUnavailable,
+                missingWord: isMissingWordUnavailable,
+              }}
+              disabledExerciseTooltips={{
+                missingLetters: isMissingLettersUnavailable
+                  ? t(interfaceLanguage, 'missingLettersNeedsWords')
+                  : undefined,
+                missingWord: isMissingWordUnavailable
+                  ? t(interfaceLanguage, 'missingWordNeedsPhrases')
+                  : undefined,
+              }}
+              selectedExerciseType={pickerExerciseType}
+              onPick={(exerciseType) => {
+                setSelectedExerciseType(exerciseType);
+                resetExerciseState();
+              }}
+            />
+          </Stack>
 
           <CardSetLibraryPicker
             cards={cards}

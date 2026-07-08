@@ -19,6 +19,8 @@ import { ALL_CARDS_CARD_SET_ID, CardSet } from '../domain/cardSets';
 import { formatCardCount, t } from '../domain/i18n';
 import { RootState } from '../store/store';
 
+const featuredCardSetLimit = 3;
+
 type CardSetLibraryItem = {
   cardCount: number;
   cardIds: string[];
@@ -135,12 +137,13 @@ export function CardSetLibraryPicker({
           </IconButton>
         </Stack>
 
-        <Stack
+        <Box
           data-test="card_set_library__chips"
-          direction="row"
-          spacing={1}
-          sx={{ flexWrap: 'wrap' }}
-          useFlexGap
+          sx={{
+            display: 'grid',
+            gap: 1,
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+          }}
         >
           {featuredItems.map((item) => (
             <CardSetLibraryChip
@@ -151,7 +154,7 @@ export function CardSetLibraryPicker({
               selected={item.id === selectedCardSetId}
             />
           ))}
-        </Stack>
+        </Box>
       </Stack>
 
       <Dialog
@@ -172,6 +175,7 @@ export function CardSetLibraryPicker({
           sx={{
             display: 'flex',
             flexDirection: 'column',
+            height: 'min(72vh, 720px)',
             maxHeight: 'min(72vh, 720px)',
             overflow: 'hidden',
             pt: 0.5,
@@ -205,6 +209,7 @@ export function CardSetLibraryPicker({
               data-test="card_set_library_dialog__items"
               sx={{
                 display: 'grid',
+                flex: 1,
                 gap: 1.25,
                 gridTemplateColumns: {
                   xs: '1fr',
@@ -279,11 +284,11 @@ function CardSetLibraryChip({
         color: '#203015',
         display: 'flex',
         minHeight: dialogMode ? 118 : 86,
-        minWidth: dialogMode ? 0 : { xs: '100%', sm: 210 },
+        minWidth: 0,
         overflow: 'hidden',
         position: 'relative',
         textAlign: 'left',
-        width: dialogMode ? '100%' : 'auto',
+        width: '100%',
       }}
     >
       <Box
@@ -374,7 +379,7 @@ function getFeaturedItems(
 ): CardSetLibraryItem[] {
   const allCardsItem = items[0];
   if (!allCardsItem || !selectedItem || selectedItem.isAllCards) {
-    return items.slice(0, 4);
+    return items.slice(0, featuredCardSetLimit);
   }
 
   return [
@@ -383,7 +388,7 @@ function getFeaturedItems(
     ...items
       .slice(1)
       .filter((item) => item.id !== selectedItem.id),
-  ].slice(0, 4);
+  ].slice(0, featuredCardSetLimit);
 }
 
 function getCardSetGradient(id: string, isAllCards?: boolean) {

@@ -42,6 +42,7 @@ type I18nKey =
   | 'cardSetLibraryDialogTitle'
   | 'cardSetLibraryNoResults'
   | 'chooseCardSetPlaceholder'
+  | 'gameLibrary'
   | 'openCardSetLibrary'
   | 'searchCardSetLibrary'
   | 'selectCardSetLibraryItem'
@@ -215,10 +216,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     start: 'Play',
     allCards: 'All cards',
     cardSetLabel: 'Card set',
-    cardSetLibrary: 'Card set library',
+    cardSetLibrary: 'Card library',
     cardSetLibraryDialogTitle: 'Card set library',
     cardSetLibraryNoResults: 'No card sets found.',
-    chooseCardSetPlaceholder: 'Choose set',
+    chooseCardSetPlaceholder: 'Choose card set',
+    gameLibrary: 'Game library',
     openCardSetLibrary: 'Open card set library',
     searchCardSetLibrary: 'Search by name or phrase',
     selectCardSetLibraryItem: 'Choose card set',
@@ -407,10 +409,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     start: 'Играть',
     allCards: 'Все карточки',
     cardSetLabel: 'Набор карточек',
-    cardSetLibrary: 'Библиотека наборов',
+    cardSetLibrary: 'Библиотека карточек',
     cardSetLibraryDialogTitle: 'Библиотека наборов карточек',
     cardSetLibraryNoResults: 'Наборы не найдены.',
-    chooseCardSetPlaceholder: 'Выберите набор',
+    chooseCardSetPlaceholder: 'Выберите набор карточек',
+    gameLibrary: 'Библиотека игр',
     openCardSetLibrary: 'Открыть библиотеку наборов',
     searchCardSetLibrary: 'Искать по названию или фразе',
     selectCardSetLibraryItem: 'Выбрать набор карточек',
@@ -600,10 +603,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     start: 'Jugar',
     allCards: 'Todas las tarjetas',
     cardSetLabel: 'Conjunto de tarjetas',
-    cardSetLibrary: 'Biblioteca de conjuntos',
+    cardSetLibrary: 'Biblioteca de tarjetas',
     cardSetLibraryDialogTitle: 'Biblioteca de conjuntos de tarjetas',
     cardSetLibraryNoResults: 'No se encontraron conjuntos.',
-    chooseCardSetPlaceholder: 'Elige conjunto',
+    chooseCardSetPlaceholder: 'Elige conjunto de tarjetas',
+    gameLibrary: 'Biblioteca de juegos',
     openCardSetLibrary: 'Abrir biblioteca de conjuntos',
     searchCardSetLibrary: 'Buscar por nombre o frase',
     selectCardSetLibraryItem: 'Elegir conjunto de tarjetas',
