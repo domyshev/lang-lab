@@ -23,6 +23,10 @@ import {
   getCardsByIds,
 } from '../domain/cardIndexes';
 import {
+  createRecentResultsByCardId,
+  type RecentCardResult,
+} from '../domain/cardResultHistory';
+import {
   formatCardCount,
   getLanguageDisplayName,
   t,
@@ -62,6 +66,15 @@ export function CardSetDetailView() {
   const cardStatsById = useMemo(
     () => createCardStatsByTarget(cardStats, targetLanguage),
     [cardStats, targetLanguage],
+  );
+  const recentResultsByCardId = useMemo(
+    () =>
+      createRecentResultsByCardId({
+        attempts: allAttempts,
+        limit: 20,
+        targetLanguage,
+      }),
+    [allAttempts, targetLanguage],
   );
   const isAllCardsSelected =
     selectedCardSetId === ALL_CARDS_CARD_SET_ID || !selectedCardSetId;
@@ -321,12 +334,7 @@ export function CardSetDetailView() {
               <RecentCardStatsTooltip
                 dataTestPrefix={`card_set_detail__card_stats__${card.id}`}
                 interfaceLanguage={interfaceLanguage}
-                recentResults={getRecentCardResults({
-                  attempts: allAttempts,
-                  cardId: card.id,
-                  limit: 20,
-                  targetLanguage,
-                })}
+                recentResults={recentResultsByCardId.get(card.id) ?? []}
                 subject={answer.text}
               >
                 <SplitWordStatsChip
@@ -728,40 +736,6 @@ function getDisplayAnswer(
     text: t(interfaceLanguage, 'noTranslationAvailable'),
     isFallback: true,
   };
-}
-
-type RecentCardResult = {
-  isCorrect: boolean;
-  occurredAt: string;
-};
-
-function getRecentCardResults({
-  attempts,
-  cardId,
-  limit,
-  targetLanguage,
-}: {
-  attempts: RootState['attempts']['attempts'];
-  cardId: string;
-  limit: number;
-  targetLanguage: SupportedLanguage;
-}): RecentCardResult[] {
-  return [...attempts]
-    .filter(
-      (attempt) =>
-        attempt.targetLanguage === targetLanguage &&
-        Object.prototype.hasOwnProperty.call(attempt.correctness, cardId),
-    )
-    .sort(
-      (left, right) =>
-        Date.parse(right.completedAt ?? right.createdAt) -
-        Date.parse(left.completedAt ?? left.createdAt),
-    )
-    .slice(0, limit)
-    .map((attempt) => ({
-      isCorrect: Boolean(attempt.correctness[cardId]),
-      occurredAt: attempt.completedAt ?? attempt.createdAt,
-    }));
 }
 
 function formatAttemptDate(value: string): string {
