@@ -24,6 +24,7 @@ export function MissingLettersExercise({
   interfaceLanguage,
   isRepeatedPrompt = false,
   onNext,
+  onMemorizeResult,
   progressCompletedCount,
   progressTotalCount,
   prompt,
@@ -35,6 +36,7 @@ export function MissingLettersExercise({
   isRepeatedPrompt?: boolean;
   prompt: MissingLettersPrompt;
   onAnswer: (answer: string) => void;
+  onMemorizeResult?: () => void;
   onNext: () => void;
   progressCompletedCount?: number;
   progressTotalCount?: number;
@@ -111,6 +113,7 @@ export function MissingLettersExercise({
     if (!isAnswerComplete) {
       setSubmittedAnswer(answer);
       setSubmissionOutcome('memorize');
+      onMemorizeResult?.();
       return;
     }
 

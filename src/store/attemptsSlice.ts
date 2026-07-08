@@ -16,8 +16,13 @@ const attemptsSlice = createSlice({
     saveAttempt(state, action: PayloadAction<ExerciseAttempt>) {
       state.attempts.push(action.payload);
     },
+    forgetExerciseSession(state, action: PayloadAction<string>) {
+      state.attempts = state.attempts.filter(
+        (attempt) => attempt.exerciseSessionId !== action.payload,
+      );
+    },
   },
 });
 
-export const { saveAttempt } = attemptsSlice.actions;
+export const { forgetExerciseSession, saveAttempt } = attemptsSlice.actions;
 export const attemptsReducer = attemptsSlice.reducer;

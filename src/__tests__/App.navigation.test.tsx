@@ -1363,6 +1363,77 @@ describe('App navigation', () => {
     expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
   });
 
+  it('forgets an active exercise from the finish confirmation dialog', async () => {
+    const user = userEvent.setup();
+    const store = renderApp();
+
+    await startExercise(user, 'Пропущенные буквы');
+    await answerMissingLettersWrong(user);
+
+    expect(store.getState().attempts.attempts).toHaveLength(1);
+    expect(store.getState().stats.cardStats).toHaveLength(1);
+
+    const exerciseHeader = getByDataTestPrefix('missing_letters_exercise__header__')[0];
+    await user.click(
+      within(exerciseHeader).getByRole('button', { name: 'Закончить упражнение' }),
+    );
+
+    const forgetButton = screen.getByRole('button', { name: 'Забыть и выйти' });
+    expect(forgetButton).toHaveStyle({
+      marginRight: 'auto',
+    });
+
+    await user.hover(forgetButton);
+    expect(
+      await screen.findByText(
+        'Эта игра не будет включена в статистику, если нажать эту кнопку.',
+      ),
+    ).toBeInTheDocument();
+
+    await user.click(forgetButton);
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
+    expect(store.getState().attempts.attempts).toHaveLength(0);
+    expect(store.getState().stats.cardStats).toHaveLength(0);
+  });
+
+  it('confirms finish after a missing letters memorize result', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await startExercise(user, 'Пропущенные буквы');
+    await user.click(screen.getByRole('button', { name: 'Отправить' }));
+
+    expect(screen.getByRole('button', { name: 'Запомнить!' })).toBeInTheDocument();
+
+    const exerciseHeader = getByDataTestPrefix('missing_letters_exercise__header__')[0];
+    await user.click(
+      within(exerciseHeader).getByRole('button', { name: 'Закончить упражнение' }),
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Закончить упражнение' })).toBeInTheDocument();
+    expect(screen.getByText('Отвечено слов: 0')).toBeInTheDocument();
+  });
+
+  it('confirms finish after a missing word memorize result', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await startExercise(user, 'Пропущенное слово');
+    await user.click(screen.getByRole('button', { name: 'Отправить' }));
+
+    expect(screen.getByRole('button', { name: 'Запомнить!' })).toBeInTheDocument();
+
+    const exerciseHeader = getByDataTestPrefix('missing_word_exercise__header__')[0];
+    await user.click(
+      within(exerciseHeader).getByRole('button', { name: 'Закончить упражнение' }),
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Закончить упражнение' })).toBeInTheDocument();
+    expect(screen.getByText('Отвечено слов: 0')).toBeInTheDocument();
+  });
+
   it('returns to the game setup through the Game tab and confirms answered exercises', async () => {
     const user = userEvent.setup();
     renderApp();
@@ -1643,6 +1714,44 @@ describe('App navigation', () => {
 
     expect(screen.queryByText(/I need to remember/)).not.toBeInTheDocument();
     expect(screen.getAllByLabelText(/Missing word letter/).length).toBeGreaterThan(0);
+  });
+
+  it('shows zebra hypersonic jumps for missing word phrases', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await startExercise(user, 'Пропущенное слово');
+
+    expect(screen.getByRole('combobox', { name: 'Прыжки' })).toBeInTheDocument();
+    const currentSentence = getVisibleMissingWordSentence();
+
+    await user.click(screen.getByRole('combobox', { name: 'Прыжки' }));
+    const jumpOptions = getByDataTestPrefix('exercise_finish_action__jump_option__');
+
+    expect(jumpOptions).toHaveLength(2);
+    expect(jumpOptions[0]).toHaveStyle({ backgroundColor: 'rgb(255, 255, 255)' });
+    expect(jumpOptions[1]).toHaveStyle({ backgroundColor: 'rgb(250, 246, 255)' });
+    expect(jumpOptions.map((option) => option.textContent)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('оно того стоит'),
+        expect.stringContaining('с нетерпением ждать'),
+      ]),
+    );
+
+    const nextPracticeKey =
+      currentSentence === 'It is worth it today.'
+        ? 'card-look-forward__0'
+        : 'card-worth-it__0';
+    const expectedSentence =
+      currentSentence === 'It is worth it today.'
+        ? 'I look forward to tomorrow.'
+        : 'It is worth it today.';
+
+    await user.click(
+      screen.getByTestId(`exercise_finish_action__jump_option__${nextPracticeKey}`),
+    );
+
+    expect(getVisibleMissingWordSentence()).toBe(expectedSentence);
   });
 
   it('shows a localized setup warning when missing letters has only phrase cards', async () => {

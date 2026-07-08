@@ -27,6 +27,7 @@ export function MissingWordExercise({
   isRepeatedPrompt = false,
   prompt,
   onAnswer,
+  onMemorizeResult,
   onNext,
   progressCompletedCount,
   progressTotalCount,
@@ -36,6 +37,7 @@ export function MissingWordExercise({
   isRepeatedPrompt?: boolean;
   prompt: MissingWordPrompt;
   onAnswer: (answer: string) => void;
+  onMemorizeResult?: () => void;
   onNext: () => void;
   progressCompletedCount?: number;
   progressTotalCount?: number;
@@ -118,6 +120,7 @@ export function MissingWordExercise({
     if (!isAnswerComplete) {
       setSubmittedAnswer(answer);
       setSubmissionOutcome('memorize');
+      onMemorizeResult?.();
       return;
     }
 

@@ -20,8 +20,14 @@ const statsSlice = createSlice({
         action.payload,
       );
     },
+    rebuildStatsFromAttempts(state, action: PayloadAction<ExerciseAttempt[]>) {
+      state.cardStats = action.payload.reduce(
+        (stats, attempt) => updateStatsFromAttempt(stats, attempt),
+        [] as CardStats[],
+      );
+    },
   },
 });
 
-export const { recordAttemptStats } = statsSlice.actions;
+export const { rebuildStatsFromAttempts, recordAttemptStats } = statsSlice.actions;
 export const statsReducer = statsSlice.reducer;

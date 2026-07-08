@@ -75,6 +75,8 @@ type I18nKey =
   | 'exit'
   | 'finish'
   | 'finishExercise'
+  | 'forgetAndExit'
+  | 'forgetExerciseTooltip'
   | 'finishExerciseAnytimeBenefit'
   | 'finishExerciseAnytimeTooltip'
   | 'finishExerciseHypersonicJumpTooltip'
@@ -257,6 +259,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     exit: 'Exit',
     finish: 'Finish',
     finishExercise: 'Finish exercise',
+    forgetAndExit: 'Forget and exit',
+    forgetExerciseTooltip:
+      'This game will not be included in statistics if you press this button.',
     finishExerciseAnytimeBenefit:
       'You can make hypersonic jumps between cards.',
     finishExerciseAnytimeTooltip:
@@ -454,6 +459,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     exit: 'Выйти',
     finish: 'Закончить',
     finishExercise: 'Закончить упражнение',
+    forgetAndExit: 'Забыть и выйти',
+    forgetExerciseTooltip:
+      'Эта игра не будет включена в статистику, если нажать эту кнопку.',
     finishExerciseAnytimeBenefit:
       'Можно делать гиперзвуковые прыжки между карточками.',
     finishExerciseAnytimeTooltip:
@@ -652,6 +660,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     exit: 'Salir',
     finish: 'Terminar',
     finishExercise: 'Terminar ejercicio',
+    forgetAndExit: 'Olvidar y salir',
+    forgetExerciseTooltip:
+      'Este juego no se incluira en las estadisticas si pulsas este boton.',
     finishExerciseAnytimeBenefit:
       'Puedes hacer saltos hipersonicos entre tarjetas.',
     finishExerciseAnytimeTooltip:

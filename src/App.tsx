@@ -20,6 +20,7 @@ import {
   Paper,
   Select,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
@@ -79,7 +80,7 @@ import {
   orderCardsForMissingLettersPractice,
 } from './domain/practiceOrdering';
 import { ALL_CARDS_CARD_SET_ID, CardSet } from './domain/cardSets';
-import { saveAttempt } from './store/attemptsSlice';
+import { forgetExerciseSession, saveAttempt } from './store/attemptsSlice';
 import {
   acknowledgeGameHelp,
   getComplementaryLanguageForTarget,
@@ -88,7 +89,7 @@ import {
   markHypersonicJumpLampShown,
 } from './store/appSlice';
 import { seedDefaultCards } from './store/cardsSlice';
-import { recordAttemptStats } from './store/statsSlice';
+import { rebuildStatsFromAttempts, recordAttemptStats } from './store/statsSlice';
 import { seedDefaultCardSets, selectCardSet } from './store/cardSetsSlice';
 import { AppDispatch, RootState } from './store/store';
 
@@ -182,6 +183,8 @@ export function App() {
     useState<CompletedExerciseSummary | null>(null);
   const [currentExerciseAnsweredCount, setCurrentExerciseAnsweredCount] =
     useState(0);
+  const [hasCurrentExerciseResult, setHasCurrentExerciseResult] =
+    useState(false);
   const [currentExerciseSessionId, setCurrentExerciseSessionId] = useState(() =>
     createId('exercise-session'),
   );
@@ -471,6 +474,7 @@ export function App() {
     setCompletedExerciseSummary(null);
     setCrosswordDraftState(emptyCrosswordDraftState);
     setCurrentExerciseAnsweredCount(0);
+    setHasCurrentExerciseResult(false);
     setCurrentExerciseSessionId(createId('exercise-session'));
     setGenerationSeed((seed) => seed + 1);
   }
@@ -490,7 +494,7 @@ export function App() {
       return;
     }
 
-    if (currentExerciseAnsweredCount === 0) {
+    if (currentExerciseAnsweredCount === 0 && !hasCurrentExerciseResult) {
       resetExerciseState();
       if (intent === 'home') {
         setActiveSection('game');
@@ -518,6 +522,22 @@ export function App() {
       saveCrosswordDraftAttempt(exercisePreview.puzzle, crosswordDraftState);
     }
 
+    setFinishDialogIntent(null);
+    setIsFinishDialogOpen(false);
+    resetExerciseState();
+    if (shouldGoHome) {
+      setActiveSection('game');
+    }
+  }
+
+  function handleFinishDialogForget() {
+    const shouldGoHome = finishDialogIntent === 'home';
+    const remainingAttempts = attempts.filter(
+      (attempt) => attempt.exerciseSessionId !== currentExerciseSessionId,
+    );
+
+    dispatch(forgetExerciseSession(currentExerciseSessionId));
+    dispatch(rebuildStatsFromAttempts(remainingAttempts));
     setFinishDialogIntent(null);
     setIsFinishDialogOpen(false);
     resetExerciseState();
@@ -744,6 +764,7 @@ export function App() {
     dispatch(recordAttemptStats(attempt));
     setLastSavedAttemptId(attempt.id);
     setCurrentExerciseAnsweredCount((count) => count + input.cardIds.length);
+    setHasCurrentExerciseResult(true);
     if (input.advance) {
       setGenerationSeed((seed) => seed + 1);
     }
@@ -919,6 +940,7 @@ export function App() {
           isCrossword={selectedExerciseType === 'crossword'}
           onCancel={handleFinishDialogCancel}
           onConfirm={handleFinishDialogConfirm}
+          onForget={handleFinishDialogForget}
           answeredCount={
             selectedExerciseType === 'crossword' &&
             currentExerciseAnsweredCount === 0
@@ -1094,6 +1116,7 @@ export function App() {
                 setResultPromptHold(null);
                 setCompletedExerciseSummary(null);
                 setCurrentExerciseAnsweredCount(0);
+                setHasCurrentExerciseResult(false);
                 setLastSavedAttemptId(null);
                 setCurrentExerciseSessionId(createId('exercise-session'));
                 setGenerationSeed((seed) => seed + 1);
@@ -1148,6 +1171,42 @@ export function App() {
 
         setResultPromptHold({
           exerciseType: 'missingLetters',
+          prompt: nextPrompt,
+        });
+        setLastSavedAttemptId(null);
+      },
+    };
+  }
+
+  function buildMissingWordJumpSelector(
+    currentPrompt: MissingWordPracticePrompt,
+  ): FinishExerciseJumpSelector {
+    const jumpPrompts = missingWordPracticePrompts.some(
+      (prompt) => prompt.practiceKey === currentPrompt.practiceKey,
+    )
+      ? missingWordPracticePrompts
+      : [currentPrompt, ...missingWordPracticePrompts];
+
+    return {
+      value: currentPrompt.practiceKey,
+      options: jumpPrompts.map((prompt, index) => ({
+        isAnswered: completedMissingWordCardIds.includes(prompt.cardId),
+        label: `${index + 1}. ${getJumpComplementaryLabel(
+          prompt,
+          complementaryLanguage,
+        )}`,
+        value: prompt.practiceKey,
+      })),
+      onChange: (nextPracticeKey) => {
+        const nextPrompt = missingWordPracticePrompts.find(
+          (prompt) => prompt.practiceKey === nextPracticeKey,
+        );
+        if (!nextPrompt) {
+          return;
+        }
+
+        setResultPromptHold({
+          exerciseType: 'missingWord',
           prompt: nextPrompt,
         });
         setLastSavedAttemptId(null);
@@ -1307,6 +1366,7 @@ export function App() {
               advance: false,
             })
           }
+          onMemorizeResult={() => setHasCurrentExerciseResult(true)}
           onNext={() => {
             const nextCompletedCardIds = uniqueValues([
               ...completedMissingLettersCardIds,
@@ -1347,7 +1407,9 @@ export function App() {
     return (
       <MissingWordExercise
         key={missingWordPrompt.practiceKey}
-        finishAction={renderFinishExerciseAction()}
+        finishAction={renderFinishExerciseAction(
+          buildMissingWordJumpSelector(missingWordPrompt),
+        )}
         isRepeatedPrompt={completedMissingWordCardIds.includes(
           missingWordPrompt.cardId,
         )}
@@ -1360,6 +1422,7 @@ export function App() {
             advance: false,
           })
         }
+        onMemorizeResult={() => setHasCurrentExerciseResult(true)}
         onNext={() => {
           const nextCompletedCardIds = uniqueValues([
             ...completedMissingWordCardIds,
@@ -1775,20 +1838,37 @@ function FinishExerciseAction({
                       },
                     }}
                   >
-                    {jumpSelector.options.map((option) => (
-                      <MenuItem
-                        data-test={`exercise_finish_action__jump_option__${option.value}`}
-                        key={option.value}
-                        value={option.value}
-                        sx={{
-                          fontSize: 14,
-                          fontWeight: 800,
-                          opacity: option.isAnswered ? 0.52 : 1,
-                        }}
-                      >
-                        {option.label}
-                      </MenuItem>
-                    ))}
+                    {jumpSelector.options.map((option, index) => {
+                      const zebraColor =
+                        index % 2 === 0 ? '#ffffff' : '#faf6ff';
+
+                      return (
+                        <MenuItem
+                          data-test={`exercise_finish_action__jump_option__${option.value}`}
+                          key={option.value}
+                          value={option.value}
+                          sx={{
+                            alignItems: 'flex-start',
+                            bgcolor: zebraColor,
+                            fontSize: 14,
+                            fontWeight: 800,
+                            lineHeight: 1.25,
+                            minHeight: 42,
+                            opacity: option.isAnswered ? 0.52 : 1,
+                            whiteSpace: 'normal',
+                            '&.Mui-selected': {
+                              bgcolor: zebraColor,
+                            },
+                            '&.Mui-selected:hover, &:hover': {
+                              bgcolor:
+                                index % 2 === 0 ? '#f5f7ef' : '#f1eafe',
+                            },
+                          }}
+                        >
+                          {option.label}
+                        </MenuItem>
+                      );
+                    })}
                   </Select>
                 </FormControl>
                 <JumpInfoTooltip interfaceLanguage={interfaceLanguage} />
@@ -2216,6 +2296,7 @@ function FinishExerciseDialog({
   isCrossword = false,
   onCancel,
   onConfirm,
+  onForget,
   open,
 }: {
   answeredCount: number;
@@ -2224,6 +2305,7 @@ function FinishExerciseDialog({
   isCrossword?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
+  onForget: () => void;
   open: boolean;
 }) {
   return (
@@ -2237,7 +2319,7 @@ function FinishExerciseDialog({
           borderColor: 'primary.main',
           borderRadius: 2,
           boxShadow: '0 20px 50px rgba(32, 48, 21, 0.22)',
-          maxWidth: 420,
+          maxWidth: 560,
         },
       }}
     >
@@ -2276,24 +2358,56 @@ function FinishExerciseDialog({
       </DialogContent>
       <DialogActions
         data-test="finish_exercise_dialog__actions"
-        sx={{ px: 3, pb: 2 }}
+        sx={{
+          alignItems: 'center',
+          display: 'flex',
+          gap: 1,
+          justifyContent: 'space-between',
+          px: 3,
+          pb: 2,
+        }}
       >
-        <Button
-          color="success"
-          data-test="finish_exercise_dialog__cancel_button"
-          variant="contained"
-          onClick={onCancel}
+        <Tooltip
+          arrow
+          describeChild
+          title={t(interfaceLanguage, 'forgetExerciseTooltip')}
         >
-          {t(interfaceLanguage, 'cancel')}
-        </Button>
-        <Button
-          color="error"
-          data-test="finish_exercise_dialog__confirm_button"
-          variant="contained"
-          onClick={onConfirm}
-        >
-          {t(interfaceLanguage, 'confirm')}
-        </Button>
+          <Button
+            data-test="finish_exercise_dialog__forget_button"
+            variant="outlined"
+            onClick={onForget}
+            sx={{
+              borderColor: '#7b5fc4',
+              color: '#6046b6',
+              fontWeight: 800,
+              mr: 'auto',
+              '&:hover': {
+                bgcolor: 'rgba(123, 95, 196, 0.08)',
+                borderColor: '#6046b6',
+              },
+            }}
+          >
+            {t(interfaceLanguage, 'forgetAndExit')}
+          </Button>
+        </Tooltip>
+        <Stack direction="row" spacing={1}>
+          <Button
+            color="success"
+            data-test="finish_exercise_dialog__cancel_button"
+            variant="contained"
+            onClick={onCancel}
+          >
+            {t(interfaceLanguage, 'cancel')}
+          </Button>
+          <Button
+            color="error"
+            data-test="finish_exercise_dialog__confirm_button"
+            variant="contained"
+            onClick={onConfirm}
+          >
+            {t(interfaceLanguage, 'confirm')}
+          </Button>
+        </Stack>
       </DialogActions>
     </Dialog>
   );
