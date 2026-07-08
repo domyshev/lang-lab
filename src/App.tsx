@@ -226,6 +226,15 @@ export function App() {
     complementaryLanguages,
     targetLanguage,
   );
+  const practiceOrderingAttempts = useMemo(
+    () =>
+      isExerciseStarted
+        ? attempts.filter(
+            (attempt) => attempt.exerciseSessionId !== currentExerciseSessionId,
+          )
+        : attempts,
+    [attempts, currentExerciseSessionId, isExerciseStarted],
+  );
 
   const visibleCardSets = useMemo(
     () => cardSets.filter((cardSet) => !cardSet.archivedAt),
@@ -281,7 +290,7 @@ export function App() {
   const missingLettersOrderedCards = useMemo(
     () =>
       orderCardsForMissingLettersPractice({
-        attempts,
+        attempts: practiceOrderingAttempts,
         cards: missingLettersEligibleCards,
         now: new Date().toISOString(),
         seed: generationSeed,
@@ -289,9 +298,9 @@ export function App() {
         targetLanguage,
       }),
     [
-      attempts,
       generationSeed,
       missingLettersEligibleCards,
+      practiceOrderingAttempts,
       practiceSettings,
       targetLanguage,
     ],
@@ -303,7 +312,7 @@ export function App() {
   const missingWordOrderedCards = useMemo(
     () =>
       orderCardsForMissingLettersPractice({
-        attempts,
+        attempts: practiceOrderingAttempts,
         cards: missingWordEligibleCards,
         now: new Date().toISOString(),
         seed: generationSeed,
@@ -311,9 +320,9 @@ export function App() {
         targetLanguage,
       }),
     [
-      attempts,
       generationSeed,
       missingWordEligibleCards,
+      practiceOrderingAttempts,
       practiceSettings,
       targetLanguage,
     ],

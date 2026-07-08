@@ -1754,6 +1754,50 @@ describe('App navigation', () => {
     expect(getVisibleMissingWordSentence()).toBe(expectedSentence);
   });
 
+  it('continues missing word from the latest selected jump', async () => {
+    const user = userEvent.setup();
+    renderApp({ cards: createMissingWordJumpCards() });
+
+    await startExercise(user, 'Пропущенное слово');
+
+    const initialJumpOrder = await getMissingWordJumpOrder(user);
+    const firstJumpKey = initialJumpOrder[1];
+    const expectedAfterFirstJumpKey = initialJumpOrder[2];
+    if (!firstJumpKey || !expectedAfterFirstJumpKey) {
+      throw new Error('Missing word jump order needs at least three prompts.');
+    }
+
+    await selectMissingWordJump(user, firstJumpKey);
+    expect(getVisibleMissingWordCardId()).toBe(cardIdFromPracticeKey(firstJumpKey));
+    await answerMissingWordCorrectByAnswer(
+      user,
+      missingWordAnswerByCardId(cardIdFromPracticeKey(firstJumpKey)),
+    );
+    await user.click(screen.getByRole('button', { name: 'Правильно!' }));
+
+    expect(getVisibleMissingWordCardId()).toBe(
+      cardIdFromPracticeKey(expectedAfterFirstJumpKey),
+    );
+
+    const secondJumpKey = initialJumpOrder[3];
+    const expectedAfterSecondJumpKey = initialJumpOrder[0];
+    if (!secondJumpKey || !expectedAfterSecondJumpKey) {
+      throw new Error('Missing word jump order needs at least four prompts.');
+    }
+
+    await selectMissingWordJump(user, secondJumpKey);
+    expect(getVisibleMissingWordCardId()).toBe(cardIdFromPracticeKey(secondJumpKey));
+    await answerMissingWordCorrectByAnswer(
+      user,
+      missingWordAnswerByCardId(cardIdFromPracticeKey(secondJumpKey)),
+    );
+    await user.click(screen.getByRole('button', { name: 'Правильно!' }));
+
+    expect(getVisibleMissingWordCardId()).toBe(
+      cardIdFromPracticeKey(expectedAfterSecondJumpKey),
+    );
+  });
+
   it('shows a localized setup warning when missing letters has only phrase cards', async () => {
     const user = userEvent.setup();
     renderApp({
@@ -2068,8 +2112,52 @@ async function selectMissingLettersJump(
   );
 }
 
+async function getMissingWordJumpOrder(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<string[]> {
+  await user.click(screen.getByRole('combobox', { name: 'Прыжки' }));
+  const practiceKeys = getByDataTestPrefix('exercise_finish_action__jump_option__')
+    .map((option) =>
+      option
+        .getAttribute('data-test')
+        ?.replace('exercise_finish_action__jump_option__', ''),
+    )
+    .filter((practiceKey): practiceKey is string => Boolean(practiceKey));
+
+  await user.keyboard('{Escape}');
+  await waitFor(() =>
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument(),
+  );
+
+  return practiceKeys;
+}
+
+async function selectMissingWordJump(
+  user: ReturnType<typeof userEvent.setup>,
+  practiceKey: string,
+) {
+  await user.click(screen.getByRole('combobox', { name: 'Прыжки' }));
+  await user.click(
+    screen.getByTestId(`exercise_finish_action__jump_option__${practiceKey}`),
+  );
+}
+
+function getVisibleMissingWordCardId(): string {
+  const panel = getByDataTestPrefix('missing_word_exercise__panel__')[0];
+  const dataTest = panel?.getAttribute('data-test');
+  if (!dataTest) {
+    throw new Error('Missing word panel is not visible.');
+  }
+
+  return dataTest.replace('missing_word_exercise__panel__', '');
+}
+
+function cardIdFromPracticeKey(practiceKey: string): string {
+  return practiceKey.replace(/__\d+$/, '');
+}
+
 function answerByPracticeKey(practiceKey: string): string {
-  const cardId = practiceKey.replace(/__\d+$/, '');
+  const cardId = cardIdFromPracticeKey(practiceKey);
   const answersByCardId: Record<string, string> = {
     'card-airport': 'airport',
     'card-vehicle': 'vehicle',
@@ -2080,6 +2168,65 @@ function answerByPracticeKey(practiceKey: string): string {
 
   if (!answer) {
     throw new Error(`Unknown practice key: ${practiceKey}`);
+  }
+
+  return answer;
+}
+
+function createMissingWordJumpCards() {
+  return [
+    createPhraseCard({
+      answer: 'call back',
+      id: 'phrase-call-back',
+      sentence: 'I will call back later.',
+    }),
+    createPhraseCard({
+      answer: 'come over',
+      id: 'phrase-come-over',
+      sentence: 'Can you come over tonight?',
+    }),
+    createPhraseCard({
+      answer: 'figure out',
+      id: 'phrase-figure-out',
+      sentence: 'We can figure out the plan.',
+    }),
+    createPhraseCard({
+      answer: 'hang out',
+      id: 'phrase-hang-out',
+      sentence: 'They hang out after work.',
+    }),
+  ];
+}
+
+function createPhraseCard({
+  answer,
+  id,
+  sentence,
+}: {
+  answer: string;
+  id: string;
+  sentence: string;
+}) {
+  return {
+    id,
+    translations: {
+      en: answer,
+      ru: `${answer} ru`,
+      es: `${answer} es`,
+    },
+    examples: {
+      en: [{ sentence, answer }],
+    },
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function missingWordAnswerByCardId(cardId: string): string {
+  const answer = createMissingWordJumpCards().find((card) => card.id === cardId)
+    ?.translations.en;
+  if (!answer) {
+    throw new Error(`Unknown missing word card id: ${cardId}`);
   }
 
   return answer;
@@ -2136,6 +2283,13 @@ async function answerMissingWordCorrect(
   sentence: string,
 ) {
   const answer = sentence === 'It is worth it today.' ? 'worth it' : 'look forward';
+  await answerMissingWordCorrectByAnswer(user, answer);
+}
+
+async function answerMissingWordCorrectByAnswer(
+  user: ReturnType<typeof userEvent.setup>,
+  answer: string,
+) {
   const editableIndexes = getMissingWordEditableIndexes(answer);
   const inputs = screen.getAllByLabelText(/Missing word letter/);
   for (const [index, input] of inputs.entries()) {
