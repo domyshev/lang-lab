@@ -150,10 +150,16 @@ export function ExerciseProgressChip({
 export function ExerciseRepeatChip({
   dataTest,
   interfaceLanguage,
+  repeatProgress,
 }: {
   dataTest: string;
   interfaceLanguage: SupportedLanguage;
+  repeatProgress?: { current: number; total: number };
 }) {
+  const label = repeatProgress
+    ? `${t(interfaceLanguage, 'repeatPrompt')} (${repeatProgress.current}/${repeatProgress.total})`
+    : t(interfaceLanguage, 'repeatPrompt');
+
   return (
     <Chip
       data-test={dataTest}
@@ -163,7 +169,7 @@ export function ExerciseRepeatChip({
           sx={{ fontSize: '16px !important' }}
         />
       }
-      label={t(interfaceLanguage, 'repeatPrompt')}
+      label={label}
       size="small"
       sx={{
         bgcolor: '#f3ecff',

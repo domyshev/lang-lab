@@ -28,6 +28,7 @@ export function MissingLettersExercise({
   progressCompletedCount,
   progressTotalCount,
   prompt,
+  repeatProgress,
   onAnswer,
   cardSetName,
   finishAction,
@@ -35,6 +36,7 @@ export function MissingLettersExercise({
   interfaceLanguage: SupportedLanguage;
   isRepeatedPrompt?: boolean;
   prompt: MissingLettersPrompt;
+  repeatProgress?: { current: number; total: number };
   onAnswer: (answer: string) => void;
   onMemorizeResult?: () => void;
   onNext: () => void;
@@ -207,6 +209,7 @@ export function MissingLettersExercise({
             <ExerciseRepeatChip
               dataTest={`missing_letters_exercise__repeat_chip__${prompt.cardId}`}
               interfaceLanguage={interfaceLanguage}
+              repeatProgress={repeatProgress}
             />
           )}
         </Stack>

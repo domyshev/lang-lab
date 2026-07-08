@@ -26,6 +26,7 @@ type SubmissionOutcome = 'correct' | 'incorrect' | 'memorize';
 export function MissingWordExercise({
   isRepeatedPrompt = false,
   prompt,
+  repeatProgress,
   onAnswer,
   onMemorizeResult,
   onNext,
@@ -36,6 +37,7 @@ export function MissingWordExercise({
 }: {
   isRepeatedPrompt?: boolean;
   prompt: MissingWordPrompt;
+  repeatProgress?: { current: number; total: number };
   onAnswer: (answer: string) => void;
   onMemorizeResult?: () => void;
   onNext: () => void;
@@ -214,6 +216,7 @@ export function MissingWordExercise({
             <ExerciseRepeatChip
               dataTest={`missing_word_exercise__repeat_chip__${prompt.cardId}`}
               interfaceLanguage={interfaceLanguage}
+              repeatProgress={repeatProgress}
             />
           )}
         </Stack>

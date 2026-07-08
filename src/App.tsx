@@ -149,6 +149,10 @@ type FinishExerciseJumpSelector = {
   options: FinishExerciseJumpOption[];
   value: string;
 };
+type RepeatProgress = {
+  current: number;
+  total: number;
+};
 
 export function App() {
   const dispatch = useDispatch<AppDispatch>();
@@ -1165,26 +1169,35 @@ export function App() {
   function buildMissingLettersJumpSelector(
     currentPrompt: MissingLettersPracticePrompt,
   ): FinishExerciseJumpSelector {
-    const jumpPrompts = missingLettersPracticePrompts.some(
-      (prompt) => prompt.practiceKey === currentPrompt.practiceKey,
-    )
-      ? missingLettersPracticePrompts
-      : [currentPrompt, ...missingLettersPracticePrompts];
+    const jumpPrompts = getUniqueJumpPrompts(
+      missingLettersPracticePrompts,
+      currentPrompt,
+    );
+    const answerCounts = countCurrentSessionCardAnswers({
+      attempts,
+      currentExerciseSessionId,
+      exerciseType: 'missingLetters',
+    });
 
     return {
-      value: currentPrompt.practiceKey,
+      value: getJumpSelectorValue(currentPrompt, jumpPrompts),
       options: jumpPrompts.map((prompt, index) => ({
         isAnswered: completedMissingLettersCardIds.includes(prompt.cardId),
         label: `${index + 1}. ${getJumpComplementaryLabel(
           prompt,
           complementaryLanguage,
-        )}`,
+        )}${formatJumpAnswerCount(answerCounts.get(prompt.cardId) ?? 0)}`,
         value: prompt.practiceKey,
       })),
       onChange: (nextPracticeKey) => {
-        const nextPrompt = missingLettersPracticePrompts.find(
-          (prompt) => prompt.practiceKey === nextPracticeKey,
-        );
+        const nextCardId = getCardIdFromPracticeKey(nextPracticeKey);
+        const nextPrompt =
+          missingLettersPracticePrompts.find(
+            (prompt) => prompt.practiceKey === nextPracticeKey,
+          ) ??
+          missingLettersPracticePrompts.find(
+            (prompt) => prompt.cardId === nextCardId,
+          );
         if (!nextPrompt) {
           return;
         }
@@ -1201,26 +1214,35 @@ export function App() {
   function buildMissingWordJumpSelector(
     currentPrompt: MissingWordPracticePrompt,
   ): FinishExerciseJumpSelector {
-    const jumpPrompts = missingWordPracticePrompts.some(
-      (prompt) => prompt.practiceKey === currentPrompt.practiceKey,
-    )
-      ? missingWordPracticePrompts
-      : [currentPrompt, ...missingWordPracticePrompts];
+    const jumpPrompts = getUniqueJumpPrompts(
+      missingWordPracticePrompts,
+      currentPrompt,
+    );
+    const answerCounts = countCurrentSessionCardAnswers({
+      attempts,
+      currentExerciseSessionId,
+      exerciseType: 'missingWord',
+    });
 
     return {
-      value: currentPrompt.practiceKey,
+      value: getJumpSelectorValue(currentPrompt, jumpPrompts),
       options: jumpPrompts.map((prompt, index) => ({
         isAnswered: completedMissingWordCardIds.includes(prompt.cardId),
         label: `${index + 1}. ${getJumpComplementaryLabel(
           prompt,
           complementaryLanguage,
-        )}`,
+        )}${formatJumpAnswerCount(answerCounts.get(prompt.cardId) ?? 0)}`,
         value: prompt.practiceKey,
       })),
       onChange: (nextPracticeKey) => {
-        const nextPrompt = missingWordPracticePrompts.find(
-          (prompt) => prompt.practiceKey === nextPracticeKey,
-        );
+        const nextCardId = getCardIdFromPracticeKey(nextPracticeKey);
+        const nextPrompt =
+          missingWordPracticePrompts.find(
+            (prompt) => prompt.practiceKey === nextPracticeKey,
+          ) ??
+          missingWordPracticePrompts.find(
+            (prompt) => prompt.cardId === nextCardId,
+          );
         if (!nextPrompt) {
           return;
         }
@@ -1374,6 +1396,10 @@ export function App() {
           isRepeatedPrompt={completedMissingLettersCardIds.includes(
             missingLettersPrompt.cardId,
           )}
+          repeatProgress={getRepeatProgress(
+            missingLettersPrompt,
+            missingLettersPracticePrompts,
+          )}
           progressCompletedCount={completedMissingLettersCardIds.length}
           progressTotalCount={missingLettersPracticeCardIds.length}
           prompt={missingLettersPrompt}
@@ -1432,6 +1458,10 @@ export function App() {
         )}
         isRepeatedPrompt={completedMissingWordCardIds.includes(
           missingWordPrompt.cardId,
+        )}
+        repeatProgress={getRepeatProgress(
+          missingWordPrompt,
+          missingWordPracticePrompts,
         )}
         prompt={missingWordPrompt}
         progressCompletedCount={completedMissingWordCardIds.length}
@@ -2538,6 +2568,93 @@ function createId(prefix: string): string {
 
 function createPracticeKey(cardId: string, index: number): string {
   return `${cardId}__${index}`;
+}
+
+function getCardIdFromPracticeKey(practiceKey: string): string {
+  return practiceKey.replace(/__\d+$/, '');
+}
+
+function getPracticeKeyOccurrence(practiceKey: string): number {
+  const occurrenceMatch = practiceKey.match(/__(\d+)$/);
+  return occurrenceMatch ? Number(occurrenceMatch[1]) : 0;
+}
+
+function getUniqueJumpPrompts<T extends PracticePrompt<ExercisePrompt>>(
+  prompts: T[],
+  currentPrompt: T,
+): T[] {
+  const source = prompts.some((prompt) => prompt.cardId === currentPrompt.cardId)
+    ? prompts
+    : [currentPrompt, ...prompts];
+  const seenCardIds = new Set<string>();
+
+  return source.filter((prompt) => {
+    if (seenCardIds.has(prompt.cardId)) {
+      return false;
+    }
+
+    seenCardIds.add(prompt.cardId);
+    return true;
+  });
+}
+
+function getJumpSelectorValue<T extends PracticePrompt<ExercisePrompt>>(
+  currentPrompt: T,
+  jumpPrompts: T[],
+): string {
+  return (
+    jumpPrompts.find((prompt) => prompt.cardId === currentPrompt.cardId)
+      ?.practiceKey ?? currentPrompt.practiceKey
+  );
+}
+
+function formatJumpAnswerCount(count: number): string {
+  return count > 1 ? ` (${count})` : '';
+}
+
+function getRepeatProgress<T extends PracticePrompt<ExercisePrompt>>(
+  prompt: T,
+  prompts: T[],
+): RepeatProgress | undefined {
+  const current = getPracticeKeyOccurrence(prompt.practiceKey);
+  if (!prompt.isRepeat || current <= 0) {
+    return undefined;
+  }
+
+  const total = Math.max(
+    0,
+    ...prompts
+      .filter((item) => item.cardId === prompt.cardId)
+      .map((item) => getPracticeKeyOccurrence(item.practiceKey)),
+  );
+
+  return total > 0 ? { current, total } : undefined;
+}
+
+function countCurrentSessionCardAnswers({
+  attempts,
+  currentExerciseSessionId,
+  exerciseType,
+}: {
+  attempts: ExerciseAttempt[];
+  currentExerciseSessionId: string;
+  exerciseType: ExerciseType;
+}): Map<string, number> {
+  const counts = new Map<string, number>();
+
+  attempts
+    .filter(
+      (attempt) =>
+        attempt.exerciseSessionId === currentExerciseSessionId &&
+        attempt.exerciseType === exerciseType,
+    )
+    .forEach((attempt) => {
+      Object.keys(attempt.correctness).forEach((cardId) => {
+        counts.set(cardId, (counts.get(cardId) ?? 0) + 1);
+      });
+    });
+
+  return counts;
 }
 
 function pickPracticePrompt<T extends PracticePrompt<ExercisePrompt>>(

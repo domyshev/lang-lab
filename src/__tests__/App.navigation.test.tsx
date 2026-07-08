@@ -1010,6 +1010,57 @@ describe('App navigation', () => {
     expect(answered.size).toBeGreaterThanOrEqual(2);
   });
 
+  it('keeps programmed repeats out of jumps and labels repeat progress', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      attempts: [
+        createStoredAttempt({
+          cardId: 'card-airport',
+          completedAt: '2026-07-03T13:00:00.000Z',
+          isCorrect: false,
+        }),
+      ],
+    });
+
+    await startExercise(user, 'Пропущенные буквы');
+
+    const initialJumpOrder = await getMissingLettersJumpOrder(user);
+    expect(
+      initialJumpOrder.filter((practiceKey) =>
+        practiceKey.startsWith('card-airport__'),
+      ),
+    ).toHaveLength(1);
+
+    expect(getVisibleMissingLettersPrompt().answer).toBe('airport');
+    await answerMissingLettersWrong(user);
+    await user.click(screen.getByRole('button', { name: 'Неверно' }));
+
+    expect(getVisibleMissingLettersPrompt().answer).not.toBe('airport');
+    await memorizeCurrentMissingLettersPrompt(user);
+
+    expect(getVisibleMissingLettersPrompt().answer).toBe('airport');
+    expect(
+      screen.getByTestId('missing_letters_exercise__repeat_chip__card-airport'),
+    ).toHaveTextContent('повтор (1/1)');
+
+    await answerMissingLettersWrong(user);
+    await user.click(screen.getByRole('combobox', { name: 'Прыжки' }));
+    const updatedJumpOptions = getByDataTestPrefix(
+      'exercise_finish_action__jump_option__',
+    );
+
+    expect(
+      updatedJumpOptions.filter((option) =>
+        option
+          .getAttribute('data-test')
+          ?.includes('exercise_finish_action__jump_option__card-airport__'),
+      ),
+    ).toHaveLength(1);
+    expect(updatedJumpOptions.map((option) => option.textContent)).toEqual(
+      expect.arrayContaining([expect.stringContaining('аэропорт (2)')]),
+    );
+  });
+
   it('keeps a correct missing letters result visible until the next button is clicked', async () => {
     const user = userEvent.setup();
     renderApp();
