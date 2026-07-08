@@ -76,6 +76,8 @@ type I18nKey =
   | 'finish'
   | 'finishExercise'
   | 'finishExerciseAnytimeBenefit'
+  | 'finishExerciseAnytimeTooltip'
+  | 'finishExerciseHypersonicJumpTooltip'
   | 'finishExerciseNotice'
   | 'exerciseJumps'
   | 'exerciseJumpsTooltip'
@@ -256,7 +258,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     finish: 'Finish',
     finishExercise: 'Finish exercise',
     finishExerciseAnytimeBenefit:
-      'You can end the exercise at any moment - completed answers will still count.',
+      'You can make hypersonic jumps between questions.',
+    finishExerciseAnytimeTooltip:
+      'You can finish the exercise at any moment - completed answers will still count.',
+    finishExerciseHypersonicJumpTooltip:
+      'A hypersonic jump moves you through space and bends the flow of time: the next question will be the one immediately after the question you choose.',
     finishExerciseNotice:
       'Exercise results will be counted and the exercise will end.',
     exerciseJumps: 'Jumps',
@@ -449,7 +455,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     finish: 'Закончить',
     finishExercise: 'Закончить упражнение',
     finishExerciseAnytimeBenefit:
+      'Можно делать гиперзвуковые прыжки между вопросами.',
+    finishExerciseAnytimeTooltip:
       'Можно закончить упражнение в любой момент - уже выполненный результат будет зачтен.',
+    finishExerciseHypersonicJumpTooltip:
+      'Гиперзвуковой прыжок переносит тебя в пространстве и меняет ход времени: следующим вопросом станет тот, который идет сразу после выбранного.',
     finishExerciseNotice:
       'Результаты упражнения будут зачтены, а упражнение закончено.',
     exerciseJumps: 'Прыжки',
@@ -643,7 +653,11 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     finish: 'Terminar',
     finishExercise: 'Terminar ejercicio',
     finishExerciseAnytimeBenefit:
+      'Puedes hacer saltos hipersonicos entre preguntas.',
+    finishExerciseAnytimeTooltip:
       'Puedes terminar el ejercicio en cualquier momento: las respuestas completadas contaran.',
+    finishExerciseHypersonicJumpTooltip:
+      'Un salto hipersonico te mueve por el espacio y cambia el curso del tiempo: la siguiente pregunta sera la que va justo despues de la elegida.',
     finishExerciseNotice:
       'Los resultados del ejercicio se guardaran y el ejercicio terminara.',
     exerciseJumps: 'Saltos',

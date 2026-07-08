@@ -15,7 +15,9 @@ import {
 export interface AppState {
   assistantId: AssistantId;
   complementaryLanguages: ComplementaryLanguages;
+  hasFinishExerciseLampBeenShown?: boolean;
   hasGameHelpCoachmarkBeenShown?: boolean;
+  hasHypersonicJumpLampBeenShown?: boolean;
   interfaceLanguage: SupportedLanguage;
   isGameHelpCollapsed?: boolean;
   practiceSettings?: PracticeSettings;
@@ -36,7 +38,9 @@ export const defaultComplementaryLanguages: ComplementaryLanguages = {
 const initialState: AppState = {
   assistantId: defaultAssistantId,
   complementaryLanguages: defaultComplementaryLanguages,
+  hasFinishExerciseLampBeenShown: false,
   hasGameHelpCoachmarkBeenShown: false,
+  hasHypersonicJumpLampBeenShown: false,
   interfaceLanguage: 'ru',
   isGameHelpCollapsed: false,
   practiceSettings: defaultPracticeSettings,
@@ -52,6 +56,12 @@ const appSlice = createSlice({
     },
     markGameHelpCoachmarkShown(state) {
       state.hasGameHelpCoachmarkBeenShown = true;
+    },
+    markFinishExerciseLampShown(state) {
+      state.hasFinishExerciseLampBeenShown = true;
+    },
+    markHypersonicJumpLampShown(state) {
+      state.hasHypersonicJumpLampBeenShown = true;
     },
     setAssistantId(state, action: PayloadAction<AssistantId>) {
       state.assistantId = action.payload;
@@ -111,7 +121,9 @@ const appSlice = createSlice({
 
 export const {
   acknowledgeGameHelp,
+  markFinishExerciseLampShown,
   markGameHelpCoachmarkShown,
+  markHypersonicJumpLampShown,
   setAssistantId,
   setComplementaryLanguageForTarget,
   setCorrectStreakCooldownMonths,

@@ -4,11 +4,11 @@ import { assistantCharacters } from '../assistants';
 import { supportedLanguages } from '../languages';
 
 describe('coachThoughts', () => {
-  it('keeps 100 localized character-specific phrases for every assistant', () => {
+  it('keeps localized character-specific standalone phrases for every assistant', () => {
     for (const assistant of assistantCharacters) {
       for (const language of supportedLanguages) {
-        expect(coachThoughts[assistant.id][language]).toHaveLength(100);
-        expect(new Set(coachThoughts[assistant.id][language]).size).toBe(100);
+        expect(coachThoughts[assistant.id][language]).toHaveLength(20);
+        expect(new Set(coachThoughts[assistant.id][language]).size).toBe(20);
       }
     }
   });
@@ -33,5 +33,24 @@ describe('coachThoughts', () => {
         }
       }
     }
+  });
+
+  it('does not combine two standalone character sayings into one thought', () => {
+    expect(coachThoughts.studyTroll.ru).toContain(
+      'Крепкая голова проходит даже через туман.',
+    );
+    expect(coachThoughts.studyTroll.ru).toContain(
+      'У следующей попытки уже лучше опора.',
+    );
+    expect(coachThoughts.studyTroll.ru).not.toContain(
+      'Крепкая голова проходит даже через туман: у следующей попытки уже лучше опора.',
+    );
+
+    expect(coachThoughts.studyTroll.en).not.toContain(
+      'A sturdy mind keeps walking through fog: your next attempt has better footing.',
+    );
+    expect(coachThoughts.studyTroll.es).not.toContain(
+      'Una cabeza firme cruza incluso la niebla: el siguiente intento ya pisa mejor.',
+    );
   });
 });

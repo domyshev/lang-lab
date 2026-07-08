@@ -45,6 +45,7 @@ export function CursorAnchoredTooltip({
   arrowDataTest,
   children,
   closeOnOtherOpen = false,
+  hideArrow = false,
   leaveDelay = 0,
   placement = 'top',
   preventOverflow = false,
@@ -55,6 +56,7 @@ export function CursorAnchoredTooltip({
   arrowDataTest: string;
   children: ReactElement;
   closeOnOtherOpen?: boolean;
+  hideArrow?: boolean;
   leaveDelay?: number;
   placement?: TooltipPlacement;
   preventOverflow?: boolean;
@@ -64,14 +66,17 @@ export function CursorAnchoredTooltip({
 }) {
   const instanceId = useId();
   const bridgeHoveredRef = useRef(false);
+  const lastAnchorPositionRef = useRef<TooltipAnchorPosition | null>(null);
   const tooltipHoveredRef = useRef(false);
   const [anchorPosition, setAnchorPosition] =
     useState<TooltipAnchorPosition | null>(null);
+  const [isImmediateClose, setIsImmediateClose] = useState(false);
   const [isTriggerHovered, setIsTriggerHovered] = useState(false);
 
-  const closeTooltip = useCallback(() => {
+  const closeTooltip = useCallback((immediate = false) => {
     bridgeHoveredRef.current = false;
     tooltipHoveredRef.current = false;
+    setIsImmediateClose(immediate);
     setAnchorPosition(null);
     setIsTriggerHovered(false);
   }, []);
@@ -88,24 +93,25 @@ export function CursorAnchoredTooltip({
     };
   }, [closeOnOtherOpen, closeTooltip, instanceId]);
 
+  const tooltipAnchorPosition = anchorPosition ?? lastAnchorPositionRef.current;
   const virtualAnchor = useMemo(
     () =>
-      anchorPosition
+      tooltipAnchorPosition
         ? {
             getBoundingClientRect: () => ({
-              bottom: anchorPosition.y,
+              bottom: tooltipAnchorPosition.y,
               height: 0,
-              left: anchorPosition.x,
-              right: anchorPosition.x,
-              top: anchorPosition.y,
+              left: tooltipAnchorPosition.x,
+              right: tooltipAnchorPosition.x,
+              top: tooltipAnchorPosition.y,
               width: 0,
-              x: anchorPosition.x,
-              y: anchorPosition.y,
+              x: tooltipAnchorPosition.x,
+              y: tooltipAnchorPosition.y,
               toJSON: () => undefined,
             }),
           }
         : undefined,
-    [anchorPosition],
+    [tooltipAnchorPosition],
   );
   const tooltipSlotProps = useMemo(
     () => ({
@@ -113,6 +119,7 @@ export function CursorAnchoredTooltip({
         'data-test': arrowDataTest,
         sx: {
           color: '#ffffff',
+          display: hideArrow ? 'none' : undefined,
           '&:before': {
             border: '1px solid rgba(32, 48, 21, 0.14)',
           },
@@ -125,7 +132,7 @@ export function CursorAnchoredTooltip({
             {
               name: 'offset',
               options: {
-                offset: [0, 8],
+                offset: [0, hideArrow ? 14 : 8],
               },
             },
             {
@@ -145,10 +152,16 @@ export function CursorAnchoredTooltip({
         },
       },
       ...(transitionTimeout === undefined
-        ? {}
+        ? isImmediateClose
+          ? {
+              transition: {
+                timeout: 0,
+              },
+            }
+          : {}
         : {
             transition: {
-              timeout: transitionTimeout,
+              timeout: isImmediateClose ? 0 : transitionTimeout,
             },
           }),
       tooltip: {
@@ -165,6 +178,8 @@ export function CursorAnchoredTooltip({
     [
       arrowDataTest,
       closeTooltip,
+      hideArrow,
+      isImmediateClose,
       preventOverflow,
       tooltipSx,
       transitionTimeout,
@@ -190,16 +205,19 @@ export function CursorAnchoredTooltip({
         return;
       }
 
+      setIsImmediateClose(false);
+
       if (closeOnOtherOpen) {
         flushSync(() => {
           for (const [tooltipId, closeOtherTooltip] of cursorTooltipClosers) {
             if (tooltipId !== instanceId) {
-              closeOtherTooltip();
+              closeOtherTooltip(true);
             }
           }
         });
       }
 
+      lastAnchorPositionRef.current = nextPosition;
       setAnchorPosition(nextPosition);
     },
     [anchorPosition, closeOnOtherOpen, instanceId],
@@ -235,7 +253,7 @@ export function CursorAnchoredTooltip({
         open={Boolean(anchorPosition)}
         placement={placement}
         slotProps={tooltipSlotProps}
-        title={anchorPosition ? title : ''}
+        title={isImmediateClose ? '' : title}
       >
         {cloneElement(children, {
           'data-anchor-x': anchorPosition?.x ?? '',
@@ -277,7 +295,7 @@ export function CursorAnchoredTooltip({
   );
 }
 
-const cursorTooltipClosers = new Map<string, () => void>();
+const cursorTooltipClosers = new Map<string, (immediate?: boolean) => void>();
 
 function getTooltipBridgeSx(
   anchorPosition: TooltipAnchorPosition,

@@ -437,15 +437,9 @@ export function getCoachThought(
 }
 
 function buildThoughts(openings: string[], endings: string[]): string[] {
-  return openings.flatMap((opening) =>
-    endings.map((ending) => `${opening}: ${lowercaseFirst(stripPeriod(ending))}.`),
-  );
+  return [...openings, ...endings].map(ensurePeriod);
 }
 
-function stripPeriod(value: string): string {
-  return value.replace(/\.$/, '');
-}
-
-function lowercaseFirst(value: string): string {
-  return value.charAt(0).toLocaleLowerCase() + value.slice(1);
+function ensurePeriod(value: string): string {
+  return value.endsWith('.') ? value : `${value}.`;
 }

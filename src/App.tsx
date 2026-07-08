@@ -83,7 +83,9 @@ import { saveAttempt } from './store/attemptsSlice';
 import {
   acknowledgeGameHelp,
   getComplementaryLanguageForTarget,
+  markFinishExerciseLampShown,
   markGameHelpCoachmarkShown,
+  markHypersonicJumpLampShown,
 } from './store/appSlice';
 import { seedDefaultCards } from './store/cardsSlice';
 import { recordAttemptStats } from './store/statsSlice';
@@ -1577,6 +1579,14 @@ function FinishExerciseAction({
   jumpSelector?: FinishExerciseJumpSelector;
   onClick: () => void;
 }) {
+  const dispatch = useDispatch<AppDispatch>();
+  const hasFinishExerciseLampBeenShown = useSelector((state: RootState) =>
+    Boolean(state.app.hasFinishExerciseLampBeenShown),
+  );
+  const hasHypersonicJumpLampBeenShown = useSelector((state: RootState) =>
+    Boolean(state.app.hasHypersonicJumpLampBeenShown),
+  );
+
   return (
     <Box
       data-test="exercise_finish_action__root"
@@ -1631,14 +1641,71 @@ function FinishExerciseAction({
           },
         }}
       >
-        <TipsAndUpdatesOutlinedIcon
-          data-test="exercise_finish_action__thought_icon"
-          sx={{
-            color: '#7b5fc4',
-            fontSize: 24,
-            mt: 0.1,
-          }}
-        />
+        <CursorAnchoredTooltip
+          arrowDataTest="exercise_finish_action__thought_icon_tooltip_arrow"
+          closeOnOtherOpen
+          hideArrow
+          title={
+            <TooltipContent sx={jumpInfoTooltipContentStyles}>
+              {t(interfaceLanguage, 'finishExerciseHypersonicJumpTooltip')}
+            </TooltipContent>
+          }
+          tooltipSx={jumpInfoTooltipStyles}
+        >
+          <Box
+            aria-label={t(interfaceLanguage, 'finishExerciseHypersonicJumpTooltip')}
+            data-test="exercise_finish_action__thought_icon_anchor"
+            onMouseEnter={() => {
+              if (!hasHypersonicJumpLampBeenShown) {
+                dispatch(markHypersonicJumpLampShown());
+              }
+            }}
+            role="img"
+            sx={{
+              alignItems: 'center',
+              animation: hasHypersonicJumpLampBeenShown
+                ? 'none'
+                : lampPulseAnimation,
+              background:
+                'radial-gradient(circle at 45% 35%, #fff7b8 0%, #ffe27a 44%, #b99cff 100%)',
+              border: '1px solid rgba(123, 95, 196, 0.32)',
+              borderRadius: '999px',
+              boxShadow:
+                '0 0 0 3px rgba(255, 226, 122, 0.22), 0 10px 22px rgba(123, 95, 196, 0.20)',
+              color: '#7b5fc4',
+              display: 'inline-flex',
+              height: 34,
+              justifyContent: 'center',
+              mt: 0.1,
+              position: 'relative',
+              transition: 'transform 160ms ease, box-shadow 160ms ease',
+              width: 34,
+              '&:hover': {
+                animation: 'none',
+                boxShadow:
+                  '0 0 0 4px rgba(255, 226, 122, 0.32), 0 12px 26px rgba(123, 95, 196, 0.26)',
+                transform: 'translateY(-1px) scale(1.04)',
+              },
+              '@keyframes hypersonicJumpLampPulse': {
+                '0%, 100%': {
+                  boxShadow:
+                    '0 0 0 3px rgba(255, 226, 122, 0.22), 0 10px 22px rgba(123, 95, 196, 0.20)',
+                  filter: 'brightness(1)',
+                },
+                '50%': {
+                  boxShadow:
+                    '0 0 0 5px rgba(255, 226, 122, 0.34), 0 14px 30px rgba(123, 95, 196, 0.28)',
+                  filter: 'brightness(1.12)',
+                },
+              },
+            }}
+          >
+            <TipsAndUpdatesOutlinedIcon
+              data-test="exercise_finish_action__thought_icon"
+              sx={{ fontSize: 24 }}
+            />
+          </Box>
+        </CursorAnchoredTooltip>
         <Stack spacing={1} sx={{ minWidth: 0 }}>
           <Typography
             data-test="exercise_finish_action__note"
@@ -1710,19 +1777,72 @@ function FinishExerciseAction({
           )}
         </Stack>
       </Box>
-      <Button
-        data-test="app__finish_exercise_button"
-        variant="outlined"
-        color="error"
-        onClick={onClick}
+      <Box
+        data-test="exercise_finish_action__finish_button_slot"
         sx={{
           alignSelf: 'center',
+          display: 'inline-flex',
           flexShrink: 0,
           justifySelf: { xs: 'start', md: 'end' },
+          position: 'relative',
         }}
       >
-        {t(interfaceLanguage, 'finishExercise')}
-      </Button>
+        <CursorAnchoredTooltip
+          arrowDataTest="exercise_finish_action__finish_button_tip_tooltip_arrow"
+          closeOnOtherOpen
+          hideArrow
+          title={
+            <TooltipContent sx={jumpInfoTooltipContentStyles}>
+              {t(interfaceLanguage, 'finishExerciseAnytimeTooltip')}
+            </TooltipContent>
+          }
+          tooltipSx={jumpInfoTooltipStyles}
+        >
+          <IconButton
+            aria-label={t(interfaceLanguage, 'finishExerciseAnytimeTooltip')}
+            data-test="exercise_finish_action__finish_button_tip_anchor"
+            onMouseEnter={() => {
+              if (!hasFinishExerciseLampBeenShown) {
+                dispatch(markFinishExerciseLampShown());
+              }
+            }}
+            size="small"
+            sx={{
+              animation: hasFinishExerciseLampBeenShown ? 'none' : lampPulseAnimation,
+              background:
+                'radial-gradient(circle at 45% 35%, #fff7b8 0%, #ffe27a 44%, #b99cff 100%)',
+              border: '1px solid rgba(123, 95, 196, 0.32)',
+              borderRadius: '999px',
+              boxShadow:
+                '0 0 0 3px rgba(255, 226, 122, 0.22), 0 10px 22px rgba(123, 95, 196, 0.20)',
+              color: '#7b5fc4',
+              left: '50%',
+              position: 'absolute',
+              top: -40,
+              transform: 'translateX(-50%)',
+              zIndex: 1,
+              '&:hover': {
+                animation: 'none',
+                boxShadow:
+                  '0 0 0 4px rgba(255, 226, 122, 0.32), 0 12px 26px rgba(123, 95, 196, 0.26)',
+              },
+            }}
+          >
+            <TipsAndUpdatesOutlinedIcon
+              data-test="exercise_finish_action__finish_button_tip_icon"
+              fontSize="small"
+            />
+          </IconButton>
+        </CursorAnchoredTooltip>
+        <Button
+          data-test="app__finish_exercise_button"
+          variant="outlined"
+          color="error"
+          onClick={onClick}
+        >
+          {t(interfaceLanguage, 'finishExercise')}
+        </Button>
+      </Box>
     </Box>
   );
 }
@@ -1751,6 +1871,8 @@ function JumpInfoTooltip({
           bgcolor: 'rgba(123, 95, 196, 0.10)',
           border: '1px solid rgba(123, 95, 196, 0.28)',
           color: '#6e56b5',
+          // Keep this info icon in the DOM for future jump guidance; do not delete it.
+          display: 'none',
           flex: '0 0 auto',
           '&:hover': {
             bgcolor: 'rgba(123, 95, 196, 0.16)',
@@ -1763,22 +1885,54 @@ function JumpInfoTooltip({
   );
 }
 
+const lampPulseAnimation = 'hypersonicJumpLampPulse 1100ms ease-in-out infinite';
+
 const jumpInfoTooltipStyles = {
-  bgcolor: '#ffffff',
-  border: '1px solid rgba(32, 48, 21, 0.16)',
-  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
-  color: '#203015',
-  maxWidth: 320,
-  px: 1.5,
-  py: 1.25,
+  background:
+    'linear-gradient(135deg, #fffaf0 0%, #fff7c7 48%, #f4edff 100%)',
+  border: '1px solid rgba(123, 95, 196, 0.24)',
+  borderRadius: '24px 24px 24px 10px',
+  boxShadow:
+    '0 14px 30px rgba(73, 48, 124, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.58)',
+  color: '#4b3a70',
+  maxWidth: 340,
+  overflow: 'visible',
+  position: 'relative',
+  px: 1.75,
+  py: 1.35,
+  '&::before': {
+    bgcolor: '#ffe27a',
+    border: '1px solid rgba(123, 95, 196, 0.18)',
+    borderRadius: '999px',
+    bottom: -8,
+    boxShadow: '0 5px 12px rgba(73, 48, 124, 0.10)',
+    content: '""',
+    height: 9,
+    left: 'calc(50% - 16px)',
+    position: 'absolute',
+    width: 9,
+  },
+  '&::after': {
+    bgcolor: '#b99cff',
+    border: '1px solid rgba(123, 95, 196, 0.14)',
+    borderRadius: '999px',
+    bottom: -15,
+    boxShadow: '0 4px 10px rgba(73, 48, 124, 0.08)',
+    content: '""',
+    height: 6,
+    left: 'calc(50% - 3px)',
+    position: 'absolute',
+    width: 6,
+  },
 };
 
 const jumpInfoTooltipContentStyles = {
-  bgcolor: '#ffffff',
-  color: '#203015',
-  fontSize: 15,
-  fontWeight: 750,
-  lineHeight: 1.35,
+  bgcolor: 'transparent',
+  color: '#4b3a70',
+  fontFamily: '"Trebuchet MS", "Verdana", "Arial", sans-serif',
+  fontSize: 13.5,
+  fontWeight: 600,
+  lineHeight: 1.38,
 };
 
 function ExerciseCompletePanel({

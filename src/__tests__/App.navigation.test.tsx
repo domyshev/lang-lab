@@ -786,7 +786,7 @@ describe('App navigation', () => {
 
   it('keeps missing letters on the answered word and shows the correct answer result', async () => {
     const user = userEvent.setup();
-    renderApp();
+    const store = renderApp();
 
     await startExercise(user, 'Пропущенные буквы');
 
@@ -799,17 +799,68 @@ describe('App navigation', () => {
     });
     const thoughtBubble = screen.getByTestId('exercise_finish_action__thought_bubble');
     expect(thoughtBubble).toHaveTextContent(
-      'Можно закончить упражнение в любой момент - уже выполненный результат будет зачтен.',
+      'Можно делать гиперзвуковые прыжки между вопросами.',
     );
     expect(screen.getByTestId('exercise_finish_action__thought_icon')).toBeInTheDocument();
+    expect(screen.getByTestId('exercise_finish_action__thought_icon_anchor')).toHaveStyle({
+      animation: 'hypersonicJumpLampPulse 1100ms ease-in-out infinite',
+      borderRadius: '999px',
+    });
+    await user.hover(screen.getByTestId('exercise_finish_action__thought_icon_anchor'));
+    expect(
+      await screen.findByText(/Гиперзвуковой прыжок переносит тебя/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId('exercise_finish_action__thought_icon_tooltip_arrow'),
+    ).toHaveStyle({
+      display: 'none',
+    });
+    await waitFor(() =>
+      expect(store.getState().app.hasHypersonicJumpLampBeenShown).toBe(true),
+    );
+    expect(screen.getByTestId('exercise_finish_action__thought_icon_anchor')).toHaveStyle({
+      animation: 'none',
+    });
     expect(thoughtBubble).not.toContainElement(
       screen.getByTestId('app__finish_exercise_button'),
     );
-    expect(within(thoughtBubble).getByRole('combobox', { name: 'Прыжки' })).toBeInTheDocument();
-    await user.hover(screen.getByTestId('exercise_finish_action__jump_info_anchor'));
+    const finishButtonSlot = screen.getByTestId(
+      'exercise_finish_action__finish_button_slot',
+    );
+    expect(finishButtonSlot).toContainElement(
+      screen.getByTestId('app__finish_exercise_button'),
+    );
+    expect(finishButtonSlot).toHaveStyle({
+      position: 'relative',
+    });
     expect(
-      await screen.findByText(/Любишь прыжки в пространстве\?/),
+      screen.getByTestId('exercise_finish_action__finish_button_tip_anchor'),
+    ).toHaveStyle({
+      position: 'absolute',
+    });
+    await user.hover(
+      screen.getByTestId('exercise_finish_action__finish_button_tip_anchor'),
+    );
+    expect(
+      await screen.findByText(/Можно закончить упражнение в любой момент/),
     ).toBeInTheDocument();
+    expect(
+      screen.getByTestId('exercise_finish_action__finish_button_tip_tooltip_arrow'),
+    ).toHaveStyle({
+      display: 'none',
+    });
+    await waitFor(() =>
+      expect(store.getState().app.hasFinishExerciseLampBeenShown).toBe(true),
+    );
+    expect(
+      screen.getByTestId('exercise_finish_action__finish_button_tip_anchor'),
+    ).toHaveStyle({
+      animation: 'none',
+    });
+    expect(within(thoughtBubble).getByRole('combobox', { name: 'Прыжки' })).toBeInTheDocument();
+    expect(screen.getByTestId('exercise_finish_action__jump_info_anchor')).toHaveStyle({
+      display: 'none',
+    });
     const firstPrompt = getVisibleMissingLettersPrompt();
     expect(
       screen.getByLabelText('Статистика по слову: Верно 0, Неверно 0'),
@@ -1244,7 +1295,7 @@ describe('App navigation', () => {
     expect(
       within(exerciseHeader).getByTestId('exercise_finish_action__note'),
     ).toHaveTextContent(
-      'Можно закончить упражнение в любой момент - уже выполненный результат будет зачтен.',
+      'Можно делать гиперзвуковые прыжки между вопросами.',
     );
     expect(
       screen.queryByRole('button', { name: 'Выберите игру' }),

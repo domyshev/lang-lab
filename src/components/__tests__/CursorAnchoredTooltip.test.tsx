@@ -46,4 +46,36 @@ describe('CursorAnchoredTooltip', () => {
       width: '118px',
     });
   });
+
+  it('keeps tooltip content during the close transition', async () => {
+    render(
+      <CursorAnchoredTooltip
+        arrowDataTest="closing_tooltip_arrow"
+        placement="right-start"
+        title={
+          <TooltipContent sx={{ bgcolor: '#ffffff', p: 1 }}>
+            Details stay visible while closing
+          </TooltipContent>
+        }
+        tooltipSx={{ bgcolor: '#ffffff' }}
+        transitionTimeout={400}
+      >
+        <Box data-test="closing_tooltip_anchor">hover me</Box>
+      </CursorAnchoredTooltip>,
+    );
+
+    const anchor = screen.getByTestId('closing_tooltip_anchor');
+
+    fireEvent.mouseOver(anchor, { clientX: 220, clientY: 120 });
+
+    expect(
+      await screen.findByText('Details stay visible while closing'),
+    ).toBeInTheDocument();
+
+    fireEvent.mouseLeave(anchor, { clientX: 20, clientY: 20 });
+
+    expect(screen.getByRole('tooltip')).toHaveTextContent(
+      'Details stay visible while closing',
+    );
+  });
 });
