@@ -1,4 +1,5 @@
-import { type ReactElement, useMemo, useState } from 'react';
+import { type ReactElement, useMemo, useRef, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import AddIcon from '@mui/icons-material/Add';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import {
@@ -41,6 +42,7 @@ export function CardSetDetailView() {
   const [isEditingCards, setIsEditingCards] = useState(false);
   const [draftCardIds, setDraftCardIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const cardsListRef = useRef<HTMLDivElement | null>(null);
   const cards = useSelector((state: RootState) => state.cards.cards);
   const targetLanguage = useSelector(
     (state: RootState) => state.app.targetLanguage,
@@ -121,6 +123,27 @@ export function CardSetDetailView() {
       getCardLabel(right, targetLanguage, interfaceLanguage),
     );
   });
+  const shouldVirtualizeCards = sortedCardSetCards.length > 100;
+  const cardRowEstimatedSize = 126;
+  const cardRowVirtualizer = useVirtualizer({
+    count: sortedCardSetCards.length,
+    estimateSize: () => cardRowEstimatedSize,
+    getItemKey: (index) => sortedCardSetCards[index]?.id ?? index,
+    getScrollElement: () => cardsListRef.current,
+    initialRect: { height: 720, width: 960 },
+    overscan: 8,
+  });
+  const virtualCardRows = shouldVirtualizeCards
+    ? cardRowVirtualizer.getVirtualItems()
+    : [];
+  const displayedVirtualCardRows =
+    shouldVirtualizeCards && virtualCardRows.length === 0
+      ? sortedCardSetCards.slice(0, 16).map((card, index) => ({
+          index,
+          key: card.id,
+          start: index * cardRowEstimatedSize,
+        }))
+      : virtualCardRows;
 
   const handleEditButtonClick = () => {
     if (isAllCardsSelected) {
@@ -155,6 +178,169 @@ export function CardSetDetailView() {
       current.includes(cardId)
         ? current.filter((item) => item !== cardId)
         : [...current, cardId],
+    );
+  };
+
+  const renderCardRow = (card: LanguageCard) => {
+    const answer = getDisplayAnswer(card, targetLanguage, interfaceLanguage);
+    const translationNote = getTranslationNote({
+      card,
+      interfaceLanguage,
+      targetLanguage,
+    });
+    const isPhrase = isPhraseCard(card, targetLanguage);
+    const isDraftSelected = draftCardIdSet.has(card.id);
+    const isAlreadyInCardSet = isEditingCards
+      ? isDraftSelected
+      : existingCardSetCardIds.has(card.id);
+    const stats = cardStatsById.get(card.id);
+    const statsLabel = t(
+      interfaceLanguage,
+      isPhrase ? 'phraseStats' : 'wordStats',
+    );
+
+    return (
+      <Box
+        data-test={`card_set_detail__card_item__${card.id}`}
+        key={card.id}
+        sx={{
+          border: '1px solid',
+          borderColor: isAlreadyInCardSet
+            ? 'rgba(111, 75, 216, 0.52)'
+            : 'rgba(32, 48, 21, 0.14)',
+          borderLeft: '4px solid',
+          borderLeftColor: isAlreadyInCardSet ? '#6f4bd8' : 'primary.main',
+          borderRadius: 1,
+          bgcolor: isAlreadyInCardSet
+            ? 'rgba(111, 75, 216, 0.045)'
+            : 'background.paper',
+          p: 1.5,
+        }}
+      >
+        <Stack data-test={`card_set_detail__card_content__${card.id}`} spacing={1}>
+          <Stack
+            data-test={`card_set_detail__card_header__${card.id}`}
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1}
+            alignItems={{ xs: 'flex-start', sm: 'center' }}
+            justifyContent="space-between"
+            useFlexGap
+            sx={{ flexWrap: 'wrap', minWidth: 0, width: '100%' }}
+          >
+            <Stack
+              data-test={`card_set_detail__card_identity__${card.id}`}
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: 'flex-start',
+                flex: '1 1 360px',
+                minWidth: 0,
+              }}
+            >
+              {isEditingCards && !isAllCardsSelected && (
+                <Stack
+                  data-test={`card_set_detail__card_select_control__${card.id}`}
+                  direction="row"
+                  spacing={0.75}
+                  sx={{ alignItems: 'center', flexShrink: 0 }}
+                >
+                  <Checkbox
+                    checked={isDraftSelected}
+                    onChange={() => handleDraftCardToggle(card.id)}
+                    slotProps={{
+                      input: {
+                        'data-test': `card_set_detail__card_select_checkbox__${card.id}`,
+                      } as Record<string, string>,
+                    }}
+                    sx={{
+                      color: '#6f4bd8',
+                      p: 0.5,
+                      '&.Mui-checked': { color: '#6f4bd8' },
+                    }}
+                  />
+                </Stack>
+              )}
+              <Box
+                data-test={`card_set_detail__card_text_block__${card.id}`}
+                sx={{ minWidth: 0 }}
+              >
+                <Typography
+                  data-test={`card_set_detail__card_answer__${card.id}`}
+                  fontWeight={800}
+                  sx={{
+                    overflowWrap: 'anywhere',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {answer.text}
+                </Typography>
+                <Typography
+                  color="text.secondary"
+                  data-test={`card_set_detail__card_language_note__${card.id}`}
+                  sx={{
+                    overflowWrap: 'anywhere',
+                    wordBreak: 'break-word',
+                  }}
+                  variant="body2"
+                >
+                  {answer.isFallback
+                    ? t(interfaceLanguage, 'fallbackTranslationShown')
+                    : translationNote}
+                </Typography>
+              </Box>
+            </Stack>
+            <Stack
+              data-test={`card_set_detail__card_meta__${card.id}`}
+              direction="row"
+              spacing={1}
+              flexWrap="wrap"
+              useFlexGap
+              sx={{
+                alignItems: 'center',
+                flex: '0 1 auto',
+                justifyContent: 'flex-end',
+                maxWidth: '100%',
+                minWidth: 0,
+              }}
+            >
+              <Chip
+                data-test={`card_set_detail__card_kind_chip__${card.id}`}
+                label={t(
+                  interfaceLanguage,
+                  isPhrase ? 'phraseLabel' : 'wordLabel',
+                )}
+                size="small"
+                variant="outlined"
+                sx={{
+                  borderColor: 'rgba(32, 48, 21, 0.28)',
+                  color: '#203015',
+                  fontWeight: 800,
+                  height: 30,
+                }}
+              />
+              <RecentCardStatsTooltip
+                dataTestPrefix={`card_set_detail__card_stats__${card.id}`}
+                interfaceLanguage={interfaceLanguage}
+                recentResults={getRecentCardResults({
+                  attempts: allAttempts,
+                  cardId: card.id,
+                  limit: 20,
+                  targetLanguage,
+                })}
+                subject={answer.text}
+              >
+                <SplitWordStatsChip
+                  correct={stats?.correct ?? 0}
+                  dataTestPrefix={`card_set_detail__card_stats__${card.id}`}
+                  incorrect={stats?.incorrect ?? 0}
+                  interfaceLanguage={interfaceLanguage}
+                  statsLabel={statsLabel}
+                />
+              </RecentCardStatsTooltip>
+            </Stack>
+          </Stack>
+        </Stack>
+      </Box>
     );
   };
 
@@ -278,9 +464,13 @@ export function CardSetDetailView() {
               : t(interfaceLanguage, 'addImportedCardsToStartCardSet')}
           </Typography>
         ) : (
-          <Stack
-            data-test={`card_set_detail__cards_list__${selectedCardSet.id}`}
-            spacing={1.25}
+          <Box
+            data-test={
+              shouldVirtualizeCards
+                ? `card_set_detail__virtualized_cards_list__${selectedCardSet.id}`
+                : `card_set_detail__cards_list__${selectedCardSet.id}`
+            }
+            ref={cardsListRef}
             sx={{
               flex: 1,
               minHeight: 0,
@@ -288,175 +478,44 @@ export function CardSetDetailView() {
               pr: 0.5,
             }}
           >
-            {sortedCardSetCards.map((card) => {
-              const answer = getDisplayAnswer(
-                card,
-                targetLanguage,
-                interfaceLanguage,
-              );
-              const translationNote = getTranslationNote({
-                card,
-                interfaceLanguage,
-                targetLanguage,
-              });
-              const isPhrase = isPhraseCard(card, targetLanguage);
-              const isDraftSelected = draftCardIdSet.has(card.id);
-              const isAlreadyInCardSet = isEditingCards
-                ? isDraftSelected
-                : existingCardSetCardIds.has(card.id);
-              const stats = cardStatsById.get(card.id);
-              const statsLabel = t(
-                interfaceLanguage,
-                isPhrase ? 'phraseStats' : 'wordStats',
-              );
+            {shouldVirtualizeCards ? (
+              <Box
+                sx={{
+                  height: `${cardRowVirtualizer.getTotalSize()}px`,
+                  position: 'relative',
+                  width: '100%',
+                }}
+              >
+                {displayedVirtualCardRows.map((virtualRow) => {
+                  const card = sortedCardSetCards[virtualRow.index];
+                  if (!card) {
+                    return null;
+                  }
 
-              return (
-                <Box
-                  data-test={`card_set_detail__card_item__${card.id}`}
-                  key={card.id}
-                  sx={{
-                    border: '1px solid',
-                    borderColor: isAlreadyInCardSet
-                      ? 'rgba(111, 75, 216, 0.52)'
-                      : 'rgba(32, 48, 21, 0.14)',
-                    borderLeft: '4px solid',
-                    borderLeftColor: isAlreadyInCardSet
-                      ? '#6f4bd8'
-                      : 'primary.main',
-                    borderRadius: 1,
-                    bgcolor: isAlreadyInCardSet
-                      ? 'rgba(111, 75, 216, 0.045)'
-                      : 'background.paper',
-                    p: 1.5,
-                  }}
-                >
-                  <Stack data-test={`card_set_detail__card_content__${card.id}`} spacing={1}>
-                    <Stack
-                      data-test={`card_set_detail__card_header__${card.id}`}
-                      direction={{ xs: 'column', sm: 'row' }}
-                      spacing={1}
-                      alignItems={{ xs: 'flex-start', sm: 'center' }}
-                      justifyContent="space-between"
-                      useFlexGap
-                      sx={{ flexWrap: 'wrap', minWidth: 0, width: '100%' }}
+                  return (
+                    <Box
+                      data-index={virtualRow.index}
+                      key={card.id}
+                      sx={{
+                        left: 0,
+                        pb: 1.25,
+                        position: 'absolute',
+                        top: 0,
+                        transform: `translateY(${virtualRow.start}px)`,
+                        width: '100%',
+                      }}
                     >
-                      <Stack
-                        data-test={`card_set_detail__card_identity__${card.id}`}
-                        direction="row"
-                        spacing={1}
-                        sx={{
-                          alignItems: 'flex-start',
-                          flex: '1 1 360px',
-                          minWidth: 0,
-                        }}
-                      >
-                        {isEditingCards && !isAllCardsSelected && (
-                          <Stack
-                            data-test={`card_set_detail__card_select_control__${card.id}`}
-                            direction="row"
-                            spacing={0.75}
-                            sx={{ alignItems: 'center', flexShrink: 0 }}
-                          >
-                            <Checkbox
-                              checked={isDraftSelected}
-                              onChange={() => handleDraftCardToggle(card.id)}
-                              slotProps={{
-                                input: {
-                                  'data-test': `card_set_detail__card_select_checkbox__${card.id}`,
-                                } as Record<string, string>,
-                              }}
-                              sx={{
-                                color: '#6f4bd8',
-                                p: 0.5,
-                                '&.Mui-checked': { color: '#6f4bd8' },
-                              }}
-                            />
-                          </Stack>
-                        )}
-                        <Box
-                          data-test={`card_set_detail__card_text_block__${card.id}`}
-                          sx={{ minWidth: 0 }}
-                        >
-                          <Typography
-                            data-test={`card_set_detail__card_answer__${card.id}`}
-                            fontWeight={800}
-                            sx={{
-                              overflowWrap: 'anywhere',
-                              wordBreak: 'break-word',
-                            }}
-                          >
-                            {answer.text}
-                          </Typography>
-                          <Typography
-                            color="text.secondary"
-                            data-test={`card_set_detail__card_language_note__${card.id}`}
-                            sx={{
-                              overflowWrap: 'anywhere',
-                              wordBreak: 'break-word',
-                            }}
-                            variant="body2"
-                          >
-                            {answer.isFallback
-                              ? t(interfaceLanguage, 'fallbackTranslationShown')
-                              : translationNote}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                      <Stack
-                        data-test={`card_set_detail__card_meta__${card.id}`}
-                        direction="row"
-                        spacing={1}
-                        flexWrap="wrap"
-                        useFlexGap
-                        sx={{
-                          alignItems: 'center',
-                          flex: '0 1 auto',
-                          justifyContent: 'flex-end',
-                          maxWidth: '100%',
-                          minWidth: 0,
-                        }}
-                      >
-                        <Chip
-                          data-test={`card_set_detail__card_kind_chip__${card.id}`}
-                          label={t(
-                            interfaceLanguage,
-                            isPhrase ? 'phraseLabel' : 'wordLabel',
-                          )}
-                          size="small"
-                          variant="outlined"
-                          sx={{
-                            borderColor: 'rgba(32, 48, 21, 0.28)',
-                            color: '#203015',
-                            fontWeight: 800,
-                            height: 30,
-                          }}
-                        />
-                        <RecentCardStatsTooltip
-                          dataTestPrefix={`card_set_detail__card_stats__${card.id}`}
-                          interfaceLanguage={interfaceLanguage}
-                          recentResults={getRecentCardResults({
-                            attempts: allAttempts,
-                            cardId: card.id,
-                            limit: 20,
-                            targetLanguage,
-                          })}
-                          subject={answer.text}
-                        >
-                          <SplitWordStatsChip
-                            correct={stats?.correct ?? 0}
-                            dataTestPrefix={`card_set_detail__card_stats__${card.id}`}
-                            incorrect={stats?.incorrect ?? 0}
-                            interfaceLanguage={interfaceLanguage}
-                            statsLabel={statsLabel}
-                          />
-                        </RecentCardStatsTooltip>
-                      </Stack>
-                    </Stack>
-                  </Stack>
-                </Box>
-              );
-            })}
-          </Stack>
+                      {renderCardRow(card)}
+                    </Box>
+                  );
+                })}
+              </Box>
+            ) : (
+              <Stack spacing={1.25}>
+                {sortedCardSetCards.map((card) => renderCardRow(card))}
+              </Stack>
+            )}
+          </Box>
         )}
       </Stack>
     </Paper>

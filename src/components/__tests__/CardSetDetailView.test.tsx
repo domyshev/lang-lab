@@ -276,6 +276,23 @@ describe('CardSetDetailView', () => {
       wordBreak: 'break-word',
     });
   });
+
+  it('virtualizes a large all-cards list instead of mounting every row', async () => {
+    const store = createStoreWithLargeCardList(2000);
+    const { container } = render(
+      <Provider store={store}>
+        <CardSetDetailView />
+      </Provider>,
+    );
+
+    expect(
+      screen.getByTestId('card_set_detail__virtualized_cards_list__all-cards'),
+    ).toBeInTheDocument();
+    expect(await screen.findByText('word 0000')).toBeInTheDocument();
+    expect(
+      getByDataTestPrefix(container, 'card_set_detail__card_item__').length,
+    ).toBeLessThan(80);
+  });
 });
 
 function getByDataTestPrefix(container: HTMLElement, prefix: string): HTMLElement[] {
@@ -378,6 +395,46 @@ function createStore({
       cardSets: {
         cardSets,
         selectedCardSetId,
+      },
+    },
+  });
+}
+
+function createStoreWithLargeCardList(count: number) {
+  return configureStore({
+    reducer: {
+      app: appReducer,
+      attempts: attemptsReducer,
+      cards: cardsReducer,
+      stats: statsReducer,
+      cardSets: cardSetsReducer,
+    },
+    preloadedState: {
+      app: {
+        assistantId: 'studyTroll' as const,
+        complementaryLanguages: { en: 'ru', ru: 'en', es: 'en' } as const,
+        interfaceLanguage: 'ru' as const,
+        targetLanguage: 'en' as const,
+      },
+      cards: {
+        cards: Array.from({ length: count }, (_, index) => ({
+          id: `large-card-${index}`,
+          translations: {
+            en: `word ${String(index).padStart(4, '0')}`,
+            ru: `слово ${String(index).padStart(4, '0')}`,
+            es: `palabra ${String(index).padStart(4, '0')}`,
+          },
+          createdAt: now,
+          updatedAt: now,
+        })),
+        duplicateProcessingHistory: [],
+        pendingDuplicates: [],
+      },
+      attempts: { attempts: [] },
+      stats: { cardStats: [] },
+      cardSets: {
+        cardSets: [],
+        selectedCardSetId: 'all-cards',
       },
     },
   });
