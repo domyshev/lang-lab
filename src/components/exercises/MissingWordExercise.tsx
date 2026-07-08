@@ -561,6 +561,10 @@ function getEditableAnswerIndexes(characters: string[]): number[] {
       return;
     }
 
+    if (!isLetter(character)) {
+      return;
+    }
+
     if (indexInWord % 2 === 1) {
       editableIndexes.push(index);
     }
@@ -568,6 +572,10 @@ function getEditableAnswerIndexes(characters: string[]): number[] {
   });
 
   return editableIndexes;
+}
+
+function isLetter(character: string): boolean {
+  return /^\p{L}$/u.test(character);
 }
 
 function focusNextEditableInput({

@@ -799,7 +799,7 @@ describe('App navigation', () => {
     });
     const thoughtBubble = screen.getByTestId('exercise_finish_action__thought_bubble');
     expect(thoughtBubble).toHaveTextContent(
-      'Можно делать гиперзвуковые прыжки между вопросами.',
+      'Можно делать гиперзвуковые прыжки между карточками.',
     );
     expect(screen.getByTestId('exercise_finish_action__thought_icon')).toBeInTheDocument();
     expect(screen.getByTestId('exercise_finish_action__thought_icon_anchor')).toHaveStyle({
@@ -1295,7 +1295,7 @@ describe('App navigation', () => {
     expect(
       within(exerciseHeader).getByTestId('exercise_finish_action__note'),
     ).toHaveTextContent(
-      'Можно делать гиперзвуковые прыжки между вопросами.',
+      'Можно делать гиперзвуковые прыжки между карточками.',
     );
     expect(
       screen.queryByRole('button', { name: 'Выберите игру' }),
@@ -1507,7 +1507,7 @@ describe('App navigation', () => {
     ).toBe(true);
   });
 
-  it('warns about entered crossword letters when finishing before a full word is answered', async () => {
+  it('closes a crossword without confirmation when no full word is answered', async () => {
     const user = userEvent.setup();
     const store = renderApp();
 
@@ -1516,22 +1516,41 @@ describe('App navigation', () => {
 
     await user.click(screen.getByRole('button', { name: 'Закончить упражнение' }));
 
-    expect(
-      await screen.findByText('В кроссворде уже введены буквы.'),
-    ).toBeInTheDocument();
-    expect(screen.getByText('Отвечено слов: 0')).toBeInTheDocument();
-    expect(
-      screen.getByText('Пока нет целых слов, поэтому в статистику нечего добавить.'),
-    ).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
-
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByTestId('card_set_library__panel')).toBeInTheDocument();
     expect(
       store
         .getState()
         .attempts.attempts.some((attempt) => attempt.exerciseType === 'crossword'),
     ).toBe(false);
+  });
+
+  it('does not show hypersonic jumps guidance in crossword exercises', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await startExercise(user, 'Кроссворд');
+
+    const crosswordHeader = screen.getByTestId('crossword_exercise__header');
+    expect(
+      within(crosswordHeader).getByRole('button', { name: 'Закончить упражнение' }),
+    ).toBeInTheDocument();
+    expect(
+      within(crosswordHeader).getByTestId(
+        'exercise_finish_action__finish_button_tip_anchor',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(crosswordHeader).queryByText(
+        'Можно делать гиперзвуковые прыжки между карточками.',
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      within(crosswordHeader).queryByTestId('exercise_finish_action__thought_bubble'),
+    ).not.toBeInTheDocument();
+    expect(
+      within(crosswordHeader).queryByRole('combobox', { name: 'Прыжки' }),
+    ).not.toBeInTheDocument();
   });
 
   it('counts only fully answered crossword words after submitting a partial crossword', async () => {

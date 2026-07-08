@@ -20,6 +20,8 @@ type TooltipAnchorPosition = {
   y: number;
 };
 
+type TooltipAnchorOrigin = 'pointer' | 'triggerTopLeft';
+
 type TooltipPlacement =
   | 'bottom'
   | 'bottom-end'
@@ -42,6 +44,7 @@ type TooltipChildHandlers = {
 };
 
 export function CursorAnchoredTooltip({
+  anchorOrigin = 'pointer',
   arrowDataTest,
   children,
   closeOnOtherOpen = false,
@@ -53,6 +56,7 @@ export function CursorAnchoredTooltip({
   transitionTimeout,
   tooltipSx,
 }: {
+  anchorOrigin?: TooltipAnchorOrigin;
   arrowDataTest: string;
   children: ReactElement;
   closeOnOtherOpen?: boolean;
@@ -197,7 +201,7 @@ export function CursorAnchoredTooltip({
 
   const openAtPointer = useCallback(
     (event: ReactMouseEvent<HTMLElement>) => {
-      const nextPosition = { x: event.clientX, y: event.clientY };
+      const nextPosition = getAnchorPosition(event, anchorOrigin);
 
       setIsTriggerHovered(true);
 
@@ -220,7 +224,7 @@ export function CursorAnchoredTooltip({
       lastAnchorPositionRef.current = nextPosition;
       setAnchorPosition(nextPosition);
     },
-    [anchorPosition, closeOnOtherOpen, instanceId],
+    [anchorOrigin, anchorPosition, closeOnOtherOpen, instanceId],
   );
 
   const handleClose = (event: SyntheticEvent | Event) => {
@@ -296,6 +300,18 @@ export function CursorAnchoredTooltip({
 }
 
 const cursorTooltipClosers = new Map<string, (immediate?: boolean) => void>();
+
+function getAnchorPosition(
+  event: ReactMouseEvent<HTMLElement>,
+  anchorOrigin: TooltipAnchorOrigin,
+): TooltipAnchorPosition {
+  if (anchorOrigin === 'triggerTopLeft') {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return { x: rect.left, y: rect.top };
+  }
+
+  return { x: event.clientX, y: event.clientY };
+}
 
 function getTooltipBridgeSx(
   anchorPosition: TooltipAnchorPosition,

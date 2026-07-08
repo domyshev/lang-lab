@@ -477,6 +477,14 @@ export function App() {
 
   function openFinishDialog(intent: 'finish' | 'home') {
     if (selectedExerciseType === 'crossword' && isExerciseStarted) {
+      if (crosswordDraftState.filledEntryCount === 0) {
+        resetExerciseState();
+        if (intent === 'home') {
+          setActiveSection('game');
+        }
+        return;
+      }
+
       setFinishDialogIntent(intent);
       setIsFinishDialogOpen(true);
       return;
@@ -1149,12 +1157,14 @@ export function App() {
 
   function renderFinishExerciseAction(
     jumpSelector?: FinishExerciseJumpSelector,
+    options?: { showHypersonicJumpGuide?: boolean },
   ) {
     return (
       <FinishExerciseAction
         interfaceLanguage={interfaceLanguage}
         jumpSelector={jumpSelector}
         onClick={() => openFinishDialog('finish')}
+        showHypersonicJumpGuide={options?.showHypersonicJumpGuide}
       />
     );
   }
@@ -1216,7 +1226,9 @@ export function App() {
             targetLanguage,
           })}
           cardSetName={selectedCardSet.name}
-          finishAction={renderFinishExerciseAction()}
+          finishAction={renderFinishExerciseAction(undefined, {
+            showHypersonicJumpGuide: false,
+          })}
           onFinish={resetExerciseState}
           onSubmit={(answers) =>
             saveCrosswordAttempt(exercisePreview.puzzle, answers)
@@ -1574,10 +1586,12 @@ function FinishExerciseAction({
   interfaceLanguage,
   jumpSelector,
   onClick,
+  showHypersonicJumpGuide = true,
 }: {
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   jumpSelector?: FinishExerciseJumpSelector;
   onClick: () => void;
+  showHypersonicJumpGuide?: boolean;
 }) {
   const dispatch = useDispatch<AppDispatch>();
   const hasFinishExerciseLampBeenShown = useSelector((state: RootState) =>
@@ -1594,189 +1608,195 @@ function FinishExerciseAction({
         alignItems: 'center',
         display: 'grid',
         gap: 1.25,
-        gridTemplateColumns: { xs: '1fr', md: 'minmax(260px, 1fr) auto' },
+        gridTemplateColumns: {
+          xs: '1fr',
+          md: showHypersonicJumpGuide ? 'minmax(260px, 1fr) auto' : 'auto',
+        },
         justifyItems: { xs: 'stretch', md: 'end' },
-        maxWidth: { xs: '100%', md: 560 },
+        maxWidth: { xs: '100%', md: showHypersonicJumpGuide ? 560 : 'max-content' },
         ml: { sm: 'auto' },
-        width: { xs: '100%', md: 'min(560px, 100%)' },
+        width: { xs: '100%', md: showHypersonicJumpGuide ? 'min(560px, 100%)' : 'auto' },
       }}
     >
-      <Box
-        data-test="exercise_finish_action__thought_bubble"
-        sx={{
-          alignItems: 'flex-start',
-          bgcolor: 'rgba(250, 246, 255, 0.96)',
-          border: '1px solid rgba(113, 82, 188, 0.24)',
-          borderRadius: '18px 18px 6px 18px',
-          boxShadow: '0 12px 28px rgba(73, 48, 124, 0.10)',
-          color: '#4b3a70',
-          display: 'grid',
-          gap: 1,
-          gridTemplateColumns: 'auto minmax(0, 1fr)',
-          justifySelf: 'stretch',
-          maxWidth: 390,
-          p: 1.25,
-          position: 'relative',
-          '&::before': {
+      {showHypersonicJumpGuide && (
+        <Box
+          data-test="exercise_finish_action__thought_bubble"
+          sx={{
+            alignItems: 'flex-start',
             bgcolor: 'rgba(250, 246, 255, 0.96)',
-            border: '1px solid rgba(113, 82, 188, 0.22)',
-            borderRadius: '999px',
-            bottom: -8,
-            content: '""',
-            height: 12,
-            position: 'absolute',
-            right: 36,
-            width: 12,
-          },
-          '&::after': {
-            bgcolor: 'rgba(250, 246, 255, 0.96)',
-            border: '1px solid rgba(113, 82, 188, 0.20)',
-            borderRadius: '999px',
-            bottom: -16,
-            content: '""',
-            height: 7,
-            position: 'absolute',
-            right: 24,
-            width: 7,
-          },
-        }}
-      >
-        <CursorAnchoredTooltip
-          arrowDataTest="exercise_finish_action__thought_icon_tooltip_arrow"
-          closeOnOtherOpen
-          hideArrow
-          title={
-            <TooltipContent sx={jumpInfoTooltipContentStyles}>
-              {t(interfaceLanguage, 'finishExerciseHypersonicJumpTooltip')}
-            </TooltipContent>
-          }
-          tooltipSx={jumpInfoTooltipStyles}
-        >
-          <Box
-            aria-label={t(interfaceLanguage, 'finishExerciseHypersonicJumpTooltip')}
-            data-test="exercise_finish_action__thought_icon_anchor"
-            onMouseEnter={() => {
-              if (!hasHypersonicJumpLampBeenShown) {
-                dispatch(markHypersonicJumpLampShown());
-              }
-            }}
-            role="img"
-            sx={{
-              alignItems: 'center',
-              animation: hasHypersonicJumpLampBeenShown
-                ? 'none'
-                : lampPulseAnimation,
-              background:
-                'radial-gradient(circle at 45% 35%, #fff7b8 0%, #ffe27a 44%, #b99cff 100%)',
-              border: '1px solid rgba(123, 95, 196, 0.32)',
+            border: '1px solid rgba(113, 82, 188, 0.24)',
+            borderRadius: '18px 18px 6px 18px',
+            boxShadow: '0 12px 28px rgba(73, 48, 124, 0.10)',
+            color: '#4b3a70',
+            display: 'grid',
+            gap: 1,
+            gridTemplateColumns: 'auto minmax(0, 1fr)',
+            justifySelf: 'stretch',
+            maxWidth: 390,
+            p: 1.25,
+            position: 'relative',
+            '&::before': {
+              bgcolor: 'rgba(250, 246, 255, 0.96)',
+              border: '1px solid rgba(113, 82, 188, 0.22)',
               borderRadius: '999px',
-              boxShadow:
-                '0 0 0 3px rgba(255, 226, 122, 0.22), 0 10px 22px rgba(123, 95, 196, 0.20)',
-              color: '#7b5fc4',
-              display: 'inline-flex',
-              height: 34,
-              justifyContent: 'center',
-              mt: 0.1,
-              position: 'relative',
-              transition: 'transform 160ms ease, box-shadow 160ms ease',
-              width: 34,
-              '&:hover': {
-                animation: 'none',
+              bottom: -8,
+              content: '""',
+              height: 12,
+              position: 'absolute',
+              right: 36,
+              width: 12,
+            },
+            '&::after': {
+              bgcolor: 'rgba(250, 246, 255, 0.96)',
+              border: '1px solid rgba(113, 82, 188, 0.20)',
+              borderRadius: '999px',
+              bottom: -16,
+              content: '""',
+              height: 7,
+              position: 'absolute',
+              right: 24,
+              width: 7,
+            },
+          }}
+        >
+          <CursorAnchoredTooltip
+            anchorOrigin="triggerTopLeft"
+            arrowDataTest="exercise_finish_action__thought_icon_tooltip_arrow"
+            closeOnOtherOpen
+            hideArrow
+            title={
+              <TooltipContent sx={jumpInfoTooltipContentStyles}>
+                {t(interfaceLanguage, 'finishExerciseHypersonicJumpTooltip')}
+              </TooltipContent>
+            }
+            tooltipSx={jumpInfoTooltipStyles}
+          >
+            <Box
+              aria-label={t(interfaceLanguage, 'finishExerciseHypersonicJumpTooltip')}
+              data-test="exercise_finish_action__thought_icon_anchor"
+              onMouseEnter={() => {
+                if (!hasHypersonicJumpLampBeenShown) {
+                  dispatch(markHypersonicJumpLampShown());
+                }
+              }}
+              role="img"
+              sx={{
+                alignItems: 'center',
+                animation: hasHypersonicJumpLampBeenShown
+                  ? 'none'
+                  : lampPulseAnimation,
+                background:
+                  'radial-gradient(circle at 45% 35%, #fff7b8 0%, #ffe27a 44%, #b99cff 100%)',
+                border: '1px solid rgba(123, 95, 196, 0.32)',
+                borderRadius: '999px',
                 boxShadow:
-                  '0 0 0 4px rgba(255, 226, 122, 0.32), 0 12px 26px rgba(123, 95, 196, 0.26)',
-                transform: 'translateY(-1px) scale(1.04)',
-              },
-              '@keyframes hypersonicJumpLampPulse': {
-                '0%, 100%': {
+                  '0 0 0 3px rgba(255, 226, 122, 0.22), 0 10px 22px rgba(123, 95, 196, 0.20)',
+                color: '#7b5fc4',
+                display: 'inline-flex',
+                height: 34,
+                justifyContent: 'center',
+                mt: 0.1,
+                position: 'relative',
+                transition: 'transform 160ms ease, box-shadow 160ms ease',
+                width: 34,
+                '&:hover': {
+                  animation: 'none',
                   boxShadow:
-                    '0 0 0 3px rgba(255, 226, 122, 0.22), 0 10px 22px rgba(123, 95, 196, 0.20)',
-                  filter: 'brightness(1)',
+                    '0 0 0 4px rgba(255, 226, 122, 0.32), 0 12px 26px rgba(123, 95, 196, 0.26)',
+                  transform: 'translateY(-1px) scale(1.04)',
                 },
-                '50%': {
-                  boxShadow:
-                    '0 0 0 5px rgba(255, 226, 122, 0.34), 0 14px 30px rgba(123, 95, 196, 0.28)',
-                  filter: 'brightness(1.12)',
+                '@keyframes hypersonicJumpLampPulse': {
+                  '0%, 100%': {
+                    boxShadow:
+                      '0 0 0 3px rgba(255, 226, 122, 0.22), 0 10px 22px rgba(123, 95, 196, 0.20)',
+                    filter: 'brightness(1)',
+                  },
+                  '50%': {
+                    boxShadow:
+                      '0 0 0 5px rgba(255, 226, 122, 0.34), 0 14px 30px rgba(123, 95, 196, 0.28)',
+                    filter: 'brightness(1.12)',
+                  },
                 },
-              },
-            }}
-          >
-            <TipsAndUpdatesOutlinedIcon
-              data-test="exercise_finish_action__thought_icon"
-              sx={{ fontSize: 24 }}
-            />
-          </Box>
-        </CursorAnchoredTooltip>
-        <Stack spacing={1} sx={{ minWidth: 0 }}>
-          <Typography
-            data-test="exercise_finish_action__note"
-            sx={{
-              color: '#4b3a70',
-              fontFamily:
-                '"Trebuchet MS", "Verdana", "Arial", sans-serif',
-              fontSize: 13.5,
-              fontStyle: 'italic',
-              fontWeight: 800,
-              letterSpacing: 0,
-              lineHeight: 1.25,
-              textAlign: 'left',
-            }}
-          >
-            {t(interfaceLanguage, 'finishExerciseAnytimeBenefit')}
-          </Typography>
-          {jumpSelector && (
-            <Stack
-              data-test="exercise_finish_action__jump_row"
-              direction="row"
-              spacing={0.75}
-              sx={{ alignItems: 'center', minWidth: 0 }}
+              }}
             >
-              <FormControl
-                data-test="exercise_finish_action__jump_control"
-                size="small"
-                sx={{ flex: '1 1 170px', minWidth: 150 }}
+              <TipsAndUpdatesOutlinedIcon
+                data-test="exercise_finish_action__thought_icon"
+                sx={{ fontSize: 24 }}
+              />
+            </Box>
+          </CursorAnchoredTooltip>
+          <Stack spacing={1} sx={{ minWidth: 0 }}>
+            <Typography
+              data-test="exercise_finish_action__note"
+              sx={{
+                color: '#4b3a70',
+                fontFamily:
+                  '"Trebuchet MS", "Verdana", "Arial", sans-serif',
+                fontSize: 13.5,
+                fontStyle: 'italic',
+                fontWeight: 800,
+                letterSpacing: 0,
+                lineHeight: 1.25,
+                textAlign: 'left',
+              }}
+            >
+              {t(interfaceLanguage, 'finishExerciseAnytimeBenefit')}
+            </Typography>
+            {jumpSelector && (
+              <Stack
+                data-test="exercise_finish_action__jump_row"
+                direction="row"
+                spacing={0.75}
+                sx={{ alignItems: 'center', minWidth: 0 }}
               >
-                <InputLabel id="exercise-finish-jump-select-label">
-                  {t(interfaceLanguage, 'exerciseJumps')}
-                </InputLabel>
-                <Select
-                  data-test="exercise_finish_action__jump_select"
-                  labelId="exercise-finish-jump-select-label"
-                  label={t(interfaceLanguage, 'exerciseJumps')}
-                  value={jumpSelector.value}
-                  onChange={(event: SelectChangeEvent<string>) =>
-                    jumpSelector.onChange(event.target.value)
-                  }
-                  sx={{
-                    bgcolor: 'rgba(255, 255, 255, 0.72)',
-                    borderRadius: 1,
-                    '& .MuiSelect-select': {
-                      fontSize: 13,
-                      fontWeight: 800,
-                      py: 0.75,
-                    },
-                  }}
+                <FormControl
+                  data-test="exercise_finish_action__jump_control"
+                  size="small"
+                  sx={{ flex: '1 1 170px', minWidth: 150 }}
                 >
-                  {jumpSelector.options.map((option) => (
-                    <MenuItem
-                      data-test={`exercise_finish_action__jump_option__${option.value}`}
-                      key={option.value}
-                      value={option.value}
-                      sx={{
-                        fontSize: 14,
+                  <InputLabel id="exercise-finish-jump-select-label">
+                    {t(interfaceLanguage, 'exerciseJumps')}
+                  </InputLabel>
+                  <Select
+                    data-test="exercise_finish_action__jump_select"
+                    labelId="exercise-finish-jump-select-label"
+                    label={t(interfaceLanguage, 'exerciseJumps')}
+                    value={jumpSelector.value}
+                    onChange={(event: SelectChangeEvent<string>) =>
+                      jumpSelector.onChange(event.target.value)
+                    }
+                    sx={{
+                      bgcolor: 'rgba(255, 255, 255, 0.72)',
+                      borderRadius: 1,
+                      '& .MuiSelect-select': {
+                        fontSize: 13,
                         fontWeight: 800,
-                        opacity: option.isAnswered ? 0.52 : 1,
-                      }}
-                    >
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <JumpInfoTooltip interfaceLanguage={interfaceLanguage} />
-            </Stack>
-          )}
-        </Stack>
-      </Box>
+                        py: 0.75,
+                      },
+                    }}
+                  >
+                    {jumpSelector.options.map((option) => (
+                      <MenuItem
+                        data-test={`exercise_finish_action__jump_option__${option.value}`}
+                        key={option.value}
+                        value={option.value}
+                        sx={{
+                          fontSize: 14,
+                          fontWeight: 800,
+                          opacity: option.isAnswered ? 0.52 : 1,
+                        }}
+                      >
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <JumpInfoTooltip interfaceLanguage={interfaceLanguage} />
+              </Stack>
+            )}
+          </Stack>
+        </Box>
+      )}
       <Box
         data-test="exercise_finish_action__finish_button_slot"
         sx={{
@@ -1788,6 +1808,7 @@ function FinishExerciseAction({
         }}
       >
         <CursorAnchoredTooltip
+          anchorOrigin="triggerTopLeft"
           arrowDataTest="exercise_finish_action__finish_button_tip_tooltip_arrow"
           closeOnOtherOpen
           hideArrow

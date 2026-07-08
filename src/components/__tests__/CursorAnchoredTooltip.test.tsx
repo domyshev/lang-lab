@@ -78,4 +78,46 @@ describe('CursorAnchoredTooltip', () => {
       'Details stay visible while closing',
     );
   });
+
+  it('can anchor the tooltip to the trigger top-left corner instead of the pointer', async () => {
+    render(
+      <CursorAnchoredTooltip
+        anchorOrigin="triggerTopLeft"
+        arrowDataTest="corner_tooltip_arrow"
+        title={
+          <TooltipContent sx={{ bgcolor: '#ffffff', p: 1 }}>
+            Corner anchored details
+          </TooltipContent>
+        }
+        tooltipSx={{ bgcolor: '#ffffff' }}
+      >
+        <Box data-test="corner_tooltip_anchor">hover me</Box>
+      </CursorAnchoredTooltip>,
+    );
+
+    const anchor = screen.getByTestId('corner_tooltip_anchor');
+    anchor.getBoundingClientRect = () => ({
+      bottom: 94,
+      height: 34,
+      left: 80,
+      right: 114,
+      top: 60,
+      width: 34,
+      x: 80,
+      y: 60,
+      toJSON: () => undefined,
+    });
+
+    fireEvent.mouseOver(anchor, { clientX: 110, clientY: 88 });
+
+    expect(await screen.findByRole('tooltip')).toBeInTheDocument();
+    expect(anchor).toHaveAttribute('data-anchor-x', '80');
+    expect(anchor).toHaveAttribute('data-anchor-y', '60');
+
+    fireEvent.mouseLeave(anchor, { clientX: 20, clientY: 20 });
+    fireEvent.mouseOver(anchor, { clientX: 86, clientY: 66 });
+
+    expect(anchor).toHaveAttribute('data-anchor-x', '80');
+    expect(anchor).toHaveAttribute('data-anchor-y', '60');
+  });
 });

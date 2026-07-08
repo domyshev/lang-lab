@@ -258,16 +258,16 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     finish: 'Finish',
     finishExercise: 'Finish exercise',
     finishExerciseAnytimeBenefit:
-      'You can make hypersonic jumps between questions.',
+      'You can make hypersonic jumps between cards.',
     finishExerciseAnytimeTooltip:
       'You can finish the exercise at any moment - completed answers will still count.',
     finishExerciseHypersonicJumpTooltip:
-      'A hypersonic jump moves you through space and bends the flow of time: the next question will be the one immediately after the question you choose.',
+      'A hypersonic jump moves you through space and bends the flow of time: the next card will be the one immediately after the card you choose.',
     finishExerciseNotice:
       'Exercise results will be counted and the exercise will end.',
     exerciseJumps: 'Jumps',
     exerciseJumpsTooltip:
-      'Do you like jumps through space? We have them too: jump to any word without losing your completed result.',
+      'Do you like jumps through space? We have them too: jump to any card without losing your completed result.',
     crosswordFinishExerciseNotice:
       'Completed crossword words will be counted and the game will end.',
     crosswordFinishHasLetters: 'The crossword already has entered letters.',
@@ -455,16 +455,16 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     finish: 'Закончить',
     finishExercise: 'Закончить упражнение',
     finishExerciseAnytimeBenefit:
-      'Можно делать гиперзвуковые прыжки между вопросами.',
+      'Можно делать гиперзвуковые прыжки между карточками.',
     finishExerciseAnytimeTooltip:
       'Можно закончить упражнение в любой момент - уже выполненный результат будет зачтен.',
     finishExerciseHypersonicJumpTooltip:
-      'Гиперзвуковой прыжок переносит тебя в пространстве и меняет ход времени: следующим вопросом станет тот, который идет сразу после выбранного.',
+      'Гиперзвуковой прыжок переносит тебя в пространстве и меняет ход времени: следующей карточкой станет та, которая идет сразу после выбранной.',
     finishExerciseNotice:
       'Результаты упражнения будут зачтены, а упражнение закончено.',
     exerciseJumps: 'Прыжки',
     exerciseJumpsTooltip:
-      'Любишь прыжки в пространстве? Вот и у нас есть: прыгай к любому слову, а уже выполненный результат не потеряется.',
+      'Любишь прыжки в пространстве? Вот и у нас есть: прыгай к любой карточке, а уже выполненный результат не потеряется.',
     crosswordFinishExerciseNotice:
       'Отвеченные слова попадут в статистику, а кроссворд будет закончен.',
     crosswordFinishHasLetters: 'В кроссворде уже введены буквы.',
@@ -653,16 +653,16 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     finish: 'Terminar',
     finishExercise: 'Terminar ejercicio',
     finishExerciseAnytimeBenefit:
-      'Puedes hacer saltos hipersonicos entre preguntas.',
+      'Puedes hacer saltos hipersonicos entre tarjetas.',
     finishExerciseAnytimeTooltip:
       'Puedes terminar el ejercicio en cualquier momento: las respuestas completadas contaran.',
     finishExerciseHypersonicJumpTooltip:
-      'Un salto hipersonico te mueve por el espacio y cambia el curso del tiempo: la siguiente pregunta sera la que va justo despues de la elegida.',
+      'Un salto hipersonico te mueve por el espacio y cambia el curso del tiempo: la siguiente tarjeta sera la que va justo despues de la elegida.',
     finishExerciseNotice:
       'Los resultados del ejercicio se guardaran y el ejercicio terminara.',
     exerciseJumps: 'Saltos',
     exerciseJumpsTooltip:
-      'Te gustan los saltos por el espacio? Aqui tambien hay: salta a cualquier palabra sin perder lo ya completado.',
+      'Te gustan los saltos por el espacio? Aqui tambien hay: salta a cualquier tarjeta sin perder lo ya completado.',
     crosswordFinishExerciseNotice:
       'Las palabras completas del crucigrama se guardaran y el juego terminara.',
     crosswordFinishHasLetters: 'El crucigrama ya tiene letras escritas.',

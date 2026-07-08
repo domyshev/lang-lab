@@ -135,6 +135,40 @@ describe('MissingWordExercise', () => {
     expect(onNext).toHaveBeenCalledOnce();
   });
 
+  it('keeps punctuation in a fixed cell instead of asking the user to type it', async () => {
+    const user = userEvent.setup();
+    const onAnswer = vi.fn();
+
+    render(
+      <Provider store={createStore()}>
+        <MissingWordExercise
+          prompt={{
+            cardId: 'the-end',
+            prompt: 'ru: конец',
+            expectedAnswer: 'the end.',
+            sentenceWithGap: 'This is _____.',
+            translationHints: [{ language: 'ru', value: 'конец' }],
+          }}
+          onAnswer={onAnswer}
+          onNext={vi.fn()}
+        />
+      </Provider>,
+    );
+
+    expect(screen.getAllByLabelText(/Missing word letter/)).toHaveLength(2);
+    expect(
+      screen.getByTestId('missing_word_exercise__answer_cells__the-end__fixed_cell__7'),
+    ).toHaveTextContent('.');
+
+    const inputs = screen.getAllByLabelText(/Missing word letter/);
+    await user.type(inputs[0], 'h');
+    await user.type(inputs[1], 'n');
+    await user.click(screen.getByRole('button', { name: 'Отправить' }));
+
+    expect(onAnswer).toHaveBeenCalledWith('the end.');
+    expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
+  });
+
   it('shows a green success state without repeating the correct phrase', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();
