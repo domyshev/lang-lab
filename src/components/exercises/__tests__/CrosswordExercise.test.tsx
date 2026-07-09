@@ -123,6 +123,61 @@ describe('CrosswordExercise', () => {
     expect(onFinish).toHaveBeenCalledOnce();
   });
 
+  it('centers the finish action vertically inside the crossword panel', () => {
+    render(
+      <CrosswordExercise
+        interfaceLanguage="ru"
+        finishAction={
+          <div data-test="crossword_test__finish_action">finish action</div>
+        }
+        puzzle={{
+          mode: 'words',
+          bounds: { minRow: 0, maxRow: 2, minCol: 0, maxCol: 2 },
+          cells: [
+            { row: 0, col: 0, solution: 'c', entryIds: ['cat'] },
+            { row: 0, col: 1, solution: 'a', entryIds: ['cat'] },
+            { row: 0, col: 2, solution: 't', entryIds: ['cat', 'tea'] },
+            { row: 1, col: 2, solution: 'e', entryIds: ['tea'] },
+            { row: 2, col: 2, solution: 'a', entryIds: ['tea'] },
+          ],
+          entries: [
+            {
+              cardId: 'cat',
+              answer: 'cat',
+              clue: 'ru: кот',
+              row: 0,
+              col: 0,
+              direction: 'across',
+            },
+            {
+              cardId: 'tea',
+              answer: 'tea',
+              clue: 'ru: чай',
+              row: 0,
+              col: 2,
+              direction: 'down',
+            },
+          ],
+        }}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    const finishActionSlot = screen.getByTestId(
+      'crossword_exercise__finish_action_slot',
+    );
+
+    expect(finishActionSlot).toContainElement(
+      screen.getByTestId('crossword_test__finish_action'),
+    );
+    expect(finishActionSlot).toHaveStyle({
+      position: 'absolute',
+      right: '16px',
+      top: '50%',
+      transform: 'translateY(-50%)',
+    });
+  });
+
   it('submits and colors only fully filled crossword words', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();

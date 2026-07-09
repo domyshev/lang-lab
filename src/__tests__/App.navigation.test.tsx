@@ -1694,11 +1694,16 @@ describe('App navigation', () => {
     await startExercise(user, 'Кроссворд');
 
     const crosswordHeader = screen.getByTestId('crossword_exercise__header');
+    const finishActionSlot = screen.getByTestId(
+      'crossword_exercise__finish_action_slot',
+    );
     expect(
-      within(crosswordHeader).getByRole('button', { name: 'Закончить упражнение' }),
+      within(finishActionSlot).getByRole('button', {
+        name: 'Закончить упражнение',
+      }),
     ).toBeInTheDocument();
     expect(
-      within(crosswordHeader).getByTestId(
+      within(finishActionSlot).getByTestId(
         'exercise_finish_action__finish_button_tip_anchor',
       ),
     ).toBeInTheDocument();

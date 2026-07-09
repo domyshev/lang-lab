@@ -170,7 +170,10 @@ export function CrosswordExercise({
   };
 
   return (
-    <Paper data-test="crossword_exercise__panel" sx={{ p: 2 }}>
+    <Paper
+      data-test="crossword_exercise__panel"
+      sx={{ p: 2, position: 'relative' }}
+    >
       <Stack data-test="crossword_exercise__content" spacing={2}>
         <Stack
           data-test="crossword_exercise__header"
@@ -228,8 +231,30 @@ export function CrosswordExercise({
               />
             </Stack>
           </Stack>
-          {finishAction}
         </Stack>
+
+        {finishAction && (
+          <Box
+            data-test="crossword_exercise__finish_action_slot"
+            style={{
+              position: 'absolute',
+              right: 16,
+              top: '50%',
+              transform: 'translateY(-50%)',
+            }}
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              zIndex: 2,
+              '@media (max-width: 899.95px)': {
+                justifyContent: 'flex-start',
+                mt: -0.5,
+              },
+            }}
+          >
+            {finishAction}
+          </Box>
+        )}
 
         <Box
           data-test="crossword_exercise__grid"
