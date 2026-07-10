@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { ALL_CARDS_CARD_SET_ID } from '../domain/cardSets';
+import { ALL_CARDS_CARD_SET_ID, getCardSetName } from '../domain/cardSets';
 import { formatCardCount, formatCardSetCount, t } from '../domain/i18n';
 import { addCardSet, archiveCardSet, selectCardSet } from '../store/cardSetsSlice';
 import { AppDispatch, RootState } from '../store/store';
@@ -31,6 +31,9 @@ export function CardSetListView({
   );
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
+  );
+  const targetLanguage = useSelector(
+    (state: RootState) => state.app.targetLanguage,
   );
   const [name, setName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -154,7 +157,7 @@ export function CardSetListView({
         >
           <CardSetTile
             id={ALL_CARDS_CARD_SET_ID}
-            name={t(interfaceLanguage, 'allCards')}
+            name={t(targetLanguage, 'allCards')}
             cardCount={cards.length}
             interfaceLanguage={interfaceLanguage}
             selected={
@@ -167,7 +170,7 @@ export function CardSetListView({
             <CardSetTile
               id={cardSet.id}
               key={cardSet.id}
-              name={cardSet.name}
+              name={getCardSetName(cardSet, targetLanguage)}
               cardCount={cardSet.cardIds.length}
               interfaceLanguage={interfaceLanguage}
               selected={cardSet.id === selectedCardSetId}

@@ -28,6 +28,7 @@ describe('CardSetLibraryPicker', () => {
         cards={cards}
         cardSets={cardSets}
         interfaceLanguage="ru"
+        targetLanguage="ru"
         selectedCardSetId="work-set"
         onSelect={vi.fn()}
       />,
@@ -53,12 +54,20 @@ describe('CardSetLibraryPicker', () => {
         cards={cards}
         cardSets={cardSets}
         interfaceLanguage="ru"
+        targetLanguage="ru"
         selectedCardSetId="all-cards"
         onSelect={vi.fn()}
       />,
     );
 
     fireEvent.wheel(screen.getByTestId('card_set_library__chips'), { deltaY: 120 });
+
+    expect(screen.getByTestId('card_set_library__carousel')).toHaveAttribute(
+      'data-featured-start-index',
+      '0',
+    );
+
+    fireEvent.wheel(screen.getByTestId('card_set_library__chips'), { deltaY: 360 });
 
     expect(screen.getByTestId('card_set_library__carousel')).toHaveAttribute(
       'data-featured-start-index',
@@ -70,6 +79,7 @@ describe('CardSetLibraryPicker', () => {
         cards={cards}
         cardSets={cardSets}
         interfaceLanguage="ru"
+        targetLanguage="ru"
         selectedCardSetId="work-set"
         onSelect={vi.fn()}
       />,
@@ -96,6 +106,7 @@ describe('CardSetLibraryPicker', () => {
         cards={cards}
         cardSets={cardSets}
         interfaceLanguage="ru"
+        targetLanguage="ru"
         selectedCardSetId="all-cards"
         onSelect={vi.fn()}
       />,
@@ -124,6 +135,7 @@ describe('CardSetLibraryPicker', () => {
         cards={cards}
         cardSets={[makeCardSet('verbs-set', longName, ['card-work'])]}
         interfaceLanguage="ru"
+        targetLanguage="ru"
         selectedCardSetId="verbs-set"
         onSelect={vi.fn()}
       />,
@@ -134,6 +146,35 @@ describe('CardSetLibraryPicker', () => {
     );
 
     expect(await screen.findByRole('tooltip')).toHaveTextContent(longName);
+  });
+
+  it('uses target-language names for card sets independently from interface language', () => {
+    render(
+      <CardSetLibraryPicker
+        cards={cards}
+        cardSets={[
+          makeCardSet('verbs-set', 'Глаголы действий', ['card-work'], {
+            en: 'Action verbs',
+            es: 'Verbos de accion',
+            ru: 'Глаголы действий',
+          }),
+        ]}
+        interfaceLanguage="ru"
+        targetLanguage="en"
+        selectedCardSetId="verbs-set"
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId('card_set_library__selected_name')).toHaveTextContent(
+      'Action verbs',
+    );
+    expect(
+      screen.getByTestId('card_set_library__chip_select_name__verbs-set'),
+    ).toHaveTextContent('Action verbs');
+    expect(
+      screen.getByTestId('card_set_library__chip_select_name__all-cards'),
+    ).toHaveTextContent('All cards');
   });
 });
 
@@ -150,10 +191,16 @@ function makeCard(id: string, en: string): LanguageCard {
   };
 }
 
-function makeCardSet(id: string, name: string, cardIds: string[]): CardSet {
+function makeCardSet(
+  id: string,
+  name: string,
+  cardIds: string[],
+  names?: CardSet['names'],
+): CardSet {
   return {
     id,
     name,
+    names,
     cardIds,
     createdAt: now,
     updatedAt: now,

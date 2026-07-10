@@ -31,7 +31,7 @@ describe('large local datasets', () => {
     renderLargeApp(2000);
 
     await user.click(
-      screen.getByRole('button', { name: 'Набор карточек: Все карточки' }),
+      screen.getByRole('button', { name: 'Набор карточек: All cards' }),
     );
     await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
 

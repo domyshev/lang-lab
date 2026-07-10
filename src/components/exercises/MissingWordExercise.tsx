@@ -20,10 +20,13 @@ import {
   ExerciseRepeatChip,
   ExerciseCardSetChip,
 } from './ExerciseCardSetChip';
+import { TranslationHintRow } from './TranslationHintRow';
+import { SupportedLanguage } from '../../domain/languages';
 
 type SubmissionOutcome = 'correct' | 'incorrect' | 'memorize';
 
 export function MissingWordExercise({
+  complementaryLanguage,
   isRepeatedPrompt = false,
   prompt,
   repeatProgress,
@@ -35,6 +38,7 @@ export function MissingWordExercise({
   cardSetName,
   finishAction,
 }: {
+  complementaryLanguage?: SupportedLanguage;
   isRepeatedPrompt?: boolean;
   prompt: MissingWordPrompt;
   repeatProgress?: { current: number; total: number };
@@ -209,9 +213,12 @@ export function MissingWordExercise({
           spacing={1}
           sx={{ alignItems: 'center', flexWrap: 'wrap' }}
         >
-          <Typography data-test={`missing_word_exercise__prompt__${prompt.cardId}`}>
-            {prompt.prompt}
-          </Typography>
+          <TranslationHintRow
+            complementaryLanguage={complementaryLanguage}
+            dataTest={`missing_word_exercise__prompt__${prompt.cardId}`}
+            fallbackPrompt={prompt.prompt}
+            hints={prompt.translationHints}
+          />
           {isRepeatedPrompt && (
             <ExerciseRepeatChip
               dataTest={`missing_word_exercise__repeat_chip__${prompt.cardId}`}

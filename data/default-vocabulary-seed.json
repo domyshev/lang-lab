@@ -34108,7 +34108,12 @@
         "default-love-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Love",
+        "ru": "Любовь",
+        "es": "Amor"
+      }
     },
     {
       "id": "default-set-family",
@@ -34216,7 +34221,12 @@
         "default-family-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Family",
+        "ru": "Семья",
+        "es": "Familia"
+      }
     },
     {
       "id": "default-set-home",
@@ -34324,7 +34334,12 @@
         "default-home-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Home",
+        "ru": "Дом",
+        "es": "Hogar"
+      }
     },
     {
       "id": "default-set-food",
@@ -34432,7 +34447,12 @@
         "default-food-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Food",
+        "ru": "Еда",
+        "es": "Comida"
+      }
     },
     {
       "id": "default-set-travel",
@@ -34540,7 +34560,12 @@
         "default-travel-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Travel",
+        "ru": "Путешествия",
+        "es": "Viajes"
+      }
     },
     {
       "id": "default-set-work",
@@ -34648,7 +34673,12 @@
         "default-work-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Work",
+        "ru": "Работа",
+        "es": "Trabajo"
+      }
     },
     {
       "id": "default-set-study",
@@ -34756,7 +34786,12 @@
         "default-study-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Study",
+        "ru": "Учеба",
+        "es": "Estudio"
+      }
     },
     {
       "id": "default-set-health",
@@ -34864,7 +34899,12 @@
         "default-health-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Health",
+        "ru": "Здоровье",
+        "es": "Salud"
+      }
     },
     {
       "id": "default-set-shopping",
@@ -34972,7 +35012,12 @@
         "default-shopping-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Shopping",
+        "ru": "Покупки",
+        "es": "Compras"
+      }
     },
     {
       "id": "default-set-time",
@@ -35080,7 +35125,12 @@
         "default-time-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Time",
+        "ru": "Время",
+        "es": "Tiempo"
+      }
     },
     {
       "id": "default-set-weather",
@@ -35188,7 +35238,12 @@
         "default-weather-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Weather",
+        "ru": "Погода",
+        "es": "Clima"
+      }
     },
     {
       "id": "default-set-emotions",
@@ -35296,7 +35351,12 @@
         "default-emotions-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Emotions",
+        "ru": "Эмоции",
+        "es": "Emociones"
+      }
     },
     {
       "id": "default-set-communication",
@@ -35404,7 +35464,12 @@
         "default-communication-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Communication",
+        "ru": "Общение",
+        "es": "Comunicacion"
+      }
     },
     {
       "id": "default-set-technology",
@@ -35512,7 +35577,12 @@
         "default-technology-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Technology",
+        "ru": "Технологии",
+        "es": "Tecnologia"
+      }
     },
     {
       "id": "default-set-city",
@@ -35620,7 +35690,12 @@
         "default-city-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "City",
+        "ru": "Город",
+        "es": "Ciudad"
+      }
     },
     {
       "id": "default-set-nature",
@@ -35728,7 +35803,12 @@
         "default-nature-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Nature",
+        "ru": "Природа",
+        "es": "Naturaleza"
+      }
     },
     {
       "id": "default-set-hobbies",
@@ -35836,7 +35916,12 @@
         "default-hobbies-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Hobbies",
+        "ru": "Хобби",
+        "es": "Pasatiempos"
+      }
     },
     {
       "id": "default-set-money",
@@ -35944,7 +36029,12 @@
         "default-money-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Money",
+        "ru": "Деньги",
+        "es": "Dinero"
+      }
     },
     {
       "id": "default-set-action-verbs",
@@ -36052,7 +36142,12 @@
         "default-action-verbs-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Action verbs",
+        "ru": "Глаголы действий",
+        "es": "Verbos de accion"
+      }
     },
     {
       "id": "default-set-thinking-verbs",
@@ -36160,7 +36255,12 @@
         "default-thinking-verbs-phrase-50"
       ],
       "createdAt": "2026-07-07T00:00:00.000Z",
-      "updatedAt": "2026-07-07T00:00:00.000Z"
+      "updatedAt": "2026-07-07T00:00:00.000Z",
+      "names": {
+        "en": "Thinking verbs",
+        "ru": "Глаголы мышления",
+        "es": "Verbos de pensamiento"
+      }
     }
   ]
 }

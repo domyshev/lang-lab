@@ -25,6 +25,21 @@ const cardSetsSlice = createSlice({
         cardIds: [...cardSet.cardIds],
       }));
     },
+    mergeCardSetMetadata(state, action: PayloadAction<CardSet[]>) {
+      const metadataById = new Map(
+        action.payload.map((cardSet) => [cardSet.id, cardSet]),
+      );
+
+      state.cardSets.forEach((cardSet) => {
+        const metadata = metadataById.get(cardSet.id);
+        if (!metadata) {
+          return;
+        }
+
+        cardSet.name = metadata.name;
+        cardSet.names = metadata.names ? { ...metadata.names } : undefined;
+      });
+    },
     addCardSet(state, action: PayloadAction<CardSet>) {
       state.cardSets.push(action.payload);
       state.selectedCardSetId = action.payload.id;
@@ -91,6 +106,7 @@ export const {
   archiveCardSet,
   selectCardSet,
   addCardToCardSet,
+  mergeCardSetMetadata,
   seedDefaultCardSets,
   setCardSetCards,
 } =

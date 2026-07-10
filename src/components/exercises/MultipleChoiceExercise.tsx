@@ -7,8 +7,10 @@ import { MultipleChoicePrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
 import { ExerciseProgressChip, ExerciseCardSetChip } from './ExerciseCardSetChip';
+import { TranslationHintRow } from './TranslationHintRow';
 
 export function MultipleChoiceExercise({
+  complementaryLanguage,
   interfaceLanguage,
   progressCompletedCount,
   progressTotalCount,
@@ -18,6 +20,7 @@ export function MultipleChoiceExercise({
   cardSetName,
   finishAction,
 }: {
+  complementaryLanguage?: SupportedLanguage;
   interfaceLanguage: SupportedLanguage;
   prompt: MultipleChoicePrompt;
   onAnswer: (answer: string) => void;
@@ -92,9 +95,12 @@ export function MultipleChoiceExercise({
           </Stack>
           {finishAction}
         </Stack>
-        <Typography data-test={`multiple_choice_exercise__prompt__${prompt.cardId}`}>
-          {prompt.prompt}
-        </Typography>
+        <TranslationHintRow
+          complementaryLanguage={complementaryLanguage}
+          dataTest={`multiple_choice_exercise__prompt__${prompt.cardId}`}
+          fallbackPrompt={prompt.prompt}
+          hints={prompt.translationHints}
+        />
         {prompt.definitionHint && (
           <Typography data-test={`multiple_choice_exercise__definition_hint__${prompt.cardId}`}>
             {prompt.definitionHint}

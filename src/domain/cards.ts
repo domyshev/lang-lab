@@ -48,6 +48,16 @@ export function getTranslationHints(
     });
 }
 
+export function orderTranslationHints(
+  hints: TranslationHint[],
+  complementaryLanguage: SupportedLanguage,
+): TranslationHint[] {
+  return [
+    ...hints.filter((hint) => hint.language === complementaryLanguage),
+    ...hints.filter((hint) => hint.language !== complementaryLanguage),
+  ];
+}
+
 export function getDefinitionHint(
   card: Pick<LanguageCard, 'definitions'>,
   targetLanguage: SupportedLanguage,

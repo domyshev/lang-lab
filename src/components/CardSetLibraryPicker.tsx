@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { WheelEvent } from 'react';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftRounded';
@@ -19,11 +19,17 @@ import {
   Typography,
 } from '@mui/material';
 import { LanguageCard } from '../domain/cards';
-import { ALL_CARDS_CARD_SET_ID, CardSet } from '../domain/cardSets';
+import {
+  ALL_CARDS_CARD_SET_ID,
+  CardSet,
+  getCardSetName,
+} from '../domain/cardSets';
 import { formatCardCount, t } from '../domain/i18n';
+import { SupportedLanguage } from '../domain/languages';
 import { RootState } from '../store/store';
 
 const featuredCardSetLimit = 3;
+const featuredWheelThreshold = 320;
 
 type CardSetLibraryItem = {
   cardCount: number;
@@ -39,13 +45,16 @@ export function CardSetLibraryPicker({
   interfaceLanguage,
   onSelect,
   selectedCardSetId,
+  targetLanguage,
 }: {
   cards: LanguageCard[];
   cardSets: CardSet[];
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   onSelect: (cardSetId: string) => void;
   selectedCardSetId: string;
+  targetLanguage: SupportedLanguage;
 }) {
+  const wheelDeltaAccumulator = useRef(0);
   const items = useMemo<CardSetLibraryItem[]>(
     () => [
       {
@@ -53,16 +62,16 @@ export function CardSetLibraryPicker({
         cardIds: cards.map((card) => card.id),
         id: ALL_CARDS_CARD_SET_ID,
         isAllCards: true,
-        name: t(interfaceLanguage, 'allCards'),
+        name: t(targetLanguage, 'allCards'),
       },
       ...cardSets.map((cardSet) => ({
         cardCount: cardSet.cardIds.length,
         cardIds: cardSet.cardIds,
         id: cardSet.id,
-        name: cardSet.name,
+        name: getCardSetName(cardSet, targetLanguage),
       })),
     ],
-    [cards, cardSets, interfaceLanguage],
+    [cards, cardSets, targetLanguage],
   );
   const selectedIndex = items.findIndex((item) => item.id === selectedCardSetId);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
@@ -129,14 +138,28 @@ export function CardSetLibraryPicker({
     const direction = Math.abs(event.deltaX) > Math.abs(event.deltaY)
       ? event.deltaX
       : event.deltaY;
-    if (direction > 0 && canPageForward) {
-      event.preventDefault();
-      pageFeaturedItems(1);
+    if (direction === 0) {
+      return;
     }
-    if (direction < 0 && canPageBack) {
-      event.preventDefault();
-      pageFeaturedItems(-1);
+
+    const canMove = direction > 0 ? canPageForward : canPageBack;
+    if (!canMove) {
+      wheelDeltaAccumulator.current = 0;
+      return;
     }
+
+    event.preventDefault();
+    wheelDeltaAccumulator.current =
+      Math.sign(wheelDeltaAccumulator.current) === Math.sign(direction)
+        ? wheelDeltaAccumulator.current + direction
+        : direction;
+
+    if (Math.abs(wheelDeltaAccumulator.current) < featuredWheelThreshold) {
+      return;
+    }
+
+    pageFeaturedItems(direction > 0 ? 1 : -1);
+    wheelDeltaAccumulator.current = 0;
   };
 
   return (

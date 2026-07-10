@@ -79,7 +79,11 @@ import {
   getPracticeSettings,
   orderCardsForMissingLettersPractice,
 } from './domain/practiceOrdering';
-import { ALL_CARDS_CARD_SET_ID, CardSet } from './domain/cardSets';
+import {
+  ALL_CARDS_CARD_SET_ID,
+  CardSet,
+  getCardSetName,
+} from './domain/cardSets';
 import { createCardById, getCardsByIds } from './domain/cardIndexes';
 import { forgetExerciseSession, saveAttempt } from './store/attemptsSlice';
 import {
@@ -91,7 +95,11 @@ import {
 } from './store/appSlice';
 import { seedDefaultCards } from './store/cardsSlice';
 import { rebuildStatsFromAttempts, recordAttemptStats } from './store/statsSlice';
-import { seedDefaultCardSets, selectCardSet } from './store/cardSetsSlice';
+import {
+  mergeCardSetMetadata,
+  seedDefaultCardSets,
+  selectCardSet,
+} from './store/cardSetsSlice';
 import { AppDispatch, RootState } from './store/store';
 
 type ExercisePreview =
@@ -157,6 +165,7 @@ type RepeatProgress = {
 export function App() {
   const dispatch = useDispatch<AppDispatch>();
   const hasSeededDefaultVocabulary = useRef(false);
+  const hasMergedDefaultCardSetMetadata = useRef(false);
   const [activeSection, setActiveSection] =
     useState<AppShellSection>('game');
   const [selectedExerciseType, setSelectedExerciseType] =
@@ -252,7 +261,7 @@ export function App() {
     if (!selectedCardSetId || selectedCardSetId === ALL_CARDS_CARD_SET_ID) {
       return {
         id: ALL_CARDS_CARD_SET_ID,
-        name: t(interfaceLanguage, 'allCards'),
+        name: t(targetLanguage, 'allCards'),
         cardIds: cards.map((card) => card.id),
         createdAt: '',
         updatedAt: '',
@@ -260,8 +269,17 @@ export function App() {
       };
     }
 
-    return visibleCardSets.find((cardSet) => cardSet.id === selectedCardSetId);
-  }, [cards, interfaceLanguage, selectedCardSetId, visibleCardSets]);
+    const cardSet = visibleCardSets.find(
+      (item) => item.id === selectedCardSetId,
+    );
+
+    return cardSet
+      ? {
+          ...cardSet,
+          name: getCardSetName(cardSet, targetLanguage),
+        }
+      : undefined;
+  }, [cards, selectedCardSetId, targetLanguage, visibleCardSets]);
   const cardSetCards = useMemo(() => {
     if (!selectedCardSet) {
       return [];
@@ -400,6 +418,15 @@ export function App() {
     dispatch(seedDefaultCardSets(defaultVocabularyCardSets));
   }, [cards.length, dispatch]);
 
+  useEffect(() => {
+    if (hasMergedDefaultCardSetMetadata.current || cardSets.length === 0) {
+      return;
+    }
+
+    hasMergedDefaultCardSetMetadata.current = true;
+    dispatch(mergeCardSetMetadata(defaultVocabularyCardSets));
+  }, [cardSets.length, dispatch]);
+
   const exercisePreview = useMemo<ExercisePreview | null>(() => {
     const firstCard = randomizedEligibleCards[0];
     if (!firstCard) {
@@ -411,6 +438,7 @@ export function App() {
         type: 'crossword',
         puzzle: createCrossword({
           cards: randomizedEligibleCards,
+          complementaryLanguage,
           targetLanguage,
         }),
       };
@@ -482,6 +510,7 @@ export function App() {
     missingLettersPracticePrompts,
     missingWordPracticePrompts,
     multipleChoiceJumpCardId,
+    complementaryLanguage,
     randomizedEligibleCards,
     resultPromptHold,
     selectedExerciseType,
@@ -1124,6 +1153,7 @@ export function App() {
             interfaceLanguage={interfaceLanguage}
             onSelect={handleCardSetChange}
             selectedCardSetId={currentCardSetId}
+            targetLanguage={targetLanguage}
           />
 
           <Stack
@@ -1381,6 +1411,7 @@ export function App() {
       return (
         <MultipleChoiceExercise
           key={`${exercisePreview.prompt.cardId}:${generationSeed}`}
+          complementaryLanguage={complementaryLanguage}
           interfaceLanguage={interfaceLanguage}
           progressCompletedCount={completedMultipleChoiceCardIds.length}
           progressTotalCount={eligibleCards.length}
@@ -1434,6 +1465,7 @@ export function App() {
       return (
         <MissingLettersExercise
           key={missingLettersPrompt.practiceKey}
+          complementaryLanguage={complementaryLanguage}
           interfaceLanguage={interfaceLanguage}
           isRepeatedPrompt={completedMissingLettersCardIds.includes(
             missingLettersPrompt.cardId,
@@ -1495,6 +1527,7 @@ export function App() {
     return (
       <MissingWordExercise
         key={missingWordPrompt.practiceKey}
+        complementaryLanguage={complementaryLanguage}
         finishAction={renderFinishExerciseAction(
           buildMissingWordJumpSelector(missingWordPrompt),
         )}
@@ -1558,7 +1591,17 @@ export function App() {
     const incorrect = totalAnswered - correct;
 
     return (
-      <Paper data-test="target_stats__panel" sx={{ p: 2 }}>
+      <Paper
+        data-test="target_stats__panel"
+        elevation={0}
+        sx={{
+          bgcolor: 'rgba(255, 255, 255, 0.72)',
+          border: '1px solid rgba(32, 48, 21, 0.14)',
+          borderRadius: 2,
+          boxShadow: '0 12px 28px rgba(32, 48, 21, 0.08)',
+          p: 2,
+        }}
+      >
         <Stack data-test="target_stats__content" spacing={1.5}>
           <Typography data-test="target_stats__language" variant="overline">
             {languageFlags[targetLanguage]}{' '}
@@ -2129,6 +2172,7 @@ function HotkeyShortcutTooltip({
           display: 'inline-flex',
           flex: '0 0 auto',
           justifyContent: 'center',
+          perspective: '140px',
           position: 'relative',
           width: { xs: 46, sm: 52 },
         }}
@@ -2138,17 +2182,18 @@ function HotkeyShortcutTooltip({
           sx={{
             alignItems: 'center',
             background:
-              'linear-gradient(145deg, #ffffff 0%, #f3efff 46%, #cfc0ff 100%)',
+              'linear-gradient(145deg, #ffffff 0%, #f7f3ff 38%, #d8ccff 72%, #b8a6f5 100%)',
             border: '1px solid rgba(105, 78, 190, 0.34)',
-            borderRadius: '13px',
+            borderRadius: '14px',
             boxShadow:
-              'inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -4px 0 rgba(93, 65, 178, 0.16), 0 12px 22px rgba(73, 48, 124, 0.22)',
+              'inset 0 2px 0 rgba(255,255,255,0.96), inset 4px 0 0 rgba(255,255,255,0.32), inset -3px 0 0 rgba(84, 59, 166, 0.10), inset 0 -6px 0 rgba(84, 59, 166, 0.20), 0 8px 14px rgba(73, 48, 124, 0.16)',
             color: '#5d41b2',
             display: 'inline-flex',
             height: { xs: 40, sm: 44 },
             justifyContent: 'center',
             position: 'relative',
-            transform: 'perspective(90px) rotateX(6deg)',
+            transform: 'rotateX(10deg) rotateY(-8deg)',
+            transformStyle: 'preserve-3d',
             transition: 'transform 160ms ease, box-shadow 160ms ease',
             width: { xs: 42, sm: 46 },
             '&::before': {
@@ -2163,20 +2208,22 @@ function HotkeyShortcutTooltip({
               top: 4,
             },
             '&::after': {
-              background: 'rgba(93, 65, 178, 0.20)',
+              background:
+                'linear-gradient(180deg, rgba(143, 119, 222, 0.34), rgba(84, 59, 166, 0.18))',
               borderRadius: '0 0 12px 12px',
-              bottom: -4,
+              bottom: -2,
               content: '""',
-              height: 6,
-              left: 4,
+              height: 4,
+              left: 5,
               position: 'absolute',
-              right: 4,
+              right: 5,
+              transform: 'translateZ(-8px)',
               zIndex: -1,
             },
             '&:hover': {
               boxShadow:
-                'inset 0 2px 0 rgba(255,255,255,0.95), inset 0 -4px 0 rgba(93, 65, 178, 0.18), 0 16px 28px rgba(73, 48, 124, 0.28)',
-              transform: 'perspective(90px) rotateX(3deg) translateY(-1px)',
+                'inset 0 2px 0 rgba(255,255,255,0.98), inset 4px 0 0 rgba(255,255,255,0.36), inset -3px 0 0 rgba(84, 59, 166, 0.12), inset 0 -6px 0 rgba(84, 59, 166, 0.22), 0 10px 18px rgba(73, 48, 124, 0.20)',
+              transform: 'rotateX(7deg) rotateY(-5deg) translateY(-1px)',
             },
           }}
         >

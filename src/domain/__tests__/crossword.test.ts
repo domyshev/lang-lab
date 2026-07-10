@@ -81,6 +81,25 @@ describe('createCrossword', () => {
     expect(new Set(startKeys).size).toBe(startKeys.length);
   });
 
+  it('puts the complementary language first in clues', () => {
+    const result = createCrossword({
+      cards: [
+        {
+          ...card('1', 'train'),
+          translations: { en: 'train', ru: 'поезд', es: 'tren' },
+        },
+        {
+          ...card('2', 'rain'),
+          translations: { en: 'rain', ru: 'дождь', es: 'lluvia' },
+        },
+      ],
+      complementaryLanguage: 'es',
+      targetLanguage: 'en',
+    });
+
+    expect(result.entries[0].clue.startsWith('es:')).toBe(true);
+  });
+
   it('uses only one phrase card for phrase mode', () => {
     const result = createCrossword({
       cards: [card('1', 'I would like a ticket'), card('2', 'airport')],

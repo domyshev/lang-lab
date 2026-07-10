@@ -263,6 +263,10 @@ describe('App navigation', () => {
 
     fireEvent.wheel(chipsRegion, { deltaY: 120 });
 
+    expect(previousButton).toBeDisabled();
+
+    fireEvent.wheel(chipsRegion, { deltaY: 360 });
+
     expect(previousButton).toBeEnabled();
     expect(
       within(chipsRegion)
@@ -720,7 +724,7 @@ describe('App navigation', () => {
       getByDataTestPrefix('missing_letters_exercise__progress_chip__')[0],
     );
     expect(getByDataTestPrefix('missing_letters_exercise__card_set_chip__')[0]).toHaveTextContent(
-      'Набор карточек: Все карточки',
+      'Набор карточек: All cards',
     );
     expect(
       getByDataTestPrefix('missing_letters_exercise__progress_chip__')[0],
@@ -835,11 +839,11 @@ describe('App navigation', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Карточки' }));
 
-    const allCardsTopic = screen.getByRole('button', { name: /Все карточки/ });
+    const allCardsTopic = screen.getByRole('button', { name: /All cards/ });
     expect(allCardsTopic).toBeInTheDocument();
     expect(allCardsTopic).toHaveTextContent('6');
     expect(
-      screen.queryByRole('button', { name: 'В архив: Все карточки' }),
+      screen.queryByRole('button', { name: 'В архив: All cards' }),
     ).not.toBeInTheDocument();
 
     await user.click(allCardsTopic);
@@ -2243,7 +2247,7 @@ function cardIdByAnswer(answer: string): string {
 }
 
 async function selectAllCardsCardSet(user: ReturnType<typeof userEvent.setup>) {
-  await selectCardSetByName(user, /Все карточки/);
+  await selectCardSetByName(user, /All cards/);
 }
 
 async function selectCardSetByName(

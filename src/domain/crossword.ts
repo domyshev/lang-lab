@@ -3,6 +3,7 @@ import {
   getCardAnswer,
   getTranslationHints,
   isPhraseValue,
+  orderTranslationHints,
 } from './cards';
 import { SupportedLanguage } from './languages';
 
@@ -38,6 +39,7 @@ export interface CrosswordPuzzle {
 
 export function createCrossword(input: {
   cards: LanguageCard[];
+  complementaryLanguage?: SupportedLanguage;
   targetLanguage: SupportedLanguage;
 }): CrosswordPuzzle {
   const eligible = input.cards
@@ -54,7 +56,14 @@ export function createCrossword(input: {
     );
 
   if (wordItems.length >= 2) {
-    return buildPuzzle('words', placeWordEntries(wordItems, input.targetLanguage));
+    return buildPuzzle(
+      'words',
+      placeWordEntries(
+        wordItems,
+        input.targetLanguage,
+        input.complementaryLanguage,
+      ),
+    );
   }
 
   const phrase = eligible.find((item) => isPhraseValue(item.answer));
@@ -63,6 +72,7 @@ export function createCrossword(input: {
       createEntry({
         card: phrase.card,
         answer: phrase.answer,
+        complementaryLanguage: input.complementaryLanguage,
         targetLanguage: input.targetLanguage,
         row: 0,
         col: 0,
@@ -71,12 +81,20 @@ export function createCrossword(input: {
     ]);
   }
 
-  return buildPuzzle('words', placeWordEntries(wordItems, input.targetLanguage));
+  return buildPuzzle(
+    'words',
+    placeWordEntries(
+      wordItems,
+      input.targetLanguage,
+      input.complementaryLanguage,
+    ),
+  );
 }
 
 function placeWordEntries(
   items: Array<{ card: LanguageCard; answer: string }>,
   targetLanguage: SupportedLanguage,
+  complementaryLanguage?: SupportedLanguage,
 ): CrosswordEntry[] {
   const entries: CrosswordEntry[] = [];
 
@@ -90,6 +108,7 @@ function placeWordEntries(
         createEntry({
           card: item.card,
           answer: item.answer,
+          complementaryLanguage,
           targetLanguage,
           row: 0,
           col: 0,
@@ -103,6 +122,7 @@ function placeWordEntries(
       existingEntries: entries,
       card: item.card,
       answer: item.answer,
+      complementaryLanguage,
       targetLanguage,
     });
 
@@ -118,6 +138,7 @@ function placeEntry(input: {
   existingEntries: CrosswordEntry[];
   card: LanguageCard;
   answer: string;
+  complementaryLanguage?: SupportedLanguage;
   targetLanguage: SupportedLanguage;
 }): CrosswordEntry | undefined {
   const existingCells = getEntryCells(input.existingEntries);
@@ -183,6 +204,7 @@ function placeEntry(input: {
     return createEntry({
       card: input.card,
       answer: input.answer,
+      complementaryLanguage: input.complementaryLanguage,
       targetLanguage: input.targetLanguage,
       row: candidate[0].row,
       col: candidate[0].col,
@@ -196,15 +218,23 @@ function placeEntry(input: {
 function createEntry(input: {
   card: LanguageCard;
   answer: string;
+  complementaryLanguage?: SupportedLanguage;
   targetLanguage: SupportedLanguage;
   row: number;
   col: number;
   direction: CrosswordEntry['direction'];
 }): CrosswordEntry {
+  const translationHints = getTranslationHints(input.card, input.targetLanguage);
+
   return {
     cardId: input.card.id,
     answer: input.answer,
-    clue: getTranslationHints(input.card, input.targetLanguage)
+    clue: orderTranslationHints(
+      translationHints,
+      input.complementaryLanguage ??
+        translationHints[0]?.language ??
+        input.targetLanguage,
+    )
       .map((hint) => `${hint.language}: ${hint.value}`)
       .join(' / '),
     row: input.row,

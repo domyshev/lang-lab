@@ -17,12 +17,14 @@ import {
   ExerciseRepeatChip,
   ExerciseCardSetChip,
 } from './ExerciseCardSetChip';
+import { TranslationHintRow } from './TranslationHintRow';
 
 type SubmissionOutcome = 'correct' | 'incorrect' | 'memorize';
 
 export function MissingLettersExercise({
   interfaceLanguage,
   isRepeatedPrompt = false,
+  complementaryLanguage,
   onNext,
   onMemorizeResult,
   progressCompletedCount,
@@ -35,6 +37,7 @@ export function MissingLettersExercise({
 }: {
   interfaceLanguage: SupportedLanguage;
   isRepeatedPrompt?: boolean;
+  complementaryLanguage?: SupportedLanguage;
   prompt: MissingLettersPrompt;
   repeatProgress?: { current: number; total: number };
   onAnswer: (answer: string) => void;
@@ -202,9 +205,12 @@ export function MissingLettersExercise({
           spacing={1}
           sx={{ alignItems: 'center', flexWrap: 'wrap' }}
         >
-          <Typography data-test={`missing_letters_exercise__prompt__${prompt.cardId}`}>
-            {prompt.prompt}
-          </Typography>
+          <TranslationHintRow
+            complementaryLanguage={complementaryLanguage}
+            dataTest={`missing_letters_exercise__prompt__${prompt.cardId}`}
+            fallbackPrompt={prompt.prompt}
+            hints={prompt.translationHints}
+          />
           {isRepeatedPrompt && (
             <ExerciseRepeatChip
               dataTest={`missing_letters_exercise__repeat_chip__${prompt.cardId}`}

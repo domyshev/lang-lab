@@ -15,6 +15,30 @@ const prompt = {
 };
 
 describe('MultipleChoiceExercise', () => {
+  it('puts the complementary translation first and makes it visually primary', () => {
+    render(
+      <MultipleChoiceExercise
+        complementaryLanguage="es"
+        interfaceLanguage="ru"
+        prompt={prompt}
+        onAnswer={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByTestId('multiple_choice_exercise__prompt_hint__airport__primary'),
+    ).toHaveTextContent('es: aeropuerto');
+    expect(
+      screen.getByTestId(
+        'multiple_choice_exercise__prompt_hint__airport__secondary__ru',
+      ),
+    ).toHaveTextContent('ru: аэропорт');
+    expect(
+      screen.getByTestId('multiple_choice_exercise__prompt_hint__airport__primary'),
+    ).toHaveStyle({ fontWeight: '850' });
+  });
+
   it('shows white answer options and marks the selected result before next', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();

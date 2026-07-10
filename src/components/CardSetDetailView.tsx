@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCardAnswer, isPhraseValue, LanguageCard } from '../domain/cards';
-import { ALL_CARDS_CARD_SET_ID } from '../domain/cardSets';
+import { ALL_CARDS_CARD_SET_ID, getCardSetName } from '../domain/cardSets';
 import {
   createCardById,
   createCardStatsByTarget,
@@ -81,7 +81,7 @@ export function CardSetDetailView() {
   const selectedCardSet = isAllCardsSelected
     ? {
         id: ALL_CARDS_CARD_SET_ID,
-        name: t(interfaceLanguage, 'allCards'),
+        name: t(targetLanguage, 'allCards'),
         cardIds: cards.map((card) => card.id),
         createdAt: '',
         updatedAt: '',
@@ -89,6 +89,9 @@ export function CardSetDetailView() {
     : cardSets.find(
         (cardSet) => cardSet.id === selectedCardSetId && !cardSet.archivedAt,
       );
+  const selectedCardSetName = selectedCardSet
+    ? getCardSetName(selectedCardSet, targetLanguage)
+    : '';
 
   if (!selectedCardSet) {
     return (
@@ -382,7 +385,7 @@ export function CardSetDetailView() {
               component="h2"
               sx={{ fontWeight: 800 }}
             >
-              {selectedCardSet.name}
+              {selectedCardSetName}
             </Typography>
             <Typography
               color="text.secondary"
