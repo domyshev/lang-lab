@@ -327,56 +327,61 @@ export function LanguageSelectors() {
             >
               {t(interfaceLanguage, 'complementaryLanguage')}
             </Typography>
-            {supportedLanguages.map((target) => {
-              const label = getComplementaryLanguageFieldLabel(
-                interfaceLanguage,
-                target,
-              );
-              const labelId = `${complementaryLabelPrefix}-${target}`;
-              return (
-                <FormControl
-                  data-test={`language_selectors__complementary_language_control__${target}`}
-                  key={target}
-                  size="small"
-                  fullWidth
-                >
-                  <InputLabel
-                    data-test={`language_selectors__complementary_language_label__${target}`}
-                    id={labelId}
+            <Stack
+              data-test="language_selectors__complementary_language_controls"
+              sx={{ gap: 1.5 }}
+            >
+              {supportedLanguages.map((target) => {
+                const label = getComplementaryLanguageFieldLabel(
+                  interfaceLanguage,
+                  target,
+                );
+                const labelId = `${complementaryLabelPrefix}-${target}`;
+                return (
+                  <FormControl
+                    data-test={`language_selectors__complementary_language_control__${target}`}
+                    key={target}
+                    size="small"
+                    fullWidth
                   >
-                    {label}
-                  </InputLabel>
-                  <Select
-                    data-test={`language_selectors__complementary_language_select__${target}`}
-                    labelId={labelId}
-                    label={label}
-                    value={complementaryLanguages[target]}
-                    onChange={handleComplementaryLanguageChange(target)}
-                    renderValue={(value) => (
-                      <LanguageLabel
-                        dataTestPrefix={`language_selectors__complementary_language_selected__${target}`}
-                        language={value as SupportedLanguage}
-                      />
-                    )}
-                  >
-                    {supportedLanguages
-                      .filter((language) => language !== target)
-                      .map((language) => (
-                        <MenuItem
-                          data-test={`language_selectors__complementary_language_option__${target}__${language}`}
-                          key={language}
-                          value={language}
-                        >
-                          <LanguageLabel
-                            dataTestPrefix={`language_selectors__complementary_language_option_label__${target}__${language}`}
-                            language={language}
-                          />
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
-              );
-            })}
+                    <InputLabel
+                      data-test={`language_selectors__complementary_language_label__${target}`}
+                      id={labelId}
+                    >
+                      {label}
+                    </InputLabel>
+                    <Select
+                      data-test={`language_selectors__complementary_language_select__${target}`}
+                      labelId={labelId}
+                      label={label}
+                      value={complementaryLanguages[target]}
+                      onChange={handleComplementaryLanguageChange(target)}
+                      renderValue={(value) => (
+                        <LanguageLabel
+                          dataTestPrefix={`language_selectors__complementary_language_selected__${target}`}
+                          language={value as SupportedLanguage}
+                        />
+                      )}
+                    >
+                      {supportedLanguages
+                        .filter((language) => language !== target)
+                        .map((language) => (
+                          <MenuItem
+                            data-test={`language_selectors__complementary_language_option__${target}__${language}`}
+                            key={language}
+                            value={language}
+                          >
+                            <LanguageLabel
+                              dataTestPrefix={`language_selectors__complementary_language_option_label__${target}__${language}`}
+                              language={language}
+                            />
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                );
+              })}
+            </Stack>
           </Stack>
           {cooldownFields.map((field) => (
             <TextField

@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
@@ -28,6 +28,11 @@ function renderApp({
 } = {}) {
   const appState = {
     ...appReducer(undefined, { type: 'test/init' }),
+    playerProfile: {
+      avatarSeed: 'test-player',
+      displayName: 'Тест',
+      isAnonymous: false,
+    },
     ...app,
   };
   const cardSetsState = {
@@ -151,6 +156,16 @@ describe('App navigation', () => {
         stats: statsReducer,
         cardSets: cardSetsReducer,
       },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          playerProfile: {
+            avatarSeed: 'test-player',
+            displayName: 'Тест',
+            isAnonymous: false,
+          },
+        },
+      },
     });
 
     render(
@@ -191,7 +206,7 @@ describe('App navigation', () => {
     expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
   });
 
-  it('keeps All cards first in the card set library after selecting another set', async () => {
+  it('pages card set library chips and centers modal selections when possible', async () => {
     const user = userEvent.setup();
     renderApp({
       cardSets: [
@@ -216,25 +231,90 @@ describe('App navigation', () => {
           createdAt: now,
           updatedAt: now,
         },
+        {
+          id: 'last-set',
+          name: 'Последний',
+          cardIds: ['card-airport'],
+          createdAt: now,
+          updatedAt: now,
+        },
       ],
     });
 
-    await user.click(screen.getByRole('button', { name: 'Набор карточек: Фразы' }));
+    const chipsRegion = screen.getByTestId('card_set_library__chips');
+    const previousButton = screen.getByRole('button', {
+      name: 'Предыдущие наборы карточек',
+    });
+    const nextButton = screen.getByRole('button', {
+      name: 'Следующие наборы карточек',
+    });
 
-    const chipButtons = within(
-      screen.getByTestId('card_set_library__chips'),
-    ).getAllByRole('button');
-
+    expect(previousButton).toBeDisabled();
+    expect(nextButton).toBeEnabled();
     expect(
-      chipButtons.map((button) => button.getAttribute('data-test')),
+      within(chipsRegion)
+        .getAllByRole('button')
+        .map((button) => button.getAttribute('data-test')),
     ).toEqual([
       'card_set_library__chip_select__all-cards',
-      'card_set_library__chip_select__phrase-set',
       'card_set_library__chip_select__word-set',
+      'card_set_library__chip_select__phrase-set',
     ]);
-    expect(screen.getByTestId('card_set_library__selected_name')).toHaveTextContent(
-      'Фразы',
+
+    fireEvent.wheel(chipsRegion, { deltaY: 120 });
+
+    expect(previousButton).toBeEnabled();
+    expect(
+      within(chipsRegion)
+        .getAllByRole('button')
+        .map((button) => button.getAttribute('data-test')),
+    ).toEqual([
+      'card_set_library__chip_select__word-set',
+      'card_set_library__chip_select__phrase-set',
+      'card_set_library__chip_select__extra-set',
+    ]);
+
+    await user.click(screen.getByTestId('card_set_library__open_button'));
+    await user.click(
+      within(screen.getByTestId('card_set_library_dialog__root')).getByRole(
+        'button',
+        { name: 'Выбрать набор карточек: Еще набор' },
+      ),
     );
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('card_set_library_dialog__root')).not.toBeInTheDocument();
+    });
+    expect(screen.getByTestId('card_set_library__selected_name')).toHaveTextContent(
+      'Еще набор',
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('card_set_library__carousel')).toHaveAttribute(
+        'data-featured-start-index',
+        '2',
+      );
+    });
+
+    await waitFor(() => {
+      expect(
+        within(screen.getByTestId('card_set_library__chips'))
+          .getAllByRole('button')
+          .map((button) => button.getAttribute('data-test')),
+      ).toEqual([
+        'card_set_library__chip_select__phrase-set',
+        'card_set_library__chip_select__extra-set',
+        'card_set_library__chip_select__last-set',
+      ]);
+    });
+    expect(screen.getByTestId('card_set_library__selected_name')).toHaveTextContent(
+      'Еще набор',
+    );
+    expect(
+      screen.getByRole('button', {
+        name: 'Следующие наборы карточек',
+      }),
+    ).toBeDisabled();
   });
 
   it('starts in Russian and shows a simple game setup tab before starting', async () => {
@@ -924,6 +1004,39 @@ describe('App navigation', () => {
     await user.click(answeredOption);
 
     expect(getVisibleMissingLettersPrompt().answer).toBe(firstPrompt.answer);
+  });
+
+  it('uses command or control arrows for missing letters jumps without submitting', async () => {
+    const user = userEvent.setup();
+    const store = renderApp();
+
+    await startExercise(user, 'Пропущенные буквы');
+
+    expect(
+      screen.getByTestId('exercise_finish_action__hotkeys_anchor'),
+    ).toHaveAccessibleName(/Cmd.*Ctrl.*стрелки/);
+    expect(
+      screen.getByTestId('exercise_finish_action__thought_bubble'),
+    ).not.toContainElement(
+      screen.getByTestId('exercise_finish_action__hotkeys_anchor'),
+    );
+    expect(
+      screen.getByTestId('exercise_finish_action__hotkeys_key_symbol'),
+    ).toHaveTextContent('⌘');
+
+    const jumpOrder = await getMissingLettersJumpOrder(user);
+    const currentPrompt = getVisibleMissingLettersPrompt();
+    const currentKey = `${cardIdByAnswer(currentPrompt.answer)}__0`;
+    const previousKey = getCircularJumpKey(jumpOrder, currentKey, -1);
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft', metaKey: true });
+
+    await waitFor(() => {
+      expect(getVisibleMissingLettersPrompt().answer).toBe(
+        answerByPracticeKey(previousKey),
+      );
+    });
+    expect(store.getState().attempts.attempts).toHaveLength(0);
   });
 
   it('continues from the latest selected missing letters jump', async () => {
@@ -1854,6 +1967,44 @@ describe('App navigation', () => {
     );
   });
 
+  it('uses control arrows for missing word jumps without submitting', async () => {
+    const user = userEvent.setup();
+    const store = renderApp({ cards: createMissingWordJumpCards() });
+
+    await startExercise(user, 'Пропущенное слово');
+
+    const jumpOrder = await getMissingWordJumpOrder(user);
+    const currentKey = `${getVisibleMissingWordCardId()}__0`;
+    const nextKey = getCircularJumpKey(jumpOrder, currentKey, 1);
+
+    fireEvent.keyDown(window, { key: 'ArrowRight', ctrlKey: true });
+
+    await waitFor(() => {
+      expect(getVisibleMissingWordCardId()).toBe(cardIdFromPracticeKey(nextKey));
+    });
+    expect(store.getState().attempts.attempts).toHaveLength(0);
+  });
+
+  it('uses command arrows for multiple choice jumps without selecting an answer', async () => {
+    const user = userEvent.setup();
+    const store = renderApp();
+
+    await startExercise(user, 'Вопрос с 3 вариантами');
+
+    const jumpOrder = await getMultipleChoiceJumpOrder(user);
+    const currentCardId = getVisibleMultipleChoiceCardId();
+    const nextCardId = getCircularJumpKey(jumpOrder, currentCardId, 1);
+
+    fireEvent.keyDown(window, { key: 'ArrowRight', metaKey: true });
+
+    await waitFor(() => {
+      expect(getVisibleMultipleChoiceCardId()).toBe(nextCardId);
+    });
+    expect(store.getState().attempts.attempts).toHaveLength(0);
+    expect(screen.queryByRole('button', { name: 'Правильно!' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Неверно' })).not.toBeInTheDocument();
+  });
+
   it('shows a localized setup warning when missing letters has only phrase cards', async () => {
     const user = userEvent.setup();
     renderApp({
@@ -2212,6 +2363,26 @@ function cardIdFromPracticeKey(practiceKey: string): string {
   return practiceKey.replace(/__\d+$/, '');
 }
 
+function getCircularJumpKey(
+  jumpOrder: string[],
+  currentValue: string,
+  direction: 1 | -1,
+): string {
+  const currentIndex = jumpOrder.indexOf(currentValue);
+  if (currentIndex < 0) {
+    throw new Error(`Current jump value is not in jump order: ${currentValue}`);
+  }
+
+  const nextIndex =
+    (currentIndex + direction + jumpOrder.length) % jumpOrder.length;
+  const nextValue = jumpOrder[nextIndex];
+  if (!nextValue) {
+    throw new Error('Jump order does not contain a next value.');
+  }
+
+  return nextValue;
+}
+
 function answerByPracticeKey(practiceKey: string): string {
   const cardId = cardIdFromPracticeKey(practiceKey);
   const answersByCardId: Record<string, string> = {
@@ -2408,6 +2579,36 @@ function getMissingWordEditableIndexes(answer: string): number[] {
 function getMultipleChoiceOptionText(): string[] {
   return getByDataTestPrefix('multiple_choice_exercise__option__')
     .map((option) => option.textContent ?? '');
+}
+
+async function getMultipleChoiceJumpOrder(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<string[]> {
+  await user.click(screen.getByRole('combobox', { name: 'Прыжки' }));
+  const cardIds = getByDataTestPrefix('exercise_finish_action__jump_option__')
+    .map((option) =>
+      option
+        .getAttribute('data-test')
+        ?.replace('exercise_finish_action__jump_option__', ''),
+    )
+    .filter((cardId): cardId is string => Boolean(cardId));
+
+  await user.keyboard('{Escape}');
+  await waitFor(() =>
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument(),
+  );
+
+  return cardIds;
+}
+
+function getVisibleMultipleChoiceCardId(): string {
+  const panel = getByDataTestPrefix('multiple_choice_exercise__panel__')[0];
+  const dataTest = panel?.getAttribute('data-test');
+  if (!dataTest) {
+    throw new Error('Multiple choice panel is not visible.');
+  }
+
+  return dataTest.replace('multiple_choice_exercise__panel__', '');
 }
 
 function getByDataTestPrefix(prefix: string): HTMLElement[] {

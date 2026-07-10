@@ -1,5 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { WheelEvent } from 'react';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftRounded';
+import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import {
   Box,
@@ -12,6 +15,7 @@ import {
   InputAdornment,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { LanguageCard } from '../domain/cards';
@@ -42,8 +46,6 @@ export function CardSetLibraryPicker({
   onSelect: (cardSetId: string) => void;
   selectedCardSetId: string;
 }) {
-  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const items = useMemo<CardSetLibraryItem[]>(
     () => [
       {
@@ -62,9 +64,21 @@ export function CardSetLibraryPicker({
     ],
     [cards, cardSets, interfaceLanguage],
   );
+  const selectedIndex = items.findIndex((item) => item.id === selectedCardSetId);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [featuredStartIndex, setFeaturedStartIndex] = useState(() =>
+    getCenteredStartIndex(selectedIndex, items.length),
+  );
   const selectedItem =
     items.find((item) => item.id === selectedCardSetId) ?? null;
-  const featuredItems = getFeaturedItems(items, selectedItem);
+  const featuredItems = items.slice(
+    featuredStartIndex,
+    featuredStartIndex + featuredCardSetLimit,
+  );
+  const canPageBack = featuredStartIndex > 0;
+  const canPageForward =
+    featuredStartIndex + featuredCardSetLimit < items.length;
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const filteredItems = normalizedSearch
     ? items.filter((item) =>
@@ -76,10 +90,53 @@ export function CardSetLibraryPicker({
       )
     : items;
 
-  const handleSelect = (cardSetId: string) => {
+  useEffect(() => {
+    setFeaturedStartIndex((currentIndex) =>
+      Math.min(currentIndex, Math.max(0, items.length - featuredCardSetLimit)),
+    );
+  }, [items.length]);
+
+  useEffect(() => {
+    setFeaturedStartIndex(getCenteredStartIndex(selectedIndex, items.length));
+  }, [items.length, selectedCardSetId, selectedIndex]);
+
+  const handleSelect = (cardSetId: string, source: 'featured' | 'dialog') => {
+    if (source === 'dialog') {
+      const nextIndex = items.findIndex((item) => item.id === cardSetId);
+      setFeaturedStartIndex(getCenteredStartIndex(nextIndex, items.length));
+    }
     onSelect(cardSetId);
     setIsLibraryOpen(false);
     setSearchQuery('');
+  };
+
+  const pageFeaturedItems = (direction: -1 | 1) => {
+    setFeaturedStartIndex((currentIndex) => {
+      const nextIndex = currentIndex + direction;
+      if (direction < 0) {
+        return Math.max(0, nextIndex);
+      }
+
+      if (currentIndex + featuredCardSetLimit >= items.length) {
+        return currentIndex;
+      }
+
+      return nextIndex;
+    });
+  };
+
+  const handleFeaturedWheel = (event: WheelEvent<HTMLDivElement>) => {
+    const direction = Math.abs(event.deltaX) > Math.abs(event.deltaY)
+      ? event.deltaX
+      : event.deltaY;
+    if (direction > 0 && canPageForward) {
+      event.preventDefault();
+      pageFeaturedItems(1);
+    }
+    if (direction < 0 && canPageBack) {
+      event.preventDefault();
+      pageFeaturedItems(-1);
+    }
   };
 
   return (
@@ -137,24 +194,56 @@ export function CardSetLibraryPicker({
           </IconButton>
         </Stack>
 
-        <Box
-          data-test="card_set_library__chips"
-          sx={{
-            display: 'grid',
-            gap: 1,
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
-          }}
+        <Stack
+          data-test="card_set_library__carousel"
+          data-featured-start-index={featuredStartIndex}
+          direction="row"
+          spacing={0.75}
+          sx={{ alignItems: 'stretch' }}
         >
-          {featuredItems.map((item) => (
-            <CardSetLibraryChip
-              interfaceLanguage={interfaceLanguage}
-              item={item}
-              key={item.id}
-              onSelect={() => handleSelect(item.id)}
-              selected={item.id === selectedCardSetId}
-            />
-          ))}
-        </Box>
+          <IconButton
+            aria-label={t(interfaceLanguage, 'previousCardSets')}
+            data-test="card_set_library__previous_button"
+            disabled={!canPageBack}
+            onClick={() => pageFeaturedItems(-1)}
+            sx={carouselButtonSx}
+          >
+            <KeyboardArrowLeftRoundedIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+          <Box
+            data-test="card_set_library__chips"
+            onWheel={handleFeaturedWheel}
+            sx={{
+              display: 'grid',
+              flex: 1,
+              gap: 1,
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(3, minmax(0, 1fr))',
+              },
+              minWidth: 0,
+            }}
+          >
+            {featuredItems.map((item) => (
+              <CardSetLibraryChip
+                interfaceLanguage={interfaceLanguage}
+                item={item}
+                key={item.id}
+                onSelect={() => handleSelect(item.id, 'featured')}
+                selected={item.id === selectedCardSetId}
+              />
+            ))}
+          </Box>
+          <IconButton
+            aria-label={t(interfaceLanguage, 'nextCardSets')}
+            data-test="card_set_library__next_button"
+            disabled={!canPageForward}
+            onClick={() => pageFeaturedItems(1)}
+            sx={carouselButtonSx}
+          >
+            <KeyboardArrowRightRoundedIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+        </Stack>
       </Stack>
 
       <Dialog
@@ -226,7 +315,7 @@ export function CardSetLibraryPicker({
                   interfaceLanguage={interfaceLanguage}
                   item={item}
                   key={item.id}
-                  onSelect={() => handleSelect(item.id)}
+                  onSelect={() => handleSelect(item.id, 'dialog')}
                   selected={item.id === selectedCardSetId}
                 />
               ))}
@@ -320,13 +409,45 @@ function CardSetLibraryChip({
         }}
       >
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <Typography
-            data-test={`${dataTestPrefix}_name__${item.id}`}
-            noWrap
-            sx={{ flex: 1, fontSize: 18, fontWeight: 950, minWidth: 0 }}
+          <Tooltip
+            arrow
+            describeChild
+            enterDelay={250}
+            placement="top"
+            slotProps={{
+              arrow: {
+                sx: {
+                  color: '#ffffff',
+                  '&::before': {
+                    border: '1px solid rgba(32, 48, 21, 0.14)',
+                  },
+                },
+              },
+              tooltip: {
+                sx: {
+                  bgcolor: '#ffffff',
+                  border: '1px solid rgba(32, 48, 21, 0.14)',
+                  borderRadius: 1.5,
+                  boxShadow: '0 12px 24px rgba(32, 48, 21, 0.16)',
+                  color: '#203015',
+                  fontSize: 14,
+                  fontWeight: 800,
+                  maxWidth: 320,
+                  px: 1.25,
+                  py: 0.9,
+                },
+              },
+            }}
+            title={item.name}
           >
-            {item.name}
-          </Typography>
+            <Typography
+              data-test={`${dataTestPrefix}_name__${item.id}`}
+              noWrap
+              sx={{ flex: 1, fontSize: 18, fontWeight: 950, minWidth: 0 }}
+            >
+              {item.name}
+            </Typography>
+          </Tooltip>
           {selected && (
             <CheckCircleRoundedIcon
               data-test={`${dataTestPrefix}_selected_icon__${item.id}`}
@@ -373,24 +494,6 @@ function cardSetMatchesSearch({
     );
 }
 
-function getFeaturedItems(
-  items: CardSetLibraryItem[],
-  selectedItem: CardSetLibraryItem | null,
-): CardSetLibraryItem[] {
-  const allCardsItem = items[0];
-  if (!allCardsItem || !selectedItem || selectedItem.isAllCards) {
-    return items.slice(0, featuredCardSetLimit);
-  }
-
-  return [
-    allCardsItem,
-    selectedItem,
-    ...items
-      .slice(1)
-      .filter((item) => item.id !== selectedItem.id),
-  ].slice(0, featuredCardSetLimit);
-}
-
 function getCardSetGradient(id: string, isAllCards?: boolean) {
   if (isAllCards) {
     return 'linear-gradient(135deg, #f9f871 0%, #9be667 42%, #61d4ff 100%)';
@@ -410,3 +513,33 @@ function getCardSetGradient(id: string, isAllCards?: boolean) {
   );
   return gradients[hash % gradients.length];
 }
+
+function getCenteredStartIndex(index: number, itemCount: number) {
+  if (index < 0) {
+    return 0;
+  }
+
+  const maxStartIndex = Math.max(0, itemCount - featuredCardSetLimit);
+  return Math.min(Math.max(0, index - 1), maxStartIndex);
+}
+
+const carouselButtonSx = {
+  alignSelf: 'stretch',
+  bgcolor: 'transparent',
+  border: '0px solid transparent',
+  borderRadius: 2,
+  color: '#6f4bd8',
+  justifyContent: 'center',
+  minWidth: 0,
+  px: 0,
+  width: { xs: 18, sm: 12 },
+  '&:hover': {
+    bgcolor: 'transparent',
+    color: '#4d31aa',
+  },
+  '&.Mui-disabled': {
+    bgcolor: 'transparent',
+    borderColor: 'transparent',
+    color: 'rgba(32, 48, 21, 0.22)',
+  },
+};

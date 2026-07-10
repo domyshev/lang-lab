@@ -51,9 +51,15 @@ function renderLargeApp(cardCount: number) {
     },
     preloadedState: {
       app: {
+        ...appReducer(undefined, { type: 'test/init' }),
         assistantId: 'studyTroll' as const,
         complementaryLanguages: { en: 'ru', ru: 'en', es: 'en' } as const,
         interfaceLanguage: 'ru' as const,
+        playerProfile: {
+          avatarSeed: 'test-player',
+          displayName: 'Тест',
+          isAnonymous: false,
+        },
         targetLanguage: 'en' as const,
       },
       cards: {

@@ -13,6 +13,13 @@ type I18nKey =
   | 'assistant'
   | 'assistantProfileLink'
   | 'assistantSuperpowersTitle'
+  | 'playerOnboardingTitle'
+  | 'playerOnboardingBody'
+  | 'playerNameLabel'
+  | 'savePlayerName'
+  | 'continueAnonymously'
+  | 'playerGreetingPrefix'
+  | 'playerAnonymousName'
   | 'practiceSettings'
   | 'complementaryLanguage'
   | 'correctStreakCooldownFivePlus'
@@ -31,6 +38,7 @@ type I18nKey =
   | 'agentsAnalyzeStatsCapability'
   | 'agentsVocabularyCapability'
   | 'agentsRollbackNotice'
+  | 'agentsIntroCoachmarkTitle'
   | 'importCards'
   | 'importDescription'
   | 'downloadCardFormat'
@@ -44,6 +52,8 @@ type I18nKey =
   | 'chooseCardSetPlaceholder'
   | 'gameLibrary'
   | 'openCardSetLibrary'
+  | 'previousCardSets'
+  | 'nextCardSets'
   | 'searchCardSetLibrary'
   | 'selectCardSetLibraryItem'
   | 'add'
@@ -83,6 +93,7 @@ type I18nKey =
   | 'finishExerciseNotice'
   | 'exerciseJumps'
   | 'exerciseJumpsTooltip'
+  | 'exerciseJumpHotkeysTooltip'
   | 'crosswordFinishExerciseNotice'
   | 'crosswordFinishHasLetters'
   | 'crosswordFinishNoCompletedWords'
@@ -190,6 +201,14 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     assistant: 'Character',
     assistantProfileLink: 'Meet them properly',
     assistantSuperpowersTitle: 'Superpowers',
+    playerOnboardingTitle: 'What should we call you?',
+    playerOnboardingBody:
+      'A bright pixel avatar will travel with you through the learning lab.',
+    playerNameLabel: 'Player name',
+    savePlayerName: 'Save',
+    continueAnonymously: 'Continue anonymously',
+    playerGreetingPrefix: 'Hello',
+    playerAnonymousName: 'wanderer',
     practiceSettings: 'Practice settings',
     complementaryLanguage: 'Complementary language',
     correctStreakCooldownFivePlus: 'Last 5 or more answers correct',
@@ -212,6 +231,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsVocabularyCapability: 'Create and add vocabulary.',
     agentsRollbackNotice:
       'Everything created by agents will be marked as agent-created, and the agent work history will keep a matching record so changes can be rolled back. No worries, the agent will not spoil your work :)',
+    agentsIntroCoachmarkTitle: 'Near plans',
     importCards: 'Manual card import',
     importDescription:
       'You can also prepare data for your learning lab with an external LLM agent and upload it here in our format. Just download the requirements and give them to your agent.',
@@ -226,6 +246,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     chooseCardSetPlaceholder: 'Choose card set',
     gameLibrary: 'Game library',
     openCardSetLibrary: 'Open card set library',
+    previousCardSets: 'Previous card sets',
+    nextCardSets: 'Next card sets',
     searchCardSetLibrary: 'Search by name or phrase',
     selectCardSetLibraryItem: 'Choose card set',
     add: 'Add',
@@ -273,6 +295,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     exerciseJumps: 'Jumps',
     exerciseJumpsTooltip:
       'Do you like jumps through space? We have them too: jump to any card without losing your completed result.',
+    exerciseJumpHotkeysTooltip:
+      'Cmd on Mac or Ctrl on Windows/Linux plus left/right arrows jump to the previous or next card. From the first card, a left jump lands on the last.',
     crosswordFinishExerciseNotice:
       'Completed crossword words will be counted and the game will end.',
     crosswordFinishHasLetters: 'The crossword already has entered letters.',
@@ -390,6 +414,14 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     assistant: 'Персонаж',
     assistantProfileLink: 'Познакомиться поближе',
     assistantSuperpowersTitle: 'Супер-способности',
+    playerOnboardingTitle: 'Как тебя зовут?',
+    playerOnboardingBody:
+      'Яркая пиксельная иконка будет путешествовать с тобой по учебной лаборатории.',
+    playerNameLabel: 'Имя игрока',
+    savePlayerName: 'Сохранить',
+    continueAnonymously: 'Продолжить анонимно',
+    playerGreetingPrefix: 'Приветик',
+    playerAnonymousName: 'странник',
     practiceSettings: 'Настройки практики',
     complementaryLanguage: 'Дополняющий язык',
     correctStreakCooldownFivePlus: 'Последние 5 и более раз верно',
@@ -412,6 +444,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsVocabularyCapability: 'Создавать и добавлять словарный запас.',
     agentsRollbackNotice:
       'Все, что создано агентами в приложении, будет помечено как созданное агентами, а в истории работы агента появится соответствующая запись. Это позволит откатить внесенные изменения. Не переживайте, агент не испортит ваши наработки :)',
+    agentsIntroCoachmarkTitle: 'Ближайшие планы',
     importCards: 'Ручной импорт карточек',
     importDescription:
       'Вы можете также подготовить данные для своей учебной лаборатории через внешнего LLM агента и загрузить их здесь в нашем формате. Просто скачайте требования и передайте их вашему агенту.',
@@ -426,6 +459,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     chooseCardSetPlaceholder: 'Выберите набор карточек',
     gameLibrary: 'Библиотека игр',
     openCardSetLibrary: 'Открыть библиотеку наборов',
+    previousCardSets: 'Предыдущие наборы карточек',
+    nextCardSets: 'Следующие наборы карточек',
     searchCardSetLibrary: 'Искать по названию или фразе',
     selectCardSetLibraryItem: 'Выбрать набор карточек',
     add: 'Добавить',
@@ -473,6 +508,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     exerciseJumps: 'Прыжки',
     exerciseJumpsTooltip:
       'Любишь прыжки в пространстве? Вот и у нас есть: прыгай к любой карточке, а уже выполненный результат не потеряется.',
+    exerciseJumpHotkeysTooltip:
+      'Cmd на Mac или Ctrl на Windows/Linux плюс стрелки влево/вправо делают прыжок к предыдущей или следующей карточке. С первой карточки прыжок влево переносит к последней.',
     crosswordFinishExerciseNotice:
       'Отвеченные слова попадут в статистику, а кроссворд будет закончен.',
     crosswordFinishHasLetters: 'В кроссворде уже введены буквы.',
@@ -591,6 +628,14 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     assistant: 'Personaje',
     assistantProfileLink: 'Conocerlo mejor',
     assistantSuperpowersTitle: 'Superpoderes',
+    playerOnboardingTitle: 'Como te llamamos?',
+    playerOnboardingBody:
+      'Un avatar pixelado y brillante viajara contigo por el laboratorio.',
+    playerNameLabel: 'Nombre de jugador',
+    savePlayerName: 'Guardar',
+    continueAnonymously: 'Continuar anonimo',
+    playerGreetingPrefix: 'Hola',
+    playerAnonymousName: 'viajero',
     practiceSettings: 'Ajustes de practica',
     complementaryLanguage: 'Idioma complementario',
     correctStreakCooldownFivePlus: 'Ultimas 5 o mas respuestas correctas',
@@ -613,6 +658,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsVocabularyCapability: 'Crear y anadir vocabulario.',
     agentsRollbackNotice:
       'Todo lo creado por agentes se marcara como creado por agentes, y el historial de trabajo guardara un registro correspondiente para poder deshacer los cambios. No te preocupes, el agente no estropeara tu trabajo :)',
+    agentsIntroCoachmarkTitle: 'Planes cercanos',
     importCards: 'Importacion manual de tarjetas',
     importDescription:
       'Tambien puedes preparar datos para tu laboratorio con un agente LLM externo y subirlos aqui en nuestro formato. Descarga los requisitos y daselos a tu agente.',
@@ -627,6 +673,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     chooseCardSetPlaceholder: 'Elige conjunto de tarjetas',
     gameLibrary: 'Biblioteca de juegos',
     openCardSetLibrary: 'Abrir biblioteca de conjuntos',
+    previousCardSets: 'Conjuntos anteriores',
+    nextCardSets: 'Conjuntos siguientes',
     searchCardSetLibrary: 'Buscar por nombre o frase',
     selectCardSetLibraryItem: 'Elegir conjunto de tarjetas',
     add: 'Anadir',
@@ -674,6 +722,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     exerciseJumps: 'Saltos',
     exerciseJumpsTooltip:
       'Te gustan los saltos por el espacio? Aqui tambien hay: salta a cualquier tarjeta sin perder lo ya completado.',
+    exerciseJumpHotkeysTooltip:
+      'Cmd en Mac o Ctrl en Windows/Linux con flechas izquierda/derecha salta a la tarjeta anterior o siguiente. Desde la primera, el salto a la izquierda vuelve a la ultima.',
     crosswordFinishExerciseNotice:
       'Las palabras completas del crucigrama se guardaran y el juego terminara.',
     crosswordFinishHasLetters: 'El crucigrama ya tiene letras escritas.',

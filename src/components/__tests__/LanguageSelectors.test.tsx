@@ -216,6 +216,25 @@ describe('LanguageSelectors', () => {
 
     expect(store.getState().app.complementaryLanguages.en).toBe('es');
   });
+
+  it('keeps extra vertical air between complementary language fields', async () => {
+    const user = userEvent.setup();
+    const store = createStore();
+
+    render(
+      <Provider store={store}>
+        <LanguageSelectors />
+      </Provider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Настройки практики' }));
+
+    expect(
+      screen.getByTestId('language_selectors__complementary_language_controls'),
+    ).toHaveStyle({
+      gap: '12px',
+    });
+  });
 });
 
 function createStore() {

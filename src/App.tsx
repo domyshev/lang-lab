@@ -176,6 +176,8 @@ export function App() {
   >([]);
   const [answeredMultipleChoiceCardIds, setAnsweredMultipleChoiceCardIds] =
     useState<string[]>([]);
+  const [multipleChoiceJumpCardId, setMultipleChoiceJumpCardId] =
+    useState<string | null>(null);
   const [completedMissingLettersCardIds, setCompletedMissingLettersCardIds] =
     useState<string[]>([]);
   const [completedMissingWordCardIds, setCompletedMissingWordCardIds] =
@@ -422,9 +424,12 @@ export function App() {
           ? [lastAnsweredCardId]
           : answeredMultipleChoiceCardIds;
       const activeCard =
-        randomizedEligibleCards.find(
-          (card) => !blockedCardIds.includes(card.id),
-        ) ?? firstCard;
+        randomizedEligibleCards.find((card) => card.id === multipleChoiceJumpCardId) ??
+        pickMultipleChoiceCard(
+          randomizedEligibleCards,
+          answeredMultipleChoiceCardIds,
+        ) ??
+        firstCard;
       const freshDistractorCards = randomizedEligibleCards.filter(
         (card) =>
           card.id !== activeCard.id && !blockedCardIds.includes(card.id),
@@ -476,6 +481,7 @@ export function App() {
     answeredMultipleChoiceCardIds,
     missingLettersPracticePrompts,
     missingWordPracticePrompts,
+    multipleChoiceJumpCardId,
     randomizedEligibleCards,
     resultPromptHold,
     selectedExerciseType,
@@ -488,6 +494,7 @@ export function App() {
     setAnsweredMissingLettersPromptKeys([]);
     setAnsweredMissingWordPromptKeys([]);
     setAnsweredMultipleChoiceCardIds([]);
+    setMultipleChoiceJumpCardId(null);
     setCompletedMissingLettersCardIds([]);
     setCompletedMissingWordCardIds([]);
     setCompletedMultipleChoiceCardIds([]);
@@ -1134,6 +1141,7 @@ export function App() {
                 setAnsweredMissingLettersPromptKeys([]);
                 setAnsweredMissingWordPromptKeys([]);
                 setAnsweredMultipleChoiceCardIds([]);
+                setMultipleChoiceJumpCardId(null);
                 setCompletedMissingLettersCardIds([]);
                 setCompletedMissingWordCardIds([]);
                 setCompletedMultipleChoiceCardIds([]);
@@ -1256,6 +1264,37 @@ export function App() {
     };
   }
 
+  function buildMultipleChoiceJumpSelector(
+    currentPrompt: ExercisePrompt & { options: string[] },
+  ): FinishExerciseJumpSelector {
+    const answerCounts = countCurrentSessionCardAnswers({
+      attempts,
+      currentExerciseSessionId,
+      exerciseType: 'multipleChoice',
+    });
+
+    return {
+      value: currentPrompt.cardId,
+      options: randomizedEligibleCards.map((card, index) => ({
+        isAnswered: completedMultipleChoiceCardIds.includes(card.id),
+        label: `${index + 1}. ${getCardJumpComplementaryLabel(
+          card,
+          complementaryLanguage,
+          targetLanguage,
+        )}${formatJumpAnswerCount(answerCounts.get(card.id) ?? 0)}`,
+        value: card.id,
+      })),
+      onChange: (nextCardId) => {
+        if (!randomizedEligibleCards.some((card) => card.id === nextCardId)) {
+          return;
+        }
+
+        setMultipleChoiceJumpCardId(nextCardId);
+        setLastSavedAttemptId(null);
+      },
+    };
+  }
+
   function renderFinishExerciseAction(
     jumpSelector?: FinishExerciseJumpSelector,
     options?: { showHypersonicJumpGuide?: boolean },
@@ -1347,7 +1386,9 @@ export function App() {
           progressTotalCount={eligibleCards.length}
           prompt={exercisePreview.prompt}
           cardSetName={selectedCardSet.name}
-          finishAction={renderFinishExerciseAction()}
+          finishAction={renderFinishExerciseAction(
+            buildMultipleChoiceJumpSelector(exercisePreview.prompt),
+          )}
           onAnswer={(answer) =>
             savePromptAttempt('multipleChoice', exercisePreview.prompt, answer, {
               advance: false,
@@ -1366,6 +1407,7 @@ export function App() {
 
             setCompletedMultipleChoiceCardIds(nextCompletedCardIds);
             setResultPromptHold(null);
+            setMultipleChoiceJumpCardId(null);
             setAnsweredMultipleChoiceCardIds((cardIds) => [
               ...cardIds.filter(
                 (cardId) => cardId !== exercisePreview.prompt.cardId,
@@ -1714,6 +1756,44 @@ function FinishExerciseAction({
     Boolean(state.app.hasHypersonicJumpLampBeenShown),
   );
 
+  useEffect(() => {
+    if (!jumpSelector || jumpSelector.options.length < 2) {
+      return undefined;
+    }
+
+    const handleJumpHotkey = (event: KeyboardEvent) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
+        return;
+      }
+
+      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) {
+        return;
+      }
+
+      const currentIndex = jumpSelector.options.findIndex(
+        (option) => option.value === jumpSelector.value,
+      );
+      if (currentIndex < 0) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const direction = event.key === 'ArrowRight' ? 1 : -1;
+      const nextIndex =
+        (currentIndex + direction + jumpSelector.options.length) %
+        jumpSelector.options.length;
+      const nextOption = jumpSelector.options[nextIndex];
+      if (nextOption) {
+        jumpSelector.onChange(nextOption.value);
+      }
+    };
+
+    window.addEventListener('keydown', handleJumpHotkey);
+    return () => window.removeEventListener('keydown', handleJumpHotkey);
+  }, [jumpSelector]);
+
   return (
     <Box
       data-test="exercise_finish_action__root"
@@ -1733,45 +1813,61 @@ function FinishExerciseAction({
     >
       {showHypersonicJumpGuide && (
         <Box
-          data-test="exercise_finish_action__thought_bubble"
+          data-test="exercise_finish_action__thought_cluster"
           sx={{
-            alignItems: 'flex-start',
-            bgcolor: 'rgba(250, 246, 255, 0.96)',
-            border: '1px solid rgba(113, 82, 188, 0.24)',
-            borderRadius: '18px 18px 6px 18px',
-            boxShadow: '0 12px 28px rgba(73, 48, 124, 0.10)',
-            color: '#4b3a70',
-            display: 'grid',
-            gap: 1,
-            gridTemplateColumns: 'auto minmax(0, 1fr)',
+            alignItems: 'center',
+            display: 'flex',
+            gap: 2.5,
             justifySelf: 'stretch',
-            maxWidth: 390,
-            p: 1.25,
-            position: 'relative',
-            '&::before': {
-              bgcolor: 'rgba(250, 246, 255, 0.96)',
-              border: '1px solid rgba(113, 82, 188, 0.22)',
-              borderRadius: '999px',
-              bottom: -8,
-              content: '""',
-              height: 12,
-              position: 'absolute',
-              right: 36,
-              width: 12,
-            },
-            '&::after': {
-              bgcolor: 'rgba(250, 246, 255, 0.96)',
-              border: '1px solid rgba(113, 82, 188, 0.20)',
-              borderRadius: '999px',
-              bottom: -16,
-              content: '""',
-              height: 7,
-              position: 'absolute',
-              right: 24,
-              width: 7,
-            },
+            maxWidth: 470,
+            width: '100%',
           }}
         >
+          {jumpSelector && (
+            <HotkeyShortcutTooltip interfaceLanguage={interfaceLanguage} />
+          )}
+          <Box
+            data-test="exercise_finish_action__thought_bubble"
+            sx={{
+              alignItems: 'flex-start',
+              bgcolor: 'rgba(250, 246, 255, 0.96)',
+              border: '1px solid rgba(113, 82, 188, 0.24)',
+              borderRadius: '18px 18px 6px 18px',
+              boxShadow: '0 12px 28px rgba(73, 48, 124, 0.10)',
+              color: '#4b3a70',
+              display: 'grid',
+              flex: '1 1 auto',
+              gap: 1,
+              gridTemplateColumns: 'auto minmax(0, 1fr)',
+              justifySelf: 'stretch',
+              maxWidth: 390,
+              minWidth: 0,
+              p: 1.25,
+              position: 'relative',
+              '&::before': {
+                bgcolor: 'rgba(250, 246, 255, 0.96)',
+                border: '1px solid rgba(113, 82, 188, 0.22)',
+                borderRadius: '999px',
+                bottom: -8,
+                content: '""',
+                height: 12,
+                position: 'absolute',
+                right: 36,
+                width: 12,
+              },
+              '&::after': {
+                bgcolor: 'rgba(250, 246, 255, 0.96)',
+                border: '1px solid rgba(113, 82, 188, 0.20)',
+                borderRadius: '999px',
+                bottom: -16,
+                content: '""',
+                height: 7,
+                position: 'absolute',
+                right: 24,
+                width: 7,
+              },
+            }}
+          >
           <CursorAnchoredTooltip
             anchorOrigin="triggerTopLeft"
             arrowDataTest="exercise_finish_action__thought_icon_tooltip_arrow"
@@ -1839,22 +1935,29 @@ function FinishExerciseAction({
             </Box>
           </CursorAnchoredTooltip>
           <Stack spacing={1} sx={{ minWidth: 0 }}>
-            <Typography
-              data-test="exercise_finish_action__note"
-              sx={{
-                color: '#4b3a70',
-                fontFamily:
-                  '"Trebuchet MS", "Verdana", "Arial", sans-serif',
-                fontSize: 13.5,
-                fontStyle: 'italic',
-                fontWeight: 800,
-                letterSpacing: 0,
-                lineHeight: 1.25,
-                textAlign: 'left',
-              }}
+            <Stack
+              data-test="exercise_finish_action__note_row"
+              direction="row"
+              spacing={1}
+              sx={{ alignItems: 'center', minWidth: 0 }}
             >
-              {t(interfaceLanguage, 'finishExerciseAnytimeBenefit')}
-            </Typography>
+              <Typography
+                data-test="exercise_finish_action__note"
+                sx={{
+                  color: '#4b3a70',
+                  fontFamily:
+                    '"Trebuchet MS", "Verdana", "Arial", sans-serif',
+                  fontSize: 13.5,
+                  fontStyle: 'italic',
+                  fontWeight: 800,
+                  letterSpacing: 0,
+                  lineHeight: 1.25,
+                  textAlign: 'left',
+                }}
+              >
+                {t(interfaceLanguage, 'finishExerciseAnytimeBenefit')}
+              </Typography>
+            </Stack>
             {jumpSelector && (
               <Stack
                 data-test="exercise_finish_action__jump_row"
@@ -1925,6 +2028,7 @@ function FinishExerciseAction({
               </Stack>
             )}
           </Stack>
+          </Box>
         </Box>
       )}
       <Box
@@ -1995,6 +2099,105 @@ function FinishExerciseAction({
         </Button>
       </Box>
     </Box>
+  );
+}
+
+function HotkeyShortcutTooltip({
+  interfaceLanguage,
+}: {
+  interfaceLanguage: RootState['app']['interfaceLanguage'];
+}) {
+  return (
+    <CursorAnchoredTooltip
+      anchorOrigin="triggerTopLeft"
+      arrowDataTest="exercise_finish_action__hotkeys_tooltip_arrow"
+      closeOnOtherOpen
+      hideArrow
+      title={
+        <TooltipContent sx={jumpInfoTooltipContentStyles}>
+          {t(interfaceLanguage, 'exerciseJumpHotkeysTooltip')}
+        </TooltipContent>
+      }
+      tooltipSx={jumpInfoTooltipStyles}
+    >
+      <Box
+        aria-label={t(interfaceLanguage, 'exerciseJumpHotkeysTooltip')}
+        data-test="exercise_finish_action__hotkeys_anchor"
+        role="img"
+        sx={{
+          alignItems: 'center',
+          display: 'inline-flex',
+          flex: '0 0 auto',
+          justifyContent: 'center',
+          position: 'relative',
+          width: { xs: 46, sm: 52 },
+        }}
+      >
+        <Box
+          data-test="exercise_finish_action__hotkeys_key"
+          sx={{
+            alignItems: 'center',
+            background:
+              'linear-gradient(145deg, #ffffff 0%, #f3efff 46%, #cfc0ff 100%)',
+            border: '1px solid rgba(105, 78, 190, 0.34)',
+            borderRadius: '13px',
+            boxShadow:
+              'inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -4px 0 rgba(93, 65, 178, 0.16), 0 12px 22px rgba(73, 48, 124, 0.22)',
+            color: '#5d41b2',
+            display: 'inline-flex',
+            height: { xs: 40, sm: 44 },
+            justifyContent: 'center',
+            position: 'relative',
+            transform: 'perspective(90px) rotateX(6deg)',
+            transition: 'transform 160ms ease, box-shadow 160ms ease',
+            width: { xs: 42, sm: 46 },
+            '&::before': {
+              background:
+                'linear-gradient(90deg, rgba(255,255,255,0.82), rgba(255,255,255,0.18))',
+              borderRadius: '10px 10px 7px 7px',
+              content: '""',
+              height: '34%',
+              left: 5,
+              position: 'absolute',
+              right: 5,
+              top: 4,
+            },
+            '&::after': {
+              background: 'rgba(93, 65, 178, 0.20)',
+              borderRadius: '0 0 12px 12px',
+              bottom: -4,
+              content: '""',
+              height: 6,
+              left: 4,
+              position: 'absolute',
+              right: 4,
+              zIndex: -1,
+            },
+            '&:hover': {
+              boxShadow:
+                'inset 0 2px 0 rgba(255,255,255,0.95), inset 0 -4px 0 rgba(93, 65, 178, 0.18), 0 16px 28px rgba(73, 48, 124, 0.28)',
+              transform: 'perspective(90px) rotateX(3deg) translateY(-1px)',
+            },
+          }}
+        >
+          <Box
+            component="span"
+            data-test="exercise_finish_action__hotkeys_key_symbol"
+            sx={{
+              fontFamily: '"Trebuchet MS", "Verdana", "Arial", sans-serif',
+              fontSize: { xs: 25, sm: 28 },
+              fontWeight: 950,
+              lineHeight: 1,
+              position: 'relative',
+              textShadow: '0 1px 0 rgba(255,255,255,0.82)',
+              zIndex: 1,
+            }}
+          >
+            ⌘
+          </Box>
+        </Box>
+      </Box>
+    </CursorAnchoredTooltip>
   );
 }
 
@@ -2517,6 +2720,23 @@ function getJumpComplementaryLabel(
   return fallbackHint ?? prompt.prompt;
 }
 
+function getCardJumpComplementaryLabel(
+  card: LanguageCard,
+  complementaryLanguage: SupportedLanguage,
+  targetLanguage: SupportedLanguage,
+): string {
+  const complementaryAnswer = getCardAnswer(card, complementaryLanguage)?.trim();
+  if (complementaryAnswer) {
+    return complementaryAnswer;
+  }
+
+  const fallbackAnswer = Object.entries(card.translations).find(
+    ([language, value]) => language !== targetLanguage && Boolean(value?.trim()),
+  )?.[1];
+
+  return fallbackAnswer?.trim() ?? card.id;
+}
+
 function getCompletedCrosswordEntries(
   puzzle: CrosswordPuzzle,
   answers: Record<string, string>,
@@ -2655,6 +2875,38 @@ function countCurrentSessionCardAnswers({
     });
 
   return counts;
+}
+
+function pickMultipleChoiceCard(
+  cards: LanguageCard[],
+  answeredCardIds: string[],
+): LanguageCard | undefined {
+  const lastAnsweredCardId = answeredCardIds[answeredCardIds.length - 1];
+  const lastAnsweredCardIndex = cards.findIndex(
+    (card) => card.id === lastAnsweredCardId,
+  );
+  const lastAnsweredCard =
+    lastAnsweredCardIndex >= 0 ? cards[lastAnsweredCardIndex] : undefined;
+  const blockedCardIds =
+    answeredCardIds.length >= cards.length ? [lastAnsweredCardId] : answeredCardIds;
+  const orderedCards =
+    lastAnsweredCardIndex >= 0
+      ? [
+          ...cards.slice(lastAnsweredCardIndex + 1),
+          ...cards.slice(0, lastAnsweredCardIndex + 1),
+        ]
+      : cards;
+  const availableCards = orderedCards.filter(
+    (card) => !blockedCardIds.includes(card.id),
+  );
+
+  return (
+    availableCards[0] ??
+    (lastAnsweredCard
+      ? cards.find((card) => card.id !== lastAnsweredCard.id)
+      : undefined) ??
+    cards[0]
+  );
 }
 
 function pickPracticePrompt<T extends PracticePrompt<ExercisePrompt>>(

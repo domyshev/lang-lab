@@ -16,12 +16,20 @@ export interface AppState {
   assistantId: AssistantId;
   complementaryLanguages: ComplementaryLanguages;
   hasFinishExerciseLampBeenShown?: boolean;
+  hasAgentsIntroCoachmarkBeenShown?: boolean;
   hasGameHelpCoachmarkBeenShown?: boolean;
   hasHypersonicJumpLampBeenShown?: boolean;
   interfaceLanguage: SupportedLanguage;
   isGameHelpCollapsed?: boolean;
+  playerProfile?: PlayerProfile;
   practiceSettings?: PracticeSettings;
   targetLanguage: SupportedLanguage;
+}
+
+export interface PlayerProfile {
+  avatarSeed: string;
+  displayName?: string;
+  isAnonymous: boolean;
 }
 
 export type ComplementaryLanguages = Record<
@@ -39,6 +47,7 @@ const initialState: AppState = {
   assistantId: defaultAssistantId,
   complementaryLanguages: defaultComplementaryLanguages,
   hasFinishExerciseLampBeenShown: false,
+  hasAgentsIntroCoachmarkBeenShown: false,
   hasGameHelpCoachmarkBeenShown: false,
   hasHypersonicJumpLampBeenShown: false,
   interfaceLanguage: 'ru',
@@ -60,11 +69,20 @@ const appSlice = createSlice({
     markFinishExerciseLampShown(state) {
       state.hasFinishExerciseLampBeenShown = true;
     },
+    markAgentsIntroCoachmarkShown(state) {
+      state.hasAgentsIntroCoachmarkBeenShown = true;
+    },
     markHypersonicJumpLampShown(state) {
       state.hasHypersonicJumpLampBeenShown = true;
     },
     setAssistantId(state, action: PayloadAction<AssistantId>) {
       state.assistantId = action.payload;
+    },
+    setPlayerProfile(state, action: PayloadAction<PlayerProfile>) {
+      state.playerProfile = {
+        ...action.payload,
+        displayName: action.payload.displayName?.trim() || undefined,
+      };
     },
     setComplementaryLanguageForTarget(
       state,
@@ -121,6 +139,7 @@ const appSlice = createSlice({
 
 export const {
   acknowledgeGameHelp,
+  markAgentsIntroCoachmarkShown,
   markFinishExerciseLampShown,
   markGameHelpCoachmarkShown,
   markHypersonicJumpLampShown,
@@ -129,6 +148,7 @@ export const {
   setCorrectStreakCooldownMonths,
   setInterfaceLanguage,
   setNewCardMixFrequencyPercent,
+  setPlayerProfile,
   setRecentMistakeRepeatFrequencyPercent,
   setTargetLanguage,
 } = appSlice.actions;
