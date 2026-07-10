@@ -37,6 +37,16 @@ describe('MultipleChoiceExercise', () => {
     expect(
       screen.getByTestId('multiple_choice_exercise__prompt_hint__airport__primary'),
     ).toHaveStyle({ fontWeight: '850' });
+    expect(
+      screen.getByTestId(
+        'multiple_choice_exercise__prompt_hint__airport__primary_language_code',
+      ),
+    ).toHaveStyle({ marginRight: '4px' });
+    expect(
+      screen.getByTestId(
+        'multiple_choice_exercise__prompt_hint__airport__secondary_language_code__ru',
+      ),
+    ).toHaveStyle({ marginRight: '4px' });
   });
 
   it('shows white answer options and marks the selected result before next', async () => {

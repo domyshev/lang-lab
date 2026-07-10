@@ -120,4 +120,46 @@ describe('CursorAnchoredTooltip', () => {
     expect(anchor).toHaveAttribute('data-anchor-x', '80');
     expect(anchor).toHaveAttribute('data-anchor-y', '60');
   });
+
+  it('can anchor the tooltip to the trigger center-left point instead of the pointer', async () => {
+    render(
+      <CursorAnchoredTooltip
+        anchorOrigin="triggerCenterLeft"
+        arrowDataTest="center_left_tooltip_arrow"
+        placement="left"
+        title={
+          <TooltipContent sx={{ bgcolor: '#ffffff', p: 1 }}>
+            Center-left anchored details
+          </TooltipContent>
+        }
+        tooltipSx={{ bgcolor: '#ffffff' }}
+      >
+        <Box data-test="center_left_tooltip_anchor">hover me</Box>
+      </CursorAnchoredTooltip>,
+    );
+
+    const anchor = screen.getByTestId('center_left_tooltip_anchor');
+    anchor.getBoundingClientRect = () => ({
+      bottom: 180,
+      height: 120,
+      left: 90,
+      right: 210,
+      top: 60,
+      width: 120,
+      x: 90,
+      y: 60,
+      toJSON: () => undefined,
+    });
+
+    fireEvent.mouseOver(anchor, { clientX: 180, clientY: 150 });
+
+    expect(await screen.findByRole('tooltip')).toBeInTheDocument();
+    expect(anchor).toHaveAttribute('data-anchor-x', '90');
+    expect(anchor).toHaveAttribute('data-anchor-y', '120');
+
+    fireEvent.mouseMove(anchor, { clientX: 100, clientY: 70 });
+
+    expect(anchor).toHaveAttribute('data-anchor-x', '90');
+    expect(anchor).toHaveAttribute('data-anchor-y', '120');
+  });
 });

@@ -1,4 +1,4 @@
-import { Box, Link, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import {
   AssistantId,
@@ -50,23 +50,27 @@ export function CoachPanel({
       }}
     >
       <CursorAnchoredTooltip
+        anchorOrigin="triggerCenterLeft"
         arrowDataTest="coach_panel__assistant_tooltip_arrow"
+        closeOnOtherOpen
+        hideArrow
+        placement="left"
         title={
           <Stack
             data-test="coach_panel__assistant_tooltip"
             spacing={0.75}
-            sx={{ bgcolor: '#ffffff' }}
+            sx={{ bgcolor: 'transparent' }}
           >
             <Typography
               data-test="coach_panel__assistant_tooltip_title"
-              sx={{ color: '#203015', fontSize: 16, fontWeight: 900 }}
+              sx={{ color: '#4b3a70', fontSize: 16, fontWeight: 950 }}
             >
               {assistantName}
             </Typography>
             <Typography
               data-test="coach_panel__assistant_tooltip_motto"
               sx={{
-                color: 'rgba(32, 48, 21, 0.78)',
+                color: 'rgba(75, 58, 112, 0.78)',
                 fontSize: 14,
                 fontStyle: 'italic',
                 lineHeight: 1.35,
@@ -75,24 +79,46 @@ export function CoachPanel({
               {assistantMotto}
             </Typography>
             <Box aria-hidden="true" sx={{ height: 4 }} />
-            <Link
+            <Box
+              component="button"
               data-test="coach_panel__assistant_profile_link"
-              href="#"
+              type="button"
               onClick={(event) => {
                 event.preventDefault();
                 onAssistantOpen?.(assistantId);
               }}
               sx={{
-                color: '#6f4bd8',
+                alignSelf: 'flex-start',
+                background:
+                  'linear-gradient(135deg, #fff3a5 0%, #ffe27a 42%, #d7c6ff 100%)',
+                border: '1.5px solid rgba(123, 95, 196, 0.42)',
+                borderRadius: '18px 12px 18px 8px',
+                boxShadow:
+                  'inset 0 1px 0 rgba(255,255,255,0.82), 0 8px 16px rgba(73, 48, 124, 0.13)',
+                color: '#5b3fc0',
                 cursor: 'pointer',
-                fontSize: 14,
-                fontWeight: 850,
-                textDecorationColor: 'rgba(111, 75, 216, 0.55)',
-                '&:hover': { textDecoration: 'none' },
+                fontFamily:
+                  '"Trebuchet MS", "Verdana", "Arial", sans-serif',
+                fontSize: 13.5,
+                fontWeight: 900,
+                lineHeight: 1.1,
+                mt: 0.25,
+                px: 1.25,
+                py: 0.75,
+                textAlign: 'left',
+                transform: 'rotate(-1deg)',
+                transition:
+                  'transform 160ms ease, box-shadow 160ms ease, filter 160ms ease',
+                '&:hover': {
+                  boxShadow:
+                    'inset 0 1px 0 rgba(255,255,255,0.9), 0 10px 20px rgba(73, 48, 124, 0.18)',
+                  filter: 'brightness(1.04)',
+                  transform: 'rotate(0deg) translateY(-1px)',
+                },
               }}
             >
               {t(interfaceLanguage, 'assistantProfileLink')}
-            </Link>
+            </Box>
           </Stack>
         }
         tooltipSx={assistantTooltipStyles}
@@ -154,10 +180,40 @@ export function CoachPanel({
 }
 
 const assistantTooltipStyles = {
-  bgcolor: '#ffffff',
-  border: '1px solid rgba(32, 48, 21, 0.14)',
-  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
-  color: '#203015',
-  maxWidth: 300,
-  p: 1.25,
+  background:
+    'linear-gradient(135deg, #fffaf0 0%, #fff7c7 48%, #f4edff 100%)',
+  border: '1px solid rgba(123, 95, 196, 0.24)',
+  borderRadius: '24px 18px 24px 10px',
+  boxShadow:
+    '0 14px 30px rgba(73, 48, 124, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.58)',
+  color: '#4b3a70',
+  maxWidth: 320,
+  overflow: 'visible',
+  position: 'relative',
+  px: 1.75,
+  py: 1.35,
+  '&::before': {
+    bgcolor: '#ffe27a',
+    border: '1px solid rgba(123, 95, 196, 0.18)',
+    borderRadius: '999px',
+    boxShadow: '0 5px 12px rgba(73, 48, 124, 0.10)',
+    content: '""',
+    height: 10,
+    position: 'absolute',
+    right: -9,
+    top: 'calc(50% - 2px)',
+    width: 10,
+  },
+  '&::after': {
+    bgcolor: '#b99cff',
+    border: '1px solid rgba(123, 95, 196, 0.14)',
+    borderRadius: '999px',
+    boxShadow: '0 4px 10px rgba(73, 48, 124, 0.08)',
+    content: '""',
+    height: 7,
+    position: 'absolute',
+    right: -18,
+    top: 'calc(50% + 10px)',
+    width: 7,
+  },
 };

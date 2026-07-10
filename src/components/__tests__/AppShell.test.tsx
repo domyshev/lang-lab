@@ -58,7 +58,7 @@ describe('AppShell', () => {
       expect(screen.queryByRole('dialog', { name: 'Как тебя зовут?' })).not.toBeInTheDocument();
     });
     expect(screen.getByTestId('player_greeting__label')).toHaveTextContent(
-      'Приветик, странник',
+      'Привет, странник',
     );
     expect(screen.getByTestId('player_greeting__avatar')).toBeInTheDocument();
     expect(store.getState().app.playerProfile).toMatchObject({
@@ -92,7 +92,7 @@ describe('AppShell', () => {
       expect(screen.queryByRole('dialog', { name: 'Как тебя зовут?' })).not.toBeInTheDocument();
     });
     expect(screen.getByTestId('player_greeting__label')).toHaveTextContent(
-      'Приветик, Илья',
+      'Привет, Илья',
     );
     expect(store.getState().app.playerProfile).toMatchObject({
       displayName: 'Илья',

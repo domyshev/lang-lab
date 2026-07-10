@@ -1360,7 +1360,6 @@ describe('App navigation', () => {
     );
 
     const tooltip = await screen.findByTestId('coach_panel__assistant_tooltip');
-    expect(tooltip).toHaveStyle({ backgroundColor: 'rgb(255, 255, 255)' });
     expect(
       within(tooltip).getByTestId('coach_panel__assistant_tooltip_title'),
     ).toHaveTextContent('Веселый листочек');
@@ -1368,8 +1367,13 @@ describe('App navigation', () => {
       within(tooltip).getByTestId('coach_panel__assistant_tooltip_motto'),
     ).toHaveStyle({ fontStyle: 'italic' });
 
+    const profileButton = within(tooltip).getByRole('button', {
+      name: 'Познакомиться поближе',
+    });
+    expect(profileButton).toHaveStyle({ cursor: 'pointer' });
+
     await user.click(
-      within(tooltip).getByRole('link', { name: 'Познакомиться поближе' }),
+      profileButton,
     );
 
     expect(

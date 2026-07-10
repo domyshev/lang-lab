@@ -39,7 +39,11 @@ export function TranslationHintRow({
           data-test={`${hintPartDataTest}__primary`}
           sx={primaryTranslationHintStyles}
         >
-          <Box component="span" sx={languageCodeStyles}>
+          <Box
+            component="span"
+            data-test={`${hintPartDataTest}__primary_language_code`}
+            sx={languageCodeStyles}
+          >
             {primaryHint.language}:
           </Box>{' '}
           {primaryHint.value}
@@ -52,7 +56,11 @@ export function TranslationHintRow({
           key={`${hint.language}:${hint.value}`}
           sx={secondaryTranslationHintStyles}
         >
-          <Box component="span" sx={secondaryLanguageCodeStyles}>
+          <Box
+            component="span"
+            data-test={`${hintPartDataTest}__secondary_language_code__${hint.language}`}
+            sx={secondaryLanguageCodeStyles}
+          >
             {hint.language}:
           </Box>{' '}
           {hint.value}
@@ -89,14 +97,17 @@ const secondaryTranslationHintStyles = {
   fontSize: { xs: 17, sm: 18 },
   fontWeight: 650,
   lineHeight: 1.3,
+  ml: '10px',
 };
 
 const languageCodeStyles = {
   color: '#5b6b47',
   fontWeight: 900,
+  mr: 0.5,
 };
 
 const secondaryLanguageCodeStyles = {
   color: '#6b7468',
   fontWeight: 800,
+  mr: 0.5,
 };

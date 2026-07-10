@@ -420,7 +420,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     playerNameLabel: 'Имя игрока',
     savePlayerName: 'Сохранить',
     continueAnonymously: 'Продолжить анонимно',
-    playerGreetingPrefix: 'Приветик',
+    playerGreetingPrefix: 'Привет',
     playerAnonymousName: 'странник',
     practiceSettings: 'Настройки практики',
     complementaryLanguage: 'Дополняющий язык',
