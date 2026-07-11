@@ -1,6 +1,6 @@
 import { ChangeEvent, useState } from 'react';
 import { Alert, Box, Button, Chip, Divider, Link, Paper, Stack, Typography } from '@mui/material';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import {
   importLanguageCards,
   ImportResult,
@@ -33,6 +33,7 @@ const summaryLabels = [
 
 export function ManualCardImportPanel() {
   const dispatch = useDispatch<AppDispatch>();
+  const reduxStore = useStore<RootState>();
   const cards = useSelector((state: RootState) => state.cards.cards);
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
@@ -50,8 +51,9 @@ export function ManualCardImportPanel() {
 
     try {
       const text = await readFileAsText(file);
+      const currentCards = reduxStore.getState().cards.cards;
       const result = importLanguageCards({
-        existingCards: cards,
+        existingCards: currentCards,
         pastedJson: text,
         now: new Date().toISOString(),
       });

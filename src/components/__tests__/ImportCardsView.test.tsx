@@ -2,7 +2,11 @@ import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { PlannedAiOperation } from '../../domain/aiOperations';
+import { LanguageCard } from '../../domain/cards';
+import { applyAiOperation } from '../../store/aiAssistantActions';
+import { stageAiOperation } from '../../store/aiAssistantSlice';
 import { rootReducer } from '../../store/store';
 import { ImportCardsView } from '../ImportCardsView';
 
@@ -54,6 +58,90 @@ describe('ImportCardsView compatibility wrapper', () => {
 
     await user.upload(screen.getByLabelText('Choose JSON file'), file);
     await waitFor(() => expect(store.getState().cards.cards).toHaveLength(1));
+    expect(screen.getByText('Added: 1')).toBeInTheDocument();
+  });
+
+  it('merges a delayed file import with an AI operation applied during the read', async () => {
+    const user = userEvent.setup();
+    const store = renderImportCardsView('en');
+    let finishReading!: (contents: string) => void;
+    const delayedContents = new Promise<string>((resolve) => {
+      finishReading = resolve;
+    });
+    const file = new File([], 'delayed-cards.json', { type: 'application/json' });
+    const readText = vi.fn(() => delayedContents);
+    Object.defineProperty(file, 'text', { configurable: true, value: readText });
+
+    const upload = user.upload(screen.getByLabelText('Choose JSON file'), file);
+    await waitFor(() => expect(readText).toHaveBeenCalledTimes(1));
+
+    const operationTime = '2026-07-12T09:00:00.000Z';
+    const aiCard: LanguageCard = {
+      id: 'card-from-ai-operation',
+      translations: { en: 'journey', ru: 'путешествие', es: 'viaje' },
+      createdAt: operationTime,
+      updatedAt: operationTime,
+    };
+    const operation: PlannedAiOperation = {
+      id: 'operation-during-file-read',
+      title: 'Add travel cards',
+      summary: 'Adds a travel card and set.',
+      userPrompt: 'Create a travel set.',
+      modelId: 'deepseek/deepseek-v4-flash',
+      createdAt: operationTime,
+      createdCards: [aiCard],
+      updatedCards: [],
+      createdCardSets: [
+        {
+          id: 'set-from-ai-operation',
+          name: 'Travel',
+          names: { en: 'Travel', ru: 'Путешествия', es: 'Viajes' },
+          cardIds: [aiCard.id],
+          createdAt: operationTime,
+          updatedAt: operationTime,
+        },
+      ],
+      updatedCardSets: [],
+      duplicateProcessingHistory: [],
+      pendingDuplicates: [],
+      previewCounts: {
+        createdCards: 1,
+        updatedCards: 0,
+        pendingDuplicates: 0,
+        createdCardSets: 1,
+        renamedCardSets: 0,
+        membershipAdditions: 1,
+        membershipRemovals: 0,
+      },
+    };
+    store.dispatch(stageAiOperation(operation));
+    store.dispatch(applyAiOperation({ operation, appliedAt: operationTime }));
+
+    finishReading(JSON.stringify([
+      {
+        translations: {
+          en: 'vehicle',
+          ru: 'транспортное средство',
+          es: 'vehiculo',
+        },
+      },
+    ]));
+    await upload;
+
+    await waitFor(() => expect(store.getState().cards.cards).toHaveLength(2));
+    const state = store.getState();
+    const cardIds = new Set(state.cards.cards.map(({ id }) => id));
+    expect(cardIds).toContain(aiCard.id);
+    expect(state.cards.cards).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ translations: expect.objectContaining({ en: 'vehicle' }) }),
+      ]),
+    );
+    expect(
+      state.cardSets.cardSets.every((cardSet) =>
+        cardSet.cardIds.every((cardId) => cardIds.has(cardId)),
+      ),
+    ).toBe(true);
     expect(screen.getByText('Added: 1')).toBeInTheDocument();
   });
 
