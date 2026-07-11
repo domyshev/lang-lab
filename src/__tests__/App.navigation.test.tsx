@@ -336,7 +336,7 @@ describe('App navigation', () => {
     expect(screen.queryByText('Language Crossword Lab')).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Карточки' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Статистика' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Агенты LLM' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'AI помощник' })).toBeInTheDocument();
     const setupPanel = screen.getByTestId('game_setup__panel');
     expect(setupPanel).toHaveStyle({
       maxWidth: '760px',
@@ -734,21 +734,67 @@ describe('App navigation', () => {
     ).toHaveTextContent('0 пройдено / 4 всего');
   });
 
-  it('opens the AI assistant workspace and keeps manual import on the agents tab', async () => {
+  it.each([
+    {
+      interfaceLanguage: 'en' as const,
+      gamesTab: 'Games',
+      title: 'AI Assistant',
+      wandLabel: 'Open AI Assistant',
+      connectionTitle: 'Connection',
+      chatTitle: 'Chat',
+      historyTitle: 'Operation history',
+      importTitle: 'Manual card import',
+    },
+    {
+      interfaceLanguage: 'ru' as const,
+      gamesTab: 'Игры',
+      title: 'AI помощник',
+      wandLabel: 'Открыть AI помощника',
+      connectionTitle: 'Подключение',
+      chatTitle: 'Чат',
+      historyTitle: 'История операций',
+      importTitle: 'Ручной импорт карточек',
+    },
+    {
+      interfaceLanguage: 'es' as const,
+      gamesTab: 'Juegos',
+      title: 'Asistente IA',
+      wandLabel: 'Abrir Asistente IA',
+      connectionTitle: 'Conexion',
+      chatTitle: 'Chat',
+      historyTitle: 'Historial de operaciones',
+      importTitle: 'Importacion manual de tarjetas',
+    },
+  ])('opens AI Assistant from its localized tab and wand in $interfaceLanguage', async ({
+    interfaceLanguage,
+    gamesTab,
+    title,
+    wandLabel,
+    connectionTitle,
+    chatTitle,
+    historyTitle,
+    importTitle,
+  }) => {
     const user = userEvent.setup();
-    renderApp();
+    renderApp({ app: { interfaceLanguage } });
 
-    await user.click(screen.getByRole('tab', { name: 'Агенты LLM' }));
+    await user.click(screen.getByRole('tab', { name: title }));
 
-    expect(screen.queryByRole('tab', { name: 'Импорт' })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'AI-ассистент' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Подключение' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Чат' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'История операций' })).toBeInTheDocument();
+    expect(screen.getByTestId('ai_assistant__page')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: connectionTitle })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: chatTitle })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: historyTitle })).toBeInTheDocument();
     expect(screen.getByText('DeepSeek V4 Flash')).toBeInTheDocument();
-    expect(screen.queryByText(/триальн/i)).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Ручной импорт карточек' })).toBeInTheDocument();
-    expect(screen.queryByText('Вставить JSON')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: importTitle })).toBeInTheDocument();
+    expect(screen.queryByText(/trial|триальн|prueba/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: gamesTab }));
+    await user.click(screen.getByRole('button', { name: wandLabel }));
+
+    expect(screen.getByTestId('ai_assistant__page')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: importTitle })).toBeInTheDocument();
   });
 
   it('collapses game help after the player acknowledges it and points back to the accordion', async () => {

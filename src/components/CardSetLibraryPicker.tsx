@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { WheelEvent } from 'react';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftRounded';
 import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
@@ -43,6 +44,7 @@ export function CardSetLibraryPicker({
   cards,
   cardSets,
   interfaceLanguage,
+  onOpenAiAssistant,
   onSelect,
   selectedCardSetId,
   targetLanguage,
@@ -50,6 +52,7 @@ export function CardSetLibraryPicker({
   cards: LanguageCard[];
   cardSets: CardSet[];
   interfaceLanguage: RootState['app']['interfaceLanguage'];
+  onOpenAiAssistant: () => void;
   onSelect: (cardSetId: string) => void;
   selectedCardSetId: string;
   targetLanguage: SupportedLanguage;
@@ -180,12 +183,38 @@ export function CardSetLibraryPicker({
           sx={{ alignItems: 'center', justifyContent: 'space-between' }}
         >
           <Box sx={{ minWidth: 0 }}>
-            <Typography
-              data-test="card_set_library__title"
-              sx={{ color: '#203015', fontSize: 18, fontWeight: 900 }}
+            <Stack
+              data-test="card_set_library__title_row"
+              direction="row"
+              style={{ gap: '10px' }}
+              sx={{ alignItems: 'center' }}
             >
-              {t(interfaceLanguage, 'cardSetLibrary')}
-            </Typography>
+              <Typography
+                data-test="card_set_library__title"
+                sx={{ color: '#203015', fontSize: 18, fontWeight: 900 }}
+              >
+                {t(interfaceLanguage, 'cardSetLibrary')}
+              </Typography>
+              <Tooltip title={t(interfaceLanguage, 'openAiAssistant')}>
+                <IconButton
+                  aria-label={t(interfaceLanguage, 'openAiAssistant')}
+                  data-test="card_set_library__ai_assistant_button"
+                  onClick={onOpenAiAssistant}
+                  size="small"
+                  sx={{
+                    bgcolor: 'rgba(111, 75, 216, 0.10)',
+                    color: '#6f4bd8',
+                    flexShrink: 0,
+                    '&:hover': { bgcolor: 'rgba(111, 75, 216, 0.18)' },
+                  }}
+                >
+                  <AutoFixHighIcon
+                    data-test="card_set_library__ai_assistant_icon"
+                    fontSize="small"
+                  />
+                </IconButton>
+              </Tooltip>
+            </Stack>
             {selectedItem ? (
               <Typography
                 data-test="card_set_library__selected_name"

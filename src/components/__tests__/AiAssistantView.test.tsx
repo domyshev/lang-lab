@@ -538,8 +538,8 @@ describe('AiAssistantView operation preview and history', () => {
 describe('AiAssistantView localization and manual import', () => {
   it.each([
     ['en', 'AI Assistant', 'Connection', 'Chat', 'Operation history', 'Manual card import'],
-    ['ru', 'AI-ассистент', 'Подключение', 'Чат', 'История операций', 'Ручной импорт карточек'],
-    ['es', 'Asistente de IA', 'Conexion', 'Chat', 'Historial de operaciones', 'Importacion manual de tarjetas'],
+    ['ru', 'AI помощник', 'Подключение', 'Чат', 'История операций', 'Ручной импорт карточек'],
+    ['es', 'Asistente IA', 'Conexion', 'Chat', 'Historial de operaciones', 'Importacion manual de tarjetas'],
   ] as const)('localizes the visible workspace in %s', (language, title, connection, chat, history, manual) => {
     renderView({ language });
     expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();

@@ -78,23 +78,35 @@ export function AppShell({
         }}
       >
         <Toolbar
+          data-nowrap-breakpoint="1360px"
           data-test="app_shell__toolbar"
           sx={{
-            alignItems: { xs: 'flex-start', md: 'center' },
-            columnGap: { xs: 1.25, md: 2 },
-            rowGap: { xs: 1.25, md: 0 },
-            flexWrap: { xs: 'wrap', md: 'nowrap' },
-            minHeight: { xs: 'auto', md: 70 },
-            py: { xs: 1.25, md: 0 },
+            alignItems: 'flex-start',
+            columnGap: 1.25,
+            rowGap: 1.25,
+            flexWrap: 'wrap',
+            minHeight: 'auto',
+            py: 1.25,
+            '@media (min-width: 1360px)': {
+              alignItems: 'center',
+              columnGap: 2,
+              rowGap: 0,
+              flexWrap: 'nowrap',
+              minHeight: 70,
+              py: 0,
+            },
           }}
         >
           <Box
             data-test="app_shell__logo_slot"
             sx={{
               display: 'flex',
-              flexBasis: { xs: '100%', md: 'auto' },
+              flexBasis: '100%',
               justifyContent: 'flex-start',
-              minWidth: 0,
+              minWidth: 250,
+              '@media (min-width: 1360px)': {
+                flexBasis: 'auto',
+              },
             }}
           >
             <AppLogo
@@ -104,6 +116,7 @@ export function AppShell({
           </Box>
 
           <Tabs
+            data-wide-scroll-buttons="hidden-at-1360px"
             data-test="app_shell__main_tabs"
             value={tabValue}
             onChange={(_, value: AppShellSection) => onNavigate?.(value)}
@@ -111,15 +124,27 @@ export function AppShell({
             variant="scrollable"
             scrollButtons="auto"
             sx={{
-              alignSelf: { xs: 'stretch', md: 'auto' },
+              alignSelf: 'stretch',
+              flexBasis: '100%',
               minHeight: 44,
-              maxWidth: { xs: '100%', md: 520 },
+              maxWidth: '100%',
+              '@media (min-width: 1360px)': {
+                alignSelf: 'auto',
+                flexBasis: 'auto',
+                maxWidth: 520,
+                '& .MuiTabs-scrollButtons': {
+                  display: 'none',
+                },
+              },
               '& .MuiTab-root': {
                 color: 'inherit',
                 minHeight: 44,
-                px: { xs: 1.25, sm: 2 },
+                px: { xs: 0.75, sm: 2 },
                 textTransform: 'none',
                 fontWeight: 800,
+                '@media (min-width: 1360px)': {
+                  px: 1,
+                },
               },
               '& .Mui-selected': {
                 color: '#203015',
@@ -135,21 +160,25 @@ export function AppShell({
               value="game"
               label={t(interfaceLanguage, 'gamesTab')}
               onClick={() => onNavigate?.('game')}
+              sx={{ minWidth: '0 !important' }}
             />
             <Tab
               data-test="app_shell__tab__cards"
               value="cards"
               label={t(interfaceLanguage, 'cards')}
+              sx={{ minWidth: '0 !important' }}
             />
             <Tab
               data-test="app_shell__tab__statistics"
               value="statistics"
               label={t(interfaceLanguage, 'statistics')}
+              sx={{ minWidth: '0 !important' }}
             />
             <Tab
               data-test="app_shell__tab__agents"
               value="agents"
               label={t(interfaceLanguage, 'agentsSection')}
+              sx={{ minWidth: '0 !important' }}
             />
           </Tabs>
 
@@ -157,11 +186,15 @@ export function AppShell({
             data-test="app_shell__player_greeting_slot"
             sx={{
               alignItems: 'center',
-              alignSelf: { xs: 'stretch', md: 'center' },
+              alignSelf: 'stretch',
               display: 'flex',
               flexGrow: 1,
               justifyContent: 'center',
               minWidth: { xs: 0, md: 260 },
+              '@media (min-width: 1360px)': {
+                alignSelf: 'center',
+                minWidth: 240,
+              },
             }}
           >
             {playerProfile && (
@@ -176,7 +209,18 @@ export function AppShell({
               />
             )}
           </Box>
-          <LanguageSelectors />
+          <Box
+            data-test="app_shell__selectors_slot"
+            sx={{
+              display: 'flex',
+              flexBasis: { xs: '100%', md: 'auto' },
+              flexShrink: 0,
+              justifyContent: 'flex-start',
+              minWidth: 0,
+            }}
+          >
+            <LanguageSelectors />
+          </Box>
         </Toolbar>
       </AppBar>
 

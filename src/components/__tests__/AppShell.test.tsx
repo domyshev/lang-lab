@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
@@ -148,5 +148,65 @@ describe('AppShell', () => {
       textAlign: 'center',
       width: '100%',
     });
+  });
+
+  it('hands nowrap to a measured desktop width while preserving the logo and target settings group', () => {
+    const store = configureStore({
+      reducer: {
+        app: appReducer,
+      },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          playerProfile: {
+            avatarSeed: 'test-player',
+            displayName: 'Илюха',
+            isAnonymous: false,
+          },
+        },
+      },
+    });
+
+    render(
+      <Provider store={store}>
+        <AppShell>
+          <div>Content</div>
+        </AppShell>
+      </Provider>,
+    );
+
+    expect(screen.getByTestId('app_shell__toolbar')).toHaveAttribute(
+      'data-nowrap-breakpoint',
+      '1360px',
+    );
+    expect(screen.getByTestId('app_shell__main_tabs')).toHaveAttribute(
+      'data-wide-scroll-buttons',
+      'hidden-at-1360px',
+    );
+    expect(screen.getByTestId('app_shell__logo_slot')).toHaveStyle({
+      justifyContent: 'flex-start',
+      minWidth: '250px',
+    });
+    expect(screen.getByTestId('app_logo__text')).toHaveStyle({
+      letterSpacing: '0',
+    });
+    expect(
+      getComputedStyle(screen.getByTestId('app_shell__tab__agents')).minWidth,
+    ).toBe('0');
+    const selectorsSlot = screen.getByTestId('app_shell__selectors_slot');
+    expect(selectorsSlot).toHaveStyle({ flexShrink: '0' });
+    const targetSettingsGroup = within(selectorsSlot).getByTestId(
+      'language_selectors__target_settings_group',
+    );
+    expect(
+      within(targetSettingsGroup).getByTestId(
+        'language_selectors__target_language_control',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(targetSettingsGroup).getByTestId(
+        'language_selectors__practice_settings_button',
+      ),
+    ).toBeInTheDocument();
   });
 });

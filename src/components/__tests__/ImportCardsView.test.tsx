@@ -29,7 +29,7 @@ describe('ImportCardsView compatibility wrapper', () => {
   it('renders the localized AI assistant workspace on the existing route', () => {
     renderImportCardsView('ru');
 
-    expect(screen.getByRole('heading', { name: 'AI-ассистент' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'AI помощник' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Подключение' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Чат' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'История операций' })).toBeInTheDocument();

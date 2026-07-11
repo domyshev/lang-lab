@@ -102,6 +102,7 @@ type I18nKey =
   | 'chooseCardSetPlaceholder'
   | 'gameLibrary'
   | 'openCardSetLibrary'
+  | 'openAiAssistant'
   | 'previousCardSets'
   | 'nextCardSets'
   | 'searchCardSetLibrary'
@@ -269,8 +270,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     recentMistakeRepeatFrequency: 'Mistake repeat frequency',
     newCardMixFrequency: 'New word mix-in',
     frequencyPercent: 'Frequency percent',
-    agentsSection: 'Agents LLM',
-    agentsTitle: 'Agents LLM',
+    agentsSection: 'AI Assistant',
+    agentsTitle: 'AI Assistant',
     agentsOpenRouterIntro:
       'You can add your own',
     agentsOpenRouterIntroSuffix:
@@ -360,6 +361,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     chooseCardSetPlaceholder: 'Choose card set',
     gameLibrary: 'Game library',
     openCardSetLibrary: 'Open card set library',
+    openAiAssistant: 'Open AI Assistant',
     previousCardSets: 'Previous card sets',
     nextCardSets: 'Next card sets',
     searchCardSetLibrary: 'Search by name or phrase',
@@ -546,8 +548,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     recentMistakeRepeatFrequency: 'Частота повторов ошибок',
     newCardMixFrequency: 'Примешивание новых слов',
     frequencyPercent: 'Процент появления',
-    agentsSection: 'Агенты LLM',
-    agentsTitle: 'Агенты LLM',
+    agentsSection: 'AI помощник',
+    agentsTitle: 'AI помощник',
     agentsOpenRouterIntro:
       'Пользователь может добавить свой ключ',
     agentsOpenRouterIntroSuffix:
@@ -560,7 +562,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsRollbackNotice:
       'Все, что создано агентами в приложении, будет помечено как созданное агентами, а в истории работы агента появится соответствующая запись. Это позволит откатить внесенные изменения. Не переживайте, агент не испортит ваши наработки :)',
     agentsIntroCoachmarkTitle: 'Ближайшие планы',
-    aiAssistantTitle: 'AI-ассистент',
+    aiAssistantTitle: 'AI помощник',
     aiConnectionTitle: 'Подключение',
     aiApiKeyLabel: 'API-ключ OpenRouter',
     aiShowKey: 'Показать API-ключ',
@@ -638,6 +640,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     chooseCardSetPlaceholder: 'Выберите набор карточек',
     gameLibrary: 'Библиотека игр',
     openCardSetLibrary: 'Открыть библиотеку наборов',
+    openAiAssistant: 'Открыть AI помощника',
     previousCardSets: 'Предыдущие наборы карточек',
     nextCardSets: 'Следующие наборы карточек',
     searchCardSetLibrary: 'Искать по названию или фразе',
@@ -825,8 +828,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     recentMistakeRepeatFrequency: 'Frecuencia de repeticion de errores',
     newCardMixFrequency: 'Mezcla de palabras nuevas',
     frequencyPercent: 'Porcentaje de frecuencia',
-    agentsSection: 'Agentes LLM',
-    agentsTitle: 'Agentes LLM',
+    agentsSection: 'Asistente IA',
+    agentsTitle: 'Asistente IA',
     agentsOpenRouterIntro:
       'Puedes anadir tu propia clave de',
     agentsOpenRouterIntroSuffix:
@@ -839,7 +842,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsRollbackNotice:
       'Todo lo creado por agentes se marcara como creado por agentes, y el historial de trabajo guardara un registro correspondiente para poder deshacer los cambios. No te preocupes, el agente no estropeara tu trabajo :)',
     agentsIntroCoachmarkTitle: 'Planes cercanos',
-    aiAssistantTitle: 'Asistente de IA',
+    aiAssistantTitle: 'Asistente IA',
     aiConnectionTitle: 'Conexion',
     aiApiKeyLabel: 'Clave API de OpenRouter',
     aiShowKey: 'Mostrar clave API',
@@ -917,6 +920,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     chooseCardSetPlaceholder: 'Elige conjunto de tarjetas',
     gameLibrary: 'Biblioteca de juegos',
     openCardSetLibrary: 'Abrir biblioteca de conjuntos',
+    openAiAssistant: 'Abrir Asistente IA',
     previousCardSets: 'Conjuntos anteriores',
     nextCardSets: 'Conjuntos siguientes',
     searchCardSetLibrary: 'Buscar por nombre o frase',

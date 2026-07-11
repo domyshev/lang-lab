@@ -30,6 +30,7 @@ describe('CardSetLibraryPicker', () => {
         interfaceLanguage="ru"
         targetLanguage="ru"
         selectedCardSetId="work-set"
+        onOpenAiAssistant={vi.fn()}
         onSelect={vi.fn()}
       />,
     );
@@ -56,6 +57,7 @@ describe('CardSetLibraryPicker', () => {
         interfaceLanguage="ru"
         targetLanguage="ru"
         selectedCardSetId="all-cards"
+        onOpenAiAssistant={vi.fn()}
         onSelect={vi.fn()}
       />,
     );
@@ -81,6 +83,7 @@ describe('CardSetLibraryPicker', () => {
         interfaceLanguage="ru"
         targetLanguage="ru"
         selectedCardSetId="work-set"
+        onOpenAiAssistant={vi.fn()}
         onSelect={vi.fn()}
       />,
     );
@@ -108,6 +111,7 @@ describe('CardSetLibraryPicker', () => {
         interfaceLanguage="ru"
         targetLanguage="ru"
         selectedCardSetId="all-cards"
+        onOpenAiAssistant={vi.fn()}
         onSelect={vi.fn()}
       />,
     );
@@ -137,6 +141,7 @@ describe('CardSetLibraryPicker', () => {
         interfaceLanguage="ru"
         targetLanguage="ru"
         selectedCardSetId="verbs-set"
+        onOpenAiAssistant={vi.fn()}
         onSelect={vi.fn()}
       />,
     );
@@ -162,6 +167,7 @@ describe('CardSetLibraryPicker', () => {
         interfaceLanguage="ru"
         targetLanguage="en"
         selectedCardSetId="verbs-set"
+        onOpenAiAssistant={vi.fn()}
         onSelect={vi.fn()}
       />,
     );
@@ -175,6 +181,62 @@ describe('CardSetLibraryPicker', () => {
     expect(
       screen.getByTestId('card_set_library__chip_select_name__all-cards'),
     ).toHaveTextContent('All cards');
+  });
+
+  it('renders a purple AI Assistant wand beside the title with an exact 10px gap', async () => {
+    const user = userEvent.setup();
+    const onOpenAiAssistant = vi.fn();
+    render(
+      <CardSetLibraryPicker
+        cards={cards}
+        cardSets={cardSets}
+        interfaceLanguage="ru"
+        targetLanguage="ru"
+        selectedCardSetId="all-cards"
+        onOpenAiAssistant={onOpenAiAssistant}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId('card_set_library__title_row')).toHaveStyle({
+      gap: '10px',
+    });
+    const wand = screen.getByTestId('card_set_library__ai_assistant_button');
+    expect(wand).toHaveAttribute('aria-label', 'Открыть AI помощника');
+    expect(getComputedStyle(wand).color).toBe('rgb(111, 75, 216)');
+
+    await user.hover(wand);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Открыть AI помощника',
+    );
+
+    await user.click(wand);
+    expect(onOpenAiAssistant).toHaveBeenCalledTimes(1);
+    expect(
+      screen.queryByTestId('card_set_library_dialog__root'),
+    ).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['en', 'Open AI Assistant'],
+    ['ru', 'Открыть AI помощника'],
+    ['es', 'Abrir Asistente IA'],
+  ] as const)('localizes the wand label in %s', (interfaceLanguage, label) => {
+    render(
+      <CardSetLibraryPicker
+        cards={cards}
+        cardSets={cardSets}
+        interfaceLanguage={interfaceLanguage}
+        targetLanguage="ru"
+        selectedCardSetId="all-cards"
+        onOpenAiAssistant={vi.fn()}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByTestId('card_set_library__ai_assistant_button'),
+    ).toHaveAttribute('aria-label', label);
   });
 });
 

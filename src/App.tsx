@@ -25,6 +25,7 @@ import {
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import { AppShell, AppShellSection } from './components/AppShell';
+import { AiAssistantView } from './components/AiAssistantView';
 import { AssistantProfileView } from './components/AssistantProfileView';
 import { CardSetLibraryPicker } from './components/CardSetLibraryPicker';
 import { CoachPanel } from './components/CoachPanel';
@@ -32,7 +33,6 @@ import { ExercisePicker } from './components/ExercisePicker';
 import { GameHelpPanel } from './components/GameHelpPanel';
 import { GameWarningIcon, GameWarningTooltip } from './components/GameWarningTooltip';
 import { HistoryView } from './components/HistoryView';
-import { ImportCardsView } from './components/ImportCardsView';
 import { SplitWordStatsChip } from './components/SplitWordStatsChip';
 import { MetricChip, StatsFormula } from './components/StatsFormula';
 import { CursorAnchoredTooltip, TooltipContent } from './components/CursorAnchoredTooltip';
@@ -927,7 +927,7 @@ export function App() {
     if (activeSection === 'agents') {
       return (
         <Box data-test="app__agents_section">
-          <ImportCardsView />
+          <AiAssistantView />
         </Box>
       );
     }
@@ -1142,6 +1142,7 @@ export function App() {
             cards={cards}
             cardSets={visibleCardSets}
             interfaceLanguage={interfaceLanguage}
+            onOpenAiAssistant={() => setActiveSection('agents')}
             onSelect={handleCardSetChange}
             selectedCardSetId={currentCardSetId}
             targetLanguage={targetLanguage}
