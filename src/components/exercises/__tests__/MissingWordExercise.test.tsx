@@ -120,6 +120,21 @@ describe('MissingWordExercise', () => {
     await user.click(screen.getByRole('button', { name: 'Отправить' }));
 
     expect(onAnswer).toHaveBeenCalledWith('wxrxh ix');
+    const submittedInputs = screen.getAllByLabelText(/Missing word letter/);
+    expect(submittedInputs[0]).toHaveStyle({
+      textDecorationLine: 'line-through',
+    });
+    expect(submittedInputs[1]).toHaveStyle({
+      textDecorationLine: 'line-through',
+    });
+    expect(submittedInputs[2]).toHaveStyle({
+      textDecorationLine: 'line-through',
+    });
+    expect(
+      screen.getByTestId(
+        'missing_word_exercise__correct_answer_cell__worth-it__1',
+      ),
+    ).toHaveStyle({ textDecorationLine: 'none' });
     expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
     expect(screen.getByText('Правильный ответ')).toBeInTheDocument();
     const correctAnswer = screen.getByLabelText('Правильный ответ: worth it');

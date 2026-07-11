@@ -9,6 +9,7 @@ import type {
   ReactNode,
 } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { shouldStrikeAnswerCharacter } from '../../domain/answerCharacters';
 import { MissingLettersPrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
@@ -242,7 +243,11 @@ export function MissingLettersExercise({
                 ref={(element: HTMLInputElement | null) => {
                   inputRefs.current[index] = element;
                 }}
-                style={getLetterCellInlineStyle(resultTone)}
+                style={getSubmittedInputCellStyle({
+                  actual: letters[index] ?? '',
+                  expected: prompt.expectedAnswer[index] ?? '',
+                  resultTone,
+                })}
                 value={letters[index] ?? ''}
                 onKeyDown={handleCellKeyDown}
                 onChange={(event) => {
@@ -439,6 +444,29 @@ function getLetterCellInlineStyle(
     color: textTone === 'strong' ? '#203015' : 'rgb(117, 117, 117)',
     WebkitTextFillColor:
       textTone === 'strong' ? '#203015' : 'rgb(117, 117, 117)',
+    textDecorationLine: 'none',
+  };
+}
+
+function getSubmittedInputCellStyle({
+  actual,
+  expected,
+  resultTone,
+}: {
+  actual: string;
+  expected: string;
+  resultTone: SubmissionOutcome | null;
+}): CSSProperties {
+  return {
+    ...getLetterCellInlineStyle(resultTone),
+    textDecorationLine: shouldStrikeAnswerCharacter({
+      actual,
+      expected,
+      isIncorrect: resultTone === 'incorrect',
+    })
+      ? 'line-through'
+      : 'none',
+    textDecorationThickness: '2px',
   };
 }
 

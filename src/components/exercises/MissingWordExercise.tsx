@@ -12,6 +12,7 @@ import type {
 } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { shouldStrikeAnswerCharacter } from '../../domain/answerCharacters';
 import { MissingWordPrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import { RootState } from '../../store/store';
@@ -450,7 +451,11 @@ function renderAnswerCells({
         ref={(element: HTMLInputElement | null) => {
           inputRefs.current[index] = element;
         }}
-        style={getLetterCellInlineStyle(resultTone)}
+        style={getSubmittedInputCellStyle({
+          actual: letters[index] ?? '',
+          expected: characters[index] ?? '',
+          resultTone,
+        })}
         value={letters[index] ?? ''}
         onKeyDown={onCellKeyDown}
         onChange={(event) => {
@@ -557,6 +562,29 @@ function getLetterCellInlineStyle(
     color: textTone === 'strong' ? '#203015' : 'rgb(117, 117, 117)',
     WebkitTextFillColor:
       textTone === 'strong' ? '#203015' : 'rgb(117, 117, 117)',
+    textDecorationLine: 'none',
+  };
+}
+
+function getSubmittedInputCellStyle({
+  actual,
+  expected,
+  resultTone,
+}: {
+  actual: string;
+  expected: string;
+  resultTone: SubmissionOutcome | null;
+}): CSSProperties {
+  return {
+    ...getLetterCellInlineStyle(resultTone),
+    textDecorationLine: shouldStrikeAnswerCharacter({
+      actual,
+      expected,
+      isIncorrect: resultTone === 'incorrect',
+    })
+      ? 'line-through'
+      : 'none',
+    textDecorationThickness: '2px',
   };
 }
 

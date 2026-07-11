@@ -4,6 +4,42 @@ import { describe, expect, it, vi } from 'vitest';
 import { MissingLettersExercise } from '../MissingLettersExercise';
 
 describe('MissingLettersExercise', () => {
+  it('strikes only an incorrectly entered letter after an incorrect submission', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MissingLettersExercise
+        interfaceLanguage="ru"
+        prompt={{
+          cardId: 'vehicle',
+          prompt: 'ru: транспортное средство',
+          expectedAnswer: 'vehicle',
+          maskedAnswer: 'v_h_c_e',
+          translationHints: [
+            { language: 'ru', value: 'транспортное средство' },
+          ],
+        }}
+        onAnswer={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    const inputs = screen.getAllByLabelText(/Missing letter/);
+    await user.type(inputs[0], 'e');
+    await user.type(inputs[1], 'o');
+    await user.type(inputs[2], 'l');
+    await user.click(screen.getByRole('button', { name: 'Отправить' }));
+
+    expect(inputs[0]).toHaveStyle({ textDecorationLine: 'none' });
+    expect(inputs[1]).toHaveStyle({ textDecorationLine: 'line-through' });
+    expect(inputs[2]).toHaveStyle({ textDecorationLine: 'none' });
+    expect(
+      screen.getByTestId(
+        'missing_letters_exercise__correct_answer_cell__vehicle__3',
+      ),
+    ).toHaveStyle({ textDecorationLine: 'none' });
+  });
+
   it('shows a green success state without repeating the correct answer', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();
