@@ -103,6 +103,10 @@ export function RecentAnswersChip({
           fontSize: 12,
           fontWeight: 800,
           height: 28,
+          '&:focus-visible': {
+            outline: '3px solid #111111',
+            outlineOffset: 2,
+          },
         }}
       />
     </CursorAnchoredTooltip>

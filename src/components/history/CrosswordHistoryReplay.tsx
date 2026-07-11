@@ -142,7 +142,7 @@ export function CrosswordHistoryReplay({
                   }
                 >
                   <Box
-                    aria-label={`Question ${startEntry.number}`}
+                    aria-label={`${t(interfaceLanguage, 'question')} ${startEntry.number}`}
                     component="button"
                     data-test={`${dataTestPrefix}__clue_number__${startEntry.entry.cardId}`}
                     sx={clueNumberStyles}

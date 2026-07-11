@@ -151,7 +151,7 @@ describe('CrosswordHistoryReplay', () => {
       'crossword_history__clue_number__cat',
     );
     expect(clueNumber).toHaveRole('button');
-    expect(clueNumber).toHaveAccessibleName('Question 1');
+    expect(clueNumber).toHaveAccessibleName('Вопрос 1');
 
     await user.tab();
     expect(clueNumber).toHaveFocus();
