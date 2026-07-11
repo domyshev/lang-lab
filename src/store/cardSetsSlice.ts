@@ -1,5 +1,6 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { ALL_CARDS_CARD_SET_ID, CardSet } from '../domain/cardSets';
+import { applyAiOperation, commitAiRollback } from './aiAssistantActions';
 
 export interface CardSetsState {
   cardSets: CardSet[];
@@ -98,6 +99,36 @@ const cardSetsSlice = createSlice({
       cardSet.cardIds = Array.from(new Set(action.payload.cardIds));
       cardSet.updatedAt = action.payload.now;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(applyAiOperation, (state, action) => {
+        const { operation } = action.payload;
+        const updatesById = new Map(
+          operation.updatedCardSets.map(({ after }) => [after.id, after]),
+        );
+        state.cardSets = state.cardSets.map(
+          (cardSet) => updatesById.get(cardSet.id) ?? cardSet,
+        );
+        state.cardSets.push(...operation.createdCardSets);
+      })
+      .addCase(commitAiRollback, (state, action) => {
+        const { operation } = action.payload;
+        const createdIds = new Set(operation.createdCardSets.map(({ id }) => id));
+        const beforeById = new Map(
+          operation.updatedCardSets.map(({ before }) => [before.id, before]),
+        );
+
+        state.cardSets = state.cardSets
+          .filter(({ id }) => !createdIds.has(id))
+          .map((cardSet) => beforeById.get(cardSet.id) ?? cardSet);
+        if (
+          state.selectedCardSetId &&
+          createdIds.has(state.selectedCardSetId)
+        ) {
+          state.selectedCardSetId = ALL_CARDS_CARD_SET_ID;
+        }
+      });
   },
 });
 

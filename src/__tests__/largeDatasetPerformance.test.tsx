@@ -9,6 +9,7 @@ import { attemptsReducer } from '../store/attemptsSlice';
 import { cardsReducer } from '../store/cardsSlice';
 import { cardSetsReducer } from '../store/cardSetsSlice';
 import { statsReducer } from '../store/statsSlice';
+import { aiAssistantReducer } from '../store/aiAssistantSlice';
 
 describe('large local datasets', () => {
   it('keeps all-cards card detail rendering virtualized', async () => {
@@ -48,6 +49,7 @@ function renderLargeApp(cardCount: number) {
       cards: cardsReducer,
       stats: statsReducer,
       cardSets: cardSetsReducer,
+      aiAssistant: aiAssistantReducer,
     },
     preloadedState: {
       app: {

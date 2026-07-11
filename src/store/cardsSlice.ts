@@ -5,6 +5,7 @@ import {
   ImportResult,
   PendingDuplicate,
 } from '../domain/importCards';
+import { applyAiOperation, commitAiRollback } from './aiAssistantActions';
 
 export interface CardsState {
   cards: LanguageCard[];
@@ -51,6 +52,45 @@ const cardsSlice = createSlice({
       );
       state.pendingDuplicates.push(...action.payload.pendingDuplicates);
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(applyAiOperation, (state, action) => {
+        const { operation } = action.payload;
+        const updatesById = new Map(
+          operation.updatedCards.map(({ after }) => [after.id, after]),
+        );
+        state.cards = state.cards.map(
+          (card) => updatesById.get(card.id) ?? card,
+        );
+        state.cards.push(...operation.createdCards);
+        state.duplicateProcessingHistory.push(
+          ...operation.duplicateProcessingHistory,
+        );
+        state.pendingDuplicates.push(...operation.pendingDuplicates);
+      })
+      .addCase(commitAiRollback, (state, action) => {
+        const { operation } = action.payload;
+        const createdIds = new Set(operation.createdCards.map(({ id }) => id));
+        const beforeById = new Map(
+          operation.updatedCards.map(({ before }) => [before.id, before]),
+        );
+        const mergeIds = new Set(
+          operation.duplicateProcessingHistory.map(({ id }) => id),
+        );
+        const pendingIds = new Set(
+          operation.pendingDuplicates.map(({ id }) => id),
+        );
+
+        state.cards = state.cards
+          .filter(({ id }) => !createdIds.has(id))
+          .map((card) => beforeById.get(card.id) ?? card);
+        state.duplicateProcessingHistory =
+          state.duplicateProcessingHistory.filter(({ id }) => !mergeIds.has(id));
+        state.pendingDuplicates = state.pendingDuplicates.filter(
+          ({ id }) => !pendingIds.has(id),
+        );
+      });
   },
 });
 

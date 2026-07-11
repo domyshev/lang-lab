@@ -10,6 +10,7 @@ import { attemptsReducer } from '../store/attemptsSlice';
 import { cardsReducer } from '../store/cardsSlice';
 import { statsReducer } from '../store/statsSlice';
 import { cardSetsReducer, selectCardSet } from '../store/cardSetsSlice';
+import { aiAssistantReducer } from '../store/aiAssistantSlice';
 
 const now = '2026-07-03T12:00:00.000Z';
 
@@ -122,6 +123,7 @@ function renderApp({
       cards: cardsReducer,
       stats: statsReducer,
       cardSets: cardSetsReducer,
+      aiAssistant: aiAssistantReducer,
     },
     preloadedState: {
       app: appState,
@@ -155,6 +157,7 @@ describe('App navigation', () => {
         cards: cardsReducer,
         stats: statsReducer,
         cardSets: cardSetsReducer,
+        aiAssistant: aiAssistantReducer,
       },
       preloadedState: {
         app: {
