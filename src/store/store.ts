@@ -113,6 +113,9 @@ function findApplyError(
   if (state.aiAssistant.stagedOperation?.id !== operation.id) {
     return 'The staged AI operation is no longer current.';
   }
+  if (state.aiAssistant.operations.some(({ id }) => id === operation.id)) {
+    return 'An AI operation with this id already exists.';
+  }
 
   const cardsById = new Map(state.cards.cards.map((card) => [card.id, card]));
   const setsById = new Map(

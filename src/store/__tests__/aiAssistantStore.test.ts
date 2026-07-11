@@ -281,6 +281,62 @@ describe('AI assistant store transactions', () => {
     expect(store.getState().aiAssistant.operationError).toBeTruthy();
   });
 
+  it('rejects a collision-free apply when its operation id is already in history', () => {
+    const store = createTestStore();
+    const firstOperation = createOperation();
+    stageAndApply(store, firstOperation);
+    const secondOperation: PlannedAiOperation = {
+      ...createOperation(firstOperation.id),
+      title: 'Add a separate travel collection',
+      summary: 'Uses unique entity and duplicate metadata ids.',
+      createdCards: [{ ...createdCard, id: 'card-created-second' }],
+      updatedCards: [],
+      createdCardSets: [
+        {
+          ...createdSet,
+          id: 'set-created-second',
+          cardIds: ['card-created-second'],
+        },
+      ],
+      updatedCardSets: [],
+      duplicateProcessingHistory: [
+        {
+          ...createOperation('second').duplicateProcessingHistory[0],
+          id: 'merge-second',
+        },
+      ],
+      pendingDuplicates: [
+        {
+          ...createOperation('second').pendingDuplicates[0],
+          id: 'pending-second',
+        },
+      ],
+    };
+    store.dispatch(stageAiOperation(secondOperation));
+    const beforeSecondApply = {
+      cards: store.getState().cards,
+      cardSets: store.getState().cardSets,
+      operations: store.getState().aiAssistant.operations,
+    };
+
+    store.dispatch(
+      applyAiOperation({
+        operation: secondOperation,
+        appliedAt: '2026-07-11T12:30:00.000Z',
+      }),
+    );
+
+    expect({
+      cards: store.getState().cards,
+      cardSets: store.getState().cardSets,
+      operations: store.getState().aiAssistant.operations,
+    }).toEqual(beforeSecondApply);
+    expect(store.getState().aiAssistant.operationError).toBe(
+      'An AI operation with this id already exists.',
+    );
+    expect(store.getState().aiAssistant.stagedOperation).toEqual(secondOperation);
+  });
+
   it('rejects rollback after an intervening entity edit', () => {
     const store = createTestStore();
     const operation = createOperation();
