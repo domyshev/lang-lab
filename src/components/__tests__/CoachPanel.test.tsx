@@ -1,12 +1,19 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { appReducer } from '../../store/appSlice';
 import { CoachPanel } from '../CoachPanel';
 
+const originalMatchMedia = window.matchMedia;
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  expect(window.matchMedia).toBe(originalMatchMedia);
+});
+
 function setNarrowViewport(matches: boolean) {
-  window.matchMedia = vi.fn().mockImplementation(() => ({
+  const controlledMatchMedia = vi.fn().mockImplementation(() => ({
     addEventListener: vi.fn(),
     addListener: vi.fn(),
     dispatchEvent: vi.fn(),
@@ -16,6 +23,8 @@ function setNarrowViewport(matches: boolean) {
     removeEventListener: vi.fn(),
     removeListener: vi.fn(),
   }));
+
+  vi.stubGlobal('matchMedia', controlledMatchMedia);
 }
 
 function renderCoachPanel() {
