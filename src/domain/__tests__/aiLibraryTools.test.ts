@@ -78,6 +78,19 @@ const snapshot: AiLibrarySnapshot = {
   interfaceLanguage: 'es',
 };
 
+function createBoundarySnapshot(): AiLibrarySnapshot {
+  return {
+    cards: Array.from({ length: 101 }, (_, index) => ({
+      id: `boundary-${index}`,
+      translations: { en: 'boundary' },
+      createdAt,
+      updatedAt: createdAt,
+    })),
+    cardSets: [],
+    interfaceLanguage: 'en',
+  };
+}
+
 describe('executeAiReadTool', () => {
   it('lists localized card sets with a stable page and a 50-item cap', () => {
     expect(
@@ -149,6 +162,42 @@ describe('executeAiReadTool', () => {
       cards: [cards[0]],
       unknownCardIds: ['missing'],
     });
+  });
+
+  it('caps search results at 100 cards with stable pagination metadata', () => {
+    const result = executeAiReadTool(
+      'search_cards',
+      { query: 'boundary', limit: 500 },
+      createBoundarySnapshot(),
+    );
+
+    expect(result).toMatchObject({
+      cursor: 0,
+      limit: 100,
+      nextCursor: 100,
+      total: 101,
+    });
+    const items = (result as { items: LanguageCard[] }).items;
+    expect(items).toHaveLength(100);
+    expect(items[items.length - 1]?.id).toBe('boundary-99');
+  });
+
+  it('caps deduplicated card-id lookups at 100 cards', () => {
+    const boundarySnapshot = createBoundarySnapshot();
+    const result = executeAiReadTool(
+      'get_cards',
+      {
+        cardIds: [
+          ...boundarySnapshot.cards.map((card) => card.id),
+          boundarySnapshot.cards[0].id,
+        ],
+      },
+      boundarySnapshot,
+    ) as { cards: LanguageCard[]; unknownCardIds: string[] };
+
+    expect(result.cards).toHaveLength(100);
+    expect(result.cards[result.cards.length - 1]?.id).toBe('boundary-99');
+    expect(result.unknownCardIds).toEqual([]);
   });
 });
 
