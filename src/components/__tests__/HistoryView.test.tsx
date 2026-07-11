@@ -64,6 +64,17 @@ describe('HistoryView', () => {
     await user.hover(
       within(missingLettersCard!).getByLabelText('Правильный ответ: airport'),
     );
+    expect(
+      screen.queryByTestId(
+        'history_view__detail_answer__attempt-missing-1_card-airport__recent_tooltip',
+      ),
+    ).not.toBeInTheDocument();
+    const recentStatsChip = within(correctAirportRow).getByTestId(
+      'history_view__detail_answer__attempt-missing-1_card-airport__recent_stats_chip',
+    );
+    expect(recentStatsChip).toHaveTextContent('Статистика последних ответов');
+    expect(recentStatsChip).toHaveStyle({ cursor: 'pointer' });
+    await user.hover(recentStatsChip);
     const airportTooltip = await screen.findByTestId(
       'history_view__detail_answer__attempt-missing-1_card-airport__recent_tooltip',
     );
@@ -95,7 +106,7 @@ describe('HistoryView', () => {
       ),
     ).toBeInTheDocument();
     await user.unhover(
-      within(missingLettersCard!).getByLabelText('Правильный ответ: airport'),
+      recentStatsChip,
     );
     expect(
       within(missingLettersCard!).getByLabelText('Правильный ответ: vehicle'),
@@ -129,6 +140,21 @@ describe('HistoryView', () => {
       textDecorationLine: 'line-through',
     });
     await user.hover(incorrectVehicleCells);
+    expect(
+      screen.queryByTestId(
+        'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_tooltip',
+      ),
+    ).not.toBeInTheDocument();
+    await user.hover(correctVehicleCells);
+    expect(
+      screen.queryByTestId(
+        'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_tooltip',
+      ),
+    ).not.toBeInTheDocument();
+    const vehicleRecentStatsChip = within(vehicleRow).getByTestId(
+      'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_stats_chip',
+    );
+    await user.hover(vehicleRecentStatsChip);
     const vehicleTooltip = await screen.findByTestId(
       'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_tooltip',
     );
@@ -138,13 +164,7 @@ describe('HistoryView', () => {
         'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_result_chip__0',
       ),
     ).toHaveTextContent('неверно');
-    await user.unhover(incorrectVehicleCells);
-    await user.hover(correctVehicleCells);
-    expect(
-      await screen.findByTestId(
-        'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_tooltip',
-      ),
-    ).toBeInTheDocument();
+    await user.unhover(vehicleRecentStatsChip);
   });
 
   it('renders multiple choice history as colored answer options', async () => {
@@ -184,6 +204,25 @@ describe('HistoryView', () => {
         'history_view__detail_result_chip__attempt-choice-1_card-vehicle',
       ),
     ).not.toBeInTheDocument();
+    await user.hover(options[0]);
+    expect(
+      screen.queryByTestId(
+        'history_view__detail_answer__attempt-choice-1_card-vehicle__recent_tooltip',
+      ),
+    ).not.toBeInTheDocument();
+    const multipleChoiceRow = screen.getByTestId(
+      'history_view__detail_row__attempt-choice-1_card-vehicle',
+    );
+    const recentStatsChip = within(multipleChoiceRow).getByTestId(
+      'history_view__detail_answer__attempt-choice-1_card-vehicle__recent_stats_chip',
+    );
+    expect(recentStatsChip).toHaveTextContent('Статистика последних ответов');
+    await user.hover(recentStatsChip);
+    expect(
+      await screen.findByTestId(
+        'history_view__detail_answer__attempt-choice-1_card-vehicle__recent_tooltip',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('scopes concurrent crossword replays while preserving legacy crossword rows', async () => {
@@ -328,6 +367,11 @@ describe('HistoryView', () => {
         'history_view__detail_row__attempt-crossword-legacy_card-cat',
       ),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId(
+        'history_view__detail_answer__attempt-crossword-legacy_card-cat__recent_stats_chip',
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it('uses a full letter-cell width for phrase spaces in statistics details', async () => {
@@ -423,7 +467,7 @@ describe('HistoryView', () => {
     );
 
     const tooltipAnchor = screen.getByTestId(
-      'history_view__detail_answer__attempt-missing-1_card-airport__tooltip_anchor',
+      'history_view__detail_answer__attempt-missing-1_card-airport__recent_stats_chip',
     );
 
     fireEvent.mouseOver(tooltipAnchor, { clientX: 240, clientY: 180 });

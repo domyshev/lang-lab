@@ -5,12 +5,11 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
-  Chip,
   Paper,
   Stack,
   Typography,
 } from '@mui/material';
-import { type ReactElement, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { ExercisePrompt } from '../domain/exercises';
 import {
@@ -22,6 +21,11 @@ import { RootState } from '../store/store';
 import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
 import { StatsFormula } from './StatsFormula';
 import { CrosswordHistoryReplay } from './history/CrosswordHistoryReplay';
+import {
+  formatAttemptDate,
+  type RecentCardResult,
+  RecentAnswersChip,
+} from './history/RecentAnswersChip';
 
 export function HistoryView() {
   const interfaceLanguage = useSelector(
@@ -280,8 +284,8 @@ function HistoryAnswer({
   recentResults: RecentCardResult[];
   type: ExerciseHistorySummary['exerciseType'];
 }) {
-  if (type === 'multipleChoice') {
-    return (
+  const answerContent =
+    type === 'multipleChoice' ? (
       <Stack data-test={`${dataTestPrefix}__multiple_choice_options`} spacing={0.75} sx={{ maxWidth: 420 }}>
         {(options.length > 0 ? options : [expectedAnswer]).map((option, index) => (
           <Box
@@ -314,10 +318,7 @@ function HistoryAnswer({
           </Box>
         ))}
       </Stack>
-    );
-  }
-
-  const answerContent = isCorrect ? (
+    ) : isCorrect ? (
       <Box component="span" sx={{ display: 'inline-flex' }}>
         <AnswerCells
           ariaLabel={`${t(interfaceLanguage, 'correctAnswer')}: ${expectedAnswer}`}
@@ -347,110 +348,20 @@ function HistoryAnswer({
       </Stack>
     );
 
+  if (type === 'crossword') {
+    return answerContent;
+  }
+
   return (
-    <RecentAnswersTooltip
+    <Stack data-test={`${dataTestPrefix}__content`} spacing={0.9}>
+      {answerContent}
+      <RecentAnswersChip
       dataTestPrefix={dataTestPrefix}
       interfaceLanguage={interfaceLanguage}
       recentResults={recentResults}
       subject={expectedAnswer}
-    >
-      {answerContent}
-    </RecentAnswersTooltip>
-  );
-}
-
-function RecentAnswersTooltip({
-  children,
-  dataTestPrefix,
-  interfaceLanguage,
-  recentResults,
-  subject,
-}: {
-  children: ReactElement;
-  dataTestPrefix: string;
-  interfaceLanguage: RootState['app']['interfaceLanguage'];
-  recentResults: RecentCardResult[];
-  subject: string;
-}) {
-  return (
-    <CursorAnchoredTooltip
-      arrowDataTest={`${dataTestPrefix}__tooltip_arrow`}
-      closeOnOtherOpen
-      leaveDelay={0}
-      transitionTimeout={0}
-      tooltipSx={recentAnswersTooltipStyles}
-      title={
-        <Stack data-test={`${dataTestPrefix}__recent_tooltip`} spacing={0.75}>
-          <Typography
-            data-test={`${dataTestPrefix}__recent_tooltip_title`}
-            sx={{ color: '#203015', fontSize: 14, fontWeight: 850 }}
-          >
-            {t(interfaceLanguage, 'recentAnswersTitle')}
-          </Typography>
-          <Typography
-            data-test={`${dataTestPrefix}__recent_tooltip_subject`}
-            sx={{
-              color: 'rgba(32, 48, 21, 0.68)',
-              fontSize: 11,
-              fontWeight: 750,
-              lineHeight: 1.25,
-            }}
-          >
-            {subject}
-          </Typography>
-          <Stack data-test={`${dataTestPrefix}__recent_results`} spacing={0.5}>
-            {recentResults.slice(0, 10).map((result, index) => (
-              <Stack
-                data-test={`${dataTestPrefix}__recent_result__${index}`}
-                direction="row"
-                key={`${result.occurredAt}-${index}`}
-                spacing={0.75}
-                sx={{ alignItems: 'center' }}
-              >
-                <Chip
-                  data-test={`${dataTestPrefix}__recent_result_chip__${index}`}
-                  label={t(
-                    interfaceLanguage,
-                    result.isCorrect
-                      ? 'metricCorrectSuffix'
-                      : 'metricIncorrectSuffix',
-                  )}
-                  size="small"
-                  sx={{
-                    bgcolor: result.isCorrect
-                      ? 'rgb(235, 247, 225)'
-                      : 'rgb(253, 235, 238)',
-                    border: '1px solid',
-                    borderColor: result.isCorrect ? '#8fc773' : '#f2a7b4',
-                    color: '#111111',
-                    fontSize: 12,
-                    fontWeight: 800,
-                    height: 24,
-                  }}
-                />
-                <Typography
-                  data-test={`${dataTestPrefix}__recent_result_date__${index}`}
-                  sx={{ color: 'rgba(32, 48, 21, 0.72)', fontSize: 11 }}
-                >
-                  {formatAttemptDate(result.occurredAt)}
-                </Typography>
-              </Stack>
-            ))}
-          </Stack>
-        </Stack>
-      }
-    >
-      <Box
-        data-test={`${dataTestPrefix}__tooltip_anchor`}
-        sx={{
-          alignItems: 'flex-start',
-          display: 'inline-flex',
-          flexDirection: 'column',
-        }}
-      >
-        {children}
-      </Box>
-    </CursorAnchoredTooltip>
+      />
+    </Stack>
   );
 }
 
@@ -533,19 +444,6 @@ function areAnswerCharactersEqual(
   );
 }
 
-type RecentCardResult = {
-  isCorrect: boolean;
-  occurredAt: string;
-};
-
-const recentAnswersTooltipStyles = {
-  bgcolor: '#ffffff',
-  border: '1px solid rgba(32, 48, 21, 0.14)',
-  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
-  color: '#203015',
-  p: 1.25,
-};
-
 const completedTrophyTooltipStyles = {
   bgcolor: '#ffffff',
   border: '1px solid rgba(32, 48, 21, 0.14)',
@@ -596,25 +494,6 @@ function getRecentCardResults({
       isCorrect: Boolean(attempt.correctness[cardId]),
       occurredAt: attempt.completedAt ?? attempt.createdAt,
     }));
-}
-
-function formatAttemptDate(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return [
-    `${padDatePart(date.getMonth() + 1)}/${padDatePart(
-      date.getDate(),
-    )}/${date.getFullYear()}`,
-    `${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`,
-  ].join(' ');
-}
-
-function padDatePart(value: number): string {
-  return String(value).padStart(2, '0');
 }
 
 function toDomKey(value: string): string {

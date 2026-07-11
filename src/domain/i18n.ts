@@ -178,6 +178,7 @@ type I18nKey =
   | 'targetIncorrectCardsTooltip'
   | 'correctInputTooltip'
   | 'recentAnswersTitle'
+  | 'recentAnswerStatsChip'
   | 'recent20AnswersTitle'
   | 'crosswordWordsDescription'
   | 'crosswordPhraseDescription'
@@ -391,6 +392,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     targetIncorrectCardsTooltip: 'Number of cards answered incorrectly.',
     correctInputTooltip: 'The input was completed correctly.',
     recentAnswersTitle: 'Last 10 answers',
+    recentAnswerStatsChip: 'Recent answer statistics',
     recent20AnswersTitle: 'Last 20 answers',
     crosswordWordsDescription: 'Up to 6 words from the selected card set',
     crosswordPhraseDescription: 'Single phrase challenge',
@@ -605,6 +607,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     targetIncorrectCardsTooltip: 'количество карточек отвеченных неверно',
     correctInputTooltip: 'Ввод был выполнен верно.',
     recentAnswersTitle: '10 последних ответов',
+    recentAnswerStatsChip: 'Статистика последних ответов',
     recent20AnswersTitle: '20 последних ответов',
     crosswordWordsDescription: 'До 6 слов из выбранного набора карточек',
     crosswordPhraseDescription: 'Задание с одной фразой',
@@ -818,6 +821,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     targetIncorrectCardsTooltip: 'Numero de tarjetas respondidas incorrectamente.',
     correctInputTooltip: 'La entrada se completo correctamente.',
     recentAnswersTitle: '10 ultimas respuestas',
+    recentAnswerStatsChip: 'Estadísticas de respuestas recientes',
     recent20AnswersTitle: '20 ultimas respuestas',
     crosswordWordsDescription: 'Hasta 6 palabras del conjunto elegido',
     crosswordPhraseDescription: 'Reto de una sola frase',
