@@ -40,6 +40,12 @@ export function AiChatPanel({
   onRetry,
   onSend,
 }: AiChatPanelProps) {
+  const suggestions = [
+    ['create_set', t(language, 'aiSuggestionCreateSet')],
+    ['find_weak_cards', t(language, 'aiSuggestionFindWeakCards')],
+    ['add_vocabulary', t(language, 'aiSuggestionAddVocabulary')],
+  ] as const;
+
   return (
     <Paper
       data-test="ai_chat__panel"
@@ -76,6 +82,29 @@ export function AiChatPanel({
           spacing={1}
           sx={{ flex: 1, minHeight: 220, overflowY: 'auto' }}
         >
+          {messages.length === 0 && !isThinking && (
+            <Stack
+              data-test="ai_chat__suggestions"
+              direction="row"
+              flexWrap="wrap"
+              gap={1}
+              justifyContent="center"
+              sx={{ my: 'auto' }}
+            >
+              {suggestions.map(([id, label]) => (
+                <Button
+                  data-test={`ai_chat__suggestion__${id}`}
+                  key={id}
+                  onClick={() => onDraftChange(label)}
+                  size="small"
+                  variant="outlined"
+                  sx={{ borderRadius: 999, textTransform: 'none' }}
+                >
+                  {label}
+                </Button>
+              ))}
+            </Stack>
+          )}
           {messages.map((message) => (
             <Box
               data-test={`ai_chat__message__${message.id}`}

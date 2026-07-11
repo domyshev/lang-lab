@@ -174,6 +174,64 @@ describe('AiAssistantView connection', () => {
 });
 
 describe('AiAssistantView chat', () => {
+  it.each([
+    [
+      'en' as const,
+      [
+        'Create a travel card set',
+        'Find my weakest cards',
+        'Add vocabulary to my library',
+      ],
+      'Message the AI assistant',
+    ],
+    [
+      'ru' as const,
+      [
+        'Создай набор для путешествий',
+        'Найди мои самые сложные карточки',
+        'Добавь слова в мою библиотеку',
+      ],
+      'Сообщение AI-ассистенту',
+    ],
+    [
+      'es' as const,
+      [
+        'Crea un conjunto para viajar',
+        'Encuentra mis tarjetas mas dificiles',
+        'Anade vocabulario a mi biblioteca',
+      ],
+      'Mensaje para el asistente de IA',
+    ],
+  ])(
+    'fills the %s composer from empty-state suggestions without sending',
+    async (language, suggestions, composerLabel) => {
+      const user = userEvent.setup();
+      const store = renderView({ language });
+
+      for (const suggestion of suggestions) {
+        expect(screen.getByRole('button', { name: suggestion })).toBeInTheDocument();
+      }
+
+      await user.click(screen.getByRole('button', { name: suggestions[0] }));
+
+      expect(screen.getByLabelText(composerLabel)).toHaveValue(suggestions[0]);
+      expect(mockedRunAiAssistant).not.toHaveBeenCalled();
+
+      act(() => {
+        store.dispatch(appendAiMessage({
+          id: `first-${language}-message`,
+          role: 'user',
+          content: suggestions[0],
+          createdAt: now,
+        }));
+      });
+
+      for (const suggestion of suggestions) {
+        expect(screen.queryByRole('button', { name: suggestion })).not.toBeInTheDocument();
+      }
+    },
+  );
+
   it('sends, shows thinking, and cancels with the request signal', async () => {
     const user = userEvent.setup();
     saveOpenRouterKey('sk-test');

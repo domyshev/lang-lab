@@ -54,6 +54,9 @@ type I18nKey =
   | 'aiCancelRequest'
   | 'aiRetry'
   | 'aiClearChat'
+  | 'aiSuggestionCreateSet'
+  | 'aiSuggestionFindWeakCards'
+  | 'aiSuggestionAddVocabulary'
   | 'aiMissingKey'
   | 'aiRequestFailed'
   | 'aiErrorInvalidKey'
@@ -300,6 +303,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiCancelRequest: 'Cancel request',
     aiRetry: 'Retry',
     aiClearChat: 'Clear chat',
+    aiSuggestionCreateSet: 'Create a travel card set',
+    aiSuggestionFindWeakCards: 'Find my weakest cards',
+    aiSuggestionAddVocabulary: 'Add vocabulary to my library',
     aiMissingKey: 'Add and save an OpenRouter API key before sending a message.',
     aiRequestFailed: 'The request could not be completed. Please try again.',
     aiErrorInvalidKey:
@@ -578,6 +584,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiCancelRequest: 'Отменить запрос',
     aiRetry: 'Повторить',
     aiClearChat: 'Очистить чат',
+    aiSuggestionCreateSet: 'Создай набор для путешествий',
+    aiSuggestionFindWeakCards: 'Найди мои самые сложные карточки',
+    aiSuggestionAddVocabulary: 'Добавь слова в мою библиотеку',
     aiMissingKey: 'Добавьте и сохраните API-ключ OpenRouter перед отправкой сообщения.',
     aiRequestFailed: 'Не удалось выполнить запрос. Попробуйте ещё раз.',
     aiErrorInvalidKey:
@@ -858,6 +867,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiCancelRequest: 'Cancelar solicitud',
     aiRetry: 'Reintentar',
     aiClearChat: 'Limpiar chat',
+    aiSuggestionCreateSet: 'Crea un conjunto para viajar',
+    aiSuggestionFindWeakCards: 'Encuentra mis tarjetas mas dificiles',
+    aiSuggestionAddVocabulary: 'Anade vocabulario a mi biblioteca',
     aiMissingKey: 'Anade y guarda una clave API de OpenRouter antes de enviar un mensaje.',
     aiRequestFailed: 'No se pudo completar la solicitud. Intentalo de nuevo.',
     aiErrorInvalidKey:
