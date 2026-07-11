@@ -129,4 +129,45 @@ describe('importLanguageCards', () => {
     expect(result.summary.added).toBe(1);
     expect(result.summary.invalid).toBe(1);
   });
+
+  it('aligns resolved ids for every incoming record', () => {
+    const result = importLanguageCards({
+      existingCards: [
+        existingCard({ id: 'card-safe' }),
+        existingCard({
+          id: 'card-conflict',
+          translations: { en: 'hotel', ru: 'отель' },
+          definitions: { en: 'An existing definition.' },
+        }),
+        existingCard({
+          id: 'card-skipped',
+          translations: { en: 'train', ru: 'поезд' },
+        }),
+      ],
+      pastedJson: JSON.stringify([
+        { translations: { en: 'ticket', ru: 'билет' } },
+        {
+          translations: { en: 'airport', ru: 'аэропорт', es: 'aeropuerto' },
+        },
+        {
+          translations: { en: 'hotel', ru: 'отель' },
+          definitions: { en: 'A different definition.' },
+        },
+        { translations: { en: 'train', ru: 'поезд' } },
+        { translations: { en: 'invalid' } },
+      ]),
+      now,
+      idFactory: (prefix) => `${prefix}-fixed`,
+    });
+
+    expect(result.resolvedCardIds).toEqual([
+      'card-fixed',
+      'card-safe',
+      'card-conflict',
+      'card-skipped',
+      undefined,
+    ]);
+    expect(result.duplicateProcessingHistory[0].id).toBe('merge-fixed');
+    expect(result.pendingDuplicates[0].id).toBe('pending-fixed');
+  });
 });

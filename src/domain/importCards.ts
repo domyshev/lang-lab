@@ -56,6 +56,7 @@ export interface ImportResult {
   duplicateProcessingHistory: DuplicateProcessingEntry[];
   pendingDuplicates: PendingDuplicate[];
   invalidRecords: Array<{ index: number; reason: string }>;
+  resolvedCardIds: Array<string | undefined>;
   summary: ImportSummary;
 }
 
@@ -67,11 +68,14 @@ export function importLanguageCards(input: {
   existingCards: LanguageCard[];
   pastedJson: string;
   now: string;
+  idFactory?: (prefix: string) => string;
 }): ImportResult {
   const cards = input.existingCards.map(cloneCard);
   const duplicateProcessingHistory: DuplicateProcessingEntry[] = [];
   const pendingDuplicates: PendingDuplicate[] = [];
   const invalidRecords: Array<{ index: number; reason: string }> = [];
+  const resolvedCardIds: Array<string | undefined> = [];
+  const idFactory = input.idFactory ?? createId;
   const summary: ImportSummary = {
     added: 0,
     safeMerged: 0,
@@ -89,6 +93,7 @@ export function importLanguageCards(input: {
       duplicateProcessingHistory,
       pendingDuplicates,
       invalidRecords: [{ index: -1, reason: 'JSON is not valid.' }],
+      resolvedCardIds,
       summary: { ...summary, invalid: 1 },
     };
   }
@@ -99,6 +104,7 @@ export function importLanguageCards(input: {
       duplicateProcessingHistory,
       pendingDuplicates,
       invalidRecords: [{ index: -1, reason: 'Root value must be an array.' }],
+      resolvedCardIds,
       summary: { ...summary, invalid: 1 },
     };
   }
@@ -107,6 +113,7 @@ export function importLanguageCards(input: {
     const validation = normalizeIncomingCard(raw);
     if (!validation.ok) {
       invalidRecords.push({ index, reason: validation.reason });
+      resolvedCardIds.push(undefined);
       summary.invalid += 1;
       return;
     }
@@ -114,8 +121,9 @@ export function importLanguageCards(input: {
     const incoming = validation.card;
     const duplicate = findDuplicate(cards, incoming);
     if (!duplicate) {
+      const cardId = idFactory('card');
       cards.push({
-        id: createId('card'),
+        id: cardId,
         translations: incoming.translations,
         definitions: incoming.definitions,
         examples: incoming.examples,
@@ -124,15 +132,18 @@ export function importLanguageCards(input: {
         createdAt: input.now,
         updatedAt: input.now,
       });
+      resolvedCardIds.push(cardId);
       summary.added += 1;
       return;
     }
+
+    resolvedCardIds.push(duplicate.card.id);
 
     const merge = safeMergeCard(duplicate.card, incoming, input.now);
     if (merge.addedFields.length > 0) {
       Object.assign(duplicate.card, merge.card);
       duplicateProcessingHistory.push({
-        id: createId('merge'),
+        id: idFactory('merge'),
         processedAt: input.now,
         type: 'safeMerge',
         existingCardId: duplicate.card.id,
@@ -145,7 +156,7 @@ export function importLanguageCards(input: {
 
     if (merge.conflicts.length > 0) {
       pendingDuplicates.push({
-        id: createId('pending'),
+        id: idFactory('pending'),
         detectedAt: input.now,
         existingCardId: duplicate.card.id,
         incomingCard: incoming,
@@ -165,6 +176,7 @@ export function importLanguageCards(input: {
     duplicateProcessingHistory,
     pendingDuplicates,
     invalidRecords,
+    resolvedCardIds,
     summary,
   };
 }
