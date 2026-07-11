@@ -165,9 +165,21 @@ test.describe('golden base visual snapshots', () => {
       .locator('button[data-test*="__correction__"][data-test$="__anchor"]')
       .first();
     await correctionAnchor.hover();
+    const correctionTooltip = page
+      .locator('[data-test*="__correction__"][data-test$="__tooltip"]')
+      .first();
+    await expect(correctionTooltip).toBeVisible();
+    await expect(correctionTooltip).not.toContainText('Правильный ответ');
     await expect(
-      page.locator('[data-test*="__correction__"][data-test$="__tooltip"]').first(),
-    ).toContainText(/\d+\. Правильный ответ: /);
+      correctionTooltip
+        .locator('[data-test*="__entry__"][data-test$="__number"]')
+        .first(),
+    ).toBeVisible();
+    await expect(
+      correctionTooltip
+        .locator('[data-test*="__answer__cell__"]')
+        .first(),
+    ).toHaveCSS('background-color', 'rgb(235, 247, 225)');
 
     await page.screenshot({
       fullPage: true,

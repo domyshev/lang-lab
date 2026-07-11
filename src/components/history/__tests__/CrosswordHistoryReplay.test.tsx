@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import type { CrosswordAttemptSnapshot } from '../../../domain/exercises';
@@ -110,12 +110,30 @@ describe('CrosswordHistoryReplay', () => {
     ).toBeInTheDocument();
 
     await user.hover(screen.getByTestId('crossword_history__cell__2_3'));
+    const correctionTooltip = await screen.findByTestId(
+      'crossword_history__correction__2_3__tooltip',
+    );
     expect(
-      await screen.findByText('2. Правильный ответ: tea'),
-    ).toBeInTheDocument();
+      within(correctionTooltip).queryByText('Правильный ответ'),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByTestId('crossword_history__correction__2_3__tooltip'),
-    ).toBeInTheDocument();
+      within(correctionTooltip).getByTestId(
+        'crossword_history__correction__2_3__entry__tea__number',
+      ),
+    ).toHaveTextContent('2');
+    expect(
+      within(correctionTooltip).getByTestId(
+        'crossword_history__correction__2_3__entry__tea__answer',
+      ),
+    ).toHaveAccessibleName('tea');
+    expect(
+      within(correctionTooltip).getByTestId(
+        'crossword_history__correction__2_3__entry__tea__answer__cell__0',
+      ),
+    ).toHaveStyle({
+      backgroundColor: 'rgb(235, 247, 225)',
+      borderColor: '#8fc773',
+    });
     expect(
       screen.getByTestId('crossword_history__correction__2_3__tooltip_arrow'),
     ).toBeInTheDocument();
@@ -166,8 +184,17 @@ describe('CrosswordHistoryReplay', () => {
     const correctionTooltip = await screen.findByTestId(
       'crossword_history__correction__1_3__tooltip',
     );
-    expect(correctionTooltip).toHaveTextContent('1. Правильный ответ: cat');
-    expect(correctionTooltip).toHaveTextContent('2. Правильный ответ: tea');
+    expect(correctionTooltip).not.toHaveTextContent('Правильный ответ');
+    expect(
+      within(correctionTooltip).getByTestId(
+        'crossword_history__correction__1_3__entry__cat__number',
+      ),
+    ).toHaveTextContent('1');
+    expect(
+      within(correctionTooltip).getByTestId(
+        'crossword_history__correction__1_3__entry__tea__number',
+      ),
+    ).toHaveTextContent('2');
     expect(correctionTooltip.textContent?.indexOf('cat')).toBeLessThan(
       correctionTooltip.textContent?.indexOf('tea') ?? -1,
     );

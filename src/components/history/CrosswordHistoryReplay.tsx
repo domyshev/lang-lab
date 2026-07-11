@@ -160,17 +160,62 @@ export function CrosswordHistoryReplay({
                   title={
                     <Stack
                       data-test={`${dataTestPrefix}__correction__${displayRow}_${displayCol}__tooltip`}
-                      spacing={0.5}
+                      spacing={1.25}
                     >
-                      {incorrectEntries.map((entry) => (
-                        <Typography
-                          key={entry.cardId}
-                          sx={{ fontSize: 14, lineHeight: 1.35 }}
-                        >
-                          {entryNumberById.get(entry.cardId)}.{' '}
-                          {t(interfaceLanguage, 'correctAnswer')}: {entry.answer}
-                        </Typography>
-                      ))}
+                      {incorrectEntries.map((entry) => {
+                        const entryNumber = entryNumberById.get(entry.cardId);
+                        const entryDataTest = `${dataTestPrefix}__correction__${displayRow}_${displayCol}__entry__${encodeURIComponent(
+                          entry.cardId,
+                        )}`;
+
+                        return (
+                          <Stack
+                            alignItems="center"
+                            data-test={entryDataTest}
+                            key={entry.cardId}
+                            spacing={0.75}
+                          >
+                            <Box
+                              aria-label={`${t(interfaceLanguage, 'question')} ${entryNumber}`}
+                              component="span"
+                              data-test={`${entryDataTest}__number`}
+                              sx={correctionNumberStyles}
+                            >
+                              {entryNumber}
+                            </Box>
+                            <Stack
+                              aria-label={entry.answer}
+                              data-test={`${entryDataTest}__answer`}
+                              direction="row"
+                              flexWrap="wrap"
+                              justifyContent="center"
+                              spacing={0.5}
+                              useFlexGap
+                            >
+                              {entry.answer.split('').map((character, index) =>
+                                character.trim() === '' ? (
+                                  <Box
+                                    aria-hidden="true"
+                                    component="span"
+                                    data-test={`${entryDataTest}__answer__space__${index}`}
+                                    key={`space-${index}`}
+                                    sx={correctionAnswerSpaceStyles}
+                                  />
+                                ) : (
+                                  <Box
+                                    component="span"
+                                    data-test={`${entryDataTest}__answer__cell__${index}`}
+                                    key={`${character}-${index}`}
+                                    sx={correctionAnswerCellStyles}
+                                  >
+                                    {character}
+                                  </Box>
+                                ),
+                              )}
+                            </Stack>
+                          </Stack>
+                        );
+                      })}
                     </Stack>
                   }
                   transitionTimeout={0}
@@ -180,10 +225,7 @@ export function CrosswordHistoryReplay({
                     aria-label={incorrectEntries
                       .map(
                         (entry) =>
-                          `${entryNumberById.get(entry.cardId)}. ${t(
-                            interfaceLanguage,
-                            'correctAnswer',
-                          )}: ${entry.answer}`,
+                          `${t(interfaceLanguage, 'question')} ${entryNumberById.get(entry.cardId)}: ${entry.answer}`,
                       )
                       .join('; ')}
                     component="button"
@@ -313,11 +355,48 @@ const correctionAnchorStyles = {
   width: '100%',
 };
 
+const correctionNumberStyles = {
+  alignItems: 'center',
+  bgcolor: '#f5d66b',
+  border: '1px solid rgba(119, 86, 0, 0.3)',
+  borderRadius: '50%',
+  color: '#203015',
+  display: 'inline-flex',
+  fontSize: 13,
+  fontWeight: 950,
+  height: 26,
+  justifyContent: 'center',
+  lineHeight: 1,
+  width: 26,
+};
+
+const correctionAnswerCellStyles = {
+  alignItems: 'center',
+  bgcolor: 'rgb(235, 247, 225)',
+  border: '1px solid #8fc773',
+  borderRadius: 1,
+  color: '#203015',
+  display: 'inline-flex',
+  fontSize: 20,
+  fontWeight: 800,
+  height: 34,
+  justifyContent: 'center',
+  lineHeight: 1,
+  textTransform: 'lowercase',
+  width: 34,
+};
+
+const correctionAnswerSpaceStyles = {
+  display: 'inline-flex',
+  height: 34,
+  width: 34,
+};
+
 const answerTooltipStyles = {
   bgcolor: '#ffffff',
   border: '1px solid rgba(32, 48, 21, 0.14)',
   boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
   color: '#203015',
-  maxWidth: 280,
+  maxWidth: 'min(520px, calc(100vw - 32px))',
   p: 1.25,
 };
