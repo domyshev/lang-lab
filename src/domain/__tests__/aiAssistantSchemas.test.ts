@@ -1,0 +1,133 @@
+import { describe, expect, it } from 'vitest';
+import { aiLibraryProposalSchema } from '../aiAssistantSchemas';
+
+const validCard = {
+  clientRef: 'airport',
+  translations: {
+    en: 'airport',
+    es: 'aeropuerto',
+    ru: 'аэропорт',
+  },
+};
+
+describe('aiLibraryProposalSchema', () => {
+  it('accepts cards and create/update card-set changes', () => {
+    const result = aiLibraryProposalSchema.safeParse({
+      title: 'Travel cards',
+      summary: 'Create a multilingual travel set.',
+      cards: [validCard],
+      cardSetChanges: [
+        {
+          type: 'create',
+          clientRef: 'travel-set',
+          names: { en: 'Travel', es: 'Viajes', ru: 'Путешествия' },
+          cardRefs: ['airport'],
+        },
+        {
+          type: 'update',
+          cardSetId: 'existing-set',
+          names: { en: 'Useful travel' },
+          addCardRefs: ['airport', 'existing-card'],
+          removeCardIds: ['obsolete-card'],
+        },
+      ],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts a card with exactly two supported languages', () => {
+    expect(
+      aiLibraryProposalSchema.safeParse({
+        title: 'Two languages',
+        summary: 'A valid partial translation card.',
+        cards: [
+          {
+            clientRef: 'friendship',
+            translations: { en: 'friendship', ru: 'дружба' },
+          },
+        ],
+      }).success,
+    ).toBe(true);
+  });
+
+  it.each([
+    {
+      name: 'only one translation',
+      value: {
+        title: 'Invalid',
+        summary: 'Invalid',
+        cards: [
+          { clientRef: 'airport', translations: { en: 'airport' } },
+        ],
+      },
+    },
+    {
+      name: 'unsupported language',
+      value: {
+        title: 'Invalid',
+        summary: 'Invalid',
+        cards: [
+          {
+            clientRef: 'airport',
+            translations: { de: 'Flughafen', en: 'airport', ru: 'аэропорт' },
+          },
+        ],
+      },
+    },
+    {
+      name: 'duplicate card refs',
+      value: {
+        title: 'Invalid',
+        summary: 'Invalid',
+        cards: [validCard, { ...validCard }],
+      },
+    },
+    {
+      name: 'duplicate create-set refs',
+      value: {
+        title: 'Invalid',
+        summary: 'Invalid',
+        cardSetChanges: [
+          {
+            type: 'create',
+            clientRef: 'set',
+            names: { en: 'One' },
+            cardRefs: [],
+          },
+          {
+            type: 'create',
+            clientRef: 'set',
+            names: { en: 'Two' },
+            cardRefs: [],
+          },
+        ],
+      },
+    },
+    {
+      name: 'unknown root property',
+      value: {
+        title: 'Invalid',
+        summary: 'Invalid',
+        cards: [validCard],
+        deleteAllCards: true,
+      },
+    },
+    {
+      name: 'archive-shaped set change',
+      value: {
+        title: 'Invalid',
+        summary: 'Invalid',
+        cardSetChanges: [
+          { type: 'archive', cardSetId: 'set-to-archive' },
+        ],
+      },
+    },
+    {
+      name: 'empty operation',
+      value: { title: 'Empty', summary: 'No changes' },
+    },
+  ])('rejects $name', ({ value }) => {
+    expect(aiLibraryProposalSchema.safeParse(value).success).toBe(false);
+  });
+});
