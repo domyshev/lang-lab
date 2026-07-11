@@ -330,7 +330,13 @@ function deriveCanonicalName(
   names: Partial<Record<SupportedLanguage, string>> | undefined,
   fallback = '',
 ): string {
-  return names?.en ?? names?.ru ?? names?.es ?? fallback;
+  for (const language of ['en', 'ru', 'es'] as const) {
+    const candidate = names?.[language]?.trim();
+    if (candidate) {
+      return candidate;
+    }
+  }
+  return fallback;
 }
 
 function rollbackConflict(

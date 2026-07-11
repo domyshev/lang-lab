@@ -382,6 +382,39 @@ describe('planAiOperation', () => {
     expect(result.operation.updatedCardSets[0].before).not.toHaveProperty('names');
     expect(result.operation.updatedCardSets[0].after).not.toHaveProperty('names');
   });
+
+  it.each([
+    [
+      { en: '   ', ru: '  Путешествия  ', es: ' Viajes ' },
+      'Путешествия',
+    ],
+    [{ en: ' ', ru: '\t', es: '  ' }, 'Legacy'],
+  ])(
+    'ignores blank legacy localized names without rewriting stored values',
+    (names, expectedCanonicalName) => {
+      const input = plannerInput({
+        title: 'Membership',
+        summary: 'Update membership only.',
+        cardSetChanges: [
+          {
+            type: 'update',
+            cardSetId: 'set-travel',
+            addCardRefs: ['card-airport'],
+          },
+        ],
+      });
+      input.cardSets[0] = cardSet({ name: 'Legacy', names });
+
+      const result = planAiOperation(input);
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.operation.updatedCardSets[0].after.name).toBe(
+        expectedCanonicalName,
+      );
+      expect(result.operation.updatedCardSets[0].after.names).toEqual(names);
+    },
+  );
 });
 
 describe('findAiRollbackConflict', () => {
