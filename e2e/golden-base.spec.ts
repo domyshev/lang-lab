@@ -3,8 +3,11 @@ import { expect, test, type Page } from '@playwright/test';
 test.describe('golden base visual snapshots', () => {
   test('runs the mocked golden AI Assistant workflow', async ({ page }) => {
     const fakeKey = 'task-8-fake-key';
+    const openRouterEndpoint = 'https://openrouter.ai/api/v1/chat/completions';
     const requestBodies: Array<Record<string, unknown>> = [];
-    const authorizationMatches: boolean[] = [];
+    const requestHeaders: Array<Record<string, string>> = [];
+    const requestUrls: string[] = [];
+    const unexpectedOpenRouterUrls: string[] = [];
     let releaseFinalResponse = () => {};
     let markFinalRequestReceived = () => {};
     const finalResponseGate = new Promise<void>((resolve) => {
@@ -15,13 +18,19 @@ test.describe('golden base visual snapshots', () => {
     });
 
     await page.route(
-      'https://openrouter.ai/api/v1/chat/completions',
+      'https://openrouter.ai/**',
       async (route) => {
         const request = route.request();
+        const requestUrl = request.url();
+        if (requestUrl !== openRouterEndpoint) {
+          unexpectedOpenRouterUrls.push(requestUrl);
+          await route.abort('blockedbyclient');
+          return;
+        }
+
+        requestUrls.push(requestUrl);
+        requestHeaders.push(await request.allHeaders());
         requestBodies.push(request.postDataJSON() as Record<string, unknown>);
-        authorizationMatches.push(
-          request.headers().authorization === `Bearer ${fakeKey}`,
-        );
         const responseIndex = requestBodies.length - 1;
         const responseMessage =
           responseIndex === 0
@@ -100,7 +109,8 @@ test.describe('golden base visual snapshots', () => {
     await expect(
       page.getByText('I staged the localized rail set for review.'),
     ).toBeVisible();
-    await expect(page.getByTestId('ai_operation_preview__panel')).toBeVisible();
+    const operationPreview = page.getByTestId('ai_operation_preview__panel');
+    await expect(operationPreview).toBeVisible();
     await expect(page.getByTestId('ai_operation_preview__title')).toHaveText(
       'Rail essentials',
     );
@@ -111,10 +121,44 @@ test.describe('golden base visual snapshots', () => {
       page.getByTestId('ai_operation_preview__count__createdCardSets'),
     ).toContainText('1');
 
+    const operationPreviewStyle = await operationPreview.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        backgroundColor: style.backgroundColor,
+        borderStyle: style.borderStyle,
+        isPaper: element.classList.contains('MuiPaper-root'),
+        surface: element.getAttribute('data-surface'),
+      };
+    });
+    expect(operationPreviewStyle).toEqual({
+      backgroundColor: 'rgb(245, 240, 255)',
+      borderStyle: 'none',
+      isPaper: false,
+      surface: 'purple-unframed',
+    });
+    await expect(operationPreview).toHaveScreenshot(
+      'ai-assistant-operation-preview.png',
+    );
+
     expect(requestBodies).toHaveLength(3);
-    expect(authorizationMatches).toEqual([true, true, true]);
-    for (const body of requestBodies) {
+    expect(unexpectedOpenRouterUrls).toEqual([]);
+    expect(requestUrls).toEqual([
+      openRouterEndpoint,
+      openRouterEndpoint,
+      openRouterEndpoint,
+    ]);
+    for (const [requestIndex, body] of requestBodies.entries()) {
+      const headers = requestHeaders[requestIndex];
+      expect(headers.authorization).toBe(`Bearer ${fakeKey}`);
+      expect(requestUrls[requestIndex]).not.toContain(fakeKey);
       expect(JSON.stringify(body)).not.toContain(fakeKey);
+      expect(
+        JSON.stringify(
+          Object.entries(headers).filter(
+            ([headerName]) => headerName.toLowerCase() !== 'authorization',
+          ),
+        ),
+      ).not.toContain(fakeKey);
       expect(body).toMatchObject({
         model: 'deepseek/deepseek-v4-flash',
         tool_choice: 'auto',

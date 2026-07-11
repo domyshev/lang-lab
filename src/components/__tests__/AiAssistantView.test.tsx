@@ -472,6 +472,17 @@ describe('AiAssistantView chat', () => {
 });
 
 describe('AiAssistantView operation preview and history', () => {
+  it('renders a staged operation as a purple unframed chat surface', () => {
+    renderView({ stagedOperation: createOperation() });
+
+    const preview = screen.getByTestId('ai_operation_preview__panel');
+    const styles = getComputedStyle(preview);
+
+    expect(preview.className).not.toContain('MuiPaper-root');
+    expect(preview).toHaveAttribute('data-surface', 'purple-unframed');
+    expect(styles.backgroundColor).toBe('rgb(245, 240, 255)');
+  });
+
   it('shows all preview counts and applies exactly once', async () => {
     const user = userEvent.setup();
     const operation = createOperation();

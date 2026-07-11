@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Paper, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import { PlannedAiOperation } from '../../domain/aiOperations';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
@@ -29,10 +29,10 @@ export function AiOperationPreview({
   operation,
 }: AiOperationPreviewProps) {
   return (
-    <Paper
+    <Box
       data-test="ai_operation_preview__panel"
-      variant="outlined"
-      sx={{ borderColor: '#d8b968', bgcolor: '#fffdf5', p: 2 }}
+      data-surface="purple-unframed"
+      sx={{ bgcolor: '#f5f0ff', borderStyle: 'none', borderRadius: 1, boxShadow: 'none', p: 2 }}
     >
       <Stack data-test="ai_operation_preview__content" spacing={1.5}>
         <div data-test="ai_operation_preview__header">
@@ -90,6 +90,6 @@ export function AiOperationPreview({
           </Button>
         </Stack>
       </Stack>
-    </Paper>
+    </Box>
   );
 }
