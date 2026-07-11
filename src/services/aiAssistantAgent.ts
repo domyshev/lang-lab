@@ -88,7 +88,10 @@ export async function runAiAssistant(input: {
     const assistantMessage = response.message;
     const toolCalls = assistantMessage.tool_calls ?? [];
     if (toolCalls.length === 0) {
-      if (typeof assistantMessage.content !== 'string') {
+      if (
+        typeof assistantMessage.content !== 'string' ||
+        assistantMessage.content.trim().length === 0
+      ) {
         return {
           ok: false,
           failure: {

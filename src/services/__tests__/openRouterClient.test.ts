@@ -139,8 +139,181 @@ describe('sendOpenRouterChat', () => {
     });
   });
 
+  it('treats AbortError while reading a successful body as cancellation', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        responseWithJsonFailure(
+          new DOMException(`Aborted ${apiKey}`, 'AbortError'),
+        ),
+      ),
+    );
+
+    const result = await sendOpenRouterChat({ apiKey, messages, tools });
+
+    expect(result).toEqual({
+      ok: false,
+      error: { kind: 'cancelled', message: 'Request cancelled.' },
+    });
+    expect(JSON.stringify(result)).not.toContain(apiKey);
+  });
+
+  it('treats a non-syntax successful body-read failure as a sanitized network error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        responseWithJsonFailure(new TypeError(`Body stream exposed ${apiKey}`)),
+      ),
+    );
+
+    const result = await sendOpenRouterChat({ apiKey, messages, tools });
+
+    expect(result).toEqual({
+      ok: false,
+      error: { kind: 'network', message: 'Unable to read the OpenRouter response.' },
+    });
+    expect(JSON.stringify(result)).not.toContain(apiKey);
+  });
+
+  it('lets cancellation win while reading a non-ok provider body', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        responseWithJsonFailure(
+          new DOMException(`Aborted ${apiKey}`, 'AbortError'),
+          500,
+        ),
+      ),
+    );
+
+    const result = await sendOpenRouterChat({ apiKey, messages, tools });
+
+    expect(result).toEqual({
+      ok: false,
+      error: { kind: 'cancelled', message: 'Request cancelled.' },
+    });
+    expect(JSON.stringify(result)).not.toContain(apiKey);
+  });
+
+  it('types a generic non-ok body-read failure as a sanitized network error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        responseWithJsonFailure(new TypeError(`Body stream exposed ${apiKey}`), 500),
+      ),
+    );
+
+    const result = await sendOpenRouterChat({ apiKey, messages, tools });
+
+    expect(result).toEqual({
+      ok: false,
+      error: { kind: 'network', message: 'Unable to read the OpenRouter response.' },
+    });
+    expect(JSON.stringify(result)).not.toContain(apiKey);
+  });
+
+  it('preserves a known status when its provider body cannot be read', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        responseWithJsonFailure(new TypeError(`Body stream exposed ${apiKey}`), 401),
+      ),
+    );
+
+    const result = await sendOpenRouterChat({ apiKey, messages, tools });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        kind: 'invalid-key',
+        message: 'The OpenRouter API key is invalid or revoked.',
+      },
+    });
+    expect(JSON.stringify(result)).not.toContain(apiKey);
+  });
+
+  it('types malformed JSON from a generic non-ok body read', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        responseWithJsonFailure(new SyntaxError(`Malformed ${apiKey}`), 500),
+      ),
+    );
+
+    const result = await sendOpenRouterChat({ apiKey, messages, tools });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        kind: 'malformed-json',
+        message: 'OpenRouter returned malformed JSON.',
+      },
+    });
+    expect(JSON.stringify(result)).not.toContain(apiKey);
+  });
+
   it('returns a controlled malformed-response result for an invalid payload', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ choices: [] })));
+
+    const result = await sendOpenRouterChat({ apiKey, messages, tools });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        kind: 'malformed-response',
+        message: 'OpenRouter returned an invalid chat completion.',
+      },
+    });
+  });
+
+  it.each([
+    ['empty tool-call id', toolCall('', 'search_cards')],
+    ['whitespace tool-call id', toolCall('   ', 'search_cards')],
+    ['empty function name', toolCall('call-1', '')],
+    ['whitespace function name', toolCall('call-1', '   ')],
+  ])('rejects %s as a malformed response', async (_name, call) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          choices: [
+            { message: { role: 'assistant', content: null, tool_calls: [call] } },
+          ],
+        }),
+      ),
+    );
+
+    const result = await sendOpenRouterChat({ apiKey, messages, tools });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        kind: 'malformed-response',
+        message: 'OpenRouter returned an invalid chat completion.',
+      },
+    });
+  });
+
+  it('rejects duplicate tool-call ids as a malformed response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          choices: [
+            {
+              message: {
+                role: 'assistant',
+                content: null,
+                tool_calls: [
+                  toolCall('duplicate', 'search_cards'),
+                  toolCall('duplicate', 'get_cards'),
+                ],
+              },
+            },
+          ],
+        }),
+      ),
+    );
 
     const result = await sendOpenRouterChat({ apiKey, messages, tools });
 
@@ -186,4 +359,20 @@ function jsonResponse(value: unknown, status = 200): Response {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+function responseWithJsonFailure(error: unknown, status = 200): Response {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    json: vi.fn().mockRejectedValue(error),
+  } as unknown as Response;
+}
+
+function toolCall(id: string, name: string) {
+  return {
+    id,
+    type: 'function',
+    function: { name, arguments: '{}' },
+  };
 }

@@ -83,7 +83,10 @@ export async function sendOpenRouterChat(input: {
   }
 
   if (!response.ok) {
-    const providerMessage = await readProviderError(response, input.apiKey);
+    const bodyResult = await readJsonBody(response);
+    if (!bodyResult.ok && bodyResult.kind === 'cancelled') {
+      return bodyReadFailure(bodyResult.kind);
+    }
     if (response.status === 401 || response.status === 403) {
       return failure('invalid-key', 'The OpenRouter API key is invalid or revoked.');
     }
@@ -93,21 +96,24 @@ export async function sendOpenRouterChat(input: {
     if (response.status === 429) {
       return failure('rate-limit', 'OpenRouter rate limit reached.');
     }
+    if (!bodyResult.ok) {
+      return bodyReadFailure(bodyResult.kind);
+    }
+    const providerMessage = extractProviderMessage(bodyResult.value);
     return failure(
       'provider',
-      providerMessage || `OpenRouter request failed with status ${response.status}.`,
+      (providerMessage && sanitizeProviderMessage(providerMessage, input.apiKey)) ||
+        `OpenRouter request failed with status ${response.status}.`,
       response.status,
     );
   }
 
-  let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch {
-    return failure('malformed-json', 'OpenRouter returned malformed JSON.');
+  const bodyResult = await readJsonBody(response);
+  if (!bodyResult.ok) {
+    return bodyReadFailure(bodyResult.kind);
   }
 
-  const message = readAssistantMessage(payload);
+  const message = readAssistantMessage(bodyResult.value);
   if (!message) {
     return failure(
       'malformed-response',
@@ -129,19 +135,36 @@ function failure(
   };
 }
 
-async function readProviderError(
-  response: Response,
-  apiKey: string,
-): Promise<string> {
-  let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch {
-    return '';
-  }
+type BodyReadFailureKind = 'cancelled' | 'malformed-json' | 'network';
 
-  const message = extractProviderMessage(payload);
-  return message ? sanitizeProviderMessage(message, apiKey) : '';
+async function readJsonBody(
+  response: Response,
+): Promise<
+  | { ok: true; value: unknown }
+  | { ok: false; kind: BodyReadFailureKind }
+> {
+  try {
+    return { ok: true, value: await response.json() };
+  } catch (error) {
+    if (isAbortError(error)) {
+      return { ok: false, kind: 'cancelled' };
+    }
+    if (isNamedError(error, 'SyntaxError')) {
+      return { ok: false, kind: 'malformed-json' };
+    }
+    return { ok: false, kind: 'network' };
+  }
+}
+
+function bodyReadFailure(kind: BodyReadFailureKind): OpenRouterChatResult {
+  switch (kind) {
+    case 'cancelled':
+      return failure('cancelled', 'Request cancelled.');
+    case 'malformed-json':
+      return failure('malformed-json', 'OpenRouter returned malformed JSON.');
+    case 'network':
+      return failure('network', 'Unable to read the OpenRouter response.');
+  }
 }
 
 function extractProviderMessage(payload: unknown): string {
@@ -182,22 +205,34 @@ function readAssistantMessage(
 }
 
 function isToolCalls(value: unknown): value is OpenRouterToolCall[] {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (call) =>
-        isRecord(call) &&
-        typeof call.id === 'string' &&
-        call.type === 'function' &&
-        isRecord(call.function) &&
-        typeof call.function.name === 'string' &&
-        typeof call.function.arguments === 'string',
-    )
-  );
+  if (!Array.isArray(value)) return false;
+
+  const callIds = new Set<string>();
+  return value.every((call) => {
+    if (
+      !isRecord(call) ||
+      typeof call.id !== 'string' ||
+      call.id.trim().length === 0 ||
+      callIds.has(call.id) ||
+      call.type !== 'function' ||
+      !isRecord(call.function) ||
+      typeof call.function.name !== 'string' ||
+      call.function.name.trim().length === 0 ||
+      typeof call.function.arguments !== 'string'
+    ) {
+      return false;
+    }
+    callIds.add(call.id);
+    return true;
+  });
 }
 
 function isAbortError(error: unknown): boolean {
-  return isRecord(error) && error.name === 'AbortError';
+  return isNamedError(error, 'AbortError');
+}
+
+function isNamedError(error: unknown, name: string): boolean {
+  return isRecord(error) && error.name === name;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

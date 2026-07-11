@@ -134,7 +134,7 @@ describe('runAiAssistant', () => {
   });
 
   it('returns content-only responses as a controlled success', async () => {
-    sendChatMock.mockResolvedValueOnce(success('Here is what I found.'));
+    sendChatMock.mockResolvedValueOnce(success('  Here is what I found.\n'));
 
     await expect(
       runAiAssistant({
@@ -144,7 +144,25 @@ describe('runAiAssistant', () => {
       }),
     ).resolves.toEqual({
       ok: true,
-      content: 'Here is what I found.',
+      content: '  Here is what I found.\n',
+    });
+  });
+
+  it.each(['', '   \n\t'])('returns empty-response for blank content %j', async (content) => {
+    sendChatMock.mockResolvedValueOnce(success(content));
+
+    const result = await runAiAssistant({
+      apiKey: 'key',
+      userMessage: 'Review my cards.',
+      snapshot,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      failure: {
+        kind: 'empty-response',
+        message: 'The assistant returned neither content nor tool calls.',
+      },
     });
   });
 
