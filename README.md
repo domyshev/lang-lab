@@ -22,6 +22,7 @@ The current app supports:
 - safe merging of missing duplicate data;
 - pending duplicate records for conflicts;
 - learner-created card sets that persist locally;
+- a frontend-only OpenRouter AI Assistant for controlled card-library changes;
 - target-language scoped practice history;
 - per-card target-language statistics;
 - weighted exercise results;
@@ -39,6 +40,18 @@ The current app supports:
 Card sets are intentionally lightweight and learner-owned. A learner can create many card sets and keep them for later, but each exercise is generated from exactly one selected card set.
 
 A later version may let a card set carry an optional topic label. That label should be metadata, not the required identity of the set.
+
+## AI Assistant
+
+The AI Assistant runs entirely in the frontend and sends chat requests directly from the browser to OpenRouter. It always uses the fixed model id `deepseek/deepseek-v4-flash`; the app does not bundle a shared or trial key.
+
+The learner supplies an OpenRouter API key. The key is stored in this browser's `localStorage` without encryption, outside Redux state. Use a restricted key, do not use a high-value account key, and do not share the browser profile. The key is sent only in the OpenRouter `Authorization` header.
+
+The assistant has four bounded read tools for listing card sets, reading one set, searching cards, and reading cards by id. It cannot mutate the library through those tools. A write request can only produce one validated, staged operation with a purple preview. Nothing changes until the learner explicitly selects **Apply changes**.
+
+Apply records cards, card sets, duplicate metadata, and operation history atomically. Operation history supports rollback only while every affected entity still matches the operation's recorded result; later conflicting edits block rollback instead of overwriting newer work. AI operations cannot globally delete cards or archive or delete card sets.
+
+Manual JSON file import remains available below the assistant as a non-AI fallback. See the [AI Card Library Assistant design](docs/superpowers/specs/2026-07-11-ai-card-library-assistant-design.md) for the full authority and data-flow contract, and [LANGUAGE_CARD_FORMAT.md](docs/LANGUAGE_CARD_FORMAT.md) for the accepted card format.
 
 ## Exercise Modes
 

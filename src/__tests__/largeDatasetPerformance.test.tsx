@@ -10,8 +10,44 @@ import { cardsReducer } from '../store/cardsSlice';
 import { cardSetsReducer } from '../store/cardSetsSlice';
 import { statsReducer } from '../store/statsSlice';
 import { aiAssistantReducer } from '../store/aiAssistantSlice';
+import { executeAiReadTool } from '../domain/aiLibraryTools';
 
 describe('large local datasets', () => {
+  it('searches 10,000 cards through the bounded AI read tool', () => {
+    const now = '2026-07-08T00:00:00.000Z';
+    const cards = Array.from({ length: 10_000 }, (_, index) => ({
+      id: `search-card-${String(index).padStart(5, '0')}`,
+      translations: {
+        en: `benchmark word ${String(index).padStart(5, '0')}`,
+        ru: `тестовое слово ${String(index).padStart(5, '0')}`,
+      },
+      createdAt: now,
+      updatedAt: now,
+    }));
+
+    const startedAt = performance.now();
+    const result = executeAiReadTool(
+      'search_cards',
+      { cursor: 200, limit: 1_000, query: 'benchmark word' },
+      { cards, cardSets: [], interfaceLanguage: 'en' },
+    );
+    const elapsedMs = performance.now() - startedAt;
+
+    expect(result).toMatchObject({
+      cursor: 200,
+      limit: 100,
+      nextCursor: 300,
+      total: 10_000,
+    });
+    expect((result as { items: typeof cards }).items).toHaveLength(100);
+    expect((result as { items: typeof cards }).items[0]?.id).toBe(
+      'search-card-00200',
+    );
+    const resultItems = (result as { items: typeof cards }).items;
+    expect(resultItems[resultItems.length - 1]?.id).toBe('search-card-00299');
+    expect(elapsedMs).toBeLessThan(1_000);
+  });
+
   it('keeps all-cards card detail rendering virtualized', async () => {
     const user = userEvent.setup();
     const { container } = renderLargeApp(2000);

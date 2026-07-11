@@ -1,6 +1,223 @@
 import { expect, test, type Page } from '@playwright/test';
 
 test.describe('golden base visual snapshots', () => {
+  test('runs the mocked golden AI Assistant workflow', async ({ page }) => {
+    const fakeKey = 'task-8-fake-key';
+    const requestBodies: Array<Record<string, unknown>> = [];
+    const authorizationMatches: boolean[] = [];
+    let releaseFinalResponse = () => {};
+    let markFinalRequestReceived = () => {};
+    const finalResponseGate = new Promise<void>((resolve) => {
+      releaseFinalResponse = resolve;
+    });
+    const finalRequestReceived = new Promise<void>((resolve) => {
+      markFinalRequestReceived = resolve;
+    });
+
+    await page.route(
+      'https://openrouter.ai/api/v1/chat/completions',
+      async (route) => {
+        const request = route.request();
+        requestBodies.push(request.postDataJSON() as Record<string, unknown>);
+        authorizationMatches.push(
+          request.headers().authorization === `Bearer ${fakeKey}`,
+        );
+        const responseIndex = requestBodies.length - 1;
+        const responseMessage =
+          responseIndex === 0
+            ? assistantToolResponse('read-catenary', 'search_cards', {
+                query: 'catenary',
+                languages: ['en', 'ru'],
+                limit: 100,
+              })
+            : responseIndex === 1
+              ? assistantToolResponse(
+                  'propose-rail-set',
+                  'propose_library_operation',
+                  {
+                    title: 'Rail essentials',
+                    summary: 'Create a localized rail set with one catenary card.',
+                    cards: [
+                      {
+                        clientRef: 'catenary-card',
+                        translations: {
+                          en: 'catenary',
+                          es: 'catenaria',
+                          ru: 'контактная сеть',
+                        },
+                        definitions: {
+                          en: 'An overhead wire system that powers electric trains.',
+                        },
+                        tags: ['travel', 'rail'],
+                        difficulty: 'easy',
+                      },
+                    ],
+                    cardSetChanges: [
+                      {
+                        type: 'create',
+                        clientRef: 'rail-set',
+                        names: {
+                          en: 'Rail essentials',
+                          es: 'Viajes en tren',
+                          ru: 'Железная дорога',
+                        },
+                        cardRefs: ['catenary-card'],
+                      },
+                    ],
+                  },
+                )
+              : {
+                  role: 'assistant',
+                  content: 'I staged the localized rail set for review.',
+                };
+
+        if (responseIndex === 2) {
+          markFinalRequestReceived();
+          await finalResponseGate;
+        }
+        await route.fulfill({
+          contentType: 'application/json',
+          status: 200,
+          body: JSON.stringify({ choices: [{ message: responseMessage }] }),
+        });
+      },
+    );
+    await openGoldenApp(page);
+
+    await page.getByTestId('card_set_library__ai_assistant_button').click();
+    await expect(page.getByTestId('ai_assistant__page')).toBeVisible();
+    await page.getByTestId('ai_connection__key_input').fill(fakeKey);
+    await page.getByTestId('ai_connection__save_button').click();
+    await page
+      .getByTestId('ai_chat__composer_field')
+      .getByRole('textbox')
+      .fill('Create a tiny travel set from this word list: catenary.');
+    await page.getByTestId('ai_chat__send_button').click();
+
+    await finalRequestReceived;
+    await expect(page.getByTestId('ai_chat__thinking')).toBeVisible();
+    releaseFinalResponse();
+    await expect(
+      page.getByText('I staged the localized rail set for review.'),
+    ).toBeVisible();
+    await expect(page.getByTestId('ai_operation_preview__panel')).toBeVisible();
+    await expect(page.getByTestId('ai_operation_preview__title')).toHaveText(
+      'Rail essentials',
+    );
+    await expect(
+      page.getByTestId('ai_operation_preview__count__createdCards'),
+    ).toContainText('1');
+    await expect(
+      page.getByTestId('ai_operation_preview__count__createdCardSets'),
+    ).toContainText('1');
+
+    expect(requestBodies).toHaveLength(3);
+    expect(authorizationMatches).toEqual([true, true, true]);
+    for (const body of requestBodies) {
+      expect(JSON.stringify(body)).not.toContain(fakeKey);
+      expect(body).toMatchObject({
+        model: 'deepseek/deepseek-v4-flash',
+        tool_choice: 'auto',
+        parallel_tool_calls: false,
+        stream: false,
+      });
+      expect(
+        (body.tools as Array<{ function: { name: string } }>).map(
+          (tool) => tool.function.name,
+        ),
+      ).toEqual([
+        'list_card_sets',
+        'get_card_set',
+        'search_cards',
+        'get_cards',
+        'propose_library_operation',
+      ]);
+    }
+    expect(requestBodies[1].messages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          role: 'assistant',
+          tool_calls: [
+            expect.objectContaining({
+              id: 'read-catenary',
+              function: expect.objectContaining({ name: 'search_cards' }),
+            }),
+          ],
+        }),
+        expect.objectContaining({ role: 'tool', tool_call_id: 'read-catenary' }),
+      ]),
+    );
+    const finalMessages = requestBodies[2].messages as Array<{
+      content: string;
+      role: string;
+      tool_call_id?: string;
+    }>;
+    expect(finalMessages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          role: 'tool',
+          tool_call_id: 'propose-rail-set',
+        }),
+      ]),
+    );
+    const proposalResult = finalMessages.find(
+      (message) => message.tool_call_id === 'propose-rail-set',
+    );
+    expect(JSON.parse(proposalResult!.content)).toMatchObject({
+      ok: true,
+      operation: {
+        modelId: 'deepseek/deepseek-v4-flash',
+        title: 'Rail essentials',
+      },
+    });
+
+    await page.getByTestId('ai_operation_preview__apply_button').click();
+    await expect(page.getByTestId('ai_operation_preview__panel')).toBeHidden();
+    await page.getByTestId('app_shell__tab__cards').click();
+    const createdSet = page
+      .locator('[data-test^="card_set_list__tile__"]')
+      .filter({ hasText: 'Rail essentials' });
+    await expect(createdSet).toBeVisible();
+    await createdSet
+      .locator('[data-test^="card_set_list__tile_select_area__"]')
+      .click();
+    await expect(
+      page.locator('[data-test^="card_set_detail__title__"]'),
+    ).toHaveText('Rail essentials');
+    await expect(
+      page.locator('[data-test^="card_set_detail__card_item__"]').filter({
+        hasText: 'catenary',
+      }),
+    ).toBeVisible();
+
+    await page.getByTestId('app_shell__tab__agents').click();
+    const historyItem = page
+      .locator('[data-test^="ai_operation_history__item__"]')
+      .filter({ hasText: 'Rail essentials' });
+    await expect(historyItem).toBeVisible();
+    await expect(
+      historyItem.locator('[data-test^="ai_operation_history__status__"]'),
+    ).toHaveText('Применено');
+    await historyItem
+      .locator('[data-test^="ai_operation_history__rollback_button__"]')
+      .click();
+    await expect(
+      historyItem.locator('[data-test^="ai_operation_history__status__"]'),
+    ).toHaveText('Отменено');
+
+    await page.getByTestId('app_shell__tab__cards').click();
+    await expect(
+      page
+        .locator('[data-test^="card_set_list__tile__"]')
+        .filter({ hasText: 'Rail essentials' }),
+    ).toHaveCount(0);
+    await expect(
+      page.locator('[data-test^="card_set_detail__card_item__"]').filter({
+        hasText: 'catenary',
+      }),
+    ).toHaveCount(0);
+  });
+
   test('games home', async ({ page }) => {
     await openGoldenApp(page);
 
@@ -41,12 +258,26 @@ test.describe('golden base visual snapshots', () => {
     await captureGolden(page, 'statistics-empty');
   });
 
-  test('agents llm import page', async ({ page }) => {
+  test('AI Assistant workspace', async ({ page }) => {
+    await page.setViewportSize({ height: 1400, width: 1440 });
     await openGoldenApp(page);
 
     await page.getByTestId('app_shell__tab__agents').click();
-    await expect(page.getByTestId('app__agents_section')).toBeVisible();
-    await captureGolden(page, 'agents-llm-import');
+    await expect(page.getByTestId('ai_assistant__page')).toBeVisible();
+    await expect(page.getByTestId('ai_connection__key_input')).toHaveValue('');
+    await expectNoHorizontalOverflow(page);
+    await captureGolden(page, 'ai-assistant-workspace');
+  });
+
+  test('AI Assistant workspace on a narrow viewport', async ({ page }) => {
+    await page.setViewportSize({ height: 2200, width: 390 });
+    await openGoldenApp(page);
+
+    await page.getByTestId('app_shell__tab__agents').click();
+    await expect(page.getByTestId('ai_assistant__page')).toBeVisible();
+    await expect(page.getByTestId('ai_connection__key_input')).toHaveValue('');
+    await expectNoHorizontalOverflow(page);
+    await captureGolden(page, 'ai-assistant-workspace-narrow');
   });
 
   test('missing letters exercise', async ({ page }) => {
@@ -277,4 +508,40 @@ async function captureGolden(page: Page, name: string) {
   await expect(page).toHaveScreenshot(`${name}.png`, {
     fullPage: true,
   });
+}
+
+async function expectNoHorizontalOverflow(page: Page) {
+  const widths = await page.evaluate(() => ({
+    documentClientWidth: document.documentElement.clientWidth,
+    documentScrollWidth: document.documentElement.scrollWidth,
+    shellClientWidth:
+      document.querySelector<HTMLElement>('[data-test="app_shell__root"]')
+        ?.clientWidth ?? 0,
+    shellScrollWidth:
+      document.querySelector<HTMLElement>('[data-test="app_shell__root"]')
+        ?.scrollWidth ?? 0,
+  }));
+
+  expect(widths.documentScrollWidth).toBeLessThanOrEqual(
+    widths.documentClientWidth,
+  );
+  expect(widths.shellScrollWidth).toBeLessThanOrEqual(widths.shellClientWidth);
+}
+
+function assistantToolResponse(
+  id: string,
+  name: string,
+  arguments_: Record<string, unknown>,
+) {
+  return {
+    role: 'assistant',
+    content: null,
+    tool_calls: [
+      {
+        id,
+        type: 'function',
+        function: { name, arguments: JSON.stringify(arguments_) },
+      },
+    ],
+  };
 }
