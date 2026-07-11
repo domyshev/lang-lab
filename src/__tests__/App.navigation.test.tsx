@@ -734,27 +734,19 @@ describe('App navigation', () => {
     ).toHaveTextContent('0 пройдено / 4 всего');
   });
 
-  it('describes agent features and keeps import controls on the agents tab', async () => {
+  it('opens the AI assistant workspace and keeps manual import on the agents tab', async () => {
     const user = userEvent.setup();
     renderApp();
 
     await user.click(screen.getByRole('tab', { name: 'Агенты LLM' }));
 
     expect(screen.queryByRole('tab', { name: 'Импорт' })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Агенты LLM' })).toBeInTheDocument();
-    expect(screen.getByTestId('agents_view__open_router_intro')).toHaveTextContent(
-      'Пользователь может добавить свой ключ Open Router, чтобы запускать агентские функции через свои лимиты.',
-    );
-    expect(screen.getByRole('link', { name: 'Open Router' })).toHaveAttribute(
-      'href',
-      'https://openrouter.ai/',
-    );
-    expect(screen.getByText(/триальный ключ Open Router/i)).toBeInTheDocument();
-    expect(screen.getByText(/анализировать статистику/i)).toBeInTheDocument();
-    expect(screen.getByText(/создавать и добавлять словарный запас/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/агент не испортит ваши наработки/i),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'AI-ассистент' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Подключение' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Чат' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'История операций' })).toBeInTheDocument();
+    expect(screen.getByText('DeepSeek V4 Flash')).toBeInTheDocument();
+    expect(screen.queryByText(/триальн/i)).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Ручной импорт карточек' })).toBeInTheDocument();
     expect(screen.queryByText('Вставить JSON')).not.toBeInTheDocument();
   });

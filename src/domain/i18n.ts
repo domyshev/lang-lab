@@ -39,6 +39,49 @@ type I18nKey =
   | 'agentsVocabularyCapability'
   | 'agentsRollbackNotice'
   | 'agentsIntroCoachmarkTitle'
+  | 'aiAssistantTitle'
+  | 'aiConnectionTitle'
+  | 'aiApiKeyLabel'
+  | 'aiShowKey'
+  | 'aiHideKey'
+  | 'aiSaveKey'
+  | 'aiDeleteKey'
+  | 'aiLocalKeyWarning'
+  | 'aiChatTitle'
+  | 'aiComposerLabel'
+  | 'aiSendMessage'
+  | 'aiThinking'
+  | 'aiCancelRequest'
+  | 'aiRetry'
+  | 'aiClearChat'
+  | 'aiMissingKey'
+  | 'aiRequestFailed'
+  | 'aiErrorInvalidKey'
+  | 'aiErrorCredits'
+  | 'aiErrorRateLimit'
+  | 'aiErrorProvider'
+  | 'aiErrorNetwork'
+  | 'aiErrorSchema'
+  | 'aiErrorTool'
+  | 'aiErrorLoop'
+  | 'aiApplyChanges'
+  | 'aiCancelPreview'
+  | 'aiOperationBlocked'
+  | 'aiCreatedCards'
+  | 'aiUpdatedCards'
+  | 'aiPendingDuplicates'
+  | 'aiCreatedCardSets'
+  | 'aiRenamedCardSets'
+  | 'aiMembershipAdditions'
+  | 'aiMembershipRemovals'
+  | 'aiHistoryTitle'
+  | 'aiHistoryEmpty'
+  | 'aiRollback'
+  | 'aiApplied'
+  | 'aiReverted'
+  | 'aiChanges'
+  | 'aiRollbackConflictTitle'
+  | 'aiRollbackConflictBody'
   | 'importCards'
   | 'importDescription'
   | 'downloadCardFormat'
@@ -233,6 +276,58 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsRollbackNotice:
       'Everything created by agents will be marked as agent-created, and the agent work history will keep a matching record so changes can be rolled back. No worries, the agent will not spoil your work :)',
     agentsIntroCoachmarkTitle: 'Near plans',
+    aiAssistantTitle: 'AI Assistant',
+    aiConnectionTitle: 'Connection',
+    aiApiKeyLabel: 'OpenRouter API key',
+    aiShowKey: 'Show API key',
+    aiHideKey: 'Hide API key',
+    aiSaveKey: 'Save key',
+    aiDeleteKey: 'Delete key',
+    aiLocalKeyWarning:
+      'Your key is stored locally and unencrypted in this browser. Use a restricted key and do not share this browser profile.',
+    aiChatTitle: 'Chat',
+    aiComposerLabel: 'Message the AI assistant',
+    aiSendMessage: 'Send message',
+    aiThinking: 'Thinking...',
+    aiCancelRequest: 'Cancel request',
+    aiRetry: 'Retry',
+    aiClearChat: 'Clear chat',
+    aiMissingKey: 'Add and save an OpenRouter API key before sending a message.',
+    aiRequestFailed: 'The request could not be completed. Please try again.',
+    aiErrorInvalidKey:
+      'OpenRouter rejected this API key. Check whether it is valid and active.',
+    aiErrorCredits: 'This OpenRouter account does not have enough credits.',
+    aiErrorRateLimit:
+      'OpenRouter is receiving too many requests. Wait a moment and try again.',
+    aiErrorProvider:
+      'The AI provider could not complete the request. Try again later.',
+    aiErrorNetwork:
+      'OpenRouter could not be reached. Check your connection and try again.',
+    aiErrorSchema:
+      'The AI response had an unexpected format and was not applied.',
+    aiErrorTool:
+      'The AI assistant could not complete its tool request. Nothing was applied.',
+    aiErrorLoop:
+      'The AI assistant stopped after too many tool steps. Nothing was applied.',
+    aiApplyChanges: 'Apply changes',
+    aiCancelPreview: 'Cancel preview',
+    aiOperationBlocked: 'The operation cannot be applied because the library changed.',
+    aiCreatedCards: 'Cards created',
+    aiUpdatedCards: 'Cards updated',
+    aiPendingDuplicates: 'Pending duplicates',
+    aiCreatedCardSets: 'Sets created',
+    aiRenamedCardSets: 'Sets renamed',
+    aiMembershipAdditions: 'Membership additions',
+    aiMembershipRemovals: 'Membership removals',
+    aiHistoryTitle: 'Operation history',
+    aiHistoryEmpty: 'No AI operations yet.',
+    aiRollback: 'Roll back changes',
+    aiApplied: 'Applied',
+    aiReverted: 'Reverted',
+    aiChanges: 'changes',
+    aiRollbackConflictTitle: 'Changes cannot be rolled back',
+    aiRollbackConflictBody:
+      'The library changed after this operation was applied. Review the affected cards or sets before trying again.',
     importCards: 'Manual card import',
     importDescription:
       'You can also prepare data for your learning lab with an external LLM agent and upload it here in our format. Just download the requirements and give them to your agent.',
@@ -447,6 +542,58 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsRollbackNotice:
       'Все, что создано агентами в приложении, будет помечено как созданное агентами, а в истории работы агента появится соответствующая запись. Это позволит откатить внесенные изменения. Не переживайте, агент не испортит ваши наработки :)',
     agentsIntroCoachmarkTitle: 'Ближайшие планы',
+    aiAssistantTitle: 'AI-ассистент',
+    aiConnectionTitle: 'Подключение',
+    aiApiKeyLabel: 'API-ключ OpenRouter',
+    aiShowKey: 'Показать API-ключ',
+    aiHideKey: 'Скрыть API-ключ',
+    aiSaveKey: 'Сохранить ключ',
+    aiDeleteKey: 'Удалить ключ',
+    aiLocalKeyWarning:
+      'Ключ хранится локально и без шифрования в этом браузере. Используйте ключ с ограничениями и не делитесь профилем браузера.',
+    aiChatTitle: 'Чат',
+    aiComposerLabel: 'Сообщение AI-ассистенту',
+    aiSendMessage: 'Отправить сообщение',
+    aiThinking: 'Думаю...',
+    aiCancelRequest: 'Отменить запрос',
+    aiRetry: 'Повторить',
+    aiClearChat: 'Очистить чат',
+    aiMissingKey: 'Добавьте и сохраните API-ключ OpenRouter перед отправкой сообщения.',
+    aiRequestFailed: 'Не удалось выполнить запрос. Попробуйте ещё раз.',
+    aiErrorInvalidKey:
+      'OpenRouter отклонил этот API-ключ. Проверьте, что ключ действителен и активен.',
+    aiErrorCredits: 'На аккаунте OpenRouter недостаточно средств.',
+    aiErrorRateLimit:
+      'OpenRouter получает слишком много запросов. Немного подождите и попробуйте снова.',
+    aiErrorProvider:
+      'AI-провайдер не смог выполнить запрос. Попробуйте позже.',
+    aiErrorNetwork:
+      'Не удалось подключиться к OpenRouter. Проверьте соединение и попробуйте снова.',
+    aiErrorSchema:
+      'Ответ AI имеет неожиданный формат, поэтому изменения не были применены.',
+    aiErrorTool:
+      'AI-ассистент не смог выполнить запрос инструмента. Ничего не было применено.',
+    aiErrorLoop:
+      'AI-ассистент остановился после слишком большого числа шагов. Ничего не было применено.',
+    aiApplyChanges: 'Применить изменения',
+    aiCancelPreview: 'Отменить предпросмотр',
+    aiOperationBlocked: 'Операцию нельзя применить, потому что библиотека изменилась.',
+    aiCreatedCards: 'Создано карточек',
+    aiUpdatedCards: 'Обновлено карточек',
+    aiPendingDuplicates: 'Дубликаты в ожидании',
+    aiCreatedCardSets: 'Создано наборов',
+    aiRenamedCardSets: 'Переименовано наборов',
+    aiMembershipAdditions: 'Добавлено в наборы',
+    aiMembershipRemovals: 'Удалено из наборов',
+    aiHistoryTitle: 'История операций',
+    aiHistoryEmpty: 'Операций AI пока нет.',
+    aiRollback: 'Отменить изменения',
+    aiApplied: 'Применено',
+    aiReverted: 'Отменено',
+    aiChanges: 'изменений',
+    aiRollbackConflictTitle: 'Нельзя отменить изменения',
+    aiRollbackConflictBody:
+      'Библиотека изменилась после применения этой операции. Проверьте затронутые карточки или наборы перед повторной попыткой.',
     importCards: 'Ручной импорт карточек',
     importDescription:
       'Вы можете также подготовить данные для своей учебной лаборатории через внешнего LLM агента и загрузить их здесь в нашем формате. Просто скачайте требования и передайте их вашему агенту.',
@@ -662,6 +809,58 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     agentsRollbackNotice:
       'Todo lo creado por agentes se marcara como creado por agentes, y el historial de trabajo guardara un registro correspondiente para poder deshacer los cambios. No te preocupes, el agente no estropeara tu trabajo :)',
     agentsIntroCoachmarkTitle: 'Planes cercanos',
+    aiAssistantTitle: 'Asistente de IA',
+    aiConnectionTitle: 'Conexion',
+    aiApiKeyLabel: 'Clave API de OpenRouter',
+    aiShowKey: 'Mostrar clave API',
+    aiHideKey: 'Ocultar clave API',
+    aiSaveKey: 'Guardar clave',
+    aiDeleteKey: 'Eliminar clave',
+    aiLocalKeyWarning:
+      'Tu clave se guarda localmente y sin cifrar en este navegador. Usa una clave restringida y no compartas este perfil.',
+    aiChatTitle: 'Chat',
+    aiComposerLabel: 'Mensaje para el asistente de IA',
+    aiSendMessage: 'Enviar mensaje',
+    aiThinking: 'Pensando...',
+    aiCancelRequest: 'Cancelar solicitud',
+    aiRetry: 'Reintentar',
+    aiClearChat: 'Limpiar chat',
+    aiMissingKey: 'Anade y guarda una clave API de OpenRouter antes de enviar un mensaje.',
+    aiRequestFailed: 'No se pudo completar la solicitud. Intentalo de nuevo.',
+    aiErrorInvalidKey:
+      'OpenRouter rechazo esta clave API. Comprueba que sea valida y este activa.',
+    aiErrorCredits: 'Esta cuenta de OpenRouter no tiene creditos suficientes.',
+    aiErrorRateLimit:
+      'OpenRouter esta recibiendo demasiadas solicitudes. Espera un momento e intentalo de nuevo.',
+    aiErrorProvider:
+      'El proveedor de IA no pudo completar la solicitud. Intentalo mas tarde.',
+    aiErrorNetwork:
+      'No se pudo conectar con OpenRouter. Comprueba tu conexion e intentalo de nuevo.',
+    aiErrorSchema:
+      'La respuesta de IA tenia un formato inesperado y no se aplico.',
+    aiErrorTool:
+      'El asistente de IA no pudo completar la solicitud de herramienta. No se aplico nada.',
+    aiErrorLoop:
+      'El asistente de IA se detuvo tras demasiados pasos. No se aplico nada.',
+    aiApplyChanges: 'Aplicar cambios',
+    aiCancelPreview: 'Cancelar vista previa',
+    aiOperationBlocked: 'La operacion no se puede aplicar porque la biblioteca cambio.',
+    aiCreatedCards: 'Tarjetas creadas',
+    aiUpdatedCards: 'Tarjetas actualizadas',
+    aiPendingDuplicates: 'Duplicados pendientes',
+    aiCreatedCardSets: 'Conjuntos creados',
+    aiRenamedCardSets: 'Conjuntos renombrados',
+    aiMembershipAdditions: 'Tarjetas anadidas a conjuntos',
+    aiMembershipRemovals: 'Tarjetas retiradas de conjuntos',
+    aiHistoryTitle: 'Historial de operaciones',
+    aiHistoryEmpty: 'Todavia no hay operaciones de IA.',
+    aiRollback: 'Deshacer cambios',
+    aiApplied: 'Aplicado',
+    aiReverted: 'Deshecho',
+    aiChanges: 'cambios',
+    aiRollbackConflictTitle: 'No se pueden deshacer los cambios',
+    aiRollbackConflictBody:
+      'La biblioteca cambio despues de aplicar esta operacion. Revisa las tarjetas o conjuntos afectados antes de intentarlo otra vez.',
     importCards: 'Importacion manual de tarjetas',
     importDescription:
       'Tambien puedes preparar datos para tu laboratorio con un agente LLM externo y subirlos aqui en nuestro formato. Descarga los requisitos y daselos a tu agente.',
