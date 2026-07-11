@@ -186,6 +186,119 @@ describe('HistoryView', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('replays saved crossword snapshots while preserving legacy crossword rows', async () => {
+    const user = userEvent.setup();
+    const crosswordPrompts = [
+      {
+        cardId: 'card-cat',
+        prompt: 'ru: кот',
+        expectedAnswer: 'cat',
+        translationHints: [{ language: 'ru' as const, value: 'кот' }],
+      },
+      {
+        cardId: 'card-tea',
+        prompt: 'ru: чай',
+        expectedAnswer: 'tea',
+        translationHints: [{ language: 'ru' as const, value: 'чай' }],
+      },
+    ];
+    const snapshotAttempt: ExerciseAttempt = {
+      id: 'attempt-crossword-1',
+      exerciseSessionId: 'session-crossword-snapshot',
+      exerciseType: 'crossword',
+      cardSetId: 'all-cards',
+      targetLanguage: 'en',
+      createdAt: '2026-07-05T12:00:00.000Z',
+      completedAt: '2026-07-05T12:00:00.000Z',
+      cardSnapshots: [],
+      prompts: crosswordPrompts,
+      answers: { 'card-cat': 'cat' },
+      correctness: { 'card-cat': true },
+      hintsUsed: { 'card-cat': 0 },
+      crosswordSnapshot: {
+        puzzle: {
+          mode: 'words',
+          bounds: { minRow: 0, maxRow: 2, minCol: 0, maxCol: 2 },
+          cells: [
+            { row: 0, col: 0, solution: 'c', entryIds: ['card-cat'] },
+            { row: 0, col: 1, solution: 'a', entryIds: ['card-cat'] },
+            {
+              row: 0,
+              col: 2,
+              solution: 't',
+              entryIds: ['card-cat', 'card-tea'],
+            },
+            { row: 1, col: 2, solution: 'e', entryIds: ['card-tea'] },
+            { row: 2, col: 2, solution: 'a', entryIds: ['card-tea'] },
+          ],
+          entries: [
+            {
+              cardId: 'card-cat',
+              answer: 'cat',
+              clue: 'ru: кот',
+              row: 0,
+              col: 0,
+              direction: 'across',
+            },
+            {
+              cardId: 'card-tea',
+              answer: 'tea',
+              clue: 'ru: чай',
+              row: 0,
+              col: 2,
+              direction: 'down',
+            },
+          ],
+        },
+        cellValues: {
+          '0:0': 'c',
+          '0:1': 'a',
+          '0:2': 't',
+          '1:2': 'e',
+        },
+      },
+    };
+    const legacyAttempt: ExerciseAttempt = {
+      id: 'attempt-crossword-legacy',
+      exerciseSessionId: 'session-crossword-legacy',
+      exerciseType: 'crossword',
+      cardSetId: 'all-cards',
+      targetLanguage: 'en',
+      createdAt: '2026-07-05T11:00:00.000Z',
+      completedAt: '2026-07-05T11:00:00.000Z',
+      cardSnapshots: [],
+      prompts: [crosswordPrompts[0]],
+      answers: { 'card-cat': 'cat' },
+      correctness: { 'card-cat': true },
+      hintsUsed: { 'card-cat': 0 },
+    };
+
+    renderHistoryView([snapshotAttempt, legacyAttempt]);
+    const snapshotCard = screen.getByTestId(
+      'history_view__attempt_card__session-crossword-snapshot',
+    );
+    const legacyCard = screen.getByTestId(
+      'history_view__attempt_card__session-crossword-legacy',
+    );
+
+    await user.click(within(snapshotCard).getByRole('button', { name: /Кроссворд/ }));
+
+    expect(screen.getByTestId('crossword_history__grid')).toBeInTheDocument();
+    expect(
+      screen.queryByTestId(
+        'history_view__detail_row__attempt-crossword-1_card-cat',
+      ),
+    ).not.toBeInTheDocument();
+
+    await user.click(within(legacyCard).getByRole('button', { name: /Кроссворд/ }));
+
+    expect(
+      screen.getByTestId(
+        'history_view__detail_row__attempt-crossword-legacy_card-cat',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('uses a full letter-cell width for phrase spaces in statistics details', async () => {
     const user = userEvent.setup();
     const phraseAttempt: ExerciseAttempt = {

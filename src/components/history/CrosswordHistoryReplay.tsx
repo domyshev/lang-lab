@@ -1,0 +1,277 @@
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
+import { shouldStrikeAnswerCharacter } from '../../domain/answerCharacters';
+import {
+  getCrosswordCellTone,
+  getIncorrectCrosswordEntries,
+} from '../../domain/crosswordResults';
+import type { CrosswordAttemptSnapshot } from '../../domain/exercises';
+import { t } from '../../domain/i18n';
+import type { SupportedLanguage } from '../../domain/languages';
+import { CursorAnchoredTooltip } from '../CursorAnchoredTooltip';
+
+export function CrosswordHistoryReplay({
+  correctness,
+  interfaceLanguage,
+  snapshot,
+}: {
+  correctness: Record<string, boolean>;
+  interfaceLanguage: SupportedLanguage;
+  snapshot: CrosswordAttemptSnapshot;
+}) {
+  const { bounds } = snapshot.puzzle;
+  const rows = createRange(bounds.minRow, bounds.maxRow);
+  const columns = createRange(bounds.minCol, bounds.maxCol);
+  const cellByKey = new Map(
+    snapshot.puzzle.cells.map((cell) => [
+      toCellKey(cell.row, cell.col),
+      cell,
+    ]),
+  );
+  const startEntryByKey = new Map(
+    snapshot.puzzle.entries.map((entry, index) => [
+      toCellKey(entry.row, entry.col),
+      { entry, number: index + 1 },
+    ]),
+  );
+
+  return (
+    <Box
+      data-test="crossword_history__grid"
+      sx={{
+        display: 'grid',
+        gap: 0.5,
+        gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`,
+        maxWidth: `min(100%, ${columns.length * 38}px)`,
+        mx: 'auto',
+        overflow: 'visible',
+        pl: 2.75,
+        pt: 2.75,
+        width: '100%',
+      }}
+    >
+      {rows.flatMap((row) =>
+        columns.map((col) => {
+          const key = toCellKey(row, col);
+          const cell = cellByKey.get(key);
+          const displayRow = row - bounds.minRow + 1;
+          const displayCol = col - bounds.minCol + 1;
+
+          if (!cell || /\s/.test(cell.solution)) {
+            return (
+              <Box
+                data-test={`crossword_history__empty_cell__${displayRow}_${displayCol}`}
+                key={key}
+                sx={emptyCellStyles}
+              />
+            );
+          }
+
+          const startEntry = startEntryByKey.get(key);
+          const value = snapshot.cellValues[key] ?? '';
+          const tone = getCrosswordCellTone(cell, correctness);
+          const incorrectEntries = getIncorrectCrosswordEntries(
+            cell,
+            snapshot.puzzle,
+            correctness,
+          );
+          const shouldStrike = shouldStrikeAnswerCharacter({
+            actual: value,
+            expected: cell.solution,
+            isIncorrect: tone === 'incorrect',
+          });
+          const staticCell = (
+            <Box
+              component="span"
+              data-test={`crossword_history__cell__${displayRow}_${displayCol}`}
+              sx={letterCellStyles}
+              style={{
+                backgroundColor:
+                  tone === 'correct'
+                    ? 'rgb(235, 247, 225)'
+                    : tone === 'incorrect'
+                      ? 'rgb(253, 235, 238)'
+                      : undefined,
+                borderColor:
+                  tone === 'correct'
+                    ? '#8fc773'
+                    : tone === 'incorrect'
+                      ? '#f2a7b4'
+                      : undefined,
+                textDecorationLine: shouldStrike ? 'line-through' : 'none',
+                textDecorationThickness: '2px',
+              }}
+            >
+              {value}
+            </Box>
+          );
+
+          return (
+            <Box key={key} sx={letterCellShellStyles}>
+              {startEntry && (
+                <Tooltip
+                  arrow
+                  placement="top-start"
+                  slotProps={clueTooltipSlotProps}
+                  title={
+                    <Stack spacing={0.5}>
+                      <Typography
+                        sx={{
+                          color: '#2f7d9b',
+                          fontSize: 14,
+                          fontWeight: 900,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {t(interfaceLanguage, 'question')}
+                      </Typography>
+                      <Typography sx={{ fontSize: 14, lineHeight: 1.35 }}>
+                        {startEntry.entry.clue}
+                      </Typography>
+                    </Stack>
+                  }
+                >
+                  <Box
+                    aria-label={`Question ${startEntry.number}`}
+                    component="span"
+                    data-test={`crossword_history__clue_number__${startEntry.entry.cardId}`}
+                    sx={clueNumberStyles}
+                  >
+                    {startEntry.number}
+                  </Box>
+                </Tooltip>
+              )}
+              {incorrectEntries.length > 0 ? (
+                <CursorAnchoredTooltip
+                  arrowDataTest={`crossword_history__cell_tooltip_arrow__${displayRow}_${displayCol}`}
+                  closeOnOtherOpen
+                  leaveDelay={0}
+                  title={
+                    <Stack spacing={0.5}>
+                      {incorrectEntries.map((entry) => (
+                        <Typography
+                          key={entry.cardId}
+                          sx={{ fontSize: 14, lineHeight: 1.35 }}
+                        >
+                          {t(interfaceLanguage, 'correctAnswer')}: {entry.answer}
+                        </Typography>
+                      ))}
+                    </Stack>
+                  }
+                  transitionTimeout={0}
+                  tooltipSx={answerTooltipStyles}
+                >
+                  {staticCell}
+                </CursorAnchoredTooltip>
+              ) : (
+                staticCell
+              )}
+            </Box>
+          );
+        }),
+      )}
+    </Box>
+  );
+}
+
+function createRange(min: number, max: number): number[] {
+  return Array.from({ length: max - min + 1 }, (_, index) => min + index);
+}
+
+function toCellKey(row: number, col: number): string {
+  return `${row}:${col}`;
+}
+
+const letterCellShellStyles = {
+  aspectRatio: '1 / 1',
+  minWidth: 0,
+  position: 'relative',
+  width: '100%',
+};
+
+const letterCellStyles = {
+  alignItems: 'center',
+  bgcolor: 'background.paper',
+  border: '1px solid',
+  borderColor: 'divider',
+  borderRadius: 1,
+  display: 'inline-flex',
+  fontSize: 20,
+  fontWeight: 800,
+  aspectRatio: '1 / 1',
+  height: 'auto',
+  justifyContent: 'center',
+  lineHeight: 1,
+  minWidth: 0,
+  p: 0,
+  textAlign: 'center',
+  textTransform: 'lowercase',
+  width: '100%',
+};
+
+const clueNumberStyles = {
+  alignItems: 'center',
+  bgcolor: '#f5d66b',
+  border: '1px solid rgba(119, 86, 0, 0.24)',
+  borderRadius: '50%',
+  color: '#203015',
+  cursor: 'help',
+  display: 'inline-flex',
+  fontSize: 9,
+  fontWeight: 950,
+  height: 15,
+  justifyContent: 'center',
+  left: -18,
+  lineHeight: 1,
+  position: 'absolute',
+  top: -18,
+  width: 15,
+  zIndex: 1,
+};
+
+const emptyCellStyles = {
+  aspectRatio: '1 / 1',
+  minWidth: 0,
+  width: '100%',
+};
+
+const clueTooltipSlotProps = {
+  popper: {
+    modifiers: [{ name: 'offset', options: { offset: [0, 5] } }],
+  },
+  tooltip: {
+    sx: (theme: { palette: { mode: string } }) => ({
+      bgcolor: theme.palette.mode === 'dark' ? '#1f2933' : '#ffffff',
+      border:
+        theme.palette.mode === 'dark'
+          ? '1px solid rgba(255, 255, 255, 0.18)'
+          : '1px solid rgba(32, 48, 21, 0.14)',
+      boxShadow:
+        theme.palette.mode === 'dark'
+          ? '0 14px 30px rgba(0, 0, 0, 0.32)'
+          : '0 14px 30px rgba(32, 48, 21, 0.14)',
+      color: theme.palette.mode === 'dark' ? '#f8fafc' : '#203015',
+      maxWidth: 280,
+      p: 1.25,
+    }),
+  },
+  arrow: {
+    sx: (theme: { palette: { mode: string } }) => ({
+      color: theme.palette.mode === 'dark' ? '#1f2933' : '#ffffff',
+      '&:before': {
+        border:
+          theme.palette.mode === 'dark'
+            ? '1px solid rgba(255, 255, 255, 0.18)'
+            : '1px solid rgba(32, 48, 21, 0.14)',
+      },
+    }),
+  },
+};
+
+const answerTooltipStyles = {
+  bgcolor: '#ffffff',
+  border: '1px solid rgba(32, 48, 21, 0.14)',
+  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
+  color: '#203015',
+  maxWidth: 280,
+  p: 1.25,
+};

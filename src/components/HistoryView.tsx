@@ -21,6 +21,7 @@ import { t } from '../domain/i18n';
 import { RootState } from '../store/store';
 import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
 import { StatsFormula } from './StatsFormula';
+import { CrosswordHistoryReplay } from './history/CrosswordHistoryReplay';
 
 export function HistoryView() {
   const interfaceLanguage = useSelector(
@@ -91,6 +92,11 @@ function AttemptHistoryCard({
       }),
     })),
   );
+  const crosswordAttempt = attempt.attempts.find(
+    (savedAttempt) =>
+      savedAttempt.exerciseType === 'crossword' &&
+      Boolean(savedAttempt.crosswordSnapshot),
+  );
 
   return (
     <Accordion
@@ -148,49 +154,63 @@ function AttemptHistoryCard({
         data-test={`history_view__attempt_details__${attemptDomKey}`}
         sx={{ pt: 0 }}
       >
-        <Stack data-test={`history_view__attempt_detail_rows__${attemptDomKey}`} spacing={1.25}>
-          <Typography
-            data-test={`history_view__attempt_details_label__${attemptDomKey}`}
-            variant="overline"
+        {crosswordAttempt?.crosswordSnapshot ? (
+          <CrosswordHistoryReplay
+            correctness={crosswordAttempt.correctness}
+            interfaceLanguage={interfaceLanguage}
+            snapshot={crosswordAttempt.crosswordSnapshot}
+          />
+        ) : (
+          <Stack
+            data-test={`history_view__attempt_detail_rows__${attemptDomKey}`}
+            spacing={1.25}
           >
-            {t(interfaceLanguage, 'exerciseDetails')}
-          </Typography>
-          {detailRows.map((row) => {
-            const rowDomKey = toDomKey(row.id);
-
-            return (
-            <Box
-              data-test={`history_view__detail_row__${rowDomKey}`}
-              key={row.id}
-              sx={{
-                border: '1px solid rgba(32, 48, 21, 0.12)',
-                borderRadius: 1,
-                p: 1.25,
-              }}
+            <Typography
+              data-test={`history_view__attempt_details_label__${attemptDomKey}`}
+              variant="overline"
             >
-              <Stack data-test={`history_view__detail_row_content__${rowDomKey}`} spacing={0.75}>
-                <Typography
-                  color="text.secondary"
-                  data-test={`history_view__detail_prompt__${rowDomKey}`}
-                  variant="body2"
+              {t(interfaceLanguage, 'exerciseDetails')}
+            </Typography>
+            {detailRows.map((row) => {
+              const rowDomKey = toDomKey(row.id);
+
+              return (
+                <Box
+                  data-test={`history_view__detail_row__${rowDomKey}`}
+                  key={row.id}
+                  sx={{
+                    border: '1px solid rgba(32, 48, 21, 0.12)',
+                    borderRadius: 1,
+                    p: 1.25,
+                  }}
                 >
-                  {row.prompt}
-                </Typography>
-                <HistoryAnswer
-                  answer={row.answer}
-                  dataTestPrefix={`history_view__detail_answer__${rowDomKey}`}
-                  expectedAnswer={row.expectedAnswer}
-                  interfaceLanguage={interfaceLanguage}
-                  isCorrect={row.isCorrect}
-                  options={row.options}
-                  recentResults={row.recentResults}
-                  type={row.exerciseType}
-                />
-              </Stack>
-            </Box>
-            );
-          })}
-        </Stack>
+                  <Stack
+                    data-test={`history_view__detail_row_content__${rowDomKey}`}
+                    spacing={0.75}
+                  >
+                    <Typography
+                      color="text.secondary"
+                      data-test={`history_view__detail_prompt__${rowDomKey}`}
+                      variant="body2"
+                    >
+                      {row.prompt}
+                    </Typography>
+                    <HistoryAnswer
+                      answer={row.answer}
+                      dataTestPrefix={`history_view__detail_answer__${rowDomKey}`}
+                      expectedAnswer={row.expectedAnswer}
+                      interfaceLanguage={interfaceLanguage}
+                      isCorrect={row.isCorrect}
+                      options={row.options}
+                      recentResults={row.recentResults}
+                      type={row.exerciseType}
+                    />
+                  </Stack>
+                </Box>
+              );
+            })}
+          </Stack>
+        )}
       </AccordionDetails>
     </Accordion>
   );
