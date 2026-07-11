@@ -997,25 +997,6 @@ export function App() {
             targetLanguage={targetLanguage}
           />
         )}
-        <FinishExerciseDialog
-          hasCrosswordDraftLetters={
-            selectedExerciseType === 'crossword' &&
-            crosswordDraftState.hasAnyLetters &&
-            currentExerciseAnsweredCount === 0
-          }
-          interfaceLanguage={interfaceLanguage}
-          isCrossword={selectedExerciseType === 'crossword'}
-          onCancel={handleFinishDialogCancel}
-          onConfirm={handleFinishDialogConfirm}
-          onForget={handleFinishDialogForget}
-          answeredCount={
-            selectedExerciseType === 'crossword' &&
-            currentExerciseAnsweredCount === 0
-              ? crosswordDraftState.filledEntryCount
-              : currentExerciseAnsweredCount
-          }
-          open={isFinishDialogOpen}
-        />
       </Stack>
     );
   }
@@ -1743,6 +1724,25 @@ export function App() {
       onNavigate={handleNavigate}
     >
       {renderMainContent()}
+      <FinishExerciseDialog
+        hasCrosswordDraftLetters={
+          selectedExerciseType === 'crossword' &&
+          crosswordDraftState.hasAnyLetters &&
+          currentExerciseAnsweredCount === 0
+        }
+        interfaceLanguage={interfaceLanguage}
+        isCrossword={selectedExerciseType === 'crossword'}
+        onCancel={handleFinishDialogCancel}
+        onConfirm={handleFinishDialogConfirm}
+        onForget={handleFinishDialogForget}
+        answeredCount={
+          selectedExerciseType === 'crossword' &&
+          currentExerciseAnsweredCount === 0
+            ? crosswordDraftState.filledEntryCount
+            : currentExerciseAnsweredCount
+        }
+        open={isFinishDialogOpen}
+      />
     </AppShell>
   );
 }

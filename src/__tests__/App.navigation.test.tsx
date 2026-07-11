@@ -1537,6 +1537,9 @@ describe('App navigation', () => {
 
     await user.click(screen.getByRole('button', { name: 'Закончить упражнение' }));
     await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
 
     expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
   });
@@ -1570,7 +1573,9 @@ describe('App navigation', () => {
 
     await user.click(forgetButton);
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
     expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
     expect(store.getState().attempts.attempts).toHaveLength(0);
     expect(store.getState().stats.cardStats).toHaveLength(0);
@@ -1633,11 +1638,52 @@ describe('App navigation', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Игры' }));
     await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
 
     expect(screen.queryByRole('heading', { name: 'Выберите набор карточек' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Выберите игру' })).not.toBeInTheDocument();
     expect(screen.getByTestId('card_set_library__panel')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
+  });
+
+  it('opens the finish dialog when returning from expanded statistics to an active game', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await startExercise(user, 'Пропущенные буквы');
+    await answerMissingLettersWrong(user);
+
+    await user.click(screen.getByRole('tab', { name: 'Статистика' }));
+    const attemptCard = getByDataTestPrefix('history_view__attempt_card__')[0];
+    await user.click(
+      within(attemptCard).getByRole('button', {
+        name: /Пропущенные буквы/,
+      }),
+    );
+    expect(screen.getByText('Детали упражнения')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Игры' }));
+
+    expect(
+      screen.getByRole('dialog', { name: 'Закончить упражнение' }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Отмена' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+    expect(screen.getByRole('heading', { name: 'Результаты' })).toBeInTheDocument();
+    expect(screen.getByText('Детали упражнения')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Игры' }));
+    await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+
+    expect(screen.getByTestId('card_set_library__panel')).toBeVisible();
   });
 
   it('returns to the main game screen through the logo without a dialog for an unanswered exercise', async () => {
