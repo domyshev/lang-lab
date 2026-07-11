@@ -210,17 +210,19 @@ The planner:
 7. Builds preview counts for created cards, updated cards, pending duplicates, created sets, renamed sets, membership additions, and membership removals.
 8. Rejects unknown ids, duplicate client references, unsupported languages, empty operations, archive/delete requests, and invalid set memberships.
 
+Every valid duplicate, including skipped and conflicting duplicates, resolves to the existing card id. Only invalid input records have an unresolved card id. New card-set canonical names use deterministic language priority `en`, `ru`, then `es`. Set updates merge partial localized names into existing names and derive the canonical fallback from the same priority before falling back to the existing canonical name.
+
 The preview is a purple unframed operation panel inside chat. It shows title, summary, counts, validation warnings, `Cancel`, and `Apply`. `Apply` is disabled for blocking errors.
 
 ## Atomic Apply
 
-One action object is handled by the cards, cardSets, and aiAssistant reducers in the same Redux dispatch:
+One request action passes through a root-reducer gate that can inspect every slice:
 
 ```ts
-applyAiOperation(plannedOperation)
+applyAiOperation({ operation: plannedOperation, appliedAt })
 ```
 
-The cards reducer applies created and updated cards and appends operation-owned duplicate merge and pending duplicate records. The cardSets reducer creates or updates sets. The aiAssistant reducer stores the applied operation with its before/after patches and status `applied`.
+The gate verifies that the staged operation is still current and every affected entity still matches its recorded before value. A stale proposal is rejected without changing cards or sets and produces a visible assistant-state error. For a valid request, the cards reducer applies created and updated cards and appends operation-owned duplicate merge and pending duplicate records. The cardSets reducer creates or updates sets. The aiAssistant reducer stores the applied operation with its before/after patches, explicit `appliedAt`, and status `applied`.
 
 This gives one observable Redux transition and prevents a partially applied library operation.
 
@@ -237,13 +239,13 @@ Each applied operation stores:
 
 The history is persisted without an automatic length cap. It displays newest first.
 
-Rollback uses a single action:
+Rollback uses one external request action:
 
 ```ts
 revertAiOperation({ operationId, revertedAt })
 ```
 
-Before dispatching, a conflict detector compares every affected current entity with the operation's recorded after state. If a later change touched the same entity, rollback is blocked and the interface names the newer dependent operation when available. It never overwrites newer values silently. Without conflicts, one dispatch removes operation-created entities, restores before snapshots, removes operation-owned duplicate records, and marks the operation `reverted`.
+The root-reducer gate resolves the operation by id, verifies that its status is still `applied`, and compares every affected current entity with the operation's recorded after state. If a later change touched the same entity, rollback is blocked and the interface names the newer dependent operation when available. It never overwrites newer values silently. Without conflicts, the gate sends one enriched internal reducer action that removes operation-created entities, restores before snapshots, removes operation-owned duplicate records, and marks the operation `reverted`. If a rolled-back operation created the currently selected card set, selection falls back to `all-cards`.
 
 Reverted operations cannot be reverted twice. Re-applying a reverted operation is outside the first version.
 

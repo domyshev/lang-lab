@@ -258,7 +258,7 @@ Commit subject: `Add bounded AI library read tools`.
 
 - [ ] **Step 1: Write failing import resolution tests**
 
-Assert that new, safely merged, conflicting duplicate, skipped duplicate, and invalid incoming records each return the expected aligned `resolvedCardIds` value. Inject deterministic ids:
+Assert that new, safely merged, conflicting duplicate, skipped duplicate, and invalid incoming records return the complete aligned `resolvedCardIds` vector. Every valid duplicate resolves to its existing id; only the invalid record resolves to `undefined`. Inject deterministic ids:
 
 ```ts
 const result = importLanguageCards({
@@ -267,7 +267,13 @@ const result = importLanguageCards({
   now,
   idFactory: (prefix) => `${prefix}-fixed`,
 });
-expect(result.resolvedCardIds).toEqual(['card-fixed', existingId, undefined]);
+expect(result.resolvedCardIds).toEqual([
+  'card-fixed',
+  safelyMergedId,
+  conflictingDuplicateId,
+  skippedDuplicateId,
+  undefined,
+]);
 ```
 
 - [ ] **Step 2: Run import test and verify RED**
@@ -286,7 +292,7 @@ Push one aligned resolved id for every parsed array item. Use the injected facto
 
 - [ ] **Step 4: Write failing operation planner tests**
 
-Cover one proposal that creates a card and set, one that safely completes an existing card and renames a set, one conflicting duplicate that creates pending metadata, membership removal, unknown ids, duplicate client refs, attempted update of `all-cards`, empty operation, exact preview counts, and deterministic ids.
+Cover one proposal that creates a card and set, one that safely completes an existing card and renames a set, one conflicting duplicate that creates pending metadata, membership removal, unknown ids, duplicate client refs, attempted update of `all-cards`, empty operation, exact preview counts, deterministic ids, and canonical set-name derivation. Create names use priority `en`, `ru`, `es`; updates merge partial names and derive the canonical fallback with the same priority before falling back to the old canonical name.
 
 Wished-for call:
 
@@ -356,13 +362,13 @@ Commit subject: `Plan reversible AI library operations`.
 - Modify: `src/store/store.ts`
 
 **Interfaces:**
-- Produces `applyAiOperation` and `revertAiOperation` shared actions.
+- Produces `applyAiOperation`, `revertAiOperation`, and an internal `commitAiRollback` action.
 - Produces `AiAssistantState`, chat actions, staging actions, and selectors.
-- Adds `aiAssistant` to `RootState` and Redux Persist.
+- Adds `aiAssistant` to `RootState` and Redux Persist and wraps `combineReducers` with a full-state operation gate.
 
 - [ ] **Step 1: Write failing atomic store tests**
 
-Build a real configured test store and dispatch exactly one `applyAiOperation(planned)`. Assert cards, sets, pending duplicates, merge history, staged proposal, and operation history all change. Dispatch rollback once and assert exact restoration and `status: 'reverted'`. Assert a second rollback does nothing.
+Build a real configured test store and dispatch exactly one `applyAiOperation({ operation: planned, appliedAt })`. Assert cards, sets, pending duplicates, merge history, staged proposal, explicit `appliedAt`, and operation history all change. Dispatch rollback by operation id once and assert exact restoration and `status: 'reverted'`. Assert a second rollback does nothing. Also assert stale Apply after an intervening manual card edit changes no library state, rollback after an intervening edit is rejected, and rollback of a selected AI-created set resets `selectedCardSetId` to `all-cards`.
 
 Also append 105 messages and assert only the newest 100 remain while operations are uncapped.
 
@@ -379,26 +385,31 @@ Expected: FAIL because the actions and reducer do not exist.
 - [ ] **Step 3: Define shared actions**
 
 ```ts
-export const applyAiOperation = createAction<PlannedAiOperation>(
+export const applyAiOperation = createAction<{
+  operation: PlannedAiOperation;
+  appliedAt: string;
+}>(
   'aiAssistant/applyOperation',
 );
 export const revertAiOperation = createAction<{
-  operation: AppliedAiOperation;
+  operationId: string;
   revertedAt: string;
 }>('aiAssistant/revertOperation');
 ```
 
+Define an internal `commitAiRollback` action carrying the resolved operation; UI code never dispatches it directly.
+
 - [ ] **Step 4: Handle actions in library reducers**
 
-Use `extraReducers` in cards and card sets. Apply exact after values, append operation-owned duplicate records, and on rollback remove created entities, restore before values, and remove duplicate records by id.
+Wrap the combined reducer with a root reducer that inspects full state. For Apply, require the staged operation id and all current entities to match recorded before snapshots. For rollback, resolve an applied operation by id and run the conflict detector. Reject stale requests through assistant state without library mutation; otherwise forward one enriched action to the combined reducer. Use `extraReducers` in cards and card sets to apply exact after values, append operation-owned duplicate records, and on committed rollback remove created entities, restore before values, remove duplicate records by id, and reset selection when a removed AI-created set was selected.
 
 - [ ] **Step 5: Implement assistant slice**
 
-State contains `messages`, `stagedOperation`, and `operations`. Export actions `appendAiMessage`, `clearAiChat`, `stageAiOperation`, and `cancelStagedAiOperation`. Extra reducers record applied/reverted status.
+State contains `messages`, `stagedOperation`, `operations`, and `operationError`. Export actions `appendAiMessage`, `clearAiChat`, `stageAiOperation`, `cancelStagedAiOperation`, and `clearAiOperationError`. Extra reducers record applied/reverted status and rejected stale requests.
 
 - [ ] **Step 6: Register reducer and run tests**
 
-Run:
+Update the RootState literal in `src/store/__tests__/store.test.ts` and every custom configured App test store that now requires `aiAssistant`. Run:
 
 ```bash
 npm test -- --run src/store/__tests__/aiAssistantStore.test.ts src/store/__tests__/store.test.ts
@@ -582,7 +593,7 @@ Commit subject: `Build the AI assistant chat workspace`.
 
 - [ ] **Step 1: Write failing wand tests**
 
-Assert the heading contains a title row with exact CSS gap `10px`, the purple wand has the localized label and tooltip, and clicking calls `onOpenAiAssistant` without opening the card-set search modal.
+Assert the heading contains a title row with exact CSS gap `10px`, the purple wand has the localized label and tooltip, and clicking calls `onOpenAiAssistant` without opening the card-set search modal. Add the required callback to every direct `CardSetLibraryPicker` test render.
 
 - [ ] **Step 2: Write failing navigation/localization tests**
 
