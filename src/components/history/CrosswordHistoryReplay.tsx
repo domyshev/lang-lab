@@ -11,10 +11,12 @@ import { CursorAnchoredTooltip } from '../CursorAnchoredTooltip';
 
 export function CrosswordHistoryReplay({
   correctness,
+  dataTestPrefix,
   interfaceLanguage,
   snapshot,
 }: {
   correctness: Record<string, boolean>;
+  dataTestPrefix: string;
   interfaceLanguage: SupportedLanguage;
   snapshot: CrosswordAttemptSnapshot;
 }) {
@@ -36,7 +38,7 @@ export function CrosswordHistoryReplay({
 
   return (
     <Box
-      data-test="crossword_history__grid"
+      data-test={`${dataTestPrefix}__grid`}
       sx={{
         display: 'grid',
         gap: 0.5,
@@ -59,7 +61,7 @@ export function CrosswordHistoryReplay({
           if (!cell || /\s/.test(cell.solution)) {
             return (
               <Box
-                data-test={`crossword_history__empty_cell__${displayRow}_${displayCol}`}
+                data-test={`${dataTestPrefix}__empty_cell__${displayRow}_${displayCol}`}
                 key={key}
                 sx={emptyCellStyles}
               />
@@ -82,7 +84,7 @@ export function CrosswordHistoryReplay({
           const staticCell = (
             <Box
               component="span"
-              data-test={`crossword_history__cell__${displayRow}_${displayCol}`}
+              data-test={`${dataTestPrefix}__cell__${displayRow}_${displayCol}`}
               sx={letterCellStyles}
               style={{
                 backgroundColor:
@@ -111,7 +113,9 @@ export function CrosswordHistoryReplay({
                 <Tooltip
                   arrow
                   placement="top-start"
-                  slotProps={clueTooltipSlotProps}
+                  slotProps={getClueTooltipSlotProps(
+                    `${dataTestPrefix}__clue_tooltip__${startEntry.entry.cardId}`,
+                  )}
                   title={
                     <Stack spacing={0.5}>
                       <Typography
@@ -133,7 +137,7 @@ export function CrosswordHistoryReplay({
                   <Box
                     aria-label={`Question ${startEntry.number}`}
                     component="span"
-                    data-test={`crossword_history__clue_number__${startEntry.entry.cardId}`}
+                    data-test={`${dataTestPrefix}__clue_number__${startEntry.entry.cardId}`}
                     sx={clueNumberStyles}
                   >
                     {startEntry.number}
@@ -142,11 +146,14 @@ export function CrosswordHistoryReplay({
               )}
               {incorrectEntries.length > 0 ? (
                 <CursorAnchoredTooltip
-                  arrowDataTest={`crossword_history__cell_tooltip_arrow__${displayRow}_${displayCol}`}
+                  arrowDataTest={`${dataTestPrefix}__correction__${displayRow}_${displayCol}__tooltip_arrow`}
                   closeOnOtherOpen
                   leaveDelay={0}
                   title={
-                    <Stack spacing={0.5}>
+                    <Stack
+                      data-test={`${dataTestPrefix}__correction__${displayRow}_${displayCol}__tooltip`}
+                      spacing={0.5}
+                    >
                       {incorrectEntries.map((entry) => (
                         <Typography
                           key={entry.cardId}
@@ -160,7 +167,12 @@ export function CrosswordHistoryReplay({
                   transitionTimeout={0}
                   tooltipSx={answerTooltipStyles}
                 >
-                  {staticCell}
+                  <Box
+                    data-test={`${dataTestPrefix}__correction__${displayRow}_${displayCol}__anchor`}
+                    sx={correctionAnchorStyles}
+                  >
+                    {staticCell}
+                  </Box>
                 </CursorAnchoredTooltip>
               ) : (
                 staticCell
@@ -234,37 +246,46 @@ const emptyCellStyles = {
   width: '100%',
 };
 
-const clueTooltipSlotProps = {
-  popper: {
-    modifiers: [{ name: 'offset', options: { offset: [0, 5] } }],
-  },
-  tooltip: {
-    sx: (theme: { palette: { mode: string } }) => ({
-      bgcolor: theme.palette.mode === 'dark' ? '#1f2933' : '#ffffff',
-      border:
-        theme.palette.mode === 'dark'
-          ? '1px solid rgba(255, 255, 255, 0.18)'
-          : '1px solid rgba(32, 48, 21, 0.14)',
-      boxShadow:
-        theme.palette.mode === 'dark'
-          ? '0 14px 30px rgba(0, 0, 0, 0.32)'
-          : '0 14px 30px rgba(32, 48, 21, 0.14)',
-      color: theme.palette.mode === 'dark' ? '#f8fafc' : '#203015',
-      maxWidth: 280,
-      p: 1.25,
-    }),
-  },
-  arrow: {
-    sx: (theme: { palette: { mode: string } }) => ({
-      color: theme.palette.mode === 'dark' ? '#1f2933' : '#ffffff',
-      '&:before': {
+function getClueTooltipSlotProps(dataTest: string) {
+  return {
+    popper: {
+      modifiers: [{ name: 'offset', options: { offset: [0, 5] } }],
+    },
+    tooltip: {
+      ...({ 'data-test': dataTest } as Record<string, string>),
+      sx: (theme: { palette: { mode: string } }) => ({
+        bgcolor: theme.palette.mode === 'dark' ? '#1f2933' : '#ffffff',
         border:
           theme.palette.mode === 'dark'
             ? '1px solid rgba(255, 255, 255, 0.18)'
             : '1px solid rgba(32, 48, 21, 0.14)',
-      },
-    }),
-  },
+        boxShadow:
+          theme.palette.mode === 'dark'
+            ? '0 14px 30px rgba(0, 0, 0, 0.32)'
+            : '0 14px 30px rgba(32, 48, 21, 0.14)',
+        color: theme.palette.mode === 'dark' ? '#f8fafc' : '#203015',
+        maxWidth: 280,
+        p: 1.25,
+      }),
+    },
+    arrow: {
+      sx: (theme: { palette: { mode: string } }) => ({
+        color: theme.palette.mode === 'dark' ? '#1f2933' : '#ffffff',
+        '&:before': {
+          border:
+            theme.palette.mode === 'dark'
+              ? '1px solid rgba(255, 255, 255, 0.18)'
+              : '1px solid rgba(32, 48, 21, 0.14)',
+        },
+      }),
+    },
+  };
+}
+
+const correctionAnchorStyles = {
+  display: 'inline-flex',
+  height: '100%',
+  width: '100%',
 };
 
 const answerTooltipStyles = {

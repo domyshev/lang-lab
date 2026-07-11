@@ -48,6 +48,7 @@ describe('CrosswordHistoryReplay', () => {
     const { rerender } = render(
       <CrosswordHistoryReplay
         correctness={{ cat: true }}
+        dataTestPrefix="crossword_history"
         interfaceLanguage="ru"
         snapshot={snapshot}
       />,
@@ -66,6 +67,9 @@ describe('CrosswordHistoryReplay', () => {
     expect(screen.getByTestId('crossword_history__cell__3_3')).toHaveTextContent(
       '',
     );
+    expect(
+      screen.getByTestId('crossword_history__empty_cell__2_1'),
+    ).toBeInTheDocument();
     expect(screen.getByTestId('crossword_history__cell__1_1')).toHaveStyle({
       backgroundColor: 'rgb(235, 247, 225)',
     });
@@ -76,11 +80,15 @@ describe('CrosswordHistoryReplay', () => {
     await user.hover(screen.getByTestId('crossword_history__clue_number__tea'));
     expect(await screen.findByText('Вопрос')).toBeInTheDocument();
     expect(await screen.findByText('ru: чай')).toBeInTheDocument();
+    expect(
+      screen.getByTestId('crossword_history__clue_tooltip__tea'),
+    ).toBeInTheDocument();
     await user.unhover(screen.getByTestId('crossword_history__clue_number__tea'));
 
     rerender(
       <CrosswordHistoryReplay
         correctness={{ cat: true, tea: false }}
+        dataTestPrefix="crossword_history"
         interfaceLanguage="ru"
         snapshot={{
           ...snapshot,
@@ -97,10 +105,19 @@ describe('CrosswordHistoryReplay', () => {
       backgroundColor: 'rgb(253, 235, 238)',
       textDecorationLine: 'none',
     });
+    expect(
+      screen.getByTestId('crossword_history__correction__2_3__anchor'),
+    ).toBeInTheDocument();
 
     await user.hover(screen.getByTestId('crossword_history__cell__2_3'));
     expect(
       await screen.findByText('Правильный ответ: tea'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId('crossword_history__correction__2_3__tooltip'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId('crossword_history__correction__2_3__tooltip_arrow'),
     ).toBeInTheDocument();
   });
 });

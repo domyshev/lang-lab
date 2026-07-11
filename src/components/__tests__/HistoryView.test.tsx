@@ -186,7 +186,7 @@ describe('HistoryView', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('replays saved crossword snapshots while preserving legacy crossword rows', async () => {
+  it('scopes concurrent crossword replays while preserving legacy crossword rows', async () => {
     const user = userEvent.setup();
     const crosswordPrompts = [
       {
@@ -272,18 +272,49 @@ describe('HistoryView', () => {
       correctness: { 'card-cat': true },
       hintsUsed: { 'card-cat': 0 },
     };
+    const secondSnapshotAttempt: ExerciseAttempt = {
+      ...snapshotAttempt,
+      id: 'attempt-crossword-2',
+      exerciseSessionId: 'session-crossword-second',
+      createdAt: '2026-07-05T13:00:00.000Z',
+      completedAt: '2026-07-05T13:00:00.000Z',
+    };
 
-    renderHistoryView([snapshotAttempt, legacyAttempt]);
+    renderHistoryView([snapshotAttempt, secondSnapshotAttempt, legacyAttempt]);
     const snapshotCard = screen.getByTestId(
       'history_view__attempt_card__session-crossword-snapshot',
+    );
+    const secondSnapshotCard = screen.getByTestId(
+      'history_view__attempt_card__session-crossword-second',
     );
     const legacyCard = screen.getByTestId(
       'history_view__attempt_card__session-crossword-legacy',
     );
 
     await user.click(within(snapshotCard).getByRole('button', { name: /Кроссворд/ }));
+    await user.click(
+      within(secondSnapshotCard).getByRole('button', { name: /Кроссворд/ }),
+    );
 
-    expect(screen.getByTestId('crossword_history__grid')).toBeInTheDocument();
+    expect(
+      screen.getByTestId(
+        'history_view__crossword_replay__session-crossword-snapshot__grid',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(
+        'history_view__crossword_replay__session-crossword-second__grid',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(
+        'history_view__crossword_replay__session-crossword-snapshot__cell__1_1',
+      ),
+    ).not.toBe(
+      screen.getByTestId(
+        'history_view__crossword_replay__session-crossword-second__cell__1_1',
+      ),
+    );
     expect(
       screen.queryByTestId(
         'history_view__detail_row__attempt-crossword-1_card-cat',

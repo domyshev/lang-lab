@@ -157,6 +157,7 @@ function AttemptHistoryCard({
         {crosswordAttempt?.crosswordSnapshot ? (
           <CrosswordHistoryReplay
             correctness={crosswordAttempt.correctness}
+            dataTestPrefix={`history_view__crossword_replay__${attemptDomKey}`}
             interfaceLanguage={interfaceLanguage}
             snapshot={crosswordAttempt.crosswordSnapshot}
           />
