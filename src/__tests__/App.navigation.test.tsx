@@ -1858,6 +1858,14 @@ describe('App navigation', () => {
       .getState()
       .attempts.attempts.find((attempt) => attempt.exerciseType === 'crossword');
     expect(Object.keys(crosswordAttempt?.correctness ?? {})).toHaveLength(1);
+    expect(
+      crosswordAttempt?.crosswordSnapshot?.puzzle.entries.length,
+    ).toBeGreaterThan(1);
+    expect(
+      Object.values(crosswordAttempt?.crosswordSnapshot?.cellValues ?? {}).some(
+        (value) => Boolean(value),
+      ),
+    ).toBe(true);
     expect(crosswordAttempt?.isExerciseCompleted).not.toBe(true);
   });
 

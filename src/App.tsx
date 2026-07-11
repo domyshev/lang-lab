@@ -65,6 +65,7 @@ import { getCoachProgressMessage } from './domain/coachProgress';
 import { AssistantId } from './domain/assistants';
 import {
   ExerciseAttempt,
+  CrosswordAttemptSnapshot,
   ExercisePrompt,
   ExerciseType,
   createMissingLettersPrompt,
@@ -144,6 +145,7 @@ type CompletedExerciseSummary = {
 const emptyCrosswordDraftState: CrosswordDraftState = {
   answers: {},
   answeredCardIds: [],
+  cellValues: {},
   filledEntryCount: 0,
   hasAnyLetters: false,
 };
@@ -692,6 +694,7 @@ export function App() {
   function saveCrosswordAttempt(
     puzzle: CrosswordPuzzle,
     answers: Record<string, string>,
+    crosswordSnapshot: CrosswordAttemptSnapshot,
   ) {
     const answeredEntries = getCompletedCrosswordEntries(puzzle, answers);
     const filteredAnswers = Object.fromEntries(
@@ -729,6 +732,7 @@ export function App() {
       cardIds: answeredEntries.map((entry) => entry.cardId),
       advance: false,
       isExerciseCompleted: answeredEntries.length === puzzle.entries.length,
+      crosswordSnapshot,
     });
   }
 
@@ -775,6 +779,10 @@ export function App() {
       hintsUsed,
       cardIds: answeredCardIds,
       advance: false,
+      crosswordSnapshot: {
+        puzzle,
+        cellValues: { ...draft.cellValues },
+      },
     });
   }
 
@@ -787,6 +795,7 @@ export function App() {
     cardIds: string[];
     advance: boolean;
     isExerciseCompleted?: boolean;
+    crosswordSnapshot?: CrosswordAttemptSnapshot;
   }) {
     if (!selectedCardSet) {
       return;
@@ -814,6 +823,7 @@ export function App() {
       correctness: input.correctness,
       hintsUsed: input.hintsUsed,
       isExerciseCompleted: input.isExerciseCompleted,
+      crosswordSnapshot: input.crosswordSnapshot,
       weightedScore,
     };
 
@@ -1400,8 +1410,12 @@ export function App() {
             showHypersonicJumpGuide: false,
           })}
           onFinish={resetExerciseState}
-          onSubmit={(answers) =>
-            saveCrosswordAttempt(exercisePreview.puzzle, answers)
+          onSubmit={(answers, crosswordSnapshot) =>
+            saveCrosswordAttempt(
+              exercisePreview.puzzle,
+              answers,
+              crosswordSnapshot,
+            )
           }
         />
       );

@@ -22,6 +22,9 @@ import {
   CrosswordEntry,
   CrosswordPuzzle,
 } from '../../domain/crossword';
+import { shouldStrikeAnswerCharacter } from '../../domain/answerCharacters';
+import { getCrosswordCellTone } from '../../domain/crosswordResults';
+import type { CrosswordAttemptSnapshot } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
 import {
@@ -34,6 +37,7 @@ import { ExerciseProgressChip, ExerciseCardSetChip } from './ExerciseCardSetChip
 export type CrosswordDraftState = {
   answers: Record<string, string>;
   answeredCardIds: string[];
+  cellValues: Record<string, string>;
   filledEntryCount: number;
   hasAnyLetters: boolean;
 };
@@ -60,7 +64,10 @@ export function CrosswordExercise({
   cardSetName?: string;
   finishAction?: ReactNode;
   onFinish?: () => void;
-  onSubmit: (answers: Record<string, string>) => void;
+  onSubmit: (
+    answers: Record<string, string>,
+    snapshot: CrosswordAttemptSnapshot,
+  ) => void;
 }) {
   const [cellValues, setCellValues] = useState<Record<string, string>>({});
   const [submittedAnswers, setSubmittedAnswers] =
@@ -97,6 +104,23 @@ export function CrosswordExercise({
     () => getCrosswordDraftState(puzzle, cellValues),
     [cellValues, puzzle],
   );
+  const submittedCorrectness = useMemo(() => {
+    if (!submittedAnswers) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      puzzle.entries
+        .filter((entry) =>
+          Object.prototype.hasOwnProperty.call(submittedAnswers, entry.cardId),
+        )
+        .map((entry) => [
+          entry.cardId,
+          normalizeAnswer(submittedAnswers[entry.cardId] ?? '') ===
+            normalizeAnswer(entry.answer),
+        ]),
+    );
+  }, [puzzle.entries, submittedAnswers]);
   const filledEntryCount = draftState.filledEntryCount;
   const hasSubmittedAnswers = Boolean(submittedAnswers);
   const isSubmitDisabled = !hasSubmittedAnswers && filledEntryCount === 0;
@@ -122,8 +146,12 @@ export function CrosswordExercise({
     }
 
     const answers = getFilledCrosswordAnswers(draftState);
+    const snapshot: CrosswordAttemptSnapshot = {
+      puzzle,
+      cellValues: { ...cellValues },
+    };
     setSubmittedAnswers(answers);
-    onSubmit(answers);
+    onSubmit(answers, snapshot);
   };
 
   const handleCellChange = (
@@ -288,11 +316,10 @@ export function CrosswordExercise({
               }
 
               const startEntryNumber = startEntryNumbers.get(key);
-              const cellTone = getSubmittedCellTone({
+              const cellTone = getCrosswordCellTone(
                 cell,
-                entryMap,
-                submittedAnswers,
-              });
+                submittedCorrectness,
+              );
               const tooltipEntry = getActiveEntryForCell(
                 cell,
                 puzzle.entries,
@@ -403,7 +430,17 @@ export function CrosswordExercise({
                       inputRefs.current[key] = element;
                     }}
                     sx={letterCellStyles}
-                    style={getSubmittedCellStyle(cellTone)}
+                    style={{
+                      ...getSubmittedCellStyle(cellTone),
+                      textDecorationLine: shouldStrikeAnswerCharacter({
+                        actual: cellValues[key] ?? '',
+                        expected: cell.solution,
+                        isIncorrect: cellTone === 'incorrect',
+                      })
+                        ? 'line-through'
+                        : 'none',
+                      textDecorationThickness: '2px',
+                    }}
                   />
                 </Box>
               );
@@ -591,6 +628,7 @@ function getCrosswordDraftState(
   return {
     answers,
     answeredCardIds,
+    cellValues: { ...cellValues },
     filledEntryCount: answeredCardIds.length,
     hasAnyLetters: Object.values(cellValues).some((value) =>
       Boolean(value.trim()),
@@ -653,37 +691,6 @@ function isEntryFilled(
 
 function normalizeAnswer(value: string): string {
   return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
-}
-
-function getSubmittedCellTone({
-  cell,
-  entryMap,
-  submittedAnswers,
-}: {
-  cell: CrosswordCell;
-  entryMap: Map<string, CrosswordEntry>;
-  submittedAnswers: Record<string, string> | null;
-}): 'correct' | 'incorrect' | undefined {
-  if (!submittedAnswers) {
-    return undefined;
-  }
-
-  const entryResults = cell.entryIds
-    .map((entryId) => entryMap.get(entryId))
-    .filter((entry): entry is CrosswordEntry =>
-      Boolean(entry && Object.prototype.hasOwnProperty.call(submittedAnswers, entry.cardId)),
-    )
-    .map(
-      (entry) =>
-        normalizeAnswer(submittedAnswers[entry.cardId] ?? '') ===
-        normalizeAnswer(entry.answer),
-    );
-
-  if (entryResults.some((isCorrect) => !isCorrect)) {
-    return 'incorrect';
-  }
-
-  return entryResults.length > 0 ? 'correct' : undefined;
 }
 
 function getSubmittedCellStyle(

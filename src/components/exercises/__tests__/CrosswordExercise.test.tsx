@@ -115,7 +115,24 @@ describe('CrosswordExercise', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Отправить кроссворд' }));
 
-    expect(onSubmit).toHaveBeenCalledWith({ cat: 'cat', tea: 'tea' });
+    expect(onSubmit).toHaveBeenCalledWith(
+      { cat: 'cat', tea: 'tea' },
+      expect.objectContaining({
+        puzzle: expect.objectContaining({
+          entries: expect.arrayContaining([
+            expect.objectContaining({ cardId: 'cat' }),
+            expect.objectContaining({ cardId: 'tea' }),
+          ]),
+        }),
+        cellValues: {
+          '0:0': 'c',
+          '0:1': 'a',
+          '0:2': 't',
+          '1:2': 'e',
+          '2:2': 'a',
+        },
+      }),
+    );
     expect(screen.getByRole('button', { name: 'Пройдено!' })).toBeInTheDocument();
     expect(screen.getByTestId('crossword_exercise__completed_button_icon')).toBeInTheDocument();
 
@@ -224,7 +241,16 @@ describe('CrosswordExercise', () => {
     await user.type(screen.getByLabelText('Crossword cell 1 3'), 't');
     await user.click(screen.getByRole('button', { name: 'Отправить кроссворд' }));
 
-    expect(onSubmit).toHaveBeenCalledWith({ cat: 'cat' });
+    expect(onSubmit).toHaveBeenCalledWith(
+      { cat: 'cat' },
+      expect.objectContaining({
+        cellValues: {
+          '0:0': 'c',
+          '0:1': 'a',
+          '0:2': 't',
+        },
+      }),
+    );
     expect(screen.getByLabelText('Crossword cell 1 3')).toHaveStyle({
       backgroundColor: 'rgb(235, 247, 225)',
     });
@@ -302,6 +328,15 @@ describe('CrosswordExercise', () => {
     });
     expect(screen.getByLabelText('Crossword cell 2 3')).toHaveStyle({
       backgroundColor: 'rgb(253, 235, 238)',
+    });
+    expect(screen.getByLabelText('Crossword cell 1 3')).toHaveStyle({
+      textDecorationLine: 'none',
+    });
+    expect(screen.getByLabelText('Crossword cell 2 3')).toHaveStyle({
+      textDecorationLine: 'line-through',
+    });
+    expect(screen.getByLabelText('Crossword cell 3 3')).toHaveStyle({
+      textDecorationLine: 'line-through',
     });
 
     await user.hover(screen.getByLabelText('Crossword cell 1 1'));

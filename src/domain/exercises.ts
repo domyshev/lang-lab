@@ -7,6 +7,7 @@ import {
   isCardEligibleForTarget,
   isPhraseValue,
 } from './cards';
+import type { CrosswordPuzzle } from './crossword';
 import { SupportedLanguage } from './languages';
 
 export type ExerciseType =
@@ -21,6 +22,11 @@ export interface ExercisePrompt {
   expectedAnswer: string;
   translationHints: Array<{ language: SupportedLanguage; value: string }>;
   definitionHint?: string;
+}
+
+export interface CrosswordAttemptSnapshot {
+  puzzle: CrosswordPuzzle;
+  cellValues: Record<string, string>;
 }
 
 export interface ExerciseAttempt {
@@ -39,6 +45,7 @@ export interface ExerciseAttempt {
   isExerciseCompleted?: boolean;
   weightedScore?: number;
   coachComment?: string;
+  crosswordSnapshot?: CrosswordAttemptSnapshot;
 }
 
 export interface MultipleChoicePrompt extends ExercisePrompt {
