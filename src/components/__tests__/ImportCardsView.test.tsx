@@ -56,4 +56,133 @@ describe('ImportCardsView compatibility wrapper', () => {
     await waitFor(() => expect(store.getState().cards.cards).toHaveLength(1));
     expect(screen.getByText('Added: 1')).toBeInTheDocument();
   });
+
+  it.each([
+    [
+      'en',
+      'not-json',
+      'The selected file does not contain valid JSON.',
+      'JSON is not valid.',
+    ],
+    [
+      'ru',
+      'not-json',
+      'Выбранный файл не содержит корректный JSON.',
+      'JSON is not valid.',
+    ],
+    [
+      'es',
+      'not-json',
+      'El archivo seleccionado no contiene JSON valido.',
+      'JSON is not valid.',
+    ],
+    [
+      'en',
+      '{}',
+      'The top-level JSON value must be an array of cards.',
+      'Root value must be an array.',
+    ],
+    [
+      'ru',
+      '{}',
+      'Верхнее значение JSON должно быть массивом карточек.',
+      'Root value must be an array.',
+    ],
+    [
+      'es',
+      '{}',
+      'El valor JSON principal debe ser una lista de tarjetas.',
+      'Root value must be an array.',
+    ],
+  ] as const)(
+    'localizes root import errors in %s',
+    async (language, contents, expected, domainReason) => {
+      const user = userEvent.setup();
+      renderImportCardsView(language);
+
+      await user.upload(
+        screen.getByLabelText(
+          language === 'ru'
+            ? 'Выбрать JSON-файл'
+            : language === 'es'
+              ? 'Elegir archivo JSON'
+              : 'Choose JSON file',
+        ),
+        new File([contents], 'invalid.json', { type: 'application/json' }),
+      );
+
+      expect(await screen.findByText(expected)).toBeInTheDocument();
+      if (language !== 'en') {
+        expect(document.body).not.toHaveTextContent(domainReason);
+      }
+      expect(screen.getByTestId('import_cards__root_error__0')).toBeInTheDocument();
+    },
+  );
+
+  it.each([
+    [
+      'en',
+      [null],
+      'Each card entry must be an object.',
+      'Record must be an object.',
+    ],
+    [
+      'ru',
+      [null],
+      'Каждая запись карточки должна быть объектом.',
+      'Record must be an object.',
+    ],
+    [
+      'es',
+      [null],
+      'Cada registro de tarjeta debe ser un objeto.',
+      'Record must be an object.',
+    ],
+    [
+      'en',
+      [{ translations: { en: 'one' } }],
+      'Each card needs translations in at least two supported languages.',
+      'Card must include translations for at least two supported languages.',
+    ],
+    [
+      'ru',
+      [{ translations: { en: 'one' } }],
+      'Для каждой карточки нужны переводы минимум на два поддерживаемых языка.',
+      'Card must include translations for at least two supported languages.',
+    ],
+    [
+      'es',
+      [{ translations: { en: 'one' } }],
+      'Cada tarjeta necesita traducciones en al menos dos idiomas compatibles.',
+      'Card must include translations for at least two supported languages.',
+    ],
+  ] as const)(
+    'localizes record import errors in %s',
+    async (language, records, expected, domainReason) => {
+      const user = userEvent.setup();
+      renderImportCardsView(language);
+
+      await user.upload(
+        screen.getByLabelText(
+          language === 'ru'
+            ? 'Выбрать JSON-файл'
+            : language === 'es'
+              ? 'Elegir archivo JSON'
+              : 'Choose JSON file',
+        ),
+        new File([JSON.stringify(records)], 'invalid-record.json', {
+          type: 'application/json',
+        }),
+      );
+
+      const recordError = await screen.findByTestId(
+        'import_cards__record_error__0',
+      );
+      expect(recordError).toHaveTextContent(expected);
+      if (language !== 'en') {
+        expect(document.body).not.toHaveTextContent(domainReason);
+      }
+      expect(recordError).toBeInTheDocument();
+    },
+  );
 });

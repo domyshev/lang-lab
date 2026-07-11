@@ -131,17 +131,24 @@ export function AiAssistantView() {
     setIsThinking(false);
   };
 
+  const handleClearChat = () => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setIsThinking(false);
+    dispatch(clearAiChat());
+  };
+
   const handleRollback = (operation: AppliedAiOperation) => {
+    const operationIndex = operations.findIndex(
+      (candidate) => candidate.id === operation.id,
+    );
     const conflict = findAiRollbackConflict({
       operation,
       cards,
       cardSets,
-      laterOperations: operations.filter(
-        (candidate) =>
-          candidate.status === 'applied' &&
-          candidate.id !== operation.id &&
-          Date.parse(candidate.appliedAt) > Date.parse(operation.appliedAt),
-      ),
+      laterOperations: operations
+        .slice(0, operationIndex)
+        .filter((candidate) => candidate.status === 'applied'),
     });
     if (conflict) {
       setRollbackConflict(conflict);
@@ -201,7 +208,7 @@ export function AiAssistantView() {
             language={interfaceLanguage}
             messages={messages}
             onCancel={handleCancel}
-            onClear={() => dispatch(clearAiChat())}
+            onClear={handleClearChat}
             onDraftChange={setDraft}
             onRetry={sendPrompt}
             onSend={() => void sendPrompt(draft)}
@@ -228,6 +235,7 @@ export function AiAssistantView() {
           language={interfaceLanguage}
           onCloseConflict={() => setRollbackConflict(null)}
           onRollback={handleRollback}
+          operationError={operationError}
           operations={operations}
         />
       </Box>

@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -364,6 +364,53 @@ describe('AiAssistantView chat', () => {
     expect(store.getState().aiAssistant.operations).toHaveLength(1);
     expect(screen.getByText('Travel vocabulary')).toBeInTheDocument();
   });
+
+  it.each(['resolve', 'reject'] as const)(
+    'keeps chat clear when an aborted request later %ss',
+    async (settlement) => {
+      const user = userEvent.setup();
+      const operation = createAppliedOperation();
+      let resolveRequest!: (value: AiAgentResult) => void;
+      let rejectRequest!: (reason: Error) => void;
+      saveOpenRouterKey('sk-test');
+      mockedRunAiAssistant.mockImplementation(
+        () =>
+          new Promise((resolve, reject) => {
+            resolveRequest = resolve;
+            rejectRequest = reject;
+          }),
+      );
+      const store = renderView({
+        operations: [operation],
+        cards: operation.createdCards,
+      });
+
+      await user.type(
+        screen.getByLabelText('Message the AI assistant'),
+        'Analyze before clearing',
+      );
+      await user.click(screen.getByRole('button', { name: 'Send message' }));
+      const request = mockedRunAiAssistant.mock.calls[0][0];
+
+      await user.click(screen.getByRole('button', { name: 'Clear chat' }));
+      expect(request.signal?.aborted).toBe(true);
+      expect(screen.queryByText('Thinking...')).not.toBeInTheDocument();
+
+      await act(async () => {
+        if (settlement === 'resolve') {
+          resolveRequest({ ok: true, content: 'Late response' });
+        } else {
+          rejectRequest(new Error('Late failure'));
+        }
+        await Promise.resolve();
+      });
+
+      expect(store.getState().aiAssistant.messages).toEqual([]);
+      expect(screen.queryByText('Late response')).not.toBeInTheDocument();
+      expect(store.getState().aiAssistant.operations).toHaveLength(1);
+      expect(screen.getByText('Travel vocabulary')).toBeInTheDocument();
+    },
+  );
 });
 
 describe('AiAssistantView operation preview and history', () => {
@@ -401,7 +448,7 @@ describe('AiAssistantView operation preview and history', () => {
     const older = createAppliedOperation('older', '2026-07-10T10:00:00.000Z');
     const newer = createAppliedOperation('newer', '2026-07-11T10:00:00.000Z');
     const store = renderView({
-      operations: [older, newer],
+      operations: [newer, older],
       cards: [...older.createdCards, ...newer.createdCards],
     });
     const items = screen.getAllByTestId(/ai_operation_history__item__/);
@@ -410,6 +457,65 @@ describe('AiAssistantView operation preview and history', () => {
 
     await user.click(within(items[0]).getByRole('button', { name: 'Roll back changes' }));
     expect(store.getState().aiAssistant.operations.find(({ id }) => id === 'newer')?.status).toBe('reverted');
+  });
+
+  it('uses newer-first list order to precheck rollback when timestamps match', async () => {
+    const user = userEvent.setup();
+    const older = createAppliedOperation('older', now);
+    const originalCard = older.createdCards[0];
+    const changedCard = {
+      ...originalCard,
+      translations: { ...originalCard.translations, en: 'changed platform' },
+      updatedAt: '2026-07-11T21:00:00.000Z',
+    };
+    const newer: AppliedAiOperation = {
+      ...createAppliedOperation('newer', now),
+      title: 'Newer list operation',
+      createdCards: [],
+      updatedCards: [{ before: originalCard, after: changedCard }],
+      previewCounts: {
+        ...createOperation('newer').previewCounts,
+        createdCards: 0,
+        updatedCards: 1,
+      },
+    };
+    const store = renderView({
+      operations: [newer, older],
+      cards: [changedCard],
+    });
+    const olderItem = screen.getByTestId('ai_operation_history__item__older');
+
+    await user.click(
+      within(olderItem).getByRole('button', { name: 'Roll back changes' }),
+    );
+
+    const conflictDialog = await screen.findByRole('dialog', {
+      name: 'Changes cannot be rolled back',
+    });
+    expect(conflictDialog).toBeInTheDocument();
+    expect(
+      within(conflictDialog).getByText(/Newer list operation/),
+    ).toBeInTheDocument();
+    expect(
+      store.getState().aiAssistant.operations.find(({ id }) => id === 'older')
+        ?.status,
+    ).toBe('applied');
+  });
+
+  it('shows a localized reducer operation error in history without a preview', () => {
+    renderView({
+      language: 'ru',
+      operationError: 'The requested AI operation was not found.',
+    });
+
+    expect(
+      screen.getByTestId('ai_operation_history__operation_error'),
+    ).toHaveTextContent(
+      'Операцию не удалось выполнить. Изменения в библиотеке не применены.',
+    );
+    expect(document.body).not.toHaveTextContent(
+      'The requested AI operation was not found.',
+    );
   });
 
   it('opens a localized conflict dialog instead of dispatching rollback', async () => {

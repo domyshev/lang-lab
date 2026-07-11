@@ -209,7 +209,7 @@ export function ManualCardImportPanel() {
                 key={record.reason}
                 severity="error"
               >
-                {record.reason}
+                {localizeImportReason(interfaceLanguage, record.reason)}
               </Alert>
             ))}
 
@@ -224,7 +224,8 @@ export function ManualCardImportPanel() {
                       data-test={`import_cards__record_error__${record.index}`}
                       key={`${record.index}-${record.reason}`}
                     >
-                      {t(interfaceLanguage, 'row')} {record.index + 1}: {record.reason}
+                      {t(interfaceLanguage, 'row')} {record.index + 1}:{' '}
+                      {localizeImportReason(interfaceLanguage, record.reason)}
                     </Typography>
                   ))}
                 </Stack>
@@ -235,6 +236,24 @@ export function ManualCardImportPanel() {
       </Stack>
     </Paper>
   );
+}
+
+function localizeImportReason(
+  language: RootState['app']['interfaceLanguage'],
+  reason: string,
+): string {
+  switch (reason) {
+    case 'JSON is not valid.':
+      return t(language, 'importErrorInvalidJson');
+    case 'Root value must be an array.':
+      return t(language, 'importErrorRootArray');
+    case 'Record must be an object.':
+      return t(language, 'importErrorRecordObject');
+    case 'Card must include translations for at least two supported languages.':
+      return t(language, 'importErrorTranslations');
+    default:
+      return t(language, 'importErrorUnknown');
+  }
 }
 
 function readFileAsText(file: File): Promise<string> {

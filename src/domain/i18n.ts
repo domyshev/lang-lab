@@ -80,11 +80,18 @@ type I18nKey =
   | 'aiApplied'
   | 'aiReverted'
   | 'aiChanges'
+  | 'aiOperationHistoryError'
   | 'aiRollbackConflictTitle'
   | 'aiRollbackConflictBody'
+  | 'aiRollbackConflictLaterOperation'
   | 'importCards'
   | 'importDescription'
   | 'downloadCardFormat'
+  | 'importErrorInvalidJson'
+  | 'importErrorRootArray'
+  | 'importErrorRecordObject'
+  | 'importErrorTranslations'
+  | 'importErrorUnknown'
   | 'startLearning'
   | 'start'
   | 'allCards'
@@ -325,13 +332,24 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiApplied: 'Applied',
     aiReverted: 'Reverted',
     aiChanges: 'changes',
+    aiOperationHistoryError:
+      'The operation could not be completed. No library changes were applied.',
     aiRollbackConflictTitle: 'Changes cannot be rolled back',
     aiRollbackConflictBody:
       'The library changed after this operation was applied. Review the affected cards or sets before trying again.',
+    aiRollbackConflictLaterOperation: 'Later operation:',
     importCards: 'Manual card import',
     importDescription:
       'You can also prepare data for your learning lab with an external LLM agent and upload it here in our format. Just download the requirements and give them to your agent.',
     downloadCardFormat: 'Download agent JSON requirements',
+    importErrorInvalidJson:
+      'The selected file does not contain valid JSON.',
+    importErrorRootArray:
+      'The top-level JSON value must be an array of cards.',
+    importErrorRecordObject: 'Each card entry must be an object.',
+    importErrorTranslations:
+      'Each card needs translations in at least two supported languages.',
+    importErrorUnknown: 'This card record could not be imported.',
     startLearning: 'Start learning',
     start: 'Play',
     allCards: 'All cards',
@@ -591,13 +609,25 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiApplied: 'Применено',
     aiReverted: 'Отменено',
     aiChanges: 'изменений',
+    aiOperationHistoryError:
+      'Операцию не удалось выполнить. Изменения в библиотеке не применены.',
     aiRollbackConflictTitle: 'Нельзя отменить изменения',
     aiRollbackConflictBody:
       'Библиотека изменилась после применения этой операции. Проверьте затронутые карточки или наборы перед повторной попыткой.',
+    aiRollbackConflictLaterOperation: 'Более поздняя операция:',
     importCards: 'Ручной импорт карточек',
     importDescription:
       'Вы можете также подготовить данные для своей учебной лаборатории через внешнего LLM агента и загрузить их здесь в нашем формате. Просто скачайте требования и передайте их вашему агенту.',
     downloadCardFormat: 'Скачать требования к JSON для агентов',
+    importErrorInvalidJson:
+      'Выбранный файл не содержит корректный JSON.',
+    importErrorRootArray:
+      'Верхнее значение JSON должно быть массивом карточек.',
+    importErrorRecordObject:
+      'Каждая запись карточки должна быть объектом.',
+    importErrorTranslations:
+      'Для каждой карточки нужны переводы минимум на два поддерживаемых языка.',
+    importErrorUnknown: 'Эту запись карточки не удалось импортировать.',
     startLearning: 'Начать учиться',
     start: 'Играть',
     allCards: 'Все карточки',
@@ -858,13 +888,25 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiApplied: 'Aplicado',
     aiReverted: 'Deshecho',
     aiChanges: 'cambios',
+    aiOperationHistoryError:
+      'No se pudo completar la operacion. No se aplicaron cambios a la biblioteca.',
     aiRollbackConflictTitle: 'No se pueden deshacer los cambios',
     aiRollbackConflictBody:
       'La biblioteca cambio despues de aplicar esta operacion. Revisa las tarjetas o conjuntos afectados antes de intentarlo otra vez.',
+    aiRollbackConflictLaterOperation: 'Operacion posterior:',
     importCards: 'Importacion manual de tarjetas',
     importDescription:
       'Tambien puedes preparar datos para tu laboratorio con un agente LLM externo y subirlos aqui en nuestro formato. Descarga los requisitos y daselos a tu agente.',
     downloadCardFormat: 'Descargar requisitos JSON para agentes',
+    importErrorInvalidJson:
+      'El archivo seleccionado no contiene JSON valido.',
+    importErrorRootArray:
+      'El valor JSON principal debe ser una lista de tarjetas.',
+    importErrorRecordObject:
+      'Cada registro de tarjeta debe ser un objeto.',
+    importErrorTranslations:
+      'Cada tarjeta necesita traducciones en al menos dos idiomas compatibles.',
+    importErrorUnknown: 'No se pudo importar este registro de tarjeta.',
     startLearning: 'Empezar',
     start: 'Jugar',
     allCards: 'Todas las tarjetas',

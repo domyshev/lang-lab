@@ -1,6 +1,7 @@
 import HistoryIcon from '@mui/icons-material/History';
 import UndoIcon from '@mui/icons-material/Undo';
 import {
+  Alert,
   Box,
   Button,
   Chip,
@@ -23,6 +24,7 @@ interface AiOperationHistoryProps {
   language: SupportedLanguage;
   onCloseConflict: () => void;
   onRollback: (operation: AppliedAiOperation) => void;
+  operationError?: string;
   operations: AppliedAiOperation[];
 }
 
@@ -31,12 +33,9 @@ export function AiOperationHistory({
   language,
   onCloseConflict,
   onRollback,
+  operationError,
   operations,
 }: AiOperationHistoryProps) {
-  const sortedOperations = [...operations].sort(
-    (left, right) => Date.parse(right.appliedAt) - Date.parse(left.appliedAt),
-  );
-
   return (
     <Paper
       data-test="ai_operation_history__panel"
@@ -51,13 +50,22 @@ export function AiOperationHistory({
           </Typography>
         </Stack>
 
-        {sortedOperations.length === 0 ? (
+        {operationError && (
+          <Alert
+            data-test="ai_operation_history__operation_error"
+            severity="error"
+          >
+            {t(language, 'aiOperationHistoryError')}
+          </Alert>
+        )}
+
+        {operations.length === 0 ? (
           <Typography data-test="ai_operation_history__empty" color="text.secondary">
             {t(language, 'aiHistoryEmpty')}
           </Typography>
         ) : (
           <Stack data-test="ai_operation_history__items" divider={<Divider flexItem />} spacing={1.5}>
-            {sortedOperations.map((operation) => {
+            {operations.map((operation) => {
               const totalChanges = Object.values(operation.previewCounts).reduce(
                 (total, value) => total + value,
                 0,
@@ -115,6 +123,15 @@ export function AiOperationHistory({
         </DialogTitle>
         <DialogContent>
           <DialogContentText>{t(language, 'aiRollbackConflictBody')}</DialogContentText>
+          {conflict?.laterOperation && (
+            <DialogContentText
+              data-test="ai_operation_history__conflict_later_operation"
+              sx={{ mt: 1 }}
+            >
+              {t(language, 'aiRollbackConflictLaterOperation')}{' '}
+              {conflict.laterOperation.title}
+            </DialogContentText>
+          )}
         </DialogContent>
         <DialogActions>
           <Button data-test="ai_operation_history__conflict_close_button" onClick={onCloseConflict}>
