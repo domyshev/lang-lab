@@ -1,4 +1,5 @@
-import { Box, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { useSelector } from 'react-redux';
 import {
   AssistantId,
@@ -22,6 +23,9 @@ export function CoachPanel({
   progressMessage?: CoachProgressMessage;
   thoughtSeed: number;
 }) {
+  const theme = useTheme();
+  const isNarrowAssistantLayout = useMediaQuery(theme.breakpoints.down('md'));
+  const assistantTooltipPlacement = isNarrowAssistantLayout ? 'right' : 'left';
   const assistantId = useSelector((state: RootState) =>
     resolveAssistantId(state.app.assistantId ?? defaultAssistantId),
   );
@@ -50,11 +54,14 @@ export function CoachPanel({
       }}
     >
       <CursorAnchoredTooltip
-        anchorOrigin="triggerCenterLeft"
+        anchorOrigin={
+          isNarrowAssistantLayout ? 'triggerCenterRight' : 'triggerCenterLeft'
+        }
         arrowDataTest="coach_panel__assistant_tooltip_arrow"
         closeOnOtherOpen
         hideArrow
-        placement="left"
+        placement={assistantTooltipPlacement}
+        preventOverflow
         title={
           <Stack
             data-test="coach_panel__assistant_tooltip"
@@ -121,7 +128,7 @@ export function CoachPanel({
             </Box>
           </Stack>
         }
-        tooltipSx={assistantTooltipStyles}
+        tooltipSx={getAssistantTooltipStyles(isNarrowAssistantLayout)}
       >
         <Box
           component="span"
@@ -179,41 +186,45 @@ export function CoachPanel({
   );
 }
 
-const assistantTooltipStyles = {
-  background:
-    'linear-gradient(135deg, #fffaf0 0%, #fff7c7 48%, #f4edff 100%)',
-  border: '1px solid rgba(123, 95, 196, 0.24)',
-  borderRadius: '24px 18px 24px 10px',
-  boxShadow:
-    '0 14px 30px rgba(73, 48, 124, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.58)',
-  color: '#4b3a70',
-  maxWidth: 320,
-  overflow: 'visible',
-  position: 'relative',
-  px: 1.75,
-  py: 1.35,
-  '&::before': {
-    bgcolor: '#ffe27a',
-    border: '1px solid rgba(123, 95, 196, 0.18)',
-    borderRadius: '999px',
-    boxShadow: '0 5px 12px rgba(73, 48, 124, 0.10)',
-    content: '""',
-    height: 10,
-    position: 'absolute',
-    right: -9,
-    top: 'calc(50% - 2px)',
-    width: 10,
-  },
-  '&::after': {
-    bgcolor: '#b99cff',
-    border: '1px solid rgba(123, 95, 196, 0.14)',
-    borderRadius: '999px',
-    boxShadow: '0 4px 10px rgba(73, 48, 124, 0.08)',
-    content: '""',
-    height: 7,
-    position: 'absolute',
-    right: -18,
-    top: 'calc(50% + 10px)',
-    width: 7,
-  },
-};
+function getAssistantTooltipStyles(isNarrow: boolean) {
+  return {
+    background:
+      'linear-gradient(135deg, #fffaf0 0%, #fff7c7 48%, #f4edff 100%)',
+    border: '1px solid rgba(123, 95, 196, 0.24)',
+    borderRadius: '24px 18px 24px 10px',
+    boxShadow:
+      '0 14px 30px rgba(73, 48, 124, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.58)',
+    color: '#4b3a70',
+    maxWidth: 320,
+    overflow: 'visible',
+    position: 'relative',
+    px: 1.75,
+    py: 1.35,
+    '&::before': {
+      bgcolor: '#ffe27a',
+      border: '1px solid rgba(123, 95, 196, 0.18)',
+      borderRadius: '999px',
+      boxShadow: '0 5px 12px rgba(73, 48, 124, 0.10)',
+      content: '""',
+      height: 10,
+      left: isNarrow ? -9 : 'auto',
+      position: 'absolute',
+      right: isNarrow ? 'auto' : -9,
+      top: 'calc(50% - 2px)',
+      width: 10,
+    },
+    '&::after': {
+      bgcolor: '#b99cff',
+      border: '1px solid rgba(123, 95, 196, 0.14)',
+      borderRadius: '999px',
+      boxShadow: '0 4px 10px rgba(73, 48, 124, 0.08)',
+      content: '""',
+      height: 7,
+      left: isNarrow ? -18 : 'auto',
+      position: 'absolute',
+      right: isNarrow ? 'auto' : -18,
+      top: 'calc(50% + 10px)',
+      width: 7,
+    },
+  };
+}

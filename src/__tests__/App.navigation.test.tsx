@@ -1027,6 +1027,12 @@ describe('App navigation', () => {
     expect(
       screen.getByTestId('exercise_finish_action__hotkeys_key_symbol'),
     ).toHaveTextContent('⌘');
+    expect(
+      screen.getByTestId('exercise_finish_action__hotkeys_anchor'),
+    ).toHaveStyle({ cursor: 'default' });
+    expect(
+      screen.getByTestId('exercise_finish_action__hotkeys_key'),
+    ).toHaveStyle({ cursor: 'default' });
 
     const jumpOrder = await getMissingLettersJumpOrder(user);
     const currentPrompt = getVisibleMissingLettersPrompt();

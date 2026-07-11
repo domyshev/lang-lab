@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { CursorAnchoredTooltip, TooltipContent } from '../CursorAnchoredTooltip';
 
 describe('CursorAnchoredTooltip', () => {
@@ -161,5 +161,44 @@ describe('CursorAnchoredTooltip', () => {
 
     expect(anchor).toHaveAttribute('data-anchor-x', '90');
     expect(anchor).toHaveAttribute('data-anchor-y', '120');
+  });
+
+  it('anchors to the trigger center-right without following mouse movement', () => {
+    render(
+      <CursorAnchoredTooltip
+        anchorOrigin="triggerCenterRight"
+        arrowDataTest="right-anchor-arrow"
+        placement="right"
+        title={
+          <TooltipContent sx={{ bgcolor: '#ffffff', p: 1 }}>
+            Profile
+          </TooltipContent>
+        }
+        tooltipSx={{ bgcolor: '#ffffff' }}
+      >
+        <button type="button">Character</button>
+      </CursorAnchoredTooltip>,
+    );
+
+    const trigger = screen.getByRole('button', { name: 'Character' });
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+      bottom: 220,
+      height: 120,
+      left: 40,
+      right: 160,
+      top: 100,
+      width: 120,
+      x: 40,
+      y: 100,
+      toJSON: () => undefined,
+    });
+
+    fireEvent.mouseOver(trigger, { clientX: 70, clientY: 140 });
+    expect(trigger).toHaveAttribute('data-anchor-x', '160');
+    expect(trigger).toHaveAttribute('data-anchor-y', '160');
+
+    fireEvent.mouseMove(trigger, { clientX: 130, clientY: 200 });
+    expect(trigger).toHaveAttribute('data-anchor-x', '160');
+    expect(trigger).toHaveAttribute('data-anchor-y', '160');
   });
 });

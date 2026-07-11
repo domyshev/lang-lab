@@ -20,7 +20,11 @@ type TooltipAnchorPosition = {
   y: number;
 };
 
-type TooltipAnchorOrigin = 'pointer' | 'triggerCenterLeft' | 'triggerTopLeft';
+type TooltipAnchorOrigin =
+  | 'pointer'
+  | 'triggerCenterLeft'
+  | 'triggerCenterRight'
+  | 'triggerTopLeft';
 
 type TooltipPlacement =
   | 'bottom'
@@ -313,6 +317,11 @@ function getAnchorPosition(
   if (anchorOrigin === 'triggerCenterLeft') {
     const rect = event.currentTarget.getBoundingClientRect();
     return { x: rect.left, y: rect.top + rect.height / 2 };
+  }
+
+  if (anchorOrigin === 'triggerCenterRight') {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return { x: rect.right, y: rect.top + rect.height / 2 };
   }
 
   return { x: event.clientX, y: event.clientY };

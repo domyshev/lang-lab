@@ -2183,6 +2183,7 @@ function HotkeyShortcutTooltip({
         role="img"
         sx={{
           alignItems: 'center',
+          cursor: 'default',
           display: 'inline-flex',
           flex: '0 0 auto',
           justifyContent: 'center',
@@ -2202,6 +2203,7 @@ function HotkeyShortcutTooltip({
             boxShadow:
               'inset 0 2px 0 rgba(255,255,255,0.96), inset 4px 0 0 rgba(255,255,255,0.32), inset -3px 0 0 rgba(84, 59, 166, 0.10), inset 0 -6px 0 rgba(84, 59, 166, 0.20), 0 8px 14px rgba(73, 48, 124, 0.16)',
             color: '#5d41b2',
+            cursor: 'default',
             display: 'inline-flex',
             height: { xs: 40, sm: 44 },
             justifyContent: 'center',
