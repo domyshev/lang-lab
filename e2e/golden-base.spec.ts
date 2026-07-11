@@ -96,6 +96,9 @@ async function openGoldenApp(page: Page) {
   });
 
   await page.goto('/');
+  await expect(page.getByTestId('player_onboarding__dialog')).toBeVisible();
+  await page.getByTestId('player_onboarding__anonymous_button').click();
+  await expect(page.getByTestId('player_onboarding__dialog')).toBeHidden();
   await page.addStyleTag({
     content: `
       *, *::before, *::after {
@@ -115,12 +118,12 @@ async function startExercise(page: Page, exerciseName: string) {
     .getByTestId('card_set_library__chip_select__default-set-love')
     .click();
   await expect(page.getByTestId('card_set_library__selected_name')).toHaveText(
-    'Любовь',
+    'Love',
   );
   await page.waitForTimeout(50);
   await page.getByRole('button', { name: exerciseName }).click();
   await expect(page.getByTestId('card_set_library__selected_name')).toHaveText(
-    'Любовь',
+    'Love',
   );
   await page.getByTestId('game_setup__start_button').click();
   await expect(page.getByTestId('app__active_exercise_section')).toBeVisible();
