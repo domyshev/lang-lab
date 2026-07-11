@@ -1,9 +1,89 @@
 import { Box } from '@mui/material';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { CursorAnchoredTooltip, TooltipContent } from '../CursorAnchoredTooltip';
 
 describe('CursorAnchoredTooltip', () => {
+  it('opens from focus at the trigger top-center and closes on blur', async () => {
+    render(
+      <CursorAnchoredTooltip
+        arrowDataTest="focus_tooltip_arrow"
+        title={
+          <TooltipContent sx={{ bgcolor: '#ffffff', p: 1 }}>
+            Keyboard details
+          </TooltipContent>
+        }
+        transitionTimeout={0}
+        tooltipSx={{ bgcolor: '#ffffff' }}
+      >
+        <button type="button">Focus me</button>
+      </CursorAnchoredTooltip>,
+    );
+
+    const trigger = screen.getByRole('button', { name: 'Focus me' });
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+      bottom: 140,
+      height: 40,
+      left: 80,
+      right: 200,
+      top: 100,
+      width: 120,
+      x: 80,
+      y: 100,
+      toJSON: () => undefined,
+    });
+
+    fireEvent.focus(trigger);
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Keyboard details',
+    );
+    expect(trigger).toHaveAttribute('data-anchor-x', '140');
+    expect(trigger).toHaveAttribute('data-anchor-y', '100');
+
+    fireEvent.blur(trigger);
+
+    await waitFor(() =>
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument(),
+    );
+  });
+
+  it('retains an explicit trigger origin when opened from focus', async () => {
+    render(
+      <CursorAnchoredTooltip
+        anchorOrigin="triggerTopLeft"
+        arrowDataTest="focused_corner_tooltip_arrow"
+        title={
+          <TooltipContent sx={{ bgcolor: '#ffffff', p: 1 }}>
+            Focused corner details
+          </TooltipContent>
+        }
+        tooltipSx={{ bgcolor: '#ffffff' }}
+      >
+        <button type="button">Corner focus</button>
+      </CursorAnchoredTooltip>,
+    );
+
+    const trigger = screen.getByRole('button', { name: 'Corner focus' });
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+      bottom: 94,
+      height: 34,
+      left: 80,
+      right: 114,
+      top: 60,
+      width: 34,
+      x: 80,
+      y: 60,
+      toJSON: () => undefined,
+    });
+
+    fireEvent.focus(trigger);
+
+    expect(await screen.findByRole('tooltip')).toBeInTheDocument();
+    expect(trigger).toHaveAttribute('data-anchor-x', '80');
+    expect(trigger).toHaveAttribute('data-anchor-y', '60');
+  });
+
   it('keeps the tooltip anchor and hover bridge fixed while the pointer moves inside the trigger', async () => {
     render(
       <CursorAnchoredTooltip

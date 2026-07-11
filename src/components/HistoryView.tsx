@@ -497,5 +497,5 @@ function getRecentCardResults({
 }
 
 function toDomKey(value: string): string {
-  return value.replace(/[^a-zA-Z0-9_-]/g, '_');
+  return encodeURIComponent(value);
 }

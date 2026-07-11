@@ -88,9 +88,11 @@ export function RecentAnswersChip({
       }
     >
       <Chip
+        component="button"
         data-test={`${dataTestPrefix}__recent_stats_chip`}
         label={t(interfaceLanguage, 'recentAnswerStatsChip')}
         size="small"
+        type="button"
         variant="outlined"
         sx={{
           alignSelf: 'flex-start',

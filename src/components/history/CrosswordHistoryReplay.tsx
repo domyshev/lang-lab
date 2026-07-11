@@ -35,6 +35,9 @@ export function CrosswordHistoryReplay({
       { entry, number: index + 1 },
     ]),
   );
+  const entryNumberById = new Map(
+    snapshot.puzzle.entries.map((entry, index) => [entry.cardId, index + 1]),
+  );
 
   return (
     <Box
@@ -75,6 +78,10 @@ export function CrosswordHistoryReplay({
             cell,
             snapshot.puzzle,
             correctness,
+          ).sort(
+            (left, right) =>
+              (entryNumberById.get(left.cardId) ?? Number.MAX_SAFE_INTEGER) -
+              (entryNumberById.get(right.cardId) ?? Number.MAX_SAFE_INTEGER),
           );
           const shouldStrike = shouldStrikeAnswerCharacter({
             actual: value,
@@ -136,9 +143,10 @@ export function CrosswordHistoryReplay({
                 >
                   <Box
                     aria-label={`Question ${startEntry.number}`}
-                    component="span"
+                    component="button"
                     data-test={`${dataTestPrefix}__clue_number__${startEntry.entry.cardId}`}
                     sx={clueNumberStyles}
+                    type="button"
                   >
                     {startEntry.number}
                   </Box>
@@ -159,6 +167,7 @@ export function CrosswordHistoryReplay({
                           key={entry.cardId}
                           sx={{ fontSize: 14, lineHeight: 1.35 }}
                         >
+                          {entryNumberById.get(entry.cardId)}.{' '}
                           {t(interfaceLanguage, 'correctAnswer')}: {entry.answer}
                         </Typography>
                       ))}
@@ -168,8 +177,19 @@ export function CrosswordHistoryReplay({
                   tooltipSx={answerTooltipStyles}
                 >
                   <Box
+                    aria-label={incorrectEntries
+                      .map(
+                        (entry) =>
+                          `${entryNumberById.get(entry.cardId)}. ${t(
+                            interfaceLanguage,
+                            'correctAnswer',
+                          )}: ${entry.answer}`,
+                      )
+                      .join('; ')}
+                    component="button"
                     data-test={`${dataTestPrefix}__correction__${displayRow}_${displayCol}__anchor`}
                     sx={correctionAnchorStyles}
+                    type="button"
                   >
                     {staticCell}
                   </Box>
@@ -234,6 +254,7 @@ const clueNumberStyles = {
   justifyContent: 'center',
   left: -18,
   lineHeight: 1,
+  p: 0,
   position: 'absolute',
   top: -18,
   width: 15,
@@ -283,8 +304,12 @@ function getClueTooltipSlotProps(dataTest: string) {
 }
 
 const correctionAnchorStyles = {
+  bgcolor: 'transparent',
+  border: 0,
+  color: 'inherit',
   display: 'inline-flex',
   height: '100%',
+  p: 0,
   width: '100%',
 };
 

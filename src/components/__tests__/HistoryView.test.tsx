@@ -53,7 +53,7 @@ describe('HistoryView', () => {
       within(missingLettersCard!).getByLabelText('Правильный ответ: airport'),
     ).toBeInTheDocument();
     const correctAirportRow = screen.getByTestId(
-      'history_view__detail_row__attempt-missing-1_card-airport',
+      'history_view__detail_row__attempt-missing-1%3Acard-airport',
     );
     expect(within(correctAirportRow).queryByText('Верно')).not.toBeInTheDocument();
     expect(
@@ -66,32 +66,33 @@ describe('HistoryView', () => {
     );
     expect(
       screen.queryByTestId(
-        'history_view__detail_answer__attempt-missing-1_card-airport__recent_tooltip',
+        'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_tooltip',
       ),
     ).not.toBeInTheDocument();
     const recentStatsChip = within(correctAirportRow).getByTestId(
-      'history_view__detail_answer__attempt-missing-1_card-airport__recent_stats_chip',
+      'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_stats_chip',
     );
+    expect(recentStatsChip).toHaveRole('button');
     expect(recentStatsChip).toHaveTextContent('Статистика последних ответов');
     expect(recentStatsChip).toHaveStyle({ cursor: 'pointer' });
     await user.hover(recentStatsChip);
     const airportTooltip = await screen.findByTestId(
-      'history_view__detail_answer__attempt-missing-1_card-airport__recent_tooltip',
+      'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_tooltip',
     );
     expect(within(airportTooltip).getByText('10 последних ответов')).toBeInTheDocument();
     expect(
       within(airportTooltip).getByTestId(
-        'history_view__detail_answer__attempt-missing-1_card-airport__recent_tooltip_subject',
+        'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_tooltip_subject',
       ),
     ).toHaveTextContent('airport');
     expect(
       within(airportTooltip).getByTestId(
-        'history_view__detail_answer__attempt-missing-1_card-airport__recent_result_chip__0',
+        'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_result_chip__0',
       ),
     ).toHaveTextContent('правильно');
     expect(
       within(airportTooltip).getByTestId(
-        'history_view__detail_answer__attempt-missing-1_card-airport__recent_result_date__0',
+        'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_result_date__0',
       ),
     ).toHaveTextContent(/\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/);
     expect(within(airportTooltip).queryByText(/^1\./)).not.toBeInTheDocument();
@@ -102,7 +103,7 @@ describe('HistoryView', () => {
     );
     expect(
       screen.getByTestId(
-        'history_view__detail_answer__attempt-missing-1_card-airport__tooltip_arrow',
+        'history_view__detail_answer__attempt-missing-1%3Acard-airport__tooltip_arrow',
       ),
     ).toBeInTheDocument();
     await user.unhover(
@@ -115,13 +116,13 @@ describe('HistoryView', () => {
       within(missingLettersCard!).getByLabelText('Неверный ответ: vehocle'),
     ).toBeInTheDocument();
     const vehicleRow = screen.getByTestId(
-      'history_view__detail_row__attempt-missing-1_card-vehicle',
+      'history_view__detail_row__attempt-missing-1%3Acard-vehicle',
     );
     const incorrectVehicleCells = within(vehicleRow).getByTestId(
-      'history_view__detail_answer__attempt-missing-1_card-vehicle__incorrect_cells__root',
+      'history_view__detail_answer__attempt-missing-1%3Acard-vehicle__incorrect_cells__root',
     );
     const correctVehicleCells = within(vehicleRow).getByTestId(
-      'history_view__detail_answer__attempt-missing-1_card-vehicle__correct_cells__root',
+      'history_view__detail_answer__attempt-missing-1%3Acard-vehicle__correct_cells__root',
     );
     expect(
       incorrectVehicleCells.compareDocumentPosition(correctVehicleCells) &
@@ -129,12 +130,12 @@ describe('HistoryView', () => {
     ).toBeTruthy();
     expect(
       within(vehicleRow).queryByTestId(
-        'history_view__detail_result_chip__attempt-missing-1_card-vehicle',
+        'history_view__detail_result_chip__attempt-missing-1%3Acard-vehicle',
       ),
     ).not.toBeInTheDocument();
     expect(
       within(vehicleRow).getByTestId(
-        'history_view__detail_answer__attempt-missing-1_card-vehicle__incorrect_cells__cell__3',
+        'history_view__detail_answer__attempt-missing-1%3Acard-vehicle__incorrect_cells__cell__3',
       ),
     ).toHaveStyle({
       textDecorationLine: 'line-through',
@@ -142,26 +143,26 @@ describe('HistoryView', () => {
     await user.hover(incorrectVehicleCells);
     expect(
       screen.queryByTestId(
-        'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_tooltip',
+        'history_view__detail_answer__attempt-missing-1%3Acard-vehicle__recent_tooltip',
       ),
     ).not.toBeInTheDocument();
     await user.hover(correctVehicleCells);
     expect(
       screen.queryByTestId(
-        'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_tooltip',
+        'history_view__detail_answer__attempt-missing-1%3Acard-vehicle__recent_tooltip',
       ),
     ).not.toBeInTheDocument();
     const vehicleRecentStatsChip = within(vehicleRow).getByTestId(
-      'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_stats_chip',
+      'history_view__detail_answer__attempt-missing-1%3Acard-vehicle__recent_stats_chip',
     );
     await user.hover(vehicleRecentStatsChip);
     const vehicleTooltip = await screen.findByTestId(
-      'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_tooltip',
+      'history_view__detail_answer__attempt-missing-1%3Acard-vehicle__recent_tooltip',
     );
     expect(within(vehicleTooltip).getByText('10 последних ответов')).toBeInTheDocument();
     expect(
       within(vehicleTooltip).getByTestId(
-        'history_view__detail_answer__attempt-missing-1_card-vehicle__recent_result_chip__0',
+        'history_view__detail_answer__attempt-missing-1%3Acard-vehicle__recent_result_chip__0',
       ),
     ).toHaveTextContent('неверно');
     await user.unhover(vehicleRecentStatsChip);
@@ -188,7 +189,7 @@ describe('HistoryView', () => {
 
     const options = getByDataTestPrefix(
       multipleChoiceCard!,
-      'history_view__detail_answer__attempt-choice-1_card-vehicle__multiple_choice_option__',
+      'history_view__detail_answer__attempt-choice-1%3Acard-vehicle__multiple_choice_option__',
     );
     expect(options).toHaveLength(3);
     expect(within(options[0]).getByText('airport')).toBeInTheDocument();
@@ -201,26 +202,26 @@ describe('HistoryView', () => {
     });
     expect(
       within(multipleChoiceCard!).queryByTestId(
-        'history_view__detail_result_chip__attempt-choice-1_card-vehicle',
+        'history_view__detail_result_chip__attempt-choice-1%3Acard-vehicle',
       ),
     ).not.toBeInTheDocument();
     await user.hover(options[0]);
     expect(
       screen.queryByTestId(
-        'history_view__detail_answer__attempt-choice-1_card-vehicle__recent_tooltip',
+        'history_view__detail_answer__attempt-choice-1%3Acard-vehicle__recent_tooltip',
       ),
     ).not.toBeInTheDocument();
     const multipleChoiceRow = screen.getByTestId(
-      'history_view__detail_row__attempt-choice-1_card-vehicle',
+      'history_view__detail_row__attempt-choice-1%3Acard-vehicle',
     );
     const recentStatsChip = within(multipleChoiceRow).getByTestId(
-      'history_view__detail_answer__attempt-choice-1_card-vehicle__recent_stats_chip',
+      'history_view__detail_answer__attempt-choice-1%3Acard-vehicle__recent_stats_chip',
     );
     expect(recentStatsChip).toHaveTextContent('Статистика последних ответов');
     await user.hover(recentStatsChip);
     expect(
       await screen.findByTestId(
-        'history_view__detail_answer__attempt-choice-1_card-vehicle__recent_tooltip',
+        'history_view__detail_answer__attempt-choice-1%3Acard-vehicle__recent_tooltip',
       ),
     ).toBeInTheDocument();
   });
@@ -364,14 +365,61 @@ describe('HistoryView', () => {
 
     expect(
       screen.getByTestId(
-        'history_view__detail_row__attempt-crossword-legacy_card-cat',
+        'history_view__detail_row__attempt-crossword-legacy%3Acard-cat',
       ),
     ).toBeInTheDocument();
     expect(
       screen.queryByTestId(
-        'history_view__detail_answer__attempt-crossword-legacy_card-cat__recent_stats_chip',
+        'history_view__detail_answer__attempt-crossword-legacy%3Acard-cat__recent_stats_chip',
       ),
     ).not.toBeInTheDocument();
+  });
+
+  it('keeps replay hooks distinct for session IDs that previously collided', () => {
+    const makeAttempt = (id: string, exerciseSessionId: string): ExerciseAttempt => ({
+      id,
+      exerciseSessionId,
+      exerciseType: 'crossword',
+      cardSetId: 'all-cards',
+      targetLanguage: 'en',
+      createdAt: '2026-07-05T12:00:00.000Z',
+      completedAt: '2026-07-05T12:00:00.000Z',
+      cardSnapshots: [],
+      prompts: [],
+      answers: {},
+      correctness: {},
+      hintsUsed: {},
+      crosswordSnapshot: {
+        puzzle: {
+          mode: 'words',
+          bounds: { minRow: 0, maxRow: 0, minCol: 0, maxCol: 0 },
+          cells: [{ row: 0, col: 0, solution: 'a', entryIds: ['card-a'] }],
+          entries: [
+            {
+              cardId: 'card-a',
+              answer: 'a',
+              clue: 'ru: а',
+              row: 0,
+              col: 0,
+              direction: 'across',
+            },
+          ],
+        },
+        cellValues: { '0:0': 'a' },
+      },
+    });
+
+    renderHistoryView([
+      makeAttempt('attempt-a', 'session:a'),
+      makeAttempt('attempt-b', 'session/a'),
+    ]);
+
+    expect(
+      screen.getByTestId('history_view__attempt_card__session%3Aa'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId('history_view__attempt_card__session%2Fa'),
+    ).toBeInTheDocument();
   });
 
   it('uses a full letter-cell width for phrase spaces in statistics details', async () => {
@@ -416,7 +464,7 @@ describe('HistoryView', () => {
 
     expect(
       screen.getByTestId(
-        'history_view__detail_answer__attempt-word-1_card-worth-it__correct_cells__space__5',
+        'history_view__detail_answer__attempt-word-1%3Acard-worth-it__correct_cells__space__5',
       ),
     ).toHaveStyle({ width: '34px' });
   });
@@ -467,14 +515,14 @@ describe('HistoryView', () => {
     );
 
     const tooltipAnchor = screen.getByTestId(
-      'history_view__detail_answer__attempt-missing-1_card-airport__recent_stats_chip',
+      'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_stats_chip',
     );
 
     fireEvent.mouseOver(tooltipAnchor, { clientX: 240, clientY: 180 });
 
     expect(
       await screen.findByTestId(
-        'history_view__detail_answer__attempt-missing-1_card-airport__recent_tooltip',
+        'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_tooltip',
       ),
     ).toBeInTheDocument();
     expect(tooltipAnchor).toHaveAttribute('data-anchor-x', '240');
@@ -490,7 +538,7 @@ describe('HistoryView', () => {
 
     expect(
       screen.getByTestId(
-        'history_view__detail_answer__attempt-missing-1_card-airport__recent_tooltip',
+        'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_tooltip',
       ),
     ).toBeInTheDocument();
 
@@ -499,7 +547,7 @@ describe('HistoryView', () => {
     await waitFor(() =>
       expect(
         screen.queryByTestId(
-          'history_view__detail_answer__attempt-missing-1_card-airport__recent_tooltip',
+          'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_tooltip',
         ),
       ).not.toBeInTheDocument(),
     );

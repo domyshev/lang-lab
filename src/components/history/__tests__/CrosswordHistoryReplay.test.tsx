@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import type { CrosswordAttemptSnapshot } from '../../../domain/exercises';
@@ -111,7 +111,7 @@ describe('CrosswordHistoryReplay', () => {
 
     await user.hover(screen.getByTestId('crossword_history__cell__2_3'));
     expect(
-      await screen.findByText('Правильный ответ: tea'),
+      await screen.findByText('2. Правильный ответ: tea'),
     ).toBeInTheDocument();
     expect(
       screen.getByTestId('crossword_history__correction__2_3__tooltip'),
@@ -119,5 +119,64 @@ describe('CrosswordHistoryReplay', () => {
     expect(
       screen.getByTestId('crossword_history__correction__2_3__tooltip_arrow'),
     ).toBeInTheDocument();
+  });
+
+  it('uses semantic focus triggers and numbers each crossing correction', async () => {
+    const user = userEvent.setup();
+    render(
+      <CrosswordHistoryReplay
+        correctness={{ cat: false, tea: false }}
+        dataTestPrefix="crossword_history"
+        interfaceLanguage="ru"
+        snapshot={{
+          ...snapshot,
+          puzzle: {
+            ...snapshot.puzzle,
+            cells: snapshot.puzzle.cells.map((cell) =>
+              cell.row === 0 && cell.col === 2
+                ? { ...cell, entryIds: ['tea', 'cat'] }
+                : cell,
+            ),
+          },
+          cellValues: {
+            ...snapshot.cellValues,
+            '0:2': 'x',
+            '2:2': 'x',
+          },
+        }}
+      />,
+    );
+
+    const clueNumber = screen.getByTestId(
+      'crossword_history__clue_number__cat',
+    );
+    expect(clueNumber).toHaveRole('button');
+    expect(clueNumber).toHaveAccessibleName('Question 1');
+
+    await user.tab();
+    expect(clueNumber).toHaveFocus();
+    expect(await screen.findByText('ru: кот')).toBeInTheDocument();
+
+    const correctionAnchor = screen.getByTestId(
+      'crossword_history__correction__1_3__anchor',
+    );
+    expect(correctionAnchor).toHaveRole('button');
+
+    correctionAnchor.focus();
+    const correctionTooltip = await screen.findByTestId(
+      'crossword_history__correction__1_3__tooltip',
+    );
+    expect(correctionTooltip).toHaveTextContent('1. Правильный ответ: cat');
+    expect(correctionTooltip).toHaveTextContent('2. Правильный ответ: tea');
+    expect(correctionTooltip.textContent?.indexOf('cat')).toBeLessThan(
+      correctionTooltip.textContent?.indexOf('tea') ?? -1,
+    );
+
+    correctionAnchor.blur();
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId('crossword_history__correction__1_3__tooltip'),
+      ).not.toBeInTheDocument(),
+    );
   });
 });

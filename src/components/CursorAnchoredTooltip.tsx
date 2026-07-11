@@ -2,6 +2,7 @@ import { Box, Tooltip } from '@mui/material';
 import type { SxProps, Theme as MuiTheme } from '@mui/material/styles';
 import {
   cloneElement,
+  type FocusEvent as ReactFocusEvent,
   type MouseEvent as ReactMouseEvent,
   type ReactElement,
   type ReactNode,
@@ -41,6 +42,8 @@ type TooltipPlacement =
   | 'top-start';
 
 type TooltipChildHandlers = {
+  onBlur?: (event: ReactFocusEvent<HTMLElement>) => void;
+  onFocus?: (event: ReactFocusEvent<HTMLElement>) => void;
   onMouseEnter?: (event: ReactMouseEvent<HTMLElement>) => void;
   onMouseLeave?: (event: ReactMouseEvent<HTMLElement>) => void;
   onMouseMove?: (event: ReactMouseEvent<HTMLElement>) => void;
@@ -205,7 +208,42 @@ export function CursorAnchoredTooltip({
 
   const openAtPointer = useCallback(
     (event: ReactMouseEvent<HTMLElement>) => {
-      const nextPosition = getAnchorPosition(event, anchorOrigin);
+      const nextPosition = getAnchorPosition(
+        event.currentTarget,
+        anchorOrigin,
+        { x: event.clientX, y: event.clientY },
+      );
+
+      setIsTriggerHovered(true);
+
+      if (anchorPosition) {
+        return;
+      }
+
+      setIsImmediateClose(false);
+
+      if (closeOnOtherOpen) {
+        flushSync(() => {
+          for (const [tooltipId, closeOtherTooltip] of cursorTooltipClosers) {
+            if (tooltipId !== instanceId) {
+              closeOtherTooltip(true);
+            }
+          }
+        });
+      }
+
+      lastAnchorPositionRef.current = nextPosition;
+      setAnchorPosition(nextPosition);
+    },
+    [anchorOrigin, anchorPosition, closeOnOtherOpen, instanceId],
+  );
+
+  const openFromFocus = useCallback(
+    (event: ReactFocusEvent<HTMLElement>) => {
+      const nextPosition = getAnchorPosition(
+        event.currentTarget,
+        anchorOrigin,
+      );
 
       setIsTriggerHovered(true);
 
@@ -266,6 +304,14 @@ export function CursorAnchoredTooltip({
         {cloneElement(children, {
           'data-anchor-x': anchorPosition?.x ?? '',
           'data-anchor-y': anchorPosition?.y ?? '',
+          onBlur: (event: ReactFocusEvent<HTMLElement>) => {
+            childProps.onBlur?.(event);
+            closeTooltip();
+          },
+          onFocus: (event: ReactFocusEvent<HTMLElement>) => {
+            childProps.onFocus?.(event);
+            openFromFocus(event);
+          },
           onMouseEnter: (event: ReactMouseEvent<HTMLElement>) => {
             childProps.onMouseEnter?.(event);
             openAtPointer(event);
@@ -306,25 +352,25 @@ export function CursorAnchoredTooltip({
 const cursorTooltipClosers = new Map<string, (immediate?: boolean) => void>();
 
 function getAnchorPosition(
-  event: ReactMouseEvent<HTMLElement>,
+  target: HTMLElement,
   anchorOrigin: TooltipAnchorOrigin,
+  pointerPosition?: TooltipAnchorPosition,
 ): TooltipAnchorPosition {
+  const rect = target.getBoundingClientRect();
+
   if (anchorOrigin === 'triggerTopLeft') {
-    const rect = event.currentTarget.getBoundingClientRect();
     return { x: rect.left, y: rect.top };
   }
 
   if (anchorOrigin === 'triggerCenterLeft') {
-    const rect = event.currentTarget.getBoundingClientRect();
     return { x: rect.left, y: rect.top + rect.height / 2 };
   }
 
   if (anchorOrigin === 'triggerCenterRight') {
-    const rect = event.currentTarget.getBoundingClientRect();
     return { x: rect.right, y: rect.top + rect.height / 2 };
   }
 
-  return { x: event.clientX, y: event.clientY };
+  return pointerPosition ?? { x: rect.left + rect.width / 2, y: rect.top };
 }
 
 function getTooltipBridgeSx(

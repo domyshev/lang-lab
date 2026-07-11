@@ -84,6 +84,133 @@ test.describe('golden base visual snapshots', () => {
     await expect(page.getByTestId('crossword_exercise__panel')).toBeVisible();
     await captureGolden(page, 'exercise-crossword');
   });
+
+  test('saves and replays an incomplete crossword result', async ({
+    page,
+  }, testInfo) => {
+    await openGoldenApp(page);
+    await startExercise(page, 'Кроссворд');
+
+    const firstClue = page
+      .locator('[data-test^="crossword_exercise__clue_number__"]')
+      .first();
+    await firstClue.click();
+
+    const filledCellTests: string[] = [];
+    const inputCount = await page
+      .locator('[data-test^="crossword_exercise__input_cell__"]')
+      .count();
+
+    for (let index = 0; index < inputCount; index += 1) {
+      const focusedInput = page.locator(
+        '[data-test^="crossword_exercise__input_cell__"]:focus',
+      );
+      const currentDataTest = await focusedInput.getAttribute('data-test');
+      expect(currentDataTest).toBeTruthy();
+      filledCellTests.push(currentDataTest!);
+
+      await page.keyboard.type('x');
+
+      const nextDataTest = await page
+        .locator('[data-test^="crossword_exercise__input_cell__"]:focus')
+        .getAttribute('data-test');
+      if (nextDataTest === currentDataTest) {
+        break;
+      }
+    }
+
+    expect(filledCellTests.length).toBeGreaterThan(1);
+    const unansweredDataTest = await page
+      .locator('[data-test^="crossword_exercise__input_cell__"]')
+      .evaluateAll((elements) =>
+        elements
+          .find((element) => (element as HTMLInputElement).value === '')
+          ?.getAttribute('data-test'),
+      );
+    expect(unansweredDataTest).toBeTruthy();
+
+    await expect(page.getByTestId('crossword_exercise__submit_button')).toBeEnabled();
+    await page.getByTestId('crossword_exercise__submit_button').click();
+    await page.getByTestId('app_shell__tab__statistics').click();
+
+    const attemptCard = page
+      .locator('[data-test^="history_view__attempt_card__"]')
+      .first();
+    await expect(attemptCard).toBeVisible();
+    await attemptCard.getByRole('button', { name: /Кроссворд/ }).click();
+
+    const replayGrid = attemptCard.locator(
+      '[data-test^="history_view__crossword_replay__"][data-test$="__grid"]',
+    );
+    await expect(replayGrid).toBeVisible();
+    await expect(
+      replayGrid.locator('[data-test*="__empty_cell__"]').first(),
+    ).toBeVisible();
+
+    const unansweredCellSuffix = unansweredDataTest!.replace(
+      'crossword_exercise__input_cell__',
+      '',
+    );
+    await expect(
+      replayGrid.locator(`[data-test$="__cell__${unansweredCellSuffix}"]`),
+    ).toHaveText('');
+    await expect(
+      replayGrid.locator('[data-test*="__cell__"][style*="line-through"]').first(),
+    ).toBeVisible();
+    await expect(
+      replayGrid.locator('button[data-test*="__clue_number__"]').first(),
+    ).toBeVisible();
+
+    const correctionAnchor = replayGrid
+      .locator('button[data-test*="__correction__"][data-test$="__anchor"]')
+      .first();
+    await correctionAnchor.hover();
+    await expect(
+      page.locator('[data-test*="__correction__"][data-test$="__tooltip"]').first(),
+    ).toContainText(/\d+\. Правильный ответ: /);
+
+    await page.screenshot({
+      fullPage: true,
+      path: testInfo.outputPath('crossword-history-replay.png'),
+    });
+  });
+
+  test('keeps the assistant tooltip visible beside the character on a narrow viewport', async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ height: 844, width: 760 });
+    await openGoldenApp(page);
+    await startExercise(page, 'Пропущенные буквы');
+
+    const assistant = page.locator(
+      '[data-test^="coach_panel__assistant_sticker_wrapper__"]',
+    );
+    await assistant.hover();
+    const tooltip = page.getByTestId('coach_panel__assistant_tooltip');
+    await expect(tooltip).toBeVisible();
+
+    const assistantBounds = await assistant.boundingBox();
+    const tooltipBounds = await tooltip.boundingBox();
+    expect(assistantBounds).not.toBeNull();
+    expect(tooltipBounds).not.toBeNull();
+    expect(tooltipBounds!.x).toBeGreaterThanOrEqual(
+      assistantBounds!.x + assistantBounds!.width,
+    );
+    expect(tooltipBounds!.x).toBeGreaterThanOrEqual(0);
+    expect(tooltipBounds!.x + tooltipBounds!.width).toBeLessThanOrEqual(760);
+    expect(tooltipBounds!.y).toBeGreaterThanOrEqual(0);
+    expect(tooltipBounds!.y + tooltipBounds!.height).toBeLessThanOrEqual(844);
+
+    const hotkeyCursor = await page
+      .getByTestId('exercise_finish_action__hotkeys_anchor')
+      .evaluate((element) => getComputedStyle(element).cursor);
+    expect(hotkeyCursor).not.toBe('text');
+
+    await page.screenshot({
+      fullPage: true,
+      path: testInfo.outputPath('narrow-assistant-tooltip.png'),
+    });
+  });
 });
 
 async function openGoldenApp(page: Page) {
