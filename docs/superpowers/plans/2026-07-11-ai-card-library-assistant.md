@@ -517,6 +517,7 @@ Commit subject: `Connect the AI assistant to OpenRouter`.
 - Create: `src/components/__tests__/AiAssistantView.test.tsx`
 - Modify: `src/components/ImportCardsView.tsx`
 - Modify: `src/components/__tests__/ImportCardsView.test.tsx`
+- Modify: `src/domain/i18n.ts`
 
 **Interfaces:**
 - `AiAssistantView` reads Redux library and assistant state and dispatches Task 4 actions.
@@ -542,6 +543,8 @@ Mock `runAiAssistant`. Cover:
 - clear chat leaving operation history intact;
 - manual import still present.
 
+Run the visible page assertions in English, Russian, and Spanish so the page is localized before it is routed into the main navigation.
+
 - [ ] **Step 3: Run and verify RED**
 
 Run:
@@ -554,7 +557,7 @@ Expected: FAIL because the page components do not exist.
 
 - [ ] **Step 4: Implement connection and chat components**
 
-Use controlled props, MUI icons, localized tooltips, stable dimensions, and no nested cards. The composer uses a multiline input and Send icon button. Thinking is playful but compact. AbortController lives in `AiAssistantView` and is aborted on unmount.
+Add the connection, key warning, key actions, chat states, preview counts, history states, rollback conflicts, retry/cancel, and manual-import strings to `src/domain/i18n.ts` in English, Russian, and Spanish. Use controlled props, MUI icons, localized tooltips, stable dimensions, and no nested cards. The composer uses a multiline input and Send icon button. Thinking is playful but compact. AbortController lives in `AiAssistantView` and is aborted on unmount.
 
 - [ ] **Step 5: Implement preview and operation history**
 
@@ -609,9 +612,9 @@ npm test -- --run src/components/__tests__/CardSetLibraryPicker.test.tsx src/__t
 
 Expected: FAIL because the callback, wand, and copy are absent.
 
-- [ ] **Step 4: Add all i18n keys**
+- [ ] **Step 4: Finalize navigation and wand i18n keys**
 
-Add connection, key warning, key actions, chat states, preview counts, history states, rollback conflicts, retry/cancel, and wand tooltip strings in English, Russian, and Spanish. Remove visible trial-key claims.
+Add or update the visible tab, page title, and wand tooltip strings in English, Russian, and Spanish. Verify the assistant-page keys added in Task 6 remain complete. Remove visible trial-key claims.
 
 - [ ] **Step 5: Implement wand and route**
 
