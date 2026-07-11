@@ -777,9 +777,12 @@ describe('App navigation', () => {
   }) => {
     const user = userEvent.setup();
     renderApp({ app: { interfaceLanguage } });
+    const scrollRoot = screen.getByTestId('app_shell__root');
+    scrollRoot.scrollTop = 336.5;
 
     await user.click(screen.getByRole('tab', { name: title }));
 
+    expect(scrollRoot.scrollTop).toBe(0);
     expect(screen.getByTestId('ai_assistant__page')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: connectionTitle })).toBeInTheDocument();
@@ -790,8 +793,10 @@ describe('App navigation', () => {
     expect(screen.queryByText(/trial|триальн|prueba/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: gamesTab }));
+    scrollRoot.scrollTop = 336.5;
     await user.click(screen.getByRole('button', { name: wandLabel }));
 
+    expect(scrollRoot.scrollTop).toBe(0);
     expect(screen.getByTestId('ai_assistant__page')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: importTitle })).toBeInTheDocument();

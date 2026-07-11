@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   AppBar,
@@ -51,13 +51,21 @@ export function AppShell({
     (state: RootState) => state.app.playerProfile,
   );
   const dispatch = useDispatch<AppDispatch>();
+  const scrollRootRef = useRef<HTMLDivElement>(null);
   const tabValue = visibleTabSections.includes(activeSection)
     ? activeSection
     : false;
 
+  useLayoutEffect(() => {
+    if (scrollRootRef.current) {
+      scrollRootRef.current.scrollTop = 0;
+    }
+  }, [activeSection]);
+
   return (
     <Box
       data-test="app_shell__root"
+      ref={scrollRootRef}
       sx={{
         bgcolor: 'background.default',
         height: '100dvh',
@@ -78,7 +86,7 @@ export function AppShell({
         }}
       >
         <Toolbar
-          data-nowrap-breakpoint="1360px"
+          data-nowrap-breakpoint="1440px"
           data-test="app_shell__toolbar"
           sx={{
             alignItems: 'flex-start',
@@ -87,7 +95,7 @@ export function AppShell({
             flexWrap: 'wrap',
             minHeight: 'auto',
             py: 1.25,
-            '@media (min-width: 1360px)': {
+            '@media (min-width: 1440px)': {
               alignItems: 'center',
               columnGap: 2,
               rowGap: 0,
@@ -104,7 +112,7 @@ export function AppShell({
               flexBasis: '100%',
               justifyContent: 'flex-start',
               minWidth: 250,
-              '@media (min-width: 1360px)': {
+              '@media (min-width: 1440px)': {
                 flexBasis: 'auto',
               },
             }}
@@ -116,7 +124,7 @@ export function AppShell({
           </Box>
 
           <Tabs
-            data-wide-scroll-buttons="hidden-at-1360px"
+            data-wide-scroll-buttons="hidden-at-1440px"
             data-test="app_shell__main_tabs"
             value={tabValue}
             onChange={(_, value: AppShellSection) => onNavigate?.(value)}
@@ -128,7 +136,7 @@ export function AppShell({
               flexBasis: '100%',
               minHeight: 44,
               maxWidth: '100%',
-              '@media (min-width: 1360px)': {
+              '@media (min-width: 1440px)': {
                 alignSelf: 'auto',
                 flexBasis: 'auto',
                 maxWidth: 520,
@@ -142,7 +150,7 @@ export function AppShell({
                 px: { xs: 0.75, sm: 2 },
                 textTransform: 'none',
                 fontWeight: 800,
-                '@media (min-width: 1360px)': {
+                '@media (min-width: 1440px)': {
                   px: 1,
                 },
               },
@@ -191,7 +199,7 @@ export function AppShell({
               flexGrow: 1,
               justifyContent: 'center',
               minWidth: { xs: 0, md: 260 },
-              '@media (min-width: 1360px)': {
+              '@media (min-width: 1440px)': {
                 alignSelf: 'center',
                 minWidth: 240,
               },

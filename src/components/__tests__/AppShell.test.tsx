@@ -177,12 +177,33 @@ describe('AppShell', () => {
 
     expect(screen.getByTestId('app_shell__toolbar')).toHaveAttribute(
       'data-nowrap-breakpoint',
-      '1360px',
+      '1440px',
     );
     expect(screen.getByTestId('app_shell__main_tabs')).toHaveAttribute(
       'data-wide-scroll-buttons',
-      'hidden-at-1360px',
+      'hidden-at-1440px',
     );
+    const toolbarWideRule = findMediaStyleRule({
+      element: screen.getByTestId('app_shell__toolbar'),
+      media: '(min-width: 1440px)',
+      selectorSuffix: '',
+    });
+    expect(toolbarWideRule?.getPropertyValue('flex-wrap')).toBe('nowrap');
+    expect(toolbarWideRule?.getPropertyValue('min-height')).toBe('70px');
+    expect(
+      findMediaStyleRule({
+        element: screen.getByTestId('app_shell__toolbar'),
+        media: '(min-width: 1360px)',
+        selectorSuffix: '',
+      }),
+    ).toBeUndefined();
+    expect(
+      findMediaStyleRule({
+        element: screen.getByTestId('app_shell__main_tabs'),
+        media: '(min-width: 1440px)',
+        selectorSuffix: '.MuiTabs-scrollButtons',
+      })?.getPropertyValue('display'),
+    ).toBe('none');
     expect(screen.getByTestId('app_shell__logo_slot')).toHaveStyle({
       justifyContent: 'flex-start',
       minWidth: '250px',
@@ -209,4 +230,90 @@ describe('AppShell', () => {
       ),
     ).toBeInTheDocument();
   });
+
+  it('resets the shell scroll root only when the active section changes', () => {
+    const store = configureStore({
+      reducer: {
+        app: appReducer,
+      },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          playerProfile: {
+            avatarSeed: 'test-player',
+            displayName: 'Илюха',
+            isAnonymous: false,
+          },
+        },
+      },
+    });
+    const { rerender } = render(
+      <Provider store={store}>
+        <AppShell activeSection="game">
+          <div>Game content</div>
+        </AppShell>
+      </Provider>,
+    );
+    const scrollRoot = screen.getByTestId('app_shell__root');
+    scrollRoot.scrollTop = 336.5;
+
+    rerender(
+      <Provider store={store}>
+        <AppShell activeSection="agents">
+          <div>AI content</div>
+        </AppShell>
+      </Provider>,
+    );
+
+    expect(scrollRoot.scrollTop).toBe(0);
+
+    scrollRoot.scrollTop = 212;
+    rerender(
+      <Provider store={store}>
+        <AppShell activeSection="agents">
+          <div>Updated AI content</div>
+        </AppShell>
+      </Provider>,
+    );
+
+    expect(scrollRoot.scrollTop).toBe(212);
+  });
 });
+
+function findMediaStyleRule({
+  element,
+  media,
+  selectorSuffix,
+}: {
+  element: HTMLElement;
+  media: string;
+  selectorSuffix: string;
+}): CSSStyleDeclaration | undefined {
+  const classSelectors = Array.from(element.classList, (name) => `.${name}`);
+
+  for (const sheet of Array.from(document.styleSheets)) {
+    for (const rule of Array.from(sheet.cssRules)) {
+      if (rule.type !== CSSRule.MEDIA_RULE) {
+        continue;
+      }
+      const mediaRule = rule as CSSMediaRule;
+      if (mediaRule.conditionText !== media) {
+        continue;
+      }
+
+      for (const nestedRule of Array.from(mediaRule.cssRules)) {
+        const styleRule = nestedRule as CSSStyleRule;
+        if (
+          classSelectors.some((selector) =>
+            styleRule.selectorText?.includes(selector),
+          ) &&
+          (!selectorSuffix || styleRule.selectorText?.includes(selectorSuffix))
+        ) {
+          return styleRule.style;
+        }
+      }
+    }
+  }
+
+  return undefined;
+}
