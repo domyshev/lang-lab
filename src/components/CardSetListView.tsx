@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import ArchiveIcon from '@mui/icons-material/Archive';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
   Box,
   Button,
+  Checkbox,
   Chip,
+  FormControlLabel,
   IconButton,
   Paper,
   Stack,
@@ -13,9 +16,19 @@ import {
   Typography,
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { ALL_CARDS_CARD_SET_ID, getCardSetName } from '../domain/cardSets';
+import {
+  ALL_CARDS_CARD_SET_ID,
+  getCardSetName,
+  getCardSetSearchValues,
+  isArchivedCardSet,
+} from '../domain/cardSets';
 import { formatCardCount, formatCardSetCount, t } from '../domain/i18n';
-import { addCardSet, archiveCardSet, selectCardSet } from '../store/cardSetsSlice';
+import {
+  addCardSet,
+  archiveCardSet,
+  copyArchivedCardSet,
+  selectCardSet,
+} from '../store/cardSetsSlice';
 import { AppDispatch, RootState } from '../store/store';
 
 export function CardSetListView({
@@ -37,7 +50,23 @@ export function CardSetListView({
   );
   const [name, setName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const visibleCardSets = cardSets.filter((cardSet) => !cardSet.archivedAt);
+  const [cardSetSearchQuery, setCardSetSearchQuery] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
+  const normalizedCardSetSearch = cardSetSearchQuery
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase();
+  const visibleCardSets = cardSets.filter((cardSet) => {
+    if (showArchived !== isArchivedCardSet(cardSet)) {
+      return false;
+    }
+    if (!normalizedCardSetSearch) {
+      return true;
+    }
+    return getCardSetSearchValues(cardSet).some((value) =>
+      value.includes(normalizedCardSetSearch),
+    );
+  });
 
   const createCardSet = () => {
     const trimmedName = name.trim();
@@ -101,7 +130,10 @@ export function CardSetListView({
               data-test="card_set_list__card_set_count"
               sx={{ mt: 0.5 }}
             >
-              {formatCardSetCount(interfaceLanguage, visibleCardSets.length + 1)}
+              {formatCardSetCount(
+                interfaceLanguage,
+                visibleCardSets.length + (showArchived ? 0 : 1),
+              )}
             </Typography>
           </Box>
           <Button
@@ -145,6 +177,26 @@ export function CardSetListView({
           </Stack>
         )}
 
+        <Stack data-test="card_set_list__filters" spacing={1}>
+          <TextField
+            data-test="card_set_list__search_input"
+            label={t(interfaceLanguage, 'searchCardSets')}
+            size="small"
+            value={cardSetSearchQuery}
+            onChange={(event) => setCardSetSearchQuery(event.target.value)}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                data-test="card_set_list__archived_checkbox"
+                checked={showArchived}
+                onChange={(event) => setShowArchived(event.target.checked)}
+              />
+            }
+            label={t(interfaceLanguage, 'showArchivedCardSets')}
+          />
+        </Stack>
+
         <Stack
           data-test="card_set_list__tiles"
           spacing={1.25}
@@ -155,16 +207,18 @@ export function CardSetListView({
             pr: 0.5,
           }}
         >
-          <CardSetTile
-            id={ALL_CARDS_CARD_SET_ID}
-            name={t(targetLanguage, 'allCards')}
-            cardCount={cards.length}
-            interfaceLanguage={interfaceLanguage}
-            selected={
-              selectedCardSetId === ALL_CARDS_CARD_SET_ID || !selectedCardSetId
-            }
-            onSelect={() => dispatch(selectCardSet(ALL_CARDS_CARD_SET_ID))}
-          />
+          {!showArchived && (
+            <CardSetTile
+              id={ALL_CARDS_CARD_SET_ID}
+              name={t(targetLanguage, 'allCards')}
+              cardCount={cards.length}
+              interfaceLanguage={interfaceLanguage}
+              selected={
+                selectedCardSetId === ALL_CARDS_CARD_SET_ID || !selectedCardSetId
+              }
+              onSelect={() => dispatch(selectCardSet(ALL_CARDS_CARD_SET_ID))}
+            />
+          )}
 
           {visibleCardSets.map((cardSet) => (
             <CardSetTile
@@ -174,13 +228,28 @@ export function CardSetListView({
               cardCount={cardSet.cardIds.length}
               interfaceLanguage={interfaceLanguage}
               selected={cardSet.id === selectedCardSetId}
-              onArchive={() =>
-                dispatch(
-                  archiveCardSet({
-                    cardSetId: cardSet.id,
-                    archivedAt: new Date().toISOString(),
-                  }),
-                )
+              onArchive={
+                isArchivedCardSet(cardSet)
+                  ? undefined
+                  : () =>
+                      dispatch(
+                        archiveCardSet({
+                          cardSetId: cardSet.id,
+                          archivedAt: new Date().toISOString(),
+                        }),
+                      )
+              }
+              onCopyArchived={
+                isArchivedCardSet(cardSet)
+                  ? () =>
+                      dispatch(
+                        copyArchivedCardSet({
+                          sourceCardSetId: cardSet.id,
+                          newCardSetId: createCardSetId(),
+                          now: new Date().toISOString(),
+                        }),
+                      )
+                  : undefined
               }
               onSelect={() => dispatch(selectCardSet(cardSet.id))}
             />
@@ -197,6 +266,7 @@ function CardSetTile({
   interfaceLanguage,
   name,
   onArchive,
+  onCopyArchived,
   onSelect,
   selected,
 }: {
@@ -205,6 +275,7 @@ function CardSetTile({
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   name: string;
   onArchive?: () => void;
+  onCopyArchived?: () => void;
   onSelect: () => void;
   selected: boolean;
 }) {
@@ -262,6 +333,19 @@ function CardSetTile({
               sx={{ mx: 1 }}
             >
               <ArchiveIcon />
+            </IconButton>
+          </Tooltip>
+        )}
+
+        {onCopyArchived && (
+          <Tooltip title={t(interfaceLanguage, 'createActiveCopy')}>
+            <IconButton
+              aria-label={`${t(interfaceLanguage, 'createActiveCopy')}: ${name}`}
+              data-test={`card_set_list__tile_copy_button__${id}`}
+              onClick={onCopyArchived}
+              sx={{ mx: 1 }}
+            >
+              <ContentCopyIcon />
             </IconButton>
           </Tooltip>
         )}
