@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { AiRollbackConflict, AppliedAiOperation, findAiRollbackConflict } from '../domain/aiOperations';
@@ -6,9 +6,11 @@ import { t } from '../domain/i18n';
 import { AiAgentFailure, runAiAssistant } from '../services/aiAssistantAgent';
 import {
   OPENROUTER_AVAILABLE_MODELS,
+  isOpenRouterTrialKey,
   loadOpenRouterKey,
   loadOpenRouterModel,
   removeOpenRouterKey,
+  restoreOpenRouterTrialKey,
   saveOpenRouterModel,
   saveOpenRouterKey,
 } from '../services/openRouterKeyStorage';
@@ -17,18 +19,26 @@ import {
   appendAiMessage,
   cancelStagedAiOperation,
   clearAiChat,
-  stageBlockedAiPreview,
-  stageAiOperation,
+  stageBlockedAiPreviewMessage,
+  stageAiOperationMessage,
 } from '../store/aiAssistantSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { AiChatPanel } from './ai/AiChatPanel';
-import { AiBlockedOperationPreview } from './ai/AiBlockedOperationPreview';
 import { AiConnectionPanel } from './ai/AiConnectionPanel';
 import { AiOperationHistory } from './ai/AiOperationHistory';
-import { AiOperationPreview } from './ai/AiOperationPreview';
 import { ManualCardImportPanel } from './ManualCardImportPanel';
 
-export function AiAssistantView() {
+interface AiAssistantViewProps {
+  dataTest?: string;
+  embedded?: boolean;
+  showManualImport?: boolean;
+}
+
+export function AiAssistantView({
+  dataTest = 'ai_assistant__page',
+  embedded = false,
+  showManualImport = true,
+}: AiAssistantViewProps = {}) {
   const dispatch = useDispatch<AppDispatch>();
   const keyStorageRef = useRef<Storage>(getOpenRouterStorage());
   const cards = useSelector((state: RootState) => state.cards.cards);
@@ -38,6 +48,9 @@ export function AiAssistantView() {
     (state: RootState) => state.aiAssistant,
   );
   const [apiKey, setApiKey] = useState(() => loadOpenRouterKey(keyStorageRef.current));
+  const [savedApiKey, setSavedApiKey] = useState(() =>
+    loadOpenRouterKey(keyStorageRef.current),
+  );
   const [modelId, setModelId] = useState(() => loadOpenRouterModel(keyStorageRef.current));
   const [draft, setDraft] = useState('');
   const [isKeyVisible, setIsKeyVisible] = useState(false);
@@ -63,6 +76,7 @@ export function AiAssistantView() {
       const key = apiKey.trim();
       if (!key) {
         setMissingKey(true);
+        setIsKeyVisible(true);
         keyInputRef.current?.focus();
         return;
       }
@@ -94,21 +108,49 @@ export function AiAssistantView() {
           return;
         }
         if (result.ok) {
-          dispatch(
-            appendAiMessage({
-              id: createUiId('assistant-message'),
-              role: 'assistant',
-              content: result.content,
-              createdAt: new Date().toISOString(),
-            }),
-          );
           if (result.stagedOperation) {
-            dispatch(stageAiOperation(result.stagedOperation));
+            dispatch(
+              stageAiOperationMessage({
+                operation: result.stagedOperation,
+                message: {
+                  id: createUiId('assistant-message'),
+                  role: 'assistant',
+                  content: result.content,
+                  createdAt: new Date().toISOString(),
+                  operationPreview: result.stagedOperation,
+                  previewStatus: 'pending',
+                },
+              }),
+            );
+          } else {
+            dispatch(
+              appendAiMessage({
+                id: createUiId('assistant-message'),
+                role: 'assistant',
+                content: result.content,
+                createdAt: new Date().toISOString(),
+              }),
+            );
           }
           return;
         }
         if (result.blockedPreview) {
-          dispatch(stageBlockedAiPreview(result.blockedPreview));
+          dispatch(
+            stageBlockedAiPreviewMessage({
+              preview: result.blockedPreview,
+              message: {
+                id: createUiId('assistant-blocked-preview'),
+                role: 'assistant',
+                content: failureMessage(interfaceLanguage, result.failure),
+                createdAt: new Date().toISOString(),
+                blockedPreview: result.blockedPreview,
+                previewStatus: 'pending',
+                isError: true,
+                retryPrompt: prompt,
+              },
+            }),
+          );
+          return;
         }
         if (result.failure.kind !== 'cancelled') {
           appendSafeError(
@@ -148,6 +190,37 @@ export function AiAssistantView() {
     dispatch(clearAiChat());
   };
 
+  const displayedMessages = useMemo(() => {
+    const result = [...messages];
+    if (
+      stagedOperation &&
+      !result.some((message) => message.operationPreview?.id === stagedOperation.id)
+    ) {
+      result.push({
+        id: `staged-operation-${stagedOperation.id}`,
+        role: 'assistant',
+        content: '',
+        createdAt: stagedOperation.createdAt,
+        operationPreview: stagedOperation,
+        previewStatus: 'pending',
+      });
+    }
+    if (
+      blockedPreview &&
+      !result.some((message) => message.blockedPreview === blockedPreview)
+    ) {
+      result.push({
+        id: `blocked-preview-${blockedPreview.title ?? 'operation'}`,
+        role: 'assistant',
+        content: '',
+        createdAt: new Date().toISOString(),
+        blockedPreview,
+        previewStatus: 'pending',
+      });
+    }
+    return result;
+  }, [blockedPreview, messages, stagedOperation]);
+
   const handleRollback = (operation: AppliedAiOperation) => {
     const operationIndex = operations.findIndex(
       (candidate) => candidate.id === operation.id,
@@ -173,15 +246,24 @@ export function AiAssistantView() {
   };
 
   return (
-    <Stack data-test="ai_assistant__page" spacing={2.5}>
-      <Typography data-test="ai_assistant__title" component="h2" variant="h5" fontWeight={900}>
-        {t(interfaceLanguage, 'aiAssistantTitle')}
-      </Typography>
+    <Stack
+      data-test={dataTest}
+      spacing={embedded ? 1.5 : 2.5}
+      sx={embedded ? { minHeight: 0 } : undefined}
+    >
+      {!embedded && (
+        <Typography data-test="ai_assistant__title" component="h2" variant="h5" fontWeight={900}>
+          {t(interfaceLanguage, 'aiAssistantTitle')}
+        </Typography>
+      )}
 
       <AiConnectionPanel
         apiKey={apiKey}
         inputRef={keyInputRef}
         isKeyVisible={isKeyVisible}
+        isRestoreTrialAvailable={!isOpenRouterTrialKey(savedApiKey)}
+        isSaveDisabled={apiKey.trim() === savedApiKey.trim()}
+        isTrialKeySelected={isOpenRouterTrialKey(savedApiKey)}
         language={interfaceLanguage}
         missingKey={missingKey}
         modelId={modelId}
@@ -193,16 +275,25 @@ export function AiAssistantView() {
         onDelete={() => {
           removeOpenRouterKey(keyStorageRef.current);
           setApiKey('');
+          setSavedApiKey('');
           setIsKeyVisible(false);
         }}
         onModelChange={(value) => {
           saveOpenRouterModel(value, keyStorageRef.current);
           setModelId(loadOpenRouterModel(keyStorageRef.current));
         }}
+        onRestoreTrial={() => {
+          restoreOpenRouterTrialKey(keyStorageRef.current);
+          const storedKey = loadOpenRouterKey(keyStorageRef.current);
+          setApiKey(storedKey);
+          setSavedApiKey(storedKey);
+          setMissingKey(false);
+        }}
         onSave={() => {
           saveOpenRouterKey(apiKey, keyStorageRef.current);
           const storedKey = loadOpenRouterKey(keyStorageRef.current);
           setApiKey(storedKey);
+          setSavedApiKey(storedKey);
           setMissingKey(!storedKey);
         }}
         onToggleVisibility={() => setIsKeyVisible((visible) => !visible)}
@@ -215,43 +306,31 @@ export function AiAssistantView() {
           display: 'grid',
           gap: 2,
           gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1.65fr) minmax(280px, 1fr)' },
+          minHeight: 0,
         }}
       >
-        <Stack data-test="ai_assistant__chat_column" spacing={2} sx={{ minWidth: 0 }}>
+        <Stack data-test="ai_assistant__chat_column" spacing={2} sx={{ minWidth: 0, minHeight: 0 }}>
           <AiChatPanel
             draft={draft}
             isThinking={isThinking}
             language={interfaceLanguage}
-            messages={messages}
+            messages={displayedMessages}
+            operationError={operationError}
+            onApplyOperation={(operation) =>
+              dispatch(
+                applyAiOperation({
+                  operation,
+                  appliedAt: new Date().toISOString(),
+                }),
+              )
+            }
             onCancel={handleCancel}
             onClear={handleClearChat}
+            onCancelPreview={() => dispatch(cancelStagedAiOperation())}
             onDraftChange={setDraft}
             onRetry={sendPrompt}
             onSend={() => void sendPrompt(draft)}
           />
-          {stagedOperation && (
-            <AiOperationPreview
-              blockingError={operationError}
-              language={interfaceLanguage}
-              onApply={() =>
-                dispatch(
-                  applyAiOperation({
-                    operation: stagedOperation,
-                    appliedAt: new Date().toISOString(),
-                  }),
-                )
-              }
-              onCancel={() => dispatch(cancelStagedAiOperation())}
-              operation={stagedOperation}
-            />
-          )}
-          {blockedPreview && (
-            <AiBlockedOperationPreview
-              language={interfaceLanguage}
-              onCancel={() => dispatch(cancelStagedAiOperation())}
-              preview={blockedPreview}
-            />
-          )}
         </Stack>
         <AiOperationHistory
           conflict={rollbackConflict}
@@ -263,7 +342,7 @@ export function AiAssistantView() {
         />
       </Box>
 
-      <ManualCardImportPanel />
+      {showManualImport && <ManualCardImportPanel />}
     </Stack>
   );
 }

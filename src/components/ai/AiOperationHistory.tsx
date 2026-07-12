@@ -40,9 +40,14 @@ export function AiOperationHistory({
     <Paper
       data-test="ai_operation_history__panel"
       variant="outlined"
-      sx={{ minHeight: { xs: 280, md: 560 }, p: { xs: 1.5, sm: 2 } }}
+      sx={{
+        display: 'flex',
+        height: { xs: 360, md: 560 },
+        minHeight: 0,
+        p: { xs: 1.5, sm: 2 },
+      }}
     >
-      <Stack data-test="ai_operation_history__content" spacing={1.5}>
+      <Stack data-test="ai_operation_history__content" spacing={1.5} sx={{ minHeight: 0, width: '100%' }}>
         <Stack data-test="ai_operation_history__header" direction="row" spacing={1} alignItems="center">
           <HistoryIcon color="action" />
           <Typography data-test="ai_operation_history__title" component="h3" variant="h6" fontWeight={800}>
@@ -65,6 +70,12 @@ export function AiOperationHistory({
           </Typography>
         ) : (
           <Stack data-test="ai_operation_history__items" divider={<Divider flexItem />} spacing={1.5}>
+            <Stack
+              data-test="ai_operation_history__scroll_area"
+              divider={<Divider flexItem />}
+              spacing={1.5}
+              sx={{ minHeight: 0, overflowY: 'auto', pr: 0.5 }}
+            >
             {operations.map((operation) => {
               const totalChanges = Object.values(operation.previewCounts).reduce(
                 (total, value) => total + value,
@@ -108,6 +119,7 @@ export function AiOperationHistory({
                 </Box>
               );
             })}
+            </Stack>
           </Stack>
         )}
       </Stack>

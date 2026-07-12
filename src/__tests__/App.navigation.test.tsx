@@ -336,7 +336,8 @@ describe('App navigation', () => {
     expect(screen.queryByText('Language Crossword Lab')).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Карточки' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Статистика' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'AI помощник' })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'AI помощник' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('app_shell__tab__help')).toBeInTheDocument();
     const setupPanel = screen.getByTestId('game_setup__panel');
     expect(setupPanel).toHaveStyle({
       maxWidth: '760px',
@@ -765,9 +766,8 @@ describe('App navigation', () => {
       historyTitle: 'Historial de operaciones',
       importTitle: 'Importacion manual de tarjetas',
     },
-  ])('opens AI Assistant from its localized tab and wand in $interfaceLanguage', async ({
+  ])('opens the embedded AI Assistant from the card-set library wand in $interfaceLanguage', async ({
     interfaceLanguage,
-    gamesTab,
     title,
     wandLabel,
     connectionTitle,
@@ -780,31 +780,28 @@ describe('App navigation', () => {
     const scrollRoot = screen.getByTestId('app_shell__root');
     scrollRoot.scrollTop = 336.5;
 
-    await user.click(screen.getByRole('tab', { name: title }));
-
-    expect(scrollRoot.scrollTop).toBe(0);
-    expect(screen.getByTestId('ai_assistant__page')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: title })).not.toBeInTheDocument();
+    expect(screen.getByTestId('game_ai_assistant__section')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: connectionTitle })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: chatTitle })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: historyTitle })).toBeInTheDocument();
     expect(screen.getByText('GPT-5.5')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: importTitle })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: importTitle })).not.toBeInTheDocument();
     expect(screen.queryByText(/trial|триальн|prueba/i)).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: gamesTab }));
     scrollRoot.scrollTop = 336.5;
     await user.click(screen.getByRole('button', { name: wandLabel }));
 
     expect(scrollRoot.scrollTop).toBe(0);
-    expect(screen.getByTestId('ai_assistant__page')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: importTitle })).toBeInTheDocument();
+    expect(screen.getByTestId('game_ai_assistant__section')).toBeInTheDocument();
   });
 
-  it('collapses game help after the player acknowledges it and points back to the accordion', async () => {
+  it('shows the old game help on the dedicated icon-only Help tab', async () => {
     const user = userEvent.setup();
     const store = renderApp();
+
+    expect(screen.queryByRole('button', { name: /Помощь/ })).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('app_shell__tab__help'));
 
     expect(screen.getByRole('button', { name: /Помощь/ })).toBeInTheDocument();
     expect(
@@ -853,6 +850,7 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp({ app: { isGameHelpCollapsed: true } });
 
+    await user.click(screen.getByTestId('app_shell__tab__help'));
     expect(screen.getByRole('button', { name: /Помощь/ })).toBeInTheDocument();
     expect(screen.queryByText(/лаборатория изучения языков/i)).not.toBeInTheDocument();
 
@@ -871,6 +869,7 @@ describe('App navigation', () => {
       } as Partial<ReturnType<typeof appReducer>>,
     });
 
+    await user.click(screen.getByTestId('app_shell__tab__help'));
     await user.click(screen.getByRole('button', { name: 'Понятно!' }));
 
     expect(store.getState().app.isGameHelpCollapsed).toBe(true);
@@ -1694,6 +1693,47 @@ describe('App navigation', () => {
     expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
   });
 
+  it('confirms before navigating to another top tab when an exercise has saved work', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await startExercise(user, 'Пропущенные буквы');
+    await answerMissingLettersWrong(user);
+
+    await user.click(screen.getByRole('tab', { name: 'Карточки' }));
+
+    expect(screen.getByRole('dialog', { name: 'Закончить упражнение' })).toBeInTheDocument();
+    expect(screen.getByText('Отвечено слов: 1')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Отмена' }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: 'Закончить упражнение' }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(screen.getByRole('heading', { name: 'Игра: Пропущенные буквы' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Карточки' }));
+    await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
+
+    await waitFor(() =>
+      expect(getByDataTestPrefix('card_set_detail__panel__')[0]).toBeInTheDocument(),
+    );
+  });
+
+  it('navigates away from an untouched missing word exercise without a finish dialog', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await startExercise(user, 'Пропущенное слово');
+    await user.click(screen.getByRole('tab', { name: 'Карточки' }));
+
+    expect(screen.queryByRole('dialog', { name: 'Закончить упражнение' })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(getByDataTestPrefix('card_set_detail__panel__')[0]).toBeInTheDocument(),
+    );
+  });
+
   it('opens the finish dialog when returning from expanded statistics to an active game', async () => {
     const user = userEvent.setup();
     renderApp();
@@ -1702,6 +1742,11 @@ describe('App navigation', () => {
     await answerMissingLettersWrong(user);
 
     await user.click(screen.getByRole('tab', { name: 'Статистика' }));
+    await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+
     const attemptCard = getByDataTestPrefix('history_view__attempt_card__')[0];
     await user.click(
       within(attemptCard).getByRole('button', {
@@ -1712,23 +1757,7 @@ describe('App navigation', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Игры' }));
 
-    expect(
-      screen.getByRole('dialog', { name: 'Закончить упражнение' }),
-    ).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Отмена' }));
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
-    expect(screen.getByRole('heading', { name: 'Результаты' })).toBeInTheDocument();
-    expect(screen.getByText('Детали упражнения')).toBeInTheDocument();
-
-    await user.click(screen.getByRole('tab', { name: 'Игры' }));
-    await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
-
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByTestId('card_set_library__panel')).toBeVisible();
   });
 
@@ -1761,6 +1790,10 @@ describe('App navigation', () => {
     await answerMissingLettersWrong(user);
 
     await user.click(screen.getByRole('tab', { name: 'Статистика' }));
+    await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
 
     expect(screen.getByRole('heading', { name: 'Результаты' })).toBeInTheDocument();
     expect(screen.getByTestId('target_stats__total_exercises__label')).toHaveTextContent(

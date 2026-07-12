@@ -43,6 +43,11 @@ export function removeOpenRouterKey(storage: Storage = window.localStorage) {
   storage.setItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY, 'true');
 }
 
+export function restoreOpenRouterTrialKey(storage: Storage = window.localStorage) {
+  storage.removeItem(OPENROUTER_KEY_STORAGE_KEY);
+  storage.removeItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY);
+}
+
 export function loadOpenRouterModel(
   storage: Storage = window.localStorage,
 ): OpenRouterModelId {
@@ -63,4 +68,8 @@ export function saveOpenRouterModel(
 
 export function isOpenRouterModelId(value: unknown): value is OpenRouterModelId {
   return OPENROUTER_AVAILABLE_MODELS.some(({ id }) => id === value);
+}
+
+export function isOpenRouterTrialKey(value: string): boolean {
+  return value.trim() === OPENROUTER_TRIAL_KEY;
 }

@@ -1,5 +1,6 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import {
   AppBar,
   Box,
@@ -28,7 +29,7 @@ export type AppShellSection =
   | 'game'
   | 'cards'
   | 'statistics'
-  | 'agents'
+  | 'help'
   | 'assistant';
 
 interface AppShellProps {
@@ -183,9 +184,10 @@ export function AppShell({
               sx={{ minWidth: '0 !important' }}
             />
             <Tab
-              data-test="app_shell__tab__agents"
-              value="agents"
-              label={t(interfaceLanguage, 'agentsSection')}
+              aria-label={t(interfaceLanguage, 'gameHelpTitle')}
+              data-test="app_shell__tab__help"
+              icon={<HelpOutlineIcon data-test="app_shell__tab_icon__help" />}
+              value="help"
               sx={{ minWidth: '0 !important' }}
             />
           </Tabs>
@@ -450,5 +452,5 @@ const visibleTabSections: AppShellSection[] = [
   'game',
   'cards',
   'statistics',
-  'agents',
+  'help',
 ];

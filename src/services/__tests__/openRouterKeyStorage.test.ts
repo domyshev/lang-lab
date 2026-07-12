@@ -9,6 +9,7 @@ import {
   OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY,
   loadOpenRouterModel,
   removeOpenRouterKey,
+  restoreOpenRouterTrialKey,
   saveOpenRouterModel,
   saveOpenRouterKey,
 } from '../openRouterKeyStorage';
@@ -54,6 +55,20 @@ describe('openRouterKeyStorage', () => {
     expect(loadOpenRouterKey(storage)).toBe('custom-key');
     removeOpenRouterKey(storage);
     expect(loadOpenRouterKey(storage)).toBe('');
+  });
+
+  it('restores the built-in trial key after a custom key or explicit delete', () => {
+    const storage = createMemoryStorage();
+
+    saveOpenRouterKey('custom-key', storage);
+    removeOpenRouterKey(storage);
+    expect(loadOpenRouterKey(storage)).toBe('');
+
+    restoreOpenRouterTrialKey(storage);
+
+    expect(loadOpenRouterKey(storage)).toBe(OPENROUTER_TRIAL_KEY);
+    expect(storage.getItem(OPENROUTER_KEY_STORAGE_KEY)).toBeNull();
+    expect(storage.getItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY)).toBeNull();
   });
 
   it('loads and stores only supported OpenRouter model ids', () => {

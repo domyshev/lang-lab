@@ -7,13 +7,17 @@ interface AiBlockedOperationPreviewProps {
   language: SupportedLanguage;
   onCancel: () => void;
   preview: BlockedAiPreview;
+  status?: 'pending' | 'applied' | 'rejected';
 }
 
 export function AiBlockedOperationPreview({
   language,
   onCancel,
   preview,
+  status = 'pending',
 }: AiBlockedOperationPreviewProps) {
+  const isPending = status === 'pending';
+
   return (
     <Box
       data-test="ai_blocked_preview__panel"
@@ -72,6 +76,7 @@ export function AiBlockedOperationPreview({
           </Button>
           <Button
             data-test="ai_blocked_preview__cancel_button"
+            disabled={!isPending}
             onClick={onCancel}
             variant="outlined"
           >

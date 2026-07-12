@@ -59,7 +59,12 @@ export async function runAiAssistant(input: {
   idFactory?: (prefix: string) => string;
 }): Promise<AiAgentResult> {
   const messages: OpenRouterChatMessage[] = [
-    { role: 'system', content: createSystemMessage() },
+    {
+      role: 'system',
+      content: createSystemMessage(
+        input.modelId ?? DEFAULT_OPENROUTER_MODEL_ID,
+      ),
+    },
     { role: 'user', content: input.userMessage },
   ];
   let stagedOperation: PlannedAiOperation | undefined;
@@ -185,12 +190,15 @@ export async function runAiAssistant(input: {
   };
 }
 
-function createSystemMessage(): string {
+function createSystemMessage(modelId: OpenRouterModelId): string {
   return `You are the Language Lab card-library assistant with limited authority.
 You may inspect the supplied current library only through the four read tools.
 You may propose writes only through propose_library_operation. That tool stages a plan for user review; you never dispatch Redux actions, apply changes, delete global cards, or archive or delete card sets.
 Never invent an id for an existing card or card set. Read the current library to obtain existing ids.
 Ask for clarification when a requested word, phrase, or meaning is ambiguous.
+You may answer questions about your current model id and effort. For any other non-library topic, say you can only manage Language Lab card sets and vocabulary.
+Current selected model id: ${modelId}
+Current effort: default
 
 The following raw English skill document is authoritative for card quality and format:
 

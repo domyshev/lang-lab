@@ -212,7 +212,7 @@ describe('AppShell', () => {
       letterSpacing: '0',
     });
     expect(
-      getComputedStyle(screen.getByTestId('app_shell__tab__agents')).minWidth,
+      getComputedStyle(screen.getByTestId('app_shell__tab__help')).minWidth,
     ).toBe('0');
     const selectorsSlot = screen.getByTestId('app_shell__selectors_slot');
     expect(selectorsSlot).toHaveStyle({ flexShrink: '0' });
@@ -259,8 +259,8 @@ describe('AppShell', () => {
 
     rerender(
       <Provider store={store}>
-        <AppShell activeSection="agents">
-          <div>AI content</div>
+        <AppShell activeSection="help">
+          <div>Help content</div>
         </AppShell>
       </Provider>,
     );
@@ -270,8 +270,8 @@ describe('AppShell', () => {
     scrollRoot.scrollTop = 212;
     rerender(
       <Provider store={store}>
-        <AppShell activeSection="agents">
-          <div>Updated AI content</div>
+        <AppShell activeSection="help">
+          <div>Updated help content</div>
         </AppShell>
       </Provider>,
     );

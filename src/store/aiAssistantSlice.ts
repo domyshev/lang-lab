@@ -16,7 +16,10 @@ export interface AiAssistantMessage {
   role: 'user' | 'assistant';
   content: string;
   createdAt: string;
+  blockedPreview?: BlockedAiPreview;
   isError?: boolean;
+  operationPreview?: PlannedAiOperation;
+  previewStatus?: 'pending' | 'applied' | 'rejected';
   retryPrompt?: string;
 }
 
@@ -51,12 +54,63 @@ const aiAssistantSlice = createSlice({
       state.blockedPreview = undefined;
       state.operationError = undefined;
     },
+    stageAiOperationMessage(
+      state,
+      action: PayloadAction<{
+        message: AiAssistantMessage;
+        operation: PlannedAiOperation;
+      }>,
+    ) {
+      state.messages.push(action.payload.message);
+      if (state.messages.length > 100) {
+        state.messages.splice(0, state.messages.length - 100);
+      }
+      state.stagedOperation = action.payload.operation;
+      state.blockedPreview = undefined;
+      state.operationError = undefined;
+    },
     stageBlockedAiPreview(state, action: PayloadAction<BlockedAiPreview>) {
       state.blockedPreview = action.payload;
       state.stagedOperation = undefined;
       state.operationError = undefined;
     },
+    stageBlockedAiPreviewMessage(
+      state,
+      action: PayloadAction<{
+        message: AiAssistantMessage;
+        preview: BlockedAiPreview;
+      }>,
+    ) {
+      state.messages.push(action.payload.message);
+      if (state.messages.length > 100) {
+        state.messages.splice(0, state.messages.length - 100);
+      }
+      state.blockedPreview = action.payload.preview;
+      state.stagedOperation = undefined;
+      state.operationError = undefined;
+    },
     cancelStagedAiOperation(state) {
+      if (state.stagedOperation) {
+        const message = state.messages.find(
+          (candidate) =>
+            candidate.operationPreview?.id === state.stagedOperation?.id &&
+            candidate.previewStatus === 'pending',
+        );
+        if (message) {
+          message.previewStatus = 'rejected';
+        }
+      }
+      if (state.blockedPreview) {
+        const message = [...state.messages]
+          .reverse()
+          .find(
+            (candidate) =>
+              candidate.blockedPreview && candidate.previewStatus === 'pending',
+          );
+        if (message) {
+          message.previewStatus = 'rejected';
+        }
+      }
       state.blockedPreview = undefined;
       state.stagedOperation = undefined;
       state.operationError = undefined;
@@ -68,6 +122,13 @@ const aiAssistantSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(applyAiOperation, (state, action) => {
+        const message = state.messages.find(
+          (candidate) =>
+            candidate.operationPreview?.id === action.payload.operation.id,
+        );
+        if (message) {
+          message.previewStatus = 'applied';
+        }
         state.operations.unshift({
           ...action.payload.operation,
           appliedAt: action.payload.appliedAt,
@@ -99,7 +160,9 @@ export const {
   clearAiChat,
   clearAiOperationError,
   stageBlockedAiPreview,
+  stageBlockedAiPreviewMessage,
   stageAiOperation,
+  stageAiOperationMessage,
 } = aiAssistantSlice.actions;
 
 export const aiAssistantReducer = aiAssistantSlice.reducer;

@@ -144,25 +144,34 @@ function createMemoryStorage(): Storage {
 }
 
 describe('AiAssistantView connection', () => {
-  it('loads the built-in trial key masked and selects the default model', () => {
+  it('keeps the model selector visible and moves key controls into settings', async () => {
+    const user = userEvent.setup();
     renderView();
 
-    expect(screen.getByLabelText('OpenRouter API key')).toHaveAttribute('type', 'password');
-    expect(screen.getByLabelText('OpenRouter API key')).toHaveValue(OPENROUTER_TRIAL_KEY);
+    expect(screen.queryByLabelText('OpenRouter API key')).not.toBeInTheDocument();
     expect(
       screen.getByRole('combobox', { name: 'OpenRouter model' }),
     ).toHaveTextContent('GPT-5.5');
     expect(DEFAULT_OPENROUTER_MODEL_ID).toBe('openai/gpt-5.5');
+    await user.click(screen.getByRole('button', { name: 'Connection settings' }));
+
+    expect(screen.getByRole('dialog', { name: 'Connection settings' })).toBeInTheDocument();
+    expect(screen.getByLabelText('OpenRouter API key')).toHaveAttribute('type', 'password');
+    expect(screen.getByLabelText('OpenRouter API key')).toHaveValue(OPENROUTER_TRIAL_KEY);
+    expect(screen.getByText(/built-in application key/i)).toBeInTheDocument();
     expect(screen.getByText(/unencrypted in this browser/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save key' })).toBeDisabled();
   });
 
-  it('shows, saves, deletes, and replaces the key through explicit controls', async () => {
+  it('shows, saves, deletes, restores, and replaces the key through settings', async () => {
     const user = userEvent.setup();
     renderView();
+    await user.click(screen.getByRole('button', { name: 'Connection settings' }));
     const keyInput = screen.getByLabelText('OpenRouter API key');
 
     await user.clear(keyInput);
     await user.type(keyInput, '  sk-new-secret  ');
+    expect(screen.getByRole('button', { name: 'Save key' })).toBeEnabled();
     await user.click(screen.getByRole('button', { name: 'Show API key' }));
     expect(keyInput).toHaveAttribute('type', 'text');
     await user.click(screen.getByRole('button', { name: 'Hide API key' }));
@@ -177,6 +186,11 @@ describe('AiAssistantView connection', () => {
     expect(window.localStorage.getItem(OPENROUTER_KEY_STORAGE_KEY)).toBeNull();
     expect(window.localStorage.getItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY)).toBe('true');
 
+    await user.click(screen.getByRole('button', { name: 'Restore built-in key' }));
+    expect(keyInput).toHaveValue(OPENROUTER_TRIAL_KEY);
+    expect(window.localStorage.getItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY)).toBeNull();
+
+    await user.clear(keyInput);
     await user.type(keyInput, 'sk-replacement');
     await user.click(screen.getByRole('button', { name: 'Save key' }));
     expect(window.localStorage.getItem(OPENROUTER_KEY_STORAGE_KEY)).toBe('sk-replacement');
@@ -206,7 +220,14 @@ describe('AiAssistantView connection', () => {
   it('focuses the key input and skips the service when sending without a key', async () => {
     const user = userEvent.setup();
     renderView();
+    await user.click(screen.getByRole('button', { name: 'Connection settings' }));
     await user.click(screen.getByRole('button', { name: 'Delete key' }));
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: 'Connection settings' }),
+      ).not.toBeInTheDocument(),
+    );
     await user.type(screen.getByLabelText('Message the AI assistant'), 'Help me study');
     await user.click(screen.getByRole('button', { name: 'Send message' }));
 
@@ -314,6 +335,9 @@ describe('AiAssistantView chat', () => {
 
     expect(await screen.findByText('I prepared a safe preview.')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: operation.title })).toBeInTheDocument();
+    expect(screen.getByTestId('ai_chat__messages')).toContainElement(
+      screen.getByTestId('ai_operation_preview__panel'),
+    );
     expect(store.getState().aiAssistant.messages.map(({ role }) => role)).toEqual([
       'user',
       'assistant',
@@ -351,6 +375,9 @@ describe('AiAssistantView chat', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Apply changes' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(screen.getByTestId('ai_chat__messages')).toContainElement(
+      screen.getByTestId('ai_blocked_preview__panel'),
+    );
     expect(store.getState().cards.cards).toEqual([]);
     expect(store.getState().aiAssistant.stagedOperation).toBeUndefined();
     expect(store.getState().aiAssistant.blockedPreview).toBeDefined();
@@ -634,7 +661,19 @@ describe('AiAssistantView operation preview and history', () => {
   it('shows all preview counts and applies exactly once', async () => {
     const user = userEvent.setup();
     const operation = createOperation();
-    const store = renderView({ stagedOperation: operation });
+    const store = renderView({
+      stagedOperation: operation,
+      messages: [
+        {
+          id: 'operation-preview-message',
+          role: 'assistant',
+          content: 'Review this operation.',
+          createdAt: now,
+          operationPreview: operation,
+          previewStatus: 'pending',
+        },
+      ],
+    });
     const preview = screen.getByTestId('ai_operation_preview__panel');
 
     for (const count of [1, 2, 3, 4, 5, 6, 7]) {
@@ -644,6 +683,8 @@ describe('AiAssistantView operation preview and history', () => {
     expect(store.getState().aiAssistant.operations).toHaveLength(1);
     expect(store.getState().cards.cards).toHaveLength(1);
     expect(store.getState().aiAssistant.stagedOperation).toBeUndefined();
+    expect(within(preview).getByRole('button', { name: 'Apply changes' })).toBeDisabled();
+    expect(within(preview).getByRole('button', { name: 'Cancel preview' })).toBeDisabled();
   });
 
   it('cancels a preview and disables apply for a blocking operation error', async () => {

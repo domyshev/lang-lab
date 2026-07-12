@@ -16,6 +16,9 @@ import {
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
 import { AiAssistantMessage } from '../../store/aiAssistantSlice';
+import { PlannedAiOperation } from '../../domain/aiOperations';
+import { AiBlockedOperationPreview } from './AiBlockedOperationPreview';
+import { AiOperationPreview } from './AiOperationPreview';
 
 interface AiChatPanelProps {
   draft: string;
@@ -24,9 +27,12 @@ interface AiChatPanelProps {
   messages: AiAssistantMessage[];
   onCancel: () => void;
   onClear: () => void;
+  onApplyOperation: (operation: PlannedAiOperation) => void;
+  onCancelPreview: () => void;
   onDraftChange: (value: string) => void;
   onRetry: (prompt: string) => void;
   onSend: () => void;
+  operationError?: string;
 }
 
 export function AiChatPanel({
@@ -34,11 +40,14 @@ export function AiChatPanel({
   isThinking,
   language,
   messages,
+  onApplyOperation,
   onCancel,
+  onCancelPreview,
   onClear,
   onDraftChange,
   onRetry,
   onSend,
+  operationError,
 }: AiChatPanelProps) {
   const suggestions = [
     ['create_set', t(language, 'aiSuggestionCreateSet')],
@@ -50,7 +59,12 @@ export function AiChatPanel({
     <Paper
       data-test="ai_chat__panel"
       variant="outlined"
-      sx={{ display: 'flex', minHeight: { xs: 430, md: 560 }, p: { xs: 1.5, sm: 2 } }}
+      sx={{
+        display: 'flex',
+        height: { xs: 430, md: 560 },
+        minHeight: 0,
+        p: { xs: 1.5, sm: 2 },
+      }}
     >
       <Stack data-test="ai_chat__content" spacing={1.5} sx={{ minWidth: 0, width: '100%' }}>
         <Stack
@@ -125,9 +139,35 @@ export function AiChatPanel({
                 py: 1,
               }}
             >
-              <Typography data-test={`ai_chat__message_text__${message.id}`} whiteSpace="pre-wrap">
-                {message.content}
-              </Typography>
+              {message.content && (
+                <Typography data-test={`ai_chat__message_text__${message.id}`} whiteSpace="pre-wrap">
+                  {message.content}
+                </Typography>
+              )}
+              {message.operationPreview && (
+                <Box sx={{ mt: message.content ? 1 : 0 }}>
+                  <AiOperationPreview
+                    blockingError={
+                      message.previewStatus === 'pending' ? operationError : undefined
+                    }
+                    language={language}
+                    onApply={() => onApplyOperation(message.operationPreview!)}
+                    onCancel={onCancelPreview}
+                    operation={message.operationPreview}
+                    status={message.previewStatus ?? 'pending'}
+                  />
+                </Box>
+              )}
+              {message.blockedPreview && (
+                <Box sx={{ mt: message.content ? 1 : 0 }}>
+                  <AiBlockedOperationPreview
+                    language={language}
+                    onCancel={onCancelPreview}
+                    preview={message.blockedPreview}
+                    status={message.previewStatus ?? 'pending'}
+                  />
+                </Box>
+              )}
               {message.retryPrompt && (
                 <Button
                   data-test={`ai_chat__retry_button__${message.id}`}

@@ -19,6 +19,7 @@ interface AiOperationPreviewProps {
   onApply: () => void;
   onCancel: () => void;
   operation: PlannedAiOperation;
+  status?: 'pending' | 'applied' | 'rejected';
 }
 
 export function AiOperationPreview({
@@ -27,7 +28,10 @@ export function AiOperationPreview({
   onApply,
   onCancel,
   operation,
+  status = 'pending',
 }: AiOperationPreviewProps) {
+  const isPending = status === 'pending';
+
   return (
     <Box
       data-test="ai_operation_preview__panel"
@@ -75,7 +79,7 @@ export function AiOperationPreview({
         <Stack data-test="ai_operation_preview__actions" direction="row" spacing={1}>
           <Button
             data-test="ai_operation_preview__apply_button"
-            disabled={Boolean(blockingError)}
+            disabled={!isPending || Boolean(blockingError)}
             onClick={onApply}
             variant="contained"
           >
@@ -83,6 +87,7 @@ export function AiOperationPreview({
           </Button>
           <Button
             data-test="ai_operation_preview__cancel_button"
+            disabled={!isPending}
             onClick={onCancel}
             variant="outlined"
           >

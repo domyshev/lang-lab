@@ -210,8 +210,10 @@ export function App() {
     useState<CrosswordDraftState>(emptyCrosswordDraftState);
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
   const [finishDialogIntent, setFinishDialogIntent] = useState<
-    'finish' | 'home' | null
+    'finish' | 'home' | 'navigate' | null
   >(null);
+  const [finishDialogTargetSection, setFinishDialogTargetSection] =
+    useState<AppShellSection | null>(null);
   const [profileAssistantId, setProfileAssistantId] =
     useState<AssistantId | null>(null);
 
@@ -538,16 +540,18 @@ export function App() {
     setGenerationSeed((seed) => seed + 1);
   }
 
-  function openFinishDialog(intent: 'finish' | 'home') {
+  function openFinishDialog(
+    intent: 'finish' | 'home' | 'navigate',
+    targetSection?: AppShellSection,
+  ) {
     if (selectedExerciseType === 'crossword' && isExerciseStarted) {
       if (crosswordDraftState.filledEntryCount === 0) {
         resetExerciseState();
-        if (intent === 'home') {
-          setActiveSection('game');
-        }
+        navigateAfterExerciseReset(intent, targetSection);
         return;
       }
 
+      setFinishDialogTargetSection(targetSection ?? null);
       setFinishDialogIntent(intent);
       setIsFinishDialogOpen(true);
       return;
@@ -555,23 +559,42 @@ export function App() {
 
     if (currentExerciseAnsweredCount === 0 && !hasCurrentExerciseResult) {
       resetExerciseState();
-      if (intent === 'home') {
-        setActiveSection('game');
-      }
+      navigateAfterExerciseReset(intent, targetSection);
       return;
     }
 
+    setFinishDialogTargetSection(targetSection ?? null);
     setFinishDialogIntent(intent);
     setIsFinishDialogOpen(true);
   }
 
+  function navigateAfterExerciseReset(
+    intent: 'finish' | 'home' | 'navigate',
+    targetSection?: AppShellSection,
+  ) {
+    if (intent === 'home') {
+      setProfileAssistantId(null);
+      setActiveSection('game');
+      return;
+    }
+
+    if (intent === 'navigate' && targetSection) {
+      if (targetSection !== 'assistant') {
+        setProfileAssistantId(null);
+      }
+      setActiveSection(targetSection);
+    }
+  }
+
   function handleFinishDialogCancel() {
     setFinishDialogIntent(null);
+    setFinishDialogTargetSection(null);
     setIsFinishDialogOpen(false);
   }
 
   function handleFinishDialogConfirm() {
-    const shouldGoHome = finishDialogIntent === 'home';
+    const targetSection = finishDialogTargetSection;
+    const intent = finishDialogIntent;
     if (
       selectedExerciseType === 'crossword' &&
       currentExerciseAnsweredCount === 0 &&
@@ -582,15 +605,15 @@ export function App() {
     }
 
     setFinishDialogIntent(null);
+    setFinishDialogTargetSection(null);
     setIsFinishDialogOpen(false);
     resetExerciseState();
-    if (shouldGoHome) {
-      setActiveSection('game');
-    }
+    navigateAfterExerciseReset(intent ?? 'finish', targetSection ?? undefined);
   }
 
   function handleFinishDialogForget() {
-    const shouldGoHome = finishDialogIntent === 'home';
+    const targetSection = finishDialogTargetSection;
+    const intent = finishDialogIntent;
     const remainingAttempts = attempts.filter(
       (attempt) => attempt.exerciseSessionId !== currentExerciseSessionId,
     );
@@ -598,11 +621,10 @@ export function App() {
     dispatch(forgetExerciseSession(currentExerciseSessionId));
     dispatch(rebuildStatsFromAttempts(remainingAttempts));
     setFinishDialogIntent(null);
+    setFinishDialogTargetSection(null);
     setIsFinishDialogOpen(false);
     resetExerciseState();
-    if (shouldGoHome) {
-      setActiveSection('game');
-    }
+    navigateAfterExerciseReset(intent ?? 'finish', targetSection ?? undefined);
   }
 
   function handleLogoClick() {
@@ -616,12 +638,18 @@ export function App() {
   }
 
   function handleNavigate(section: AppShellSection) {
-    if (section === 'game') {
-      setProfileAssistantId(null);
-      if (isExerciseStarted) {
+    if (isExerciseStarted) {
+      if (section === 'game') {
+        setProfileAssistantId(null);
         openFinishDialog('home');
         return;
       }
+      openFinishDialog('navigate', section);
+      return;
+    }
+
+    if (section === 'game') {
+      setProfileAssistantId(null);
       setActiveSection('game');
       return;
     }
@@ -635,6 +663,28 @@ export function App() {
   function openAssistantProfile(assistantId: AssistantId) {
     setProfileAssistantId(assistantId);
     setActiveSection('assistant');
+  }
+
+  function openGameAiAssistant() {
+    setProfileAssistantId(null);
+    setActiveSection('game');
+    const scrollRoot = document.querySelector<HTMLElement>(
+      '[data-test="app_shell__root"]',
+    );
+    if (scrollRoot) {
+      scrollRoot.scrollTop = 0;
+    }
+    window.requestAnimationFrame(() => {
+      const nextScrollRoot = document.querySelector<HTMLElement>(
+        '[data-test="app_shell__root"]',
+      );
+      if (nextScrollRoot) {
+        nextScrollRoot.scrollTop = 0;
+      }
+      document
+        .querySelector<HTMLElement>('[data-test="game_ai_assistant__section"]')
+        ?.scrollIntoView?.({ block: 'start' });
+    });
   }
 
   function savePromptAttempt(
@@ -924,10 +974,16 @@ export function App() {
       );
     }
 
-    if (activeSection === 'agents') {
+    if (activeSection === 'help') {
       return (
-        <Box data-test="app__agents_section">
-          <AiAssistantView />
+        <Box data-test="app__help_section">
+          <GameHelpPanel
+            hasCoachmarkBeenShown={hasGameHelpCoachmarkBeenShown}
+            interfaceLanguage={interfaceLanguage}
+            isInitiallyCollapsed={isGameHelpCollapsed}
+            onAcknowledge={() => dispatch(acknowledgeGameHelp())}
+            onCoachmarkShown={() => dispatch(markGameHelpCoachmarkShown())}
+          />
         </Box>
       );
     }
@@ -939,12 +995,10 @@ export function App() {
     if (!isExerciseStarted) {
       return (
         <Stack data-test="app__game_setup_section" style={{ gap: 12 }}>
-          <GameHelpPanel
-            hasCoachmarkBeenShown={hasGameHelpCoachmarkBeenShown}
-            interfaceLanguage={interfaceLanguage}
-            isInitiallyCollapsed={isGameHelpCollapsed}
-            onAcknowledge={() => dispatch(acknowledgeGameHelp())}
-            onCoachmarkShown={() => dispatch(markGameHelpCoachmarkShown())}
+          <AiAssistantView
+            dataTest="game_ai_assistant__section"
+            embedded
+            showManualImport={false}
           />
           <GameSetup />
         </Stack>
@@ -1142,7 +1196,7 @@ export function App() {
             cards={cards}
             cardSets={visibleCardSets}
             interfaceLanguage={interfaceLanguage}
-            onOpenAiAssistant={() => setActiveSection('agents')}
+            onOpenAiAssistant={openGameAiAssistant}
             onSelect={handleCardSetChange}
             selectedCardSetId={currentCardSetId}
             targetLanguage={targetLanguage}

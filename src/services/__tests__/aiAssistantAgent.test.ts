@@ -98,6 +98,13 @@ describe('runAiAssistant', () => {
     expect(first.messages[0].content).toContain(languageCardSkill);
     expect(first.messages[0].content).toContain('limited authority');
     expect(first.messages[0].content).toContain('never dispatch');
+    expect(first.messages[0].content).toContain(
+      'Current selected model id: deepseek/deepseek-v4-flash',
+    );
+    expect(first.messages[0].content).toContain('Current effort: default');
+    expect(first.messages[0].content).toContain(
+      'You may answer questions about your current model id and effort',
+    );
 
     const second = sendChatMock.mock.calls[1][0];
     expect(second.tools).toBe(aiAssistantToolDefinitions);
