@@ -74,7 +74,7 @@ describe('openRouterKeyStorage', () => {
   it('loads and stores only supported OpenRouter model ids', () => {
     const storage = createMemoryStorage();
 
-    expect(DEFAULT_OPENROUTER_MODEL_ID).toBe('openai/gpt-5.5');
+    expect(DEFAULT_OPENROUTER_MODEL_ID).toBe('deepseek/deepseek-v4-flash');
     expect(OPENROUTER_AVAILABLE_MODELS.map(({ id }) => id)).toEqual([
       'openai/gpt-5.5',
       'deepseek/deepseek-v4-flash',

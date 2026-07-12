@@ -76,6 +76,8 @@ function createAppliedOperation(
 
 function renderView({
   language = 'en',
+  embedded = false,
+  showManualImport = true,
   messages = [],
   operations = [],
   cards,
@@ -84,6 +86,8 @@ function renderView({
   operationError,
 }: {
   language?: SupportedLanguage;
+  embedded?: boolean;
+  showManualImport?: boolean;
   messages?: ReturnType<typeof rootReducer>['aiAssistant']['messages'];
   operations?: AppliedAiOperation[];
   cards?: ReturnType<typeof rootReducer>['cards']['cards'];
@@ -113,7 +117,7 @@ function renderView({
 
   render(
     <Provider store={store}>
-      <AiAssistantView />
+      <AiAssistantView embedded={embedded} showManualImport={showManualImport} />
     </Provider>,
   );
 
@@ -144,16 +148,35 @@ function createMemoryStorage(): Storage {
 }
 
 describe('AiAssistantView connection', () => {
-  it('keeps the model selector visible and moves key controls into settings', async () => {
+  it('keeps the compact model selector in the chat header and moves key controls into the model menu settings', async () => {
     const user = userEvent.setup();
     renderView();
 
     expect(screen.queryByLabelText('OpenRouter API key')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Connection' })).not.toBeInTheDocument();
+    const chatSummary = screen.getByTestId('ai_assistant__chat_summary');
     expect(
-      screen.getByRole('combobox', { name: 'OpenRouter model' }),
-    ).toHaveTextContent('GPT-5.5');
-    expect(DEFAULT_OPENROUTER_MODEL_ID).toBe('openai/gpt-5.5');
-    await user.click(screen.getByRole('button', { name: 'Connection settings' }));
+      within(chatSummary).getByRole('combobox', { name: 'OpenRouter model' }),
+    ).toHaveTextContent('DeepSeek V4 Flash');
+    expect(screen.getByTestId('ai_connection__model_control')).toHaveStyle({
+      minWidth: '176px',
+    });
+    expect(screen.getByTestId('ai_assistant__chat_summary_actions')).toHaveStyle({
+      marginRight: '20px',
+    });
+    expect(screen.getByTestId('ai_assistant__operation_history_button')).toHaveStyle({
+      color: 'rgba(91, 76, 115, 0.82)',
+      height: '29px',
+      width: '29px',
+    });
+    expect(screen.getByTestId('ai_chat__clear_button')).toHaveStyle({
+      color: 'rgba(91, 76, 115, 0.42)',
+      height: '29px',
+      width: '29px',
+    });
+    expect(DEFAULT_OPENROUTER_MODEL_ID).toBe('deepseek/deepseek-v4-flash');
+    await user.click(within(chatSummary).getByLabelText('OpenRouter model'));
+    await user.click(screen.getByRole('option', { name: 'Connection settings' }));
 
     expect(screen.getByRole('dialog', { name: 'Connection settings' })).toBeInTheDocument();
     expect(screen.getByLabelText('OpenRouter API key')).toHaveAttribute('type', 'password');
@@ -163,10 +186,52 @@ describe('AiAssistantView connection', () => {
     expect(screen.getByRole('button', { name: 'Save key' })).toBeDisabled();
   });
 
+  it('locks GPT behind a custom key when the built-in key is selected', async () => {
+    const user = userEvent.setup();
+    renderView({ language: 'ru' });
+
+    await user.click(screen.getByLabelText('Модель OpenRouter'));
+
+    const gptOption = screen.getByRole('option', { name: 'GPT-5.5' });
+    expect(gptOption).toHaveAttribute('aria-disabled', 'true');
+    expect(gptOption).toHaveStyle({ opacity: '0.46' });
+
+    await user.hover(
+      screen.getByTestId('ai_connection__model_option__openai/gpt-5.5__locked_content'),
+    );
+
+    const tooltip = await screen.findByTestId('ai_connection__locked_model_tooltip');
+    expect(tooltip).toHaveTextContent(
+      'Введите свой ключ OpenRouter, чтобы открыть эту модель.',
+    );
+    expect(tooltip).toHaveStyle({
+      backgroundColor: 'rgba(255, 255, 255, 0.98)',
+      fontSize: '14px',
+    });
+  });
+
+  it('allows GPT when a custom key is selected', async () => {
+    const user = userEvent.setup();
+    saveOpenRouterKey('sk-custom');
+    renderView();
+
+    await user.click(screen.getByLabelText('OpenRouter model'));
+
+    const gptOption = screen.getByRole('option', { name: 'GPT-5.5' });
+    expect(gptOption).not.toHaveAttribute('aria-disabled', 'true');
+    await user.click(gptOption);
+
+    expect(screen.getByLabelText('OpenRouter model')).toHaveTextContent('GPT-5.5');
+    expect(window.localStorage.getItem(OPENROUTER_MODEL_STORAGE_KEY)).toBe(
+      'openai/gpt-5.5',
+    );
+  });
+
   it('shows, saves, deletes, restores, and replaces the key through settings', async () => {
     const user = userEvent.setup();
     renderView();
-    await user.click(screen.getByRole('button', { name: 'Connection settings' }));
+    await user.click(screen.getByLabelText('OpenRouter model'));
+    await user.click(screen.getByRole('option', { name: 'Connection settings' }));
     const keyInput = screen.getByLabelText('OpenRouter API key');
 
     await user.clear(keyInput);
@@ -199,28 +264,30 @@ describe('AiAssistantView connection', () => {
 
   it('persists the selected model and passes it to the assistant service', async () => {
     const user = userEvent.setup();
+    saveOpenRouterKey('sk-custom');
     mockedRunAiAssistant.mockResolvedValue({ ok: true, content: 'Ready.' });
     renderView();
 
     await user.click(screen.getByLabelText('OpenRouter model'));
-    await user.click(screen.getByRole('option', { name: 'DeepSeek V4 Flash' }));
+    await user.click(screen.getByRole('option', { name: 'GPT-5.5' }));
     expect(window.localStorage.getItem(OPENROUTER_MODEL_STORAGE_KEY)).toBe(
-      'deepseek/deepseek-v4-flash',
+      'openai/gpt-5.5',
     );
 
     await user.type(screen.getByLabelText('Message the AI assistant'), 'Analyze my cards');
     await user.click(screen.getByRole('button', { name: 'Send message' }));
 
     expect(mockedRunAiAssistant.mock.calls[0][0]).toMatchObject({
-      apiKey: OPENROUTER_TRIAL_KEY,
-      modelId: 'deepseek/deepseek-v4-flash',
+      apiKey: 'sk-custom',
+      modelId: 'openai/gpt-5.5',
     });
   });
 
   it('focuses the key input and skips the service when sending without a key', async () => {
     const user = userEvent.setup();
     renderView();
-    await user.click(screen.getByRole('button', { name: 'Connection settings' }));
+    await user.click(screen.getByLabelText('OpenRouter model'));
+    await user.click(screen.getByRole('option', { name: 'Connection settings' }));
     await user.click(screen.getByRole('button', { name: 'Delete key' }));
     await user.click(screen.getByRole('button', { name: 'Close' }));
     await waitFor(() =>
@@ -237,6 +304,66 @@ describe('AiAssistantView connection', () => {
 });
 
 describe('AiAssistantView chat', () => {
+  it.each([
+    ['Meta+Enter', '{Meta>}{Enter}{/Meta}'],
+    ['Control+Enter', '{Control>}{Enter}{/Control}'],
+  ])('sends the composer with %s', async (_, shortcut) => {
+    const user = userEvent.setup();
+    saveOpenRouterKey('sk-test');
+    mockedRunAiAssistant.mockResolvedValue({ ok: true, content: 'Shortcut accepted.' });
+    renderView();
+
+    await user.type(
+      screen.getByLabelText('Message the AI assistant'),
+      'Create a shortcut card set',
+    );
+    await user.keyboard(shortcut);
+
+    await waitFor(() => expect(mockedRunAiAssistant).toHaveBeenCalledOnce());
+    expect(mockedRunAiAssistant.mock.calls[0][0].userMessage).toBe(
+      'Create a shortcut card set',
+    );
+  });
+
+  it('keeps plain Enter as composer input without sending', async () => {
+    const user = userEvent.setup();
+    saveOpenRouterKey('sk-test');
+    mockedRunAiAssistant.mockResolvedValue({ ok: true, content: 'Unexpected.' });
+    renderView();
+
+    const composer = screen.getByLabelText('Message the AI assistant');
+    await user.type(composer, 'First line');
+    await user.keyboard('{Enter}');
+
+    expect(mockedRunAiAssistant).not.toHaveBeenCalled();
+    expect(composer).toHaveValue('First line\n');
+  });
+
+  it('shows a shortcut tooltip and glam AI styling on the send button', async () => {
+    const user = userEvent.setup();
+    renderView({ language: 'ru' });
+
+    await user.type(screen.getByLabelText('Сообщение AI-ассистенту'), 'Привет');
+    const sendButton = screen.getByRole('button', { name: 'Отправить сообщение' });
+
+    expect(sendButton).toHaveStyle({
+      background:
+        'linear-gradient(135deg, rgba(126, 87, 194, 0.96) 0%, rgba(190, 132, 255, 0.9) 46%, rgba(255, 203, 112, 0.96) 100%)',
+      color: '#fffdf7',
+    });
+
+    await user.hover(sendButton);
+
+    const tooltip = await screen.findByTestId('ai_chat__send_tooltip');
+    expect(tooltip).toHaveTextContent('Отправить сообщение');
+    expect(tooltip).toHaveTextContent('⌘ Enter');
+    expect(tooltip).toHaveTextContent('Ctrl Enter');
+    expect(tooltip).toHaveStyle({
+      backgroundColor: 'rgba(255, 255, 255, 0.98)',
+      fontSize: '14px',
+    });
+  });
+
   it.each([
     [
       'en' as const,
@@ -294,6 +421,68 @@ describe('AiAssistantView chat', () => {
       }
     },
   );
+
+  it('scrolls the chat to the newest message on mount and after new messages arrive', async () => {
+    let currentScrollHeight = 640;
+    const scrollHeightDescriptor = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      'scrollHeight',
+    );
+    Object.defineProperty(HTMLElement.prototype, 'scrollHeight', {
+      configurable: true,
+      get() {
+        return this.getAttribute('data-test') === 'ai_chat__messages'
+          ? currentScrollHeight
+          : 0;
+      },
+    });
+
+    try {
+      const store = renderView({
+        messages: [
+          {
+            id: 'message-older',
+            role: 'user',
+            content: 'Create a card set from these words.',
+            createdAt: now,
+          },
+          {
+            id: 'message-latest',
+            role: 'assistant',
+            content: 'I prepared the newest card set preview.',
+            createdAt: now,
+          },
+        ],
+      });
+      const messagesContainer = screen.getByTestId('ai_chat__messages');
+
+      await waitFor(() => expect(messagesContainer.scrollTop).toBe(640));
+
+      currentScrollHeight = 1280;
+      act(() => {
+        store.dispatch(
+          appendAiMessage({
+            id: 'message-newest',
+            role: 'assistant',
+            content: 'One more line arrived at the bottom.',
+            createdAt: now,
+          }),
+        );
+      });
+
+      await waitFor(() => expect(messagesContainer.scrollTop).toBe(1280));
+    } finally {
+      if (scrollHeightDescriptor) {
+        Object.defineProperty(
+          HTMLElement.prototype,
+          'scrollHeight',
+          scrollHeightDescriptor,
+        );
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, 'scrollHeight');
+      }
+    }
+  });
 
   it('sends, shows thinking, and cancels with the request signal', async () => {
     const user = userEvent.setup();
@@ -546,7 +735,7 @@ describe('AiAssistantView chat', () => {
     expect(document.body).not.toHaveTextContent('raw cancellation detail');
   });
 
-  it('clears messages without clearing operation history', async () => {
+  it('confirms before clearing messages without clearing operation history', async () => {
     const user = userEvent.setup();
     const store = renderView({
       messages: [
@@ -558,9 +747,29 @@ describe('AiAssistantView chat', () => {
     });
 
     await user.click(screen.getByRole('button', { name: 'Clear chat' }));
+    const confirmDialog = screen.getByRole('dialog', { name: 'Erase chat?' });
+    expect(confirmDialog).toHaveTextContent(
+      'This will erase the visible chat messages. Operation history will stay available.',
+    );
+    expect(screen.getByText('Old prompt')).toBeInTheDocument();
+    expect(store.getState().aiAssistant.messages).toHaveLength(2);
+
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Erase chat?' })).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText('Old prompt')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Clear chat' }));
+    await user.click(screen.getByRole('button', { name: 'Erase' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Erase chat?' })).not.toBeInTheDocument(),
+    );
+
     expect(screen.queryByText('Old prompt')).not.toBeInTheDocument();
     expect(store.getState().aiAssistant.messages).toEqual([]);
     expect(store.getState().aiAssistant.operations).toHaveLength(1);
+    await openOperationHistory(user);
     expect(screen.getByText('Travel vocabulary')).toBeInTheDocument();
   });
 
@@ -592,6 +801,11 @@ describe('AiAssistantView chat', () => {
       const request = mockedRunAiAssistant.mock.calls[0][0];
 
       await user.click(screen.getByRole('button', { name: 'Clear chat' }));
+      expect(request.signal?.aborted).toBe(false);
+      await user.click(screen.getByRole('button', { name: 'Erase' }));
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog', { name: 'Erase chat?' })).not.toBeInTheDocument(),
+      );
       expect(request.signal?.aborted).toBe(true);
       expect(screen.queryByText('Thinking...')).not.toBeInTheDocument();
 
@@ -607,6 +821,7 @@ describe('AiAssistantView chat', () => {
       expect(store.getState().aiAssistant.messages).toEqual([]);
       expect(screen.queryByText('Late response')).not.toBeInTheDocument();
       expect(store.getState().aiAssistant.operations).toHaveLength(1);
+      await openOperationHistory(user);
       expect(screen.getByText('Travel vocabulary')).toBeInTheDocument();
     },
   );
@@ -709,6 +924,7 @@ describe('AiAssistantView operation preview and history', () => {
       operations: [newer, older],
       cards: [...older.createdCards, ...newer.createdCards],
     });
+    await openOperationHistory(user);
     const items = screen.getAllByTestId(/ai_operation_history__item__/);
     expect(within(items[0]).getByText('Travel vocabulary')).toBeInTheDocument();
     expect(items[0]).toHaveAttribute('data-test', 'ai_operation_history__item__newer');
@@ -741,6 +957,7 @@ describe('AiAssistantView operation preview and history', () => {
       operations: [newer, older],
       cards: [changedCard],
     });
+    await openOperationHistory(user);
     const olderItem = screen.getByTestId('ai_operation_history__item__older');
 
     await user.click(
@@ -760,11 +977,13 @@ describe('AiAssistantView operation preview and history', () => {
     ).toBe('applied');
   });
 
-  it('shows a localized reducer operation error in history without a preview', () => {
+  it('shows a localized reducer operation error in history without a preview', async () => {
+    const user = userEvent.setup();
     renderView({
       language: 'ru',
       operationError: 'The requested AI operation was not found.',
     });
+    await openOperationHistory(user, 'История операций');
 
     expect(
       screen.getByTestId('ai_operation_history__operation_error'),
@@ -785,6 +1004,7 @@ describe('AiAssistantView operation preview and history', () => {
       operations: [operation],
       cards: [changedCard],
     });
+    await openOperationHistory(user, 'История операций');
 
     await user.click(screen.getByRole('button', { name: 'Отменить изменения' }));
     expect(await screen.findByRole('dialog', { name: 'Нельзя отменить изменения' })).toBeInTheDocument();
@@ -795,16 +1015,46 @@ describe('AiAssistantView operation preview and history', () => {
 
 describe('AiAssistantView localization and manual import', () => {
   it.each([
-    ['en', 'AI Assistant', 'Connection', 'Chat', 'Operation history', 'Manual card import'],
-    ['ru', 'AI помощник', 'Подключение', 'Чат', 'История операций', 'Ручной импорт карточек'],
-    ['es', 'Asistente IA', 'Conexion', 'Chat', 'Historial de operaciones', 'Importacion manual de tarjetas'],
-  ] as const)('localizes the visible workspace in %s', (language, title, connection, chat, history, manual) => {
+    ['en', 'AI Assistant', 'Chat', 'Operation history', 'Manual card import'],
+    ['ru', 'AI помощник', 'Чат', 'История операций', 'Ручной импорт карточек'],
+    ['es', 'Asistente IA', 'Chat', 'Historial de operaciones', 'Importacion manual de tarjetas'],
+  ] as const)('localizes the visible workspace in %s', (language, title, chat, history, manual) => {
     renderView({ language });
     expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: connection })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: chat })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: history })).toBeInTheDocument();
+    expect(screen.queryByTestId('ai_connection__panel')).not.toBeInTheDocument();
+    expect(screen.getByTestId('ai_assistant__chat_accordion')).toHaveTextContent(chat);
+    expect(screen.getByRole('button', { name: history })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: manual })).toBeInTheDocument();
+  });
+
+  it('renders embedded chat as a fixed-height accordion and opens operation history in a modal', async () => {
+    const user = userEvent.setup();
+    const operation = createAppliedOperation();
+    renderView({
+      embedded: true,
+      showManualImport: false,
+      operations: [operation],
+    });
+
+    expect(screen.getByTestId('ai_assistant__page')).toHaveStyle({
+      maxWidth: '760px',
+      width: '100%',
+    });
+    expect(screen.getByTestId('ai_assistant__chat_accordion')).toBeInTheDocument();
+    expect(screen.getByTestId('ai_chat__panel')).toHaveStyle({ height: '400px' });
+    expect(screen.getByTestId('ai_chat__composer')).toHaveStyle({ alignItems: 'center' });
+    expect(
+      screen.queryByRole('heading', { name: 'Operation history' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Operation history' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Operation history' });
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByTestId('ai_operation_history__scroll_area')).toHaveStyle({
+      overflowY: 'auto',
+    });
+    expect(within(dialog).getByText('Travel vocabulary')).toBeInTheDocument();
   });
 
   it('keeps manual file import functional below the assistant tools', async () => {
@@ -819,3 +1069,10 @@ describe('AiAssistantView localization and manual import', () => {
     expect(screen.getByText('Added: 1')).toBeInTheDocument();
   });
 });
+
+async function openOperationHistory(
+  user: ReturnType<typeof userEvent.setup>,
+  label = 'Operation history',
+) {
+  await user.click(screen.getByRole('button', { name: label }));
+}

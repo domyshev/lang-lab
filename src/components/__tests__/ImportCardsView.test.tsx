@@ -34,9 +34,9 @@ describe('ImportCardsView compatibility wrapper', () => {
     renderImportCardsView('ru');
 
     expect(screen.getByRole('heading', { name: 'AI помощник' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Подключение' })).toBeInTheDocument();
+    expect(screen.queryByTestId('ai_connection__panel')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Чат' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'История операций' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'История операций' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Ручной импорт карточек' })).toBeInTheDocument();
     expect(screen.queryByText(/триальн/i)).not.toBeInTheDocument();
   });

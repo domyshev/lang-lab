@@ -741,7 +741,6 @@ describe('App navigation', () => {
       gamesTab: 'Games',
       title: 'AI Assistant',
       wandLabel: 'Open AI Assistant',
-      connectionTitle: 'Connection',
       chatTitle: 'Chat',
       historyTitle: 'Operation history',
       importTitle: 'Manual card import',
@@ -751,7 +750,6 @@ describe('App navigation', () => {
       gamesTab: 'Игры',
       title: 'AI помощник',
       wandLabel: 'Открыть AI помощника',
-      connectionTitle: 'Подключение',
       chatTitle: 'Чат',
       historyTitle: 'История операций',
       importTitle: 'Ручной импорт карточек',
@@ -761,16 +759,14 @@ describe('App navigation', () => {
       gamesTab: 'Juegos',
       title: 'Asistente IA',
       wandLabel: 'Abrir Asistente IA',
-      connectionTitle: 'Conexion',
       chatTitle: 'Chat',
       historyTitle: 'Historial de operaciones',
       importTitle: 'Importacion manual de tarjetas',
     },
-  ])('opens the embedded AI Assistant from the card-set library wand in $interfaceLanguage', async ({
+  ])('opens the embedded AI Assistant from the library wands in $interfaceLanguage', async ({
     interfaceLanguage,
     title,
     wandLabel,
-    connectionTitle,
     chatTitle,
     historyTitle,
     importTitle,
@@ -782,28 +778,48 @@ describe('App navigation', () => {
 
     expect(screen.queryByRole('tab', { name: title })).not.toBeInTheDocument();
     expect(screen.getByTestId('game_ai_assistant__section')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: connectionTitle })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: chatTitle })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: historyTitle })).toBeInTheDocument();
-    expect(screen.getByText('GPT-5.5')).toBeInTheDocument();
+    expect(screen.queryByTestId('ai_connection__panel')).not.toBeInTheDocument();
+    expect(screen.getByTestId('ai_assistant__chat_accordion')).toHaveTextContent(chatTitle);
+    expect(screen.getByRole('button', { name: historyTitle })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: historyTitle }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('DeepSeek V4 Flash')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: importTitle })).not.toBeInTheDocument();
     expect(screen.queryByText(/trial|триальн|prueba/i)).not.toBeInTheDocument();
 
+    const chatSummary = screen.getByTestId('ai_assistant__chat_summary');
+    const gameLibraryWand = screen.getByTestId('game_library__ai_assistant_button');
+    const cardSetLibraryWand = screen.getByTestId('card_set_library__ai_assistant_button');
+    expect(gameLibraryWand).toHaveAttribute('aria-label', wandLabel);
+    expect(cardSetLibraryWand).toHaveAttribute('aria-label', wandLabel);
+
+    await user.click(chatSummary);
+    expect(chatSummary).toHaveAttribute('aria-expanded', 'false');
     scrollRoot.scrollTop = 336.5;
-    await user.click(screen.getByRole('button', { name: wandLabel }));
+    await user.click(gameLibraryWand);
 
     expect(scrollRoot.scrollTop).toBe(0);
+    expect(chatSummary).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(chatSummary);
+    expect(chatSummary).toHaveAttribute('aria-expanded', 'false');
+    scrollRoot.scrollTop = 336.5;
+    await user.click(screen.getByTestId('card_set_library__ai_assistant_button'));
+
+    expect(scrollRoot.scrollTop).toBe(0);
+    expect(chatSummary).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByTestId('game_ai_assistant__section')).toBeInTheDocument();
   });
 
-  it('shows the old game help on the dedicated icon-only Help tab', async () => {
+  it('shows fixed help slides on the dedicated icon-only Help tab', async () => {
     const user = userEvent.setup();
     const store = renderApp();
 
-    expect(screen.queryByRole('button', { name: /Помощь/ })).not.toBeInTheDocument();
     await user.click(screen.getByTestId('app_shell__tab__help'));
 
-    expect(screen.getByRole('button', { name: /Помощь/ })).toBeInTheDocument();
+    expect(screen.queryByTestId('game_help__accordion')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Помощь' })).toBeInTheDocument();
     expect(
       screen.getByText(/лаборатория изучения языков/i),
     ).toBeInTheDocument();
@@ -822,42 +838,26 @@ describe('App navigation', () => {
 
     await user.click(screen.getByRole('button', { name: 'Понятно!' }));
 
-    expect(screen.getByRole('button', { name: /Помощь/ })).toBeInTheDocument();
     expect(screen.queryByText(/лаборатория изучения языков/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId('game_help__chat_slide')).toHaveTextContent(
+      /чат AI-помощника/i,
+    );
+    expect(screen.getByTestId('game_help__chat_slide')).toHaveTextContent(
+      /создавать наборы карточек/i,
+    );
     expect(store.getState().app.isGameHelpCollapsed).toBe(true);
-    expect(store.getState().app.hasGameHelpCoachmarkBeenShown).toBe(true);
-    expect(screen.getByTestId('game_help__coachmark_icon')).toBeInTheDocument();
-    expect(
-      screen.getByTestId('game_help__coachmark_item__return'),
-    ).toHaveTextContent(/всегда можно вернуться/i);
-    expect(
-      screen.getByTestId('game_help__coachmark_item__smart'),
-    ).toHaveTextContent(/помощь умная/i);
-    expect(
-      screen.queryByTestId('game_help__coachmark_body'),
-    ).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Хорошо' }));
-    expect(screen.queryByText(/всегда можно вернуться/i)).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: /Помощь/ }));
-    expect(
-      screen.getByText(/лаборатория изучения языков/i),
-    ).toBeInTheDocument();
+    expect(screen.queryByTestId('game_help__coachmark_icon')).not.toBeInTheDocument();
   });
 
-  it('keeps game help collapsed when the collapsed flag is already stored', async () => {
+  it('opens the AI chat help slide when the first help slide was already acknowledged', async () => {
     const user = userEvent.setup();
     renderApp({ app: { isGameHelpCollapsed: true } });
 
     await user.click(screen.getByTestId('app_shell__tab__help'));
-    expect(screen.getByRole('button', { name: /Помощь/ })).toBeInTheDocument();
     expect(screen.queryByText(/лаборатория изучения языков/i)).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: /Помощь/ }));
-    expect(
-      screen.getByText(/лаборатория изучения языков/i),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('game_help__chat_slide')).toHaveTextContent(
+      /чат AI-помощника/i,
+    );
   });
 
   it('does not show the help coachmark again after it was already shown once', async () => {
@@ -876,6 +876,7 @@ describe('App navigation', () => {
     expect(store.getState().app.hasGameHelpCoachmarkBeenShown).toBe(true);
     expect(screen.queryByTestId('game_help__coachmark_icon')).not.toBeInTheDocument();
     expect(screen.queryByText(/помощь остается здесь/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId('game_help__chat_slide')).toBeInTheDocument();
   });
 
   it('shows All cards as a fixed cards topic without an archive action', async () => {
@@ -1795,7 +1796,12 @@ describe('App navigation', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
 
-    expect(screen.getByRole('heading', { name: 'Результаты' })).toBeInTheDocument();
+    expect(screen.queryByTestId('target_stats__language')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('target_stats__title')).not.toBeInTheDocument();
+    expect(screen.getByTestId('target_stats__panel')).toHaveStyle({
+      background:
+        'linear-gradient(135deg, rgba(255, 251, 226, 0.76) 0%, rgba(237, 244, 255, 0.64) 52%, rgba(245, 238, 255, 0.7) 100%)',
+    });
     expect(screen.getByTestId('target_stats__total_exercises__label')).toHaveTextContent(
       'Всего пройдено игр',
     );

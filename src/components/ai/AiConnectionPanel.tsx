@@ -6,17 +6,20 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import {
   Alert,
+  Box,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   FormControl,
   IconButton,
   InputAdornment,
   InputLabel,
+  ListItemIcon,
+  ListItemText,
   MenuItem,
-  Paper,
   Select,
   Stack,
   TextField,
@@ -25,6 +28,7 @@ import {
 } from '@mui/material';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
+import { OPENROUTER_GPT_MODEL_ID } from '../../services/openRouterKeyStorage';
 
 interface AiConnectionPanelProps {
   apiKey: string;
@@ -44,6 +48,8 @@ interface AiConnectionPanelProps {
   onSave: () => void;
   onToggleVisibility: () => void;
 }
+
+const SETTINGS_MENU_VALUE = '__connection_settings__';
 
 export function AiConnectionPanel({
   apiKey,
@@ -83,56 +89,141 @@ export function AiConnectionPanel({
   }, [inputRef, isSettingsOpen, missingKey]);
 
   return (
-    <Paper
-      data-test="ai_connection__panel"
-      variant="outlined"
-      sx={{ borderColor: 'rgba(37, 118, 150, 0.24)', p: { xs: 1.5, sm: 2 } }}
+    <Box
+      data-test="ai_connection__model_menu"
+      onClick={(event) => event.stopPropagation()}
+      onFocus={(event) => event.stopPropagation()}
+      sx={{ minWidth: 0 }}
     >
-      <Stack data-test="ai_connection__content" spacing={1.25}>
-        <Stack
-          data-test="ai_connection__header"
-          direction={{ xs: 'column', sm: 'row' }}
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
-          justifyContent="space-between"
-          spacing={1}
+      <FormControl
+        data-test="ai_connection__model_control"
+        size="small"
+        sx={{
+          minWidth: 176,
+          '& .MuiInputLabel-root': {
+            fontSize: '0.8rem',
+          },
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 2,
+            fontSize: '0.8rem',
+          },
+          '& .MuiSelect-select': {
+            minHeight: '0 !important',
+            py: 0.45,
+          },
+        }}
+      >
+        <InputLabel id="ai-connection-model-label">
+          {t(language, 'aiModelLabel')}
+        </InputLabel>
+        <Select
+          data-test="ai_connection__model_select"
+          label={t(language, 'aiModelLabel')}
+          labelId="ai-connection-model-label"
+          onChange={(event) => {
+            const value = event.target.value;
+            if (value === SETTINGS_MENU_VALUE) {
+              setIsSettingsOpen(true);
+              return;
+            }
+            if (isTrialKeySelected && value === OPENROUTER_GPT_MODEL_ID) {
+              return;
+            }
+            onModelChange(value);
+          }}
+          value={modelId}
         >
-          <Typography data-test="ai_connection__title" component="h3" variant="h6" fontWeight={800}>
-            {t(language, 'aiConnectionTitle')}
-          </Typography>
-          <FormControl data-test="ai_connection__model_control" size="small" sx={{ minWidth: 220 }}>
-            <InputLabel id="ai-connection-model-label">
-              {t(language, 'aiModelLabel')}
-            </InputLabel>
-            <Select
-              data-test="ai_connection__model_select"
-              label={t(language, 'aiModelLabel')}
-              labelId="ai-connection-model-label"
-              onChange={(event) => onModelChange(event.target.value)}
-              value={modelId}
-            >
-              {modelOptions.map((option) => (
-                <MenuItem
-                  data-test={`ai_connection__model_option__${option.id}`}
-                  key={option.id}
-                  value={option.id}
-                >
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <IconButton
-            aria-label={t(language, 'aiConnectionSettings')}
-            data-test="ai_connection__settings_button"
-            onClick={() => setIsSettingsOpen(true)}
-            sx={{
-              border: '1px solid rgba(111, 79, 166, 0.28)',
-              color: '#6f4fa6',
-            }}
+          {modelOptions.map((option) => {
+            const isLocked = isTrialKeySelected && option.id === OPENROUTER_GPT_MODEL_ID;
+
+            return (
+              <MenuItem
+                data-test={`ai_connection__model_option__${option.id}`}
+                disabled={isLocked}
+                key={option.id}
+                sx={
+                  isLocked
+                    ? {
+                        cursor: 'not-allowed',
+                        opacity: 0.46,
+                        pointerEvents: 'auto',
+                        '&.Mui-disabled': {
+                          opacity: 0.46,
+                          pointerEvents: 'auto',
+                        },
+                      }
+                    : undefined
+                }
+                value={option.id}
+              >
+                {isLocked ? (
+                  <Tooltip
+                    arrow
+                    slotProps={{
+                      arrow: {
+                        sx: {
+                          color: (theme) =>
+                            theme.palette.mode === 'dark'
+                              ? 'rgba(29, 26, 43, 0.98)'
+                              : 'rgba(255, 255, 255, 0.98)',
+                        },
+                      },
+                      tooltip: {
+                        ...({
+                          'data-test': 'ai_connection__locked_model_tooltip',
+                        } as Record<string, string>),
+                        sx: {
+                          bgcolor: (theme) =>
+                            theme.palette.mode === 'dark'
+                              ? 'rgba(29, 26, 43, 0.98)'
+                              : 'rgba(255, 255, 255, 0.98)',
+                          border: (theme) =>
+                            theme.palette.mode === 'dark'
+                              ? '1px solid rgba(211, 188, 255, 0.28)'
+                              : '1px solid rgba(92, 66, 142, 0.18)',
+                          borderRadius: 2,
+                          boxShadow:
+                            '0 16px 34px rgba(67, 45, 103, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.35) inset',
+                          color: (theme) =>
+                            theme.palette.mode === 'dark' ? '#f6efff' : '#22331f',
+                          fontSize: '14px',
+                          maxWidth: 280,
+                          px: 1.5,
+                          py: 1.1,
+                        },
+                      },
+                    }}
+                    title={
+                      <Typography sx={{ fontSize: '14px', fontWeight: 700 }}>
+                        {t(language, 'aiModelRequiresOwnKey')}
+                      </Typography>
+                    }
+                  >
+                    <Box
+                      data-test={`ai_connection__model_option__${option.id}__locked_content`}
+                      sx={{ pointerEvents: 'auto', width: '100%' }}
+                    >
+                      {option.label}
+                    </Box>
+                  </Tooltip>
+                ) : (
+                  option.label
+                )}
+              </MenuItem>
+            );
+          })}
+          <Divider />
+          <MenuItem
+            data-test="ai_connection__settings_option"
+            value={SETTINGS_MENU_VALUE}
           >
-            <SettingsOutlinedIcon />
-          </IconButton>
-        </Stack>
+            <ListItemIcon sx={{ minWidth: 34 }}>
+              <SettingsOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t(language, 'aiConnectionSettings')}</ListItemText>
+          </MenuItem>
+        </Select>
+      </FormControl>
 
         <Dialog
           aria-labelledby="ai-connection-settings-title"
@@ -256,7 +347,6 @@ export function AiConnectionPanel({
             </Button>
           </DialogActions>
         </Dialog>
-      </Stack>
-    </Paper>
+    </Box>
   );
 }

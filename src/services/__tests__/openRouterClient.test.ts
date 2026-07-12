@@ -68,7 +68,7 @@ describe('sendOpenRouterChat', () => {
       parallel_tool_calls: false,
       stream: false,
     });
-    expect(DEFAULT_OPENROUTER_MODEL_ID).toBe('openai/gpt-5.5');
+    expect(DEFAULT_OPENROUTER_MODEL_ID).toBe('deepseek/deepseek-v4-flash');
     expect(OPENROUTER_CHAT_URL).toBe(
       'https://openrouter.ai/api/v1/chat/completions',
     );

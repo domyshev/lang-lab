@@ -214,6 +214,9 @@ describe('AppShell', () => {
     expect(
       getComputedStyle(screen.getByTestId('app_shell__tab__help')).minWidth,
     ).toBe('0');
+    expect(screen.getByTestId('app_shell__tab__help')).toHaveStyle({
+      marginLeft: '15px',
+    });
     const selectorsSlot = screen.getByTestId('app_shell__selectors_slot');
     expect(selectorsSlot).toHaveStyle({ flexShrink: '0' });
     const targetSettingsGroup = within(selectorsSlot).getByTestId(

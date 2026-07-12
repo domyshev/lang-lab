@@ -166,7 +166,9 @@ describe('runAiAssistant', () => {
       snapshot,
     });
 
-    expect(sendChatMock.mock.calls[0][0].modelId).toBe('openai/gpt-5.5');
+    expect(sendChatMock.mock.calls[0][0].modelId).toBe(
+      'deepseek/deepseek-v4-flash',
+    );
   });
 
   it('continues when a model sends an empty optional card set id for search', async () => {

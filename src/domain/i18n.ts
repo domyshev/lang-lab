@@ -45,6 +45,7 @@ type I18nKey =
   | 'aiConnectionSettings'
   | 'aiApiKeyLabel'
   | 'aiModelLabel'
+  | 'aiModelRequiresOwnKey'
   | 'aiShowKey'
   | 'aiHideKey'
   | 'aiSaveKey'
@@ -58,6 +59,9 @@ type I18nKey =
   | 'aiCancelRequest'
   | 'aiRetry'
   | 'aiClearChat'
+  | 'aiClearChatDialogTitle'
+  | 'aiClearChatDialogBody'
+  | 'aiEraseChat'
   | 'aiSuggestionCreateSet'
   | 'aiSuggestionFindWeakCards'
   | 'aiSuggestionAddVocabulary'
@@ -301,6 +305,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiConnectionSettings: 'Connection settings',
     aiApiKeyLabel: 'OpenRouter API key',
     aiModelLabel: 'OpenRouter model',
+    aiModelRequiresOwnKey: 'Enter your own OpenRouter key to unlock this model.',
     aiShowKey: 'Show API key',
     aiHideKey: 'Hide API key',
     aiSaveKey: 'Save key',
@@ -315,6 +320,10 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiCancelRequest: 'Cancel request',
     aiRetry: 'Retry',
     aiClearChat: 'Clear chat',
+    aiClearChatDialogTitle: 'Erase chat?',
+    aiClearChatDialogBody:
+      'This will erase the visible chat messages. Operation history will stay available.',
+    aiEraseChat: 'Erase',
     aiSuggestionCreateSet: 'Create a travel card set',
     aiSuggestionFindWeakCards: 'Find my weakest cards',
     aiSuggestionAddVocabulary: 'Add vocabulary to my library',
@@ -591,6 +600,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiConnectionSettings: 'Настройки подключения',
     aiApiKeyLabel: 'API-ключ OpenRouter',
     aiModelLabel: 'Модель OpenRouter',
+    aiModelRequiresOwnKey: 'Введите свой ключ OpenRouter, чтобы открыть эту модель.',
     aiShowKey: 'Показать API-ключ',
     aiHideKey: 'Скрыть API-ключ',
     aiSaveKey: 'Сохранить ключ',
@@ -605,6 +615,10 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiCancelRequest: 'Отменить запрос',
     aiRetry: 'Повторить',
     aiClearChat: 'Очистить чат',
+    aiClearChatDialogTitle: 'Стереть чат?',
+    aiClearChatDialogBody:
+      'Видимые сообщения чата будут стерты. История операций останется доступной.',
+    aiEraseChat: 'Erase',
     aiSuggestionCreateSet: 'Создай набор для путешествий',
     aiSuggestionFindWeakCards: 'Найди мои самые сложные карточки',
     aiSuggestionAddVocabulary: 'Добавь слова в мою библиотеку',
@@ -883,6 +897,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiConnectionSettings: 'Ajustes de conexion',
     aiApiKeyLabel: 'Clave API de OpenRouter',
     aiModelLabel: 'Modelo de OpenRouter',
+    aiModelRequiresOwnKey:
+      'Introduce tu propia clave de OpenRouter para desbloquear este modelo.',
     aiShowKey: 'Mostrar clave API',
     aiHideKey: 'Ocultar clave API',
     aiSaveKey: 'Guardar clave',
@@ -897,6 +913,10 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiCancelRequest: 'Cancelar solicitud',
     aiRetry: 'Reintentar',
     aiClearChat: 'Limpiar chat',
+    aiClearChatDialogTitle: 'Borrar chat?',
+    aiClearChatDialogBody:
+      'Se borraran los mensajes visibles del chat. El historial de operaciones seguira disponible.',
+    aiEraseChat: 'Erase',
     aiSuggestionCreateSet: 'Crea un conjunto para viajar',
     aiSuggestionFindWeakCards: 'Encuentra mis tarjetas mas dificiles',
     aiSuggestionAddVocabulary: 'Anade vocabulario a mi biblioteca',

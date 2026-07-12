@@ -20,21 +20,25 @@ import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
 
 interface AiOperationHistoryProps {
+  containerSx?: Record<string, unknown>;
   conflict: AiRollbackConflict | null;
   language: SupportedLanguage;
   onCloseConflict: () => void;
   onRollback: (operation: AppliedAiOperation) => void;
   operationError?: string;
   operations: AppliedAiOperation[];
+  showHeader?: boolean;
 }
 
 export function AiOperationHistory({
+  containerSx,
   conflict,
   language,
   onCloseConflict,
   onRollback,
   operationError,
   operations,
+  showHeader = true,
 }: AiOperationHistoryProps) {
   return (
     <Paper
@@ -45,15 +49,22 @@ export function AiOperationHistory({
         height: { xs: 360, md: 560 },
         minHeight: 0,
         p: { xs: 1.5, sm: 2 },
+        ...containerSx,
       }}
     >
-      <Stack data-test="ai_operation_history__content" spacing={1.5} sx={{ minHeight: 0, width: '100%' }}>
-        <Stack data-test="ai_operation_history__header" direction="row" spacing={1} alignItems="center">
-          <HistoryIcon color="action" />
-          <Typography data-test="ai_operation_history__title" component="h3" variant="h6" fontWeight={800}>
-            {t(language, 'aiHistoryTitle')}
-          </Typography>
-        </Stack>
+      <Stack
+        data-test="ai_operation_history__content"
+        spacing={1.5}
+        sx={{ flex: 1, minHeight: 0, width: '100%' }}
+      >
+        {showHeader && (
+          <Stack data-test="ai_operation_history__header" direction="row" spacing={1} alignItems="center">
+            <HistoryIcon color="action" />
+            <Typography data-test="ai_operation_history__title" component="h3" variant="h6" fontWeight={800}>
+              {t(language, 'aiHistoryTitle')}
+            </Typography>
+          </Stack>
+        )}
 
         {operationError && (
           <Alert
@@ -69,12 +80,17 @@ export function AiOperationHistory({
             {t(language, 'aiHistoryEmpty')}
           </Typography>
         ) : (
-          <Stack data-test="ai_operation_history__items" divider={<Divider flexItem />} spacing={1.5}>
+          <Stack
+            data-test="ai_operation_history__items"
+            divider={<Divider flexItem />}
+            spacing={1.5}
+            sx={{ flex: 1, minHeight: 0 }}
+          >
             <Stack
               data-test="ai_operation_history__scroll_area"
               divider={<Divider flexItem />}
               spacing={1.5}
-              sx={{ minHeight: 0, overflowY: 'auto', pr: 0.5 }}
+              sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 }}
             >
             {operations.map((operation) => {
               const totalChanges = Object.values(operation.previewCounts).reduce(

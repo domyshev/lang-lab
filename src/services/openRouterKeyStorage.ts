@@ -6,12 +6,17 @@ export const OPENROUTER_MODEL_STORAGE_KEY =
   'language-crossword-lab:openrouter-model:v1';
 export const OPENROUTER_TRIAL_KEY =
   '***API_KEY_REMOVED***';
+export const OPENROUTER_GPT_MODEL_ID = 'openai/gpt-5.5';
+export const OPENROUTER_DEEPSEEK_MODEL_ID = 'deepseek/deepseek-v4-flash';
 export const OPENROUTER_AVAILABLE_MODELS = [
-  { id: 'openai/gpt-5.5', label: 'GPT-5.5' },
-  { id: 'deepseek/deepseek-v4-flash', label: 'DeepSeek V4 Flash' },
+  { id: OPENROUTER_GPT_MODEL_ID, label: 'GPT-5.5' },
+  { id: OPENROUTER_DEEPSEEK_MODEL_ID, label: 'DeepSeek V4 Flash' },
 ] as const;
 export type OpenRouterModelId = (typeof OPENROUTER_AVAILABLE_MODELS)[number]['id'];
-export const DEFAULT_OPENROUTER_MODEL_ID: OpenRouterModelId = 'openai/gpt-5.5';
+export const OPENROUTER_TRIAL_MODEL_ID: OpenRouterModelId =
+  OPENROUTER_DEEPSEEK_MODEL_ID;
+export const DEFAULT_OPENROUTER_MODEL_ID: OpenRouterModelId =
+  OPENROUTER_DEEPSEEK_MODEL_ID;
 
 export function loadOpenRouterKey(storage: Storage = window.localStorage): string {
   const storedKey = storage.getItem(OPENROUTER_KEY_STORAGE_KEY)?.trim();

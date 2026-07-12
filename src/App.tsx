@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import TipsAndUpdatesOutlinedIcon from '@mui/icons-material/TipsAndUpdatesOutlined';
@@ -170,6 +171,7 @@ export function App() {
   const hasMergedDefaultCardSetMetadata = useRef(false);
   const [activeSection, setActiveSection] =
     useState<AppShellSection>('game');
+  const [gameAiAssistantOpenSignal, setGameAiAssistantOpenSignal] = useState(0);
   const [selectedExerciseType, setSelectedExerciseType] =
     useState<ExerciseType | null>(null);
   const [selectedGameCardSetId, setSelectedGameCardSetId] = useState('');
@@ -668,6 +670,7 @@ export function App() {
   function openGameAiAssistant() {
     setProfileAssistantId(null);
     setActiveSection('game');
+    setGameAiAssistantOpenSignal((signal) => signal + 1);
     const scrollRoot = document.querySelector<HTMLElement>(
       '[data-test="app_shell__root"]',
     );
@@ -998,6 +1001,7 @@ export function App() {
           <AiAssistantView
             dataTest="game_ai_assistant__section"
             embedded
+            openSignal={gameAiAssistantOpenSignal}
             showManualImport={false}
           />
           <GameSetup />
@@ -1148,12 +1152,38 @@ export function App() {
         <Stack data-test="game_setup__content" spacing={3}>
           <Stack data-test="game_library__section" style={{ gap: 12 }}>
             <Box data-test="game_library__header" sx={{ minWidth: 0 }}>
-              <Typography
-                data-test="game_library__title"
-                sx={{ color: '#203015', fontSize: 18, fontWeight: 900 }}
+              <Stack
+                data-test="game_library__title_row"
+                direction="row"
+                style={{ gap: '10px' }}
+                sx={{ alignItems: 'center' }}
               >
-                {t(interfaceLanguage, 'gameLibrary')}
-              </Typography>
+                <Typography
+                  data-test="game_library__title"
+                  sx={{ color: '#203015', fontSize: 18, fontWeight: 900 }}
+                >
+                  {t(interfaceLanguage, 'gameLibrary')}
+                </Typography>
+                <Tooltip title={t(interfaceLanguage, 'openAiAssistant')}>
+                  <IconButton
+                    aria-label={t(interfaceLanguage, 'openAiAssistant')}
+                    data-test="game_library__ai_assistant_button"
+                    onClick={openGameAiAssistant}
+                    size="small"
+                    sx={{
+                      bgcolor: 'rgba(111, 75, 216, 0.10)',
+                      color: '#6f4bd8',
+                      flexShrink: 0,
+                      '&:hover': { bgcolor: 'rgba(111, 75, 216, 0.18)' },
+                    }}
+                  >
+                    <AutoFixHighIcon
+                      data-test="game_library__ai_assistant_icon"
+                      fontSize="small"
+                    />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
               {selectedExerciseLabel ? (
                 <Typography
                   data-test="game_library__selected_name"
@@ -1645,7 +1675,8 @@ export function App() {
         data-test="target_stats__panel"
         elevation={0}
         sx={{
-          bgcolor: 'rgba(255, 255, 255, 0.72)',
+          background:
+            'linear-gradient(135deg, rgba(255, 251, 226, 0.76) 0%, rgba(237, 244, 255, 0.64) 52%, rgba(245, 238, 255, 0.7) 100%)',
           border: '1px solid rgba(32, 48, 21, 0.14)',
           borderRadius: 2,
           boxShadow: '0 12px 28px rgba(32, 48, 21, 0.08)',
@@ -1653,17 +1684,6 @@ export function App() {
         }}
       >
         <Stack data-test="target_stats__content" spacing={1.5}>
-          <Typography data-test="target_stats__language" variant="overline">
-            {languageFlags[targetLanguage]}{' '}
-            {getLanguageDisplayName(interfaceLanguage, targetLanguage)}
-          </Typography>
-          <Typography
-            data-test="target_stats__title"
-            variant="h6"
-            component="h2"
-          >
-            {t(interfaceLanguage, 'resultsTitle')}
-          </Typography>
           <Box
             data-test="target_stats__metrics"
             sx={{
