@@ -21,6 +21,7 @@ import {
   getCardSetName,
   getCardSetSearchValues,
   isArchivedCardSet,
+  normalizeCardSetName,
 } from '../domain/cardSets';
 import { formatCardCount, formatCardSetCount, t } from '../domain/i18n';
 import {
@@ -67,6 +68,11 @@ export function CardSetListView({
       value.includes(normalizedCardSetSearch),
     );
   });
+  const allCardsName = t(targetLanguage, 'allCards');
+  const showAllCardsTile =
+    !showArchived &&
+    (!normalizedCardSetSearch ||
+      normalizeCardSetName(allCardsName).includes(normalizedCardSetSearch));
 
   const createCardSet = () => {
     const trimmedName = name.trim();
@@ -132,7 +138,7 @@ export function CardSetListView({
             >
               {formatCardSetCount(
                 interfaceLanguage,
-                visibleCardSets.length + (showArchived ? 0 : 1),
+                visibleCardSets.length + (showAllCardsTile ? 1 : 0),
               )}
             </Typography>
           </Box>
@@ -207,10 +213,10 @@ export function CardSetListView({
             pr: 0.5,
           }}
         >
-          {!showArchived && (
+          {showAllCardsTile && (
             <CardSetTile
               id={ALL_CARDS_CARD_SET_ID}
-              name={t(targetLanguage, 'allCards')}
+              name={allCardsName}
               cardCount={cards.length}
               interfaceLanguage={interfaceLanguage}
               selected={

@@ -81,6 +81,7 @@ describe('CardSetListView archive browsing', () => {
     expect(screen.queryByTestId('card_set_list__tile__set-old-love')).not.toBeInTheDocument();
 
     await user.type(screen.getByRole('textbox', { name: 'Search card sets' }), 'сем');
+    expect(screen.queryByTestId('card_set_list__tile__all-cards')).not.toBeInTheDocument();
     expect(screen.queryByTestId('card_set_list__tile__set-love')).not.toBeInTheDocument();
     expect(screen.getByTestId('card_set_list__tile__set-family')).toBeInTheDocument();
 
