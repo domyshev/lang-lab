@@ -395,6 +395,7 @@ function renderList() {
           {
             id: 'set-family',
             name: 'Family',
+            names: { en: 'Family', ru: 'Семья', es: 'Familia' },
             cardIds: [],
             createdAt: now,
             updatedAt: now,
@@ -443,14 +444,17 @@ describe('CardSetListView archive browsing', () => {
     await user.click(screen.getByRole('checkbox', { name: 'Archived' }));
     await user.click(screen.getByRole('button', { name: 'Create active copy: Love archive' }));
 
-    const copied = store
-      .getState()
-      .cardSets.cardSets.find((cardSet) => cardSet.id !== 'set-old-love' && cardSet.name === 'Love');
+    const cardSetState = store.getState().cardSets;
+    const copied = cardSetState.cardSets.find(
+      (cardSet) => cardSet.id === cardSetState.selectedCardSetId,
+    );
+    expect(copied?.id).not.toBe('set-old-love');
+    expect(copied?.id).not.toBe('set-love');
     expect(copied).toMatchObject({
+      name: 'Love',
       cardIds: ['card-a'],
-      archivedAt: undefined,
     });
-    expect(store.getState().cardSets.selectedCardSetId).toBe(copied?.id);
+    expect(copied).not.toHaveProperty('archivedAt');
   });
 });
 ```
