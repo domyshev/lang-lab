@@ -293,6 +293,49 @@ describe('CardSetDetailView', () => {
       getByDataTestPrefix(container, 'card_set_detail__card_item__').length,
     ).toBeLessThan(80);
   });
+
+  it('opens archived card sets read-only and can create an active copy', async () => {
+    const user = userEvent.setup();
+    const store = createStore({
+      selectedCardSetId: 'card-set-archived',
+      cardSets: [
+        {
+          id: 'card-set-archived',
+          name: 'Archived love',
+          cardIds: ['card-airport', 'card-worth-it'],
+          createdAt: now,
+          updatedAt: now,
+          archivedAt: '2026-07-04T12:00:00.000Z',
+        },
+      ],
+    });
+
+    render(
+      <Provider store={store}>
+        <CardSetDetailView />
+      </Provider>,
+    );
+
+    expect(
+      screen.getByTestId('card_set_detail__archived_chip__card-set-archived'),
+    ).toHaveTextContent('Заархивировано');
+    expect(
+      screen.queryByRole('button', { name: 'Редактировать карточки' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('airport')).toBeInTheDocument();
+    expect(screen.getByText('worth it')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Создать активную копию' }));
+
+    const copied = store
+      .getState()
+      .cardSets.cardSets.find(
+        (cardSet) =>
+          cardSet.id !== 'card-set-archived' && cardSet.name === 'Archived love',
+      );
+    expect(copied?.archivedAt).toBeUndefined();
+    expect(copied?.cardIds).toEqual(['card-airport', 'card-worth-it']);
+  });
 });
 
 function getByDataTestPrefix(container: HTMLElement, prefix: string): HTMLElement[] {
@@ -312,6 +355,7 @@ function createStore({
     cardIds: string[];
     createdAt: string;
     updatedAt: string;
+    archivedAt?: string;
   }>;
 } = {}) {
   return configureStore({

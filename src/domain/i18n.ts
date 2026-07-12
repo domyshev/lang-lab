@@ -132,6 +132,7 @@ type I18nKey =
   | 'searchCardSets'
   | 'showArchivedCardSets'
   | 'createActiveCopy'
+  | 'archived'
   | 'archive'
   | 'newCardSet'
   | 'create'
@@ -413,6 +414,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     searchCardSets: 'Search card sets',
     showArchivedCardSets: 'Archived',
     createActiveCopy: 'Create active copy',
+    archived: 'Archived',
     archive: 'Archive',
     newCardSet: 'New card set',
     create: 'Create',
@@ -714,6 +716,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     searchCardSets: 'Поиск наборов',
     showArchivedCardSets: 'Заархивированные',
     createActiveCopy: 'Создать активную копию',
+    archived: 'Заархивировано',
     archive: 'В архив',
     newCardSet: 'Новый набор карточек',
     create: 'Создать',
@@ -1017,6 +1020,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     searchCardSets: 'Buscar conjuntos',
     showArchivedCardSets: 'Archivados',
     createActiveCopy: 'Crear copia activa',
+    archived: 'Archivado',
     archive: 'Archivar',
     newCardSet: 'Nuevo conjunto de tarjetas',
     create: 'Crear',

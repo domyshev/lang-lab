@@ -16,7 +16,11 @@ import {
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCardAnswer, isPhraseValue, LanguageCard } from '../domain/cards';
-import { ALL_CARDS_CARD_SET_ID, getCardSetName } from '../domain/cardSets';
+import {
+  ALL_CARDS_CARD_SET_ID,
+  getCardSetName,
+  isArchivedCardSet,
+} from '../domain/cardSets';
 import {
   createCardById,
   createCardStatsByTarget,
@@ -36,7 +40,10 @@ import {
   supportedLanguages,
   SupportedLanguage,
 } from '../domain/languages';
-import { setCardSetCards } from '../store/cardSetsSlice';
+import {
+  copyArchivedCardSet,
+  setCardSetCards,
+} from '../store/cardSetsSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
 import { SplitWordStatsChip } from './SplitWordStatsChip';
@@ -86,9 +93,11 @@ export function CardSetDetailView() {
         createdAt: '',
         updatedAt: '',
       }
-    : cardSets.find(
-        (cardSet) => cardSet.id === selectedCardSetId && !cardSet.archivedAt,
-      );
+    : cardSets.find((cardSet) => cardSet.id === selectedCardSetId);
+  const isArchivedSelectedCardSet =
+    selectedCardSet && !isAllCardsSelected && isArchivedCardSet(selectedCardSet);
+  const canEditSelectedCardSet =
+    !isAllCardsSelected && !isArchivedSelectedCardSet;
   const selectedCardSetName = selectedCardSet
     ? getCardSetName(selectedCardSet, targetLanguage)
     : '';
@@ -109,7 +118,8 @@ export function CardSetDetailView() {
   const cardSetCards = isAllCardsSelected
     ? cards
     : getCardsByIds(cardById, selectedCardSet.cardIds);
-  const cardsForList = isEditingCards && !isAllCardsSelected ? cards : cardSetCards;
+  const cardsForList =
+    isEditingCards && canEditSelectedCardSet ? cards : cardSetCards;
   const existingCardSetCardIds = new Set(
     isAllCardsSelected ? [] : selectedCardSet.cardIds,
   );
@@ -162,7 +172,7 @@ export function CardSetDetailView() {
       : virtualCardRows;
 
   const handleEditButtonClick = () => {
-    if (isAllCardsSelected) {
+    if (!canEditSelectedCardSet) {
       return;
     }
 
@@ -253,7 +263,7 @@ export function CardSetDetailView() {
                 minWidth: 0,
               }}
             >
-              {isEditingCards && !isAllCardsSelected && (
+              {isEditingCards && canEditSelectedCardSet && (
                 <Stack
                   data-test={`card_set_detail__card_select_control__${card.id}`}
                   direction="row"
@@ -404,7 +414,37 @@ export function CardSetDetailView() {
             sx={{ alignItems: 'center', flexWrap: 'wrap' }}
             useFlexGap
           >
-            {!isAllCardsSelected && (
+            {isArchivedSelectedCardSet && (
+              <Chip
+                data-test={`card_set_detail__archived_chip__${selectedCardSet.id}`}
+                label={t(interfaceLanguage, 'archived')}
+                variant="outlined"
+                sx={{
+                  borderColor: 'rgba(111, 75, 216, 0.52)',
+                  color: '#5e3fc0',
+                  fontWeight: 850,
+                }}
+              />
+            )}
+            {isArchivedSelectedCardSet && (
+              <Button
+                data-test={`card_set_detail__copy_archived_button__${selectedCardSet.id}`}
+                startIcon={<AddIcon />}
+                variant="outlined"
+                onClick={() =>
+                  dispatch(
+                    copyArchivedCardSet({
+                      sourceCardSetId: selectedCardSet.id,
+                      newCardSetId: createCardSetId(),
+                      now: new Date().toISOString(),
+                    }),
+                  )
+                }
+              >
+                {t(interfaceLanguage, 'createActiveCopy')}
+              </Button>
+            )}
+            {canEditSelectedCardSet && (
               <Button
                 data-test={`card_set_detail__edit_cards_button__${selectedCardSet.id}`}
                 disabled={isEditingCards && !hasDraftChanges}
@@ -531,6 +571,10 @@ export function CardSetDetailView() {
       </Stack>
     </Paper>
   );
+}
+
+function createCardSetId(): string {
+  return crypto.randomUUID();
 }
 
 function RecentCardStatsTooltip({
