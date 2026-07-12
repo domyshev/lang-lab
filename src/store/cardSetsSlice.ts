@@ -137,6 +137,14 @@ const cardSetsSlice = createSlice({
           (cardSet) => updatesById.get(cardSet.id) ?? cardSet,
         );
         state.cardSets.push(...operation.createdCardSets);
+        if (
+          state.cardSets.some(
+            (cardSet) =>
+              cardSet.id === state.selectedCardSetId && cardSet.archivedAt,
+          )
+        ) {
+          state.selectedCardSetId = ALL_CARDS_CARD_SET_ID;
+        }
       })
       .addCase(commitAiRollback, (state, action) => {
         const { operation } = action.payload;

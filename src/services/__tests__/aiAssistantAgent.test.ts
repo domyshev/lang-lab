@@ -95,8 +95,9 @@ describe('runAiAssistant', () => {
     ]);
     expect(first.messages).toHaveLength(2);
     expect(first.messages[0]).toMatchObject({ role: 'system' });
-    expect(first.messages[0].content).toContain(languageCardSkill);
+    expect(first.messages[0].content).toContain('# Language Card JSON Format');
     expect(first.messages[0].content).toContain('limited authority');
+    expect(first.messages[0].content).toContain('archive normal card sets');
     expect(first.messages[0].content).toContain('never dispatch');
     expect(first.messages[0].content).toContain(
       'Current selected model id: deepseek/deepseek-v4-flash',
@@ -479,6 +480,24 @@ describe('runAiAssistant', () => {
 });
 
 describe('aiAssistantToolDefinitions', () => {
+  it('allows archive proposals only through a closed card-set update schema', () => {
+    const proposal =
+      aiAssistantToolDefinitions[aiAssistantToolDefinitions.length - 1];
+    const parameters = proposal?.function.parameters as {
+      properties?: {
+        cardSetChanges?: {
+          items?: { oneOf?: Array<{ properties?: Record<string, unknown> }> };
+        };
+      };
+    };
+    const updateSet = parameters.properties?.cardSetChanges?.items?.oneOf?.[1];
+
+    expect(updateSet).toMatchObject({
+      additionalProperties: false,
+      properties: { archive: { const: true } },
+    });
+  });
+
   it('closes the proposal schema and every nested object schema', () => {
     const proposal =
       aiAssistantToolDefinitions[aiAssistantToolDefinitions.length - 1];

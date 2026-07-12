@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { PlannedAiOperation } from '../../domain/aiOperations';
+import { applyAiOperation } from '../aiAssistantActions';
 import {
   archiveCardSet,
   cardSetsReducer,
@@ -16,6 +18,38 @@ const activeSet = {
   updatedAt: now,
 };
 
+function archiveOperation(): PlannedAiOperation {
+  return {
+    id: 'archive-love',
+    title: 'Archive Love',
+    summary: 'Archives the Love set.',
+    userPrompt: 'Archive Love.',
+    modelId: 'deepseek/deepseek-v4-flash',
+    createdAt: now,
+    createdCards: [],
+    updatedCards: [],
+    createdCardSets: [],
+    updatedCardSets: [
+      {
+        before: activeSet,
+        after: { ...activeSet, archivedAt: '2026-07-12T12:00:00.000Z' },
+      },
+    ],
+    duplicateProcessingHistory: [],
+    pendingDuplicates: [],
+    previewCounts: {
+      createdCards: 0,
+      updatedCards: 0,
+      pendingDuplicates: 0,
+      createdCardSets: 0,
+      archivedCardSets: 1,
+      renamedCardSets: 0,
+      membershipAdditions: 0,
+      membershipRemovals: 0,
+    },
+  };
+}
+
 describe('cardSetsSlice archive behavior', () => {
   it('archives a custom set and selects all cards if the archived set was selected', () => {
     const state = cardSetsReducer(
@@ -30,6 +64,19 @@ describe('cardSetsSlice archive behavior', () => {
       id: 'set-love',
       archivedAt: '2026-07-12T12:00:00.000Z',
     });
+    expect(state.selectedCardSetId).toBe('all-cards');
+  });
+
+  it('selects all cards when an AI operation archives the selected set', () => {
+    const state = cardSetsReducer(
+      { cardSets: [activeSet], selectedCardSetId: 'set-love' },
+      applyAiOperation({
+        operation: archiveOperation(),
+        appliedAt: '2026-07-12T12:00:00.000Z',
+      }),
+    );
+
+    expect(state.cardSets[0].archivedAt).toBe('2026-07-12T12:00:00.000Z');
     expect(state.selectedCardSetId).toBe('all-cards');
   });
 
