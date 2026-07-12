@@ -7,6 +7,7 @@ import {
   executeAiReadTool,
 } from '../domain/aiLibraryTools';
 import { PlannedAiOperation, planAiOperation } from '../domain/aiOperations';
+import type { BlockedAiPreview } from '../domain/aiBlockedPreview';
 import {
   AI_ASSISTANT_MODEL_ID,
   OpenRouterChatMessage,
@@ -45,7 +46,7 @@ export type AiAgentFailure =
 
 export type AiAgentResult =
   | { ok: true; content: string; stagedOperation?: PlannedAiOperation }
-  | { ok: false; failure: AiAgentFailure };
+  | { ok: false; failure: AiAgentFailure; blockedPreview?: BlockedAiPreview };
 
 export async function runAiAssistant(input: {
   apiKey: string;
@@ -131,6 +132,7 @@ export async function runAiAssistant(input: {
         if (!parsedProposal.success) {
           return invalidProposal(
             parsedProposal.error.issues.map((issue) => issue.message),
+            parsedArguments.value,
           );
         }
         const planned = planAiOperation({
@@ -143,7 +145,7 @@ export async function runAiAssistant(input: {
           idFactory: input.idFactory,
         });
         if (!planned.ok) {
-          return invalidProposal(planned.errors);
+          return invalidProposal(planned.errors, parsedProposal.data);
         }
         stagedOperation = planned.operation;
         messages.push({
@@ -213,15 +215,41 @@ function invalidArguments(toolName: string): AiAgentResult {
   };
 }
 
-function invalidProposal(errors: string[]): AiAgentResult {
+function invalidProposal(errors: string[], proposal: unknown): AiAgentResult {
+  const validationWarnings = [...new Set(errors)];
   return {
     ok: false,
     failure: {
       kind: 'invalid-proposal',
       message: 'The proposed library operation is invalid.',
-      errors: [...new Set(errors)],
+      errors: validationWarnings,
+    },
+    blockedPreview: {
+      ...readPreviewText(proposal),
+      validationWarnings,
     },
   };
+}
+
+function readPreviewText(proposal: unknown): Pick<BlockedAiPreview, 'title' | 'summary'> {
+  if (typeof proposal !== 'object' || proposal === null) {
+    return {};
+  }
+  const candidate = proposal as Record<string, unknown>;
+  const title = readNonEmptyText(candidate.title);
+  const summary = readNonEmptyText(candidate.summary);
+  return {
+    ...(title ? { title } : {}),
+    ...(summary ? { summary } : {}),
+  };
+}
+
+function readNonEmptyText(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed || undefined;
 }
 
 function proposalToolParameters(): Record<string, unknown> {

@@ -223,6 +223,57 @@ describe('planAiOperation', () => {
     expect(result.operation.previewCounts.pendingDuplicates).toBe(1);
   });
 
+  it('rejects an exact duplicate when duplicate processing produces no library change', () => {
+    const result = planAiOperation(
+      plannerInput({
+        title: 'Duplicate airport',
+        summary: 'Try to add the existing airport card again.',
+        cards: [
+          {
+            clientRef: 'airport-copy',
+            translations: { en: 'airport', ru: 'аэропорт' },
+          },
+        ],
+      }),
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      errors: ['An operation must contain at least one change.'],
+    });
+  });
+
+  it('keeps an exact duplicate proposal valid when it adds membership to a set', () => {
+    const result = planAiOperation(
+      plannerInput({
+        title: 'Organize airport',
+        summary: 'Add the existing airport card to Travel.',
+        cards: [
+          {
+            clientRef: 'airport-copy',
+            translations: { en: 'airport', ru: 'аэропорт' },
+          },
+        ],
+        cardSetChanges: [
+          {
+            type: 'update',
+            cardSetId: 'set-travel',
+            addCardRefs: ['airport-copy'],
+          },
+        ],
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.operation.createdCards).toEqual([]);
+    expect(result.operation.updatedCards).toEqual([]);
+    expect(result.operation.updatedCardSets[0].after.cardIds).toEqual([
+      'card-old',
+      'card-airport',
+    ]);
+  });
+
   it.each([
     {
       name: 'unknown card reference',

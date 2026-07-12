@@ -3,6 +3,7 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { BlockedAiPreview } from '../../domain/aiBlockedPreview';
 import type { AppliedAiOperation, PlannedAiOperation } from '../../domain/aiOperations';
 import type { SupportedLanguage } from '../../domain/languages';
 import { AiAgentResult, runAiAssistant } from '../../services/aiAssistantAgent';
@@ -10,7 +11,10 @@ import {
   OPENROUTER_KEY_STORAGE_KEY,
   saveOpenRouterKey,
 } from '../../services/openRouterKeyStorage';
-import { appendAiMessage, stageAiOperation } from '../../store/aiAssistantSlice';
+import {
+  appendAiMessage,
+  stageAiOperation,
+} from '../../store/aiAssistantSlice';
 import { rootReducer } from '../../store/store';
 import { AiAssistantView } from '../AiAssistantView';
 
@@ -71,6 +75,7 @@ function renderView({
   messages = [],
   operations = [],
   cards,
+  blockedPreview,
   stagedOperation,
   operationError,
 }: {
@@ -78,6 +83,7 @@ function renderView({
   messages?: ReturnType<typeof rootReducer>['aiAssistant']['messages'];
   operations?: AppliedAiOperation[];
   cards?: ReturnType<typeof rootReducer>['cards']['cards'];
+  blockedPreview?: BlockedAiPreview;
   stagedOperation?: PlannedAiOperation;
   operationError?: string;
 } = {}) {
@@ -94,6 +100,7 @@ function renderView({
       aiAssistant: {
         messages,
         operations,
+        ...(blockedPreview ? { blockedPreview } : {}),
         ...(stagedOperation ? { stagedOperation } : {}),
         ...(operationError ? { operationError } : {}),
       },
@@ -279,6 +286,74 @@ describe('AiAssistantView chat', () => {
     expect(store.getState().aiAssistant.stagedOperation?.id).toBe(operation.id);
   });
 
+  it('stages an invalid proposal as a blocked preview while keeping the chat error retryable', async () => {
+    const user = userEvent.setup();
+    saveOpenRouterKey('sk-test');
+    mockedRunAiAssistant.mockResolvedValue({
+      ok: false,
+      failure: {
+        kind: 'invalid-proposal',
+        message: 'The proposed library operation is invalid.',
+        errors: ['A card requires translations in at least two languages.'],
+      },
+      blockedPreview: {
+        title: 'Travel proposal needs review',
+        summary: 'One card is missing a translation.',
+        validationWarnings: [
+          'A card requires translations in at least two languages.',
+        ],
+      },
+    });
+    const store = renderView();
+
+    await user.type(screen.getByLabelText('Message the AI assistant'), 'Add a travel card');
+    await user.click(screen.getByRole('button', { name: 'Send message' }));
+
+    expect(await screen.findByText('Travel proposal needs review')).toBeInTheDocument();
+    expect(screen.getByText('One card is missing a translation.')).toBeInTheDocument();
+    expect(
+      screen.getByText('A card requires translations in at least two languages.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Apply changes' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(store.getState().cards.cards).toEqual([]);
+    expect(store.getState().aiAssistant.stagedOperation).toBeUndefined();
+    expect(store.getState().aiAssistant.blockedPreview).toBeDefined();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel preview' }));
+    expect(store.getState().aiAssistant.blockedPreview).toBeUndefined();
+  });
+
+  it('shows the sanitized provider detail with a localized provider prefix', async () => {
+    const user = userEvent.setup();
+    saveOpenRouterKey('sk-never-show');
+    mockedRunAiAssistant.mockResolvedValue({
+      ok: false,
+      failure: {
+        kind: 'transport',
+        message: 'Upstream inference timed out. Request id req_123.',
+        error: {
+          kind: 'provider',
+          message: 'Upstream inference timed out. Request id req_123.',
+          status: 503,
+        },
+      },
+    });
+    const store = renderView({ language: 'ru' });
+
+    await user.type(screen.getByLabelText('Сообщение AI-ассистенту'), 'Проверь карточки');
+    await user.click(screen.getByRole('button', { name: 'Отправить сообщение' }));
+
+    expect(
+      await screen.findByText(
+        'AI-провайдер не смог выполнить запрос. Попробуйте позже. Upstream inference timed out. Request id req_123.',
+      ),
+    ).toBeInTheDocument();
+    const persistedMessages = JSON.stringify(store.getState().aiAssistant.messages);
+    expect(persistedMessages).toContain('Upstream inference timed out. Request id req_123.');
+    expect(persistedMessages).not.toContain('sk-never-show');
+  });
+
   it('stores a localized safe error and retries the original prompt', async () => {
     const user = userEvent.setup();
     saveOpenRouterKey('sk-never-show');
@@ -342,10 +417,14 @@ describe('AiAssistantView chat', () => {
       'provider',
       {
         kind: 'transport' as const,
-        message: 'raw provider detail',
-        error: { kind: 'provider' as const, message: 'raw provider detail', status: 500 },
+        message: 'OpenRouter upstream was unavailable.',
+        error: {
+          kind: 'provider' as const,
+          message: 'OpenRouter upstream was unavailable.',
+          status: 500,
+        },
       },
-      'The AI provider could not complete the request. Try again later.',
+      'The AI provider could not complete the request. Try again later. OpenRouter upstream was unavailable.',
     ],
     [
       'network',
@@ -472,6 +551,40 @@ describe('AiAssistantView chat', () => {
 });
 
 describe('AiAssistantView operation preview and history', () => {
+  it.each([
+    [
+      'en' as const,
+      'Review required',
+      'This proposal cannot be applied until its validation warnings are resolved.',
+      'Validation warnings',
+    ],
+    [
+      'ru' as const,
+      'Требуется проверка',
+      'Это предложение нельзя применить, пока не устранены замечания проверки.',
+      'Замечания проверки',
+    ],
+    [
+      'es' as const,
+      'Revision necesaria',
+      'Esta propuesta no se puede aplicar hasta resolver las advertencias de validacion.',
+      'Advertencias de validacion',
+    ],
+  ])(
+    'localizes blocked-preview fallbacks in %s',
+    (language, title, summary, warningLabel) => {
+      renderView({
+        language,
+        blockedPreview: { validationWarnings: ['Dynamic planner warning'] },
+      });
+
+      expect(screen.getByText(title)).toBeInTheDocument();
+      expect(screen.getByText(summary)).toBeInTheDocument();
+      expect(screen.getByText(warningLabel)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /apply|применить|aplicar/i })).toBeDisabled();
+    },
+  );
+
   it('renders a staged operation as a purple unframed chat surface', () => {
     renderView({ stagedOperation: createOperation() });
 

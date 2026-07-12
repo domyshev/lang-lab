@@ -134,6 +134,24 @@ function findApplyError(
     return 'The library changed after this AI operation was staged.';
   }
 
+  const availableCardIds = new Set([
+    ...cardsById.keys(),
+    ...operation.createdCards.map(({ id }) => id),
+  ]);
+  const missingMembershipCardIds = [
+    ...new Set(
+      [
+        ...operation.createdCardSets,
+        ...operation.updatedCardSets.map(({ after }) => after),
+      ].flatMap((cardSet) =>
+        cardSet.cardIds.filter((cardId) => !availableCardIds.has(cardId)),
+      ),
+    ),
+  ];
+  if (missingMembershipCardIds.length > 0) {
+    return `The AI operation references missing cards: ${missingMembershipCardIds.join(', ')}.`;
+  }
+
   const mergeIds = new Set(
     state.cards.duplicateProcessingHistory.map(({ id }) => id),
   );

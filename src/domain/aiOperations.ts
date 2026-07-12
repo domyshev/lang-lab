@@ -176,6 +176,19 @@ export function planAiOperation(input: {
     return [{ before: cloneCardSet(existingSet), after: cloneCardSet(finalSet) }];
   });
 
+  if (
+    createdCards.length === 0 &&
+    updatedCards.length === 0 &&
+    importResult.pendingDuplicates.length === 0 &&
+    createdCardSets.length === 0 &&
+    updatedCardSets.length === 0
+  ) {
+    return {
+      ok: false,
+      errors: ['An operation must contain at least one change.'],
+    };
+  }
+
   const previewCounts = buildPreviewCounts({
     createdCards,
     updatedCards,
@@ -222,10 +235,25 @@ export function findAiRollbackConflict(input: {
     ...input.operation.createdCardSets,
     ...input.operation.updatedCardSets.map((update) => update.after),
   ];
+  const createdCardIds = new Set(
+    input.operation.createdCards.map(({ id }) => id),
+  );
+  const affectedSetIds = new Set(affectedSets.map(({ id }) => id));
 
   for (const after of affectedCards) {
     if (!entitiesEqual(cardsById.get(after.id), after)) {
       return rollbackConflict('card', after.id, input.laterOperations);
+    }
+  }
+  for (const cardSet of input.cardSets) {
+    if (affectedSetIds.has(cardSet.id)) {
+      continue;
+    }
+    const dependentCardId = cardSet.cardIds.find((cardId) =>
+      createdCardIds.has(cardId),
+    );
+    if (dependentCardId) {
+      return rollbackConflict('card', dependentCardId, input.laterOperations);
     }
   }
   for (const after of affectedSets) {
@@ -364,7 +392,11 @@ function operationTouchesEntity(
   if (entityType === 'card') {
     return (
       operation.createdCards.some((card) => card.id === entityId) ||
-      operation.updatedCards.some((update) => update.after.id === entityId)
+      operation.updatedCards.some((update) => update.after.id === entityId) ||
+      operation.createdCardSets.some((set) => set.cardIds.includes(entityId)) ||
+      operation.updatedCardSets.some((update) =>
+        update.after.cardIds.includes(entityId),
+      )
     );
   }
   return (

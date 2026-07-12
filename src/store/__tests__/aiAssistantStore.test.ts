@@ -125,6 +125,29 @@ function createOperation(id = 'operation-1'): PlannedAiOperation {
   };
 }
 
+function createCardOnlyOperation(id: string): PlannedAiOperation {
+  const operation = createOperation(id);
+  return {
+    ...operation,
+    title: `Create card ${id}`,
+    summary: 'Creates one card for membership dependency tests.',
+    updatedCards: [],
+    createdCardSets: [],
+    updatedCardSets: [],
+    duplicateProcessingHistory: [],
+    pendingDuplicates: [],
+    previewCounts: {
+      createdCards: 1,
+      updatedCards: 0,
+      pendingDuplicates: 0,
+      createdCardSets: 0,
+      renamedCardSets: 0,
+      membershipAdditions: 0,
+      membershipRemovals: 0,
+    },
+  };
+}
+
 function createTestStore() {
   return configureStore({
     reducer: rootReducer,
@@ -374,6 +397,124 @@ describe('AI assistant store transactions', () => {
     }).toEqual(libraryBeforeRollback);
     expect(store.getState().aiAssistant.operations[0].status).toBe('applied');
     expect(store.getState().aiAssistant.operationError).toBeTruthy();
+  });
+
+  it('rejects rollback when a later applied operation references its created card', () => {
+    const store = createTestStore();
+    const operationA = createCardOnlyOperation('operation-a');
+    const createdCardId = operationA.createdCards[0].id;
+    stageAndApply(store, operationA);
+
+    const operationB: PlannedAiOperation = {
+      ...createOperation('operation-b'),
+      title: 'Use the created card elsewhere',
+      summary: 'Creates an external set that depends on operation A.',
+      createdCards: [],
+      updatedCards: [],
+      createdCardSets: [
+        {
+          ...createdSet,
+          id: 'set-external',
+          cardIds: [createdCardId],
+        },
+      ],
+      updatedCardSets: [],
+      duplicateProcessingHistory: [],
+      pendingDuplicates: [],
+    };
+    stageAndApply(store, operationB, '2026-07-11T12:30:00.000Z');
+    const libraryBeforeRollback = {
+      cards: store.getState().cards,
+      cardSets: store.getState().cardSets,
+    };
+
+    store.dispatch(revertAiOperation({ operationId: operationA.id, revertedAt }));
+
+    expect({
+      cards: store.getState().cards,
+      cardSets: store.getState().cardSets,
+    }).toEqual(libraryBeforeRollback);
+    expect(
+      store.getState().aiAssistant.operations.find(({ id }) => id === operationA.id)
+        ?.status,
+    ).toBe('applied');
+    expect(store.getState().aiAssistant.operationError).toContain(createdCardId);
+  });
+
+  it('rejects a staged membership update after its referenced card is rolled back', () => {
+    const store = createTestStore();
+    const operationA = createCardOnlyOperation('operation-a');
+    const createdCardId = operationA.createdCards[0].id;
+    stageAndApply(store, operationA);
+
+    const operationB: PlannedAiOperation = {
+      ...createOperation('operation-b'),
+      title: 'Stage dependent membership',
+      summary: 'Adds the operation A card to an existing set.',
+      createdCards: [],
+      updatedCards: [],
+      createdCardSets: [],
+      updatedCardSets: [
+        {
+          before: originalSet,
+          after: {
+            ...originalSet,
+            cardIds: [...originalSet.cardIds, createdCardId],
+            updatedAt: operationTime,
+          },
+        },
+      ],
+      duplicateProcessingHistory: [],
+      pendingDuplicates: [],
+    };
+    store.dispatch(stageAiOperation(operationB));
+    store.dispatch(revertAiOperation({ operationId: operationA.id, revertedAt }));
+    const libraryBeforeApply = {
+      cards: store.getState().cards,
+      cardSets: store.getState().cardSets,
+    };
+
+    store.dispatch(applyAiOperation({ operation: operationB, appliedAt }));
+
+    expect({
+      cards: store.getState().cards,
+      cardSets: store.getState().cardSets,
+    }).toEqual(libraryBeforeApply);
+    expect(store.getState().aiAssistant.stagedOperation).toEqual(operationB);
+    expect(store.getState().aiAssistant.operationError).toContain(createdCardId);
+  });
+
+  it('rejects an operation whose created set references a missing card', () => {
+    const store = createTestStore();
+    const operation: PlannedAiOperation = {
+      ...createOperation('missing-membership'),
+      createdCards: [],
+      updatedCards: [],
+      createdCardSets: [
+        {
+          ...createdSet,
+          id: 'set-with-missing-card',
+          cardIds: ['card-missing'],
+        },
+      ],
+      updatedCardSets: [],
+      duplicateProcessingHistory: [],
+      pendingDuplicates: [],
+    };
+    store.dispatch(stageAiOperation(operation));
+    const libraryBeforeApply = {
+      cards: store.getState().cards,
+      cardSets: store.getState().cardSets,
+    };
+
+    store.dispatch(applyAiOperation({ operation, appliedAt }));
+
+    expect({
+      cards: store.getState().cards,
+      cardSets: store.getState().cardSets,
+    }).toEqual(libraryBeforeApply);
+    expect(store.getState().aiAssistant.operations).toEqual([]);
+    expect(store.getState().aiAssistant.operationError).toContain('card-missing');
   });
 
   it('falls back to all cards when rollback removes the selected created set', () => {

@@ -3,6 +3,7 @@ import {
   AppliedAiOperation,
   PlannedAiOperation,
 } from '../domain/aiOperations';
+import type { BlockedAiPreview } from '../domain/aiBlockedPreview';
 import type { RootState } from './store';
 import {
   applyAiOperation,
@@ -21,6 +22,7 @@ export interface AiAssistantMessage {
 
 export interface AiAssistantState {
   messages: AiAssistantMessage[];
+  blockedPreview?: BlockedAiPreview;
   stagedOperation?: PlannedAiOperation;
   operations: AppliedAiOperation[];
   operationError?: string;
@@ -46,9 +48,16 @@ const aiAssistantSlice = createSlice({
     },
     stageAiOperation(state, action: PayloadAction<PlannedAiOperation>) {
       state.stagedOperation = action.payload;
+      state.blockedPreview = undefined;
+      state.operationError = undefined;
+    },
+    stageBlockedAiPreview(state, action: PayloadAction<BlockedAiPreview>) {
+      state.blockedPreview = action.payload;
+      state.stagedOperation = undefined;
       state.operationError = undefined;
     },
     cancelStagedAiOperation(state) {
+      state.blockedPreview = undefined;
       state.stagedOperation = undefined;
       state.operationError = undefined;
     },
@@ -64,6 +73,7 @@ const aiAssistantSlice = createSlice({
           appliedAt: action.payload.appliedAt,
           status: 'applied',
         });
+        state.blockedPreview = undefined;
         state.stagedOperation = undefined;
         state.operationError = undefined;
       })
@@ -88,6 +98,7 @@ export const {
   cancelStagedAiOperation,
   clearAiChat,
   clearAiOperationError,
+  stageBlockedAiPreview,
   stageAiOperation,
 } = aiAssistantSlice.actions;
 

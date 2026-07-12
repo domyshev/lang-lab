@@ -222,7 +222,7 @@ describe('runAiAssistant', () => {
     });
   });
 
-  it('returns a controlled invalid-proposal failure', async () => {
+  it('retains an invalid schema proposal as a blocked preview for inspection', async () => {
     sendChatMock.mockResolvedValueOnce(
       success(null, [
         toolCall('proposal-bad', 'propose_library_operation', {
@@ -245,9 +245,48 @@ describe('runAiAssistant', () => {
       kind: 'invalid-proposal',
       message: 'The proposed library operation is invalid.',
     });
+    expect(result.blockedPreview).toEqual({
+      title: 'Unsafe',
+      summary: 'Tries an unsupported mutation.',
+      validationWarnings: expect.arrayContaining([expect.any(String)]),
+    });
     if (result.failure.kind === 'invalid-proposal') {
       expect(result.failure.errors.length).toBeGreaterThan(0);
     }
+  });
+
+  it('retains planner validation errors in a blocked preview', async () => {
+    sendChatMock.mockResolvedValueOnce(
+      success(null, [
+        toolCall('proposal-missing-ref', 'propose_library_operation', {
+          title: 'Broken travel set',
+          summary: 'References a card that does not exist.',
+          cardSetChanges: [
+            {
+              type: 'create',
+              clientRef: 'travel-set',
+              names: { en: 'Travel' },
+              cardRefs: ['missing-card'],
+            },
+          ],
+        }),
+      ]),
+    );
+
+    const result = await runAiAssistant({
+      apiKey: 'key',
+      userMessage: 'Create a travel set.',
+      snapshot,
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.failure.kind).toBe('invalid-proposal');
+    expect(result.blockedPreview).toEqual({
+      title: 'Broken travel set',
+      summary: 'References a card that does not exist.',
+      validationWarnings: expect.arrayContaining([expect.stringContaining('missing-card')]),
+    });
   });
 
   it('stops after eight model responses', async () => {

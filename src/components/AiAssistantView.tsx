@@ -14,10 +14,12 @@ import {
   appendAiMessage,
   cancelStagedAiOperation,
   clearAiChat,
+  stageBlockedAiPreview,
   stageAiOperation,
 } from '../store/aiAssistantSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { AiChatPanel } from './ai/AiChatPanel';
+import { AiBlockedOperationPreview } from './ai/AiBlockedOperationPreview';
 import { AiConnectionPanel } from './ai/AiConnectionPanel';
 import { AiOperationHistory } from './ai/AiOperationHistory';
 import { AiOperationPreview } from './ai/AiOperationPreview';
@@ -29,7 +31,7 @@ export function AiAssistantView() {
   const cards = useSelector((state: RootState) => state.cards.cards);
   const cardSets = useSelector((state: RootState) => state.cardSets.cardSets);
   const interfaceLanguage = useSelector((state: RootState) => state.app.interfaceLanguage);
-  const { messages, operationError, operations, stagedOperation } = useSelector(
+  const { blockedPreview, messages, operationError, operations, stagedOperation } = useSelector(
     (state: RootState) => state.aiAssistant,
   );
   const [apiKey, setApiKey] = useState(() => loadOpenRouterKey(keyStorageRef.current));
@@ -99,6 +101,9 @@ export function AiAssistantView() {
             dispatch(stageAiOperation(result.stagedOperation));
           }
           return;
+        }
+        if (result.blockedPreview) {
+          dispatch(stageBlockedAiPreview(result.blockedPreview));
         }
         if (result.failure.kind !== 'cancelled') {
           appendSafeError(
@@ -229,6 +234,13 @@ export function AiAssistantView() {
               operation={stagedOperation}
             />
           )}
+          {blockedPreview && (
+            <AiBlockedOperationPreview
+              language={interfaceLanguage}
+              onCancel={() => dispatch(cancelStagedAiOperation())}
+              preview={blockedPreview}
+            />
+          )}
         </Stack>
         <AiOperationHistory
           conflict={rollbackConflict}
@@ -275,7 +287,7 @@ function failureMessage(
       case 'rate-limit':
         return t(language, 'aiErrorRateLimit');
       case 'provider':
-        return t(language, 'aiErrorProvider');
+        return `${t(language, 'aiErrorProvider')} ${failure.message}`;
       case 'network':
         return t(language, 'aiErrorNetwork');
       case 'malformed-json':

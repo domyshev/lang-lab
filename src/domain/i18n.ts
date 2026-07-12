@@ -70,6 +70,9 @@ type I18nKey =
   | 'aiApplyChanges'
   | 'aiCancelPreview'
   | 'aiOperationBlocked'
+  | 'aiBlockedPreviewTitle'
+  | 'aiBlockedPreviewSummary'
+  | 'aiBlockedPreviewWarnings'
   | 'aiCreatedCards'
   | 'aiUpdatedCards'
   | 'aiPendingDuplicates'
@@ -326,6 +329,10 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiApplyChanges: 'Apply changes',
     aiCancelPreview: 'Cancel preview',
     aiOperationBlocked: 'The operation cannot be applied because the library changed.',
+    aiBlockedPreviewTitle: 'Review required',
+    aiBlockedPreviewSummary:
+      'This proposal cannot be applied until its validation warnings are resolved.',
+    aiBlockedPreviewWarnings: 'Validation warnings',
     aiCreatedCards: 'Cards created',
     aiUpdatedCards: 'Cards updated',
     aiPendingDuplicates: 'Pending duplicates',
@@ -607,6 +614,10 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiApplyChanges: 'Применить изменения',
     aiCancelPreview: 'Отменить предпросмотр',
     aiOperationBlocked: 'Операцию нельзя применить, потому что библиотека изменилась.',
+    aiBlockedPreviewTitle: 'Требуется проверка',
+    aiBlockedPreviewSummary:
+      'Это предложение нельзя применить, пока не устранены замечания проверки.',
+    aiBlockedPreviewWarnings: 'Замечания проверки',
     aiCreatedCards: 'Создано карточек',
     aiUpdatedCards: 'Обновлено карточек',
     aiPendingDuplicates: 'Дубликаты в ожидании',
@@ -890,6 +901,10 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiApplyChanges: 'Aplicar cambios',
     aiCancelPreview: 'Cancelar vista previa',
     aiOperationBlocked: 'La operacion no se puede aplicar porque la biblioteca cambio.',
+    aiBlockedPreviewTitle: 'Revision necesaria',
+    aiBlockedPreviewSummary:
+      'Esta propuesta no se puede aplicar hasta resolver las advertencias de validacion.',
+    aiBlockedPreviewWarnings: 'Advertencias de validacion',
     aiCreatedCards: 'Tarjetas creadas',
     aiUpdatedCards: 'Tarjetas actualizadas',
     aiPendingDuplicates: 'Duplicados pendientes',
