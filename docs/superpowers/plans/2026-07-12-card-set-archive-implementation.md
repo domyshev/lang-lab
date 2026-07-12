@@ -13,7 +13,7 @@
 - `TASK_REQUIREMENTS.md` must never be changed.
 - UI and committed documentation copy must remain English in docs and localized through `src/domain/i18n.ts` in app screens.
 - `all-cards` cannot be archived.
-- Archived card sets cannot be restored in place or deleted.
+- Archived card sets cannot be restored in place through a standalone user action or deleted. AI operation rollback remains allowed as an undo of the specific applied operation that archived the set.
 - Archived card sets remain in `state.cardSets.cardSets` so old statistics and attempts keep working.
 - New active card sets may reuse names from archived sets.
 - Name uniqueness checks apply only among non-archived custom card sets.

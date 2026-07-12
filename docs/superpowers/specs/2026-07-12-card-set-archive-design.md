@@ -2,7 +2,7 @@
 
 ## Goal
 
-Add a first-class archived state for card sets across the Cards page and the AI helper while keeping historical game results intact. Archived card sets remain readable, continue to appear in statistics through existing attempts, and can be used as a source for a new active card set, but they cannot be restored in place.
+Add a first-class archived state for card sets across the Cards page and the AI helper while keeping historical game results intact. Archived card sets remain readable, continue to appear in statistics through existing attempts, and can be used as a source for a new active card set, but they cannot be restored in place through a standalone user action.
 
 ## Existing Context
 
@@ -18,7 +18,8 @@ Rules:
 - Archived card sets stay in `state.cardSets.cardSets`.
 - Archived card sets keep their original `id`, `name`, `names`, and `cardIds`.
 - Existing attempts and statistics are not migrated or deleted.
-- An archived set cannot be restored in place.
+- An archived set cannot be restored in place through a standalone user action.
+- AI operation rollback remains allowed as an undo of the specific applied operation that archived the set, because operation history stores the operation's `before` and `after` snapshots.
 - A new active set may be created from an archived set by cloning names and `cardIds` into a new `id` with fresh `createdAt` and `updatedAt`, without `archivedAt`.
 
 ## Cards Page UX
@@ -69,7 +70,7 @@ Schema change:
 Planning behavior:
 
 - `planAiOperation` turns `archive: true` into an `updatedCardSets` entry where `after.archivedAt = now` and `after.updatedAt = now`;
-- rollback remains possible through the existing AI operation history because the operation stores `before` and `after`;
+- rollback remains possible through the existing AI operation history because the operation stores `before` and `after`; this rollback is the only allowed in-place reversal of an archive;
 - preview counts add `archivedCardSets`, counting card-set updates that newly set `archivedAt`.
 
 AI read tools:
@@ -104,7 +105,7 @@ Add tests before implementation:
 
 ## Out of Scope
 
-- Restoring archived sets in place.
+- Standalone restoring of archived sets in place outside AI operation rollback.
 - Deleting archived sets.
 - Moving or rewriting historical attempts.
 - Backend synchronization for archived sets.
