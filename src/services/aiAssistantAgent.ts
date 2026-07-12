@@ -9,9 +9,10 @@ import {
 import { PlannedAiOperation, planAiOperation } from '../domain/aiOperations';
 import type { BlockedAiPreview } from '../domain/aiBlockedPreview';
 import {
-  AI_ASSISTANT_MODEL_ID,
+  DEFAULT_OPENROUTER_MODEL_ID,
   OpenRouterChatMessage,
   OpenRouterError,
+  OpenRouterModelId,
   OpenRouterToolDefinition,
   sendOpenRouterChat,
 } from './openRouterClient';
@@ -50,6 +51,7 @@ export type AiAgentResult =
 
 export async function runAiAssistant(input: {
   apiKey: string;
+  modelId?: OpenRouterModelId;
   userMessage: string;
   snapshot: AiLibrarySnapshot;
   signal?: AbortSignal;
@@ -64,10 +66,11 @@ export async function runAiAssistant(input: {
 
   for (let responseCount = 0; responseCount < MAX_MODEL_RESPONSES; responseCount += 1) {
     const response = await sendOpenRouterChat({
-      apiKey: input.apiKey,
-      messages: [...messages],
-      tools: aiAssistantToolDefinitions,
-      signal: input.signal,
+        apiKey: input.apiKey,
+        messages: [...messages],
+        modelId: input.modelId ?? DEFAULT_OPENROUTER_MODEL_ID,
+        tools: aiAssistantToolDefinitions,
+        signal: input.signal,
     });
     if (!response.ok) {
       if (response.error.kind === 'cancelled') {
@@ -139,7 +142,7 @@ export async function runAiAssistant(input: {
           cards: input.snapshot.cards,
           cardSets: input.snapshot.cardSets,
           proposal: parsedProposal.data,
-          modelId: AI_ASSISTANT_MODEL_ID,
+          modelId: input.modelId ?? DEFAULT_OPENROUTER_MODEL_ID,
           now: input.now?.() ?? new Date().toISOString(),
           userPrompt: input.userMessage,
           idFactory: input.idFactory,

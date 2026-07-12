@@ -5,10 +5,13 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import {
   Alert,
   Button,
-  Chip,
+  FormControl,
   IconButton,
   InputAdornment,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Stack,
   TextField,
   Tooltip,
@@ -23,8 +26,11 @@ interface AiConnectionPanelProps {
   isKeyVisible: boolean;
   language: SupportedLanguage;
   missingKey: boolean;
+  modelId: string;
+  modelOptions: ReadonlyArray<{ id: string; label: string }>;
   onApiKeyChange: (value: string) => void;
   onDelete: () => void;
+  onModelChange: (value: string) => void;
   onSave: () => void;
   onToggleVisibility: () => void;
 }
@@ -35,8 +41,11 @@ export function AiConnectionPanel({
   isKeyVisible,
   language,
   missingKey,
+  modelId,
+  modelOptions,
   onApiKeyChange,
   onDelete,
+  onModelChange,
   onSave,
   onToggleVisibility,
 }: AiConnectionPanelProps) {
@@ -59,12 +68,28 @@ export function AiConnectionPanel({
           <Typography data-test="ai_connection__title" component="h3" variant="h6" fontWeight={800}>
             {t(language, 'aiConnectionTitle')}
           </Typography>
-          <Chip
-            data-test="ai_connection__model_badge"
-            label="DeepSeek V4 Flash"
-            size="small"
-            sx={{ bgcolor: '#e8f6fb', color: '#174e69', fontWeight: 800 }}
-          />
+          <FormControl data-test="ai_connection__model_control" size="small" sx={{ minWidth: 220 }}>
+            <InputLabel id="ai-connection-model-label">
+              {t(language, 'aiModelLabel')}
+            </InputLabel>
+            <Select
+              data-test="ai_connection__model_select"
+              label={t(language, 'aiModelLabel')}
+              labelId="ai-connection-model-label"
+              onChange={(event) => onModelChange(event.target.value)}
+              value={modelId}
+            >
+              {modelOptions.map((option) => (
+                <MenuItem
+                  data-test={`ai_connection__model_option__${option.id}`}
+                  key={option.id}
+                  value={option.id}
+                >
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Stack>
 
         <Stack

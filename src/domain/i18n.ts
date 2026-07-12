@@ -42,6 +42,7 @@ type I18nKey =
   | 'aiAssistantTitle'
   | 'aiConnectionTitle'
   | 'aiApiKeyLabel'
+  | 'aiModelLabel'
   | 'aiShowKey'
   | 'aiHideKey'
   | 'aiSaveKey'
@@ -293,6 +294,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiAssistantTitle: 'AI Assistant',
     aiConnectionTitle: 'Connection',
     aiApiKeyLabel: 'OpenRouter API key',
+    aiModelLabel: 'OpenRouter model',
     aiShowKey: 'Show API key',
     aiHideKey: 'Hide API key',
     aiSaveKey: 'Save key',
@@ -578,6 +580,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiAssistantTitle: 'AI помощник',
     aiConnectionTitle: 'Подключение',
     aiApiKeyLabel: 'API-ключ OpenRouter',
+    aiModelLabel: 'Модель OpenRouter',
     aiShowKey: 'Показать API-ключ',
     aiHideKey: 'Скрыть API-ключ',
     aiSaveKey: 'Сохранить ключ',
@@ -865,6 +868,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiAssistantTitle: 'Asistente IA',
     aiConnectionTitle: 'Conexion',
     aiApiKeyLabel: 'Clave API de OpenRouter',
+    aiModelLabel: 'Modelo de OpenRouter',
     aiShowKey: 'Mostrar clave API',
     aiHideKey: 'Ocultar clave API',
     aiSaveKey: 'Guardar clave',

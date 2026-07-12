@@ -788,7 +788,7 @@ describe('App navigation', () => {
     expect(screen.getByRole('heading', { name: connectionTitle })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: chatTitle })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: historyTitle })).toBeInTheDocument();
-    expect(screen.getByText('DeepSeek V4 Flash')).toBeInTheDocument();
+    expect(screen.getByText('GPT-5.5')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: importTitle })).toBeInTheDocument();
     expect(screen.queryByText(/trial|триальн|prueba/i)).not.toBeInTheDocument();
 

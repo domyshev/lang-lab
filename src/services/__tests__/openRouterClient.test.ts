@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  AI_ASSISTANT_MODEL_ID,
+  DEFAULT_OPENROUTER_MODEL_ID,
   OPENROUTER_CHAT_URL,
   sendOpenRouterChat,
 } from '../openRouterClient';
@@ -61,17 +61,36 @@ describe('sendOpenRouterChat', () => {
       },
     });
     expect(JSON.parse(String(init.body))).toEqual({
-      model: AI_ASSISTANT_MODEL_ID,
+      model: DEFAULT_OPENROUTER_MODEL_ID,
       messages,
       tools,
       tool_choice: 'auto',
       parallel_tool_calls: false,
       stream: false,
     });
-    expect(AI_ASSISTANT_MODEL_ID).toBe('deepseek/deepseek-v4-flash');
+    expect(DEFAULT_OPENROUTER_MODEL_ID).toBe('openai/gpt-5.5');
     expect(OPENROUTER_CHAT_URL).toBe(
       'https://openrouter.ai/api/v1/chat/completions',
     );
+  });
+
+  it('sends the explicitly selected OpenRouter model id', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        choices: [{ message: { role: 'assistant', content: 'Ready.' } }],
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await sendOpenRouterChat({
+      apiKey,
+      messages,
+      tools,
+      modelId: 'deepseek/deepseek-v4-flash',
+    });
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body)).model).toBe('deepseek/deepseek-v4-flash');
   });
 
   it.each([

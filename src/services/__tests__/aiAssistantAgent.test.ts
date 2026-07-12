@@ -63,6 +63,7 @@ describe('runAiAssistant', () => {
 
     const result = await runAiAssistant({
       apiKey: 'sk-or-test',
+      modelId: 'deepseek/deepseek-v4-flash',
       userMessage: 'Create a rail travel set.',
       snapshot,
       now: () => now,
@@ -84,6 +85,7 @@ describe('runAiAssistant', () => {
     expect(sendChatMock).toHaveBeenCalledTimes(3);
     const first = sendChatMock.mock.calls[0][0];
     expect(first.tools).toBe(aiAssistantToolDefinitions);
+    expect(first.modelId).toBe('deepseek/deepseek-v4-flash');
     expect(first.tools.map((tool) => tool.function.name)).toEqual([
       'list_card_sets',
       'get_card_set',
@@ -146,6 +148,18 @@ describe('runAiAssistant', () => {
       ok: true,
       content: '  Here is what I found.\n',
     });
+  });
+
+  it('uses the default OpenRouter model when no model is selected', async () => {
+    sendChatMock.mockResolvedValueOnce(success('Ready.'));
+
+    await runAiAssistant({
+      apiKey: 'key',
+      userMessage: 'Review my cards.',
+      snapshot,
+    });
+
+    expect(sendChatMock.mock.calls[0][0].modelId).toBe('openai/gpt-5.5');
   });
 
   it.each(['', '   \n\t'])('returns empty-response for blank content %j', async (content) => {

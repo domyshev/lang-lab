@@ -1,4 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
+import {
+  DEFAULT_OPENROUTER_MODEL_ID,
+  OPENROUTER_TRIAL_KEY,
+} from '../src/services/openRouterKeyStorage';
 
 test.describe('golden base visual snapshots', () => {
   test('runs the mocked golden AI Assistant workflow', async ({ page }) => {
@@ -160,7 +164,7 @@ test.describe('golden base visual snapshots', () => {
         ),
       ).not.toContain(fakeKey);
       expect(body).toMatchObject({
-        model: 'deepseek/deepseek-v4-flash',
+        model: DEFAULT_OPENROUTER_MODEL_ID,
         tool_choice: 'auto',
         parallel_tool_calls: false,
         stream: false,
@@ -210,7 +214,7 @@ test.describe('golden base visual snapshots', () => {
     expect(JSON.parse(proposalResult!.content)).toMatchObject({
       ok: true,
       operation: {
-        modelId: 'deepseek/deepseek-v4-flash',
+        modelId: DEFAULT_OPENROUTER_MODEL_ID,
         title: 'Rail essentials',
       },
     });
@@ -308,7 +312,9 @@ test.describe('golden base visual snapshots', () => {
 
     await page.getByTestId('app_shell__tab__agents').click();
     await expect(page.getByTestId('ai_assistant__page')).toBeVisible();
-    await expect(page.getByTestId('ai_connection__key_input')).toHaveValue('');
+    await expect(page.getByTestId('ai_connection__key_input')).toHaveValue(
+      OPENROUTER_TRIAL_KEY,
+    );
     await expectNoHorizontalOverflow(page);
     await captureGolden(page, 'ai-assistant-workspace');
   });
@@ -319,7 +325,9 @@ test.describe('golden base visual snapshots', () => {
 
     await page.getByTestId('app_shell__tab__agents').click();
     await expect(page.getByTestId('ai_assistant__page')).toBeVisible();
-    await expect(page.getByTestId('ai_connection__key_input')).toHaveValue('');
+    await expect(page.getByTestId('ai_connection__key_input')).toHaveValue(
+      OPENROUTER_TRIAL_KEY,
+    );
     await expectNoHorizontalOverflow(page);
     await captureGolden(page, 'ai-assistant-workspace-narrow');
   });

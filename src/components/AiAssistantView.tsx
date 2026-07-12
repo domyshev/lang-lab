@@ -5,8 +5,11 @@ import { AiRollbackConflict, AppliedAiOperation, findAiRollbackConflict } from '
 import { t } from '../domain/i18n';
 import { AiAgentFailure, runAiAssistant } from '../services/aiAssistantAgent';
 import {
+  OPENROUTER_AVAILABLE_MODELS,
   loadOpenRouterKey,
+  loadOpenRouterModel,
   removeOpenRouterKey,
+  saveOpenRouterModel,
   saveOpenRouterKey,
 } from '../services/openRouterKeyStorage';
 import { applyAiOperation, revertAiOperation } from '../store/aiAssistantActions';
@@ -35,6 +38,7 @@ export function AiAssistantView() {
     (state: RootState) => state.aiAssistant,
   );
   const [apiKey, setApiKey] = useState(() => loadOpenRouterKey(keyStorageRef.current));
+  const [modelId, setModelId] = useState(() => loadOpenRouterModel(keyStorageRef.current));
   const [draft, setDraft] = useState('');
   const [isKeyVisible, setIsKeyVisible] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
@@ -81,6 +85,7 @@ export function AiAssistantView() {
       try {
         const result = await runAiAssistant({
           apiKey: key,
+          modelId,
           userMessage: prompt,
           snapshot: { cards, cardSets, interfaceLanguage },
           signal: controller.signal,
@@ -127,7 +132,7 @@ export function AiAssistantView() {
         }
       }
     },
-    [apiKey, cardSets, cards, dispatch, interfaceLanguage, isThinking],
+    [apiKey, cardSets, cards, dispatch, interfaceLanguage, isThinking, modelId],
   );
 
   const handleCancel = () => {
@@ -179,6 +184,8 @@ export function AiAssistantView() {
         isKeyVisible={isKeyVisible}
         language={interfaceLanguage}
         missingKey={missingKey}
+        modelId={modelId}
+        modelOptions={OPENROUTER_AVAILABLE_MODELS}
         onApiKeyChange={(value) => {
           setApiKey(value);
           if (value.trim()) setMissingKey(false);
@@ -187,6 +194,10 @@ export function AiAssistantView() {
           removeOpenRouterKey(keyStorageRef.current);
           setApiKey('');
           setIsKeyVisible(false);
+        }}
+        onModelChange={(value) => {
+          saveOpenRouterModel(value, keyStorageRef.current);
+          setModelId(loadOpenRouterModel(keyStorageRef.current));
         }}
         onSave={() => {
           saveOpenRouterKey(apiKey, keyStorageRef.current);

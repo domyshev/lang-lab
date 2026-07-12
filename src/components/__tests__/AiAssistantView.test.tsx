@@ -8,7 +8,11 @@ import type { AppliedAiOperation, PlannedAiOperation } from '../../domain/aiOper
 import type { SupportedLanguage } from '../../domain/languages';
 import { AiAgentResult, runAiAssistant } from '../../services/aiAssistantAgent';
 import {
+  DEFAULT_OPENROUTER_MODEL_ID,
   OPENROUTER_KEY_STORAGE_KEY,
+  OPENROUTER_MODEL_STORAGE_KEY,
+  OPENROUTER_TRIAL_KEY,
+  OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY,
   saveOpenRouterKey,
 } from '../../services/openRouterKeyStorage';
 import {
@@ -140,21 +144,24 @@ function createMemoryStorage(): Storage {
 }
 
 describe('AiAssistantView connection', () => {
-  it('loads a saved key masked and identifies the fixed model', () => {
-    saveOpenRouterKey('sk-saved-secret');
+  it('loads the built-in trial key masked and selects the default model', () => {
     renderView();
 
     expect(screen.getByLabelText('OpenRouter API key')).toHaveAttribute('type', 'password');
-    expect(screen.getByLabelText('OpenRouter API key')).toHaveValue('sk-saved-secret');
-    expect(screen.getByText('DeepSeek V4 Flash')).toBeInTheDocument();
+    expect(screen.getByLabelText('OpenRouter API key')).toHaveValue(OPENROUTER_TRIAL_KEY);
+    expect(
+      screen.getByRole('combobox', { name: 'OpenRouter model' }),
+    ).toHaveTextContent('GPT-5.5');
+    expect(DEFAULT_OPENROUTER_MODEL_ID).toBe('openai/gpt-5.5');
     expect(screen.getByText(/unencrypted in this browser/i)).toBeInTheDocument();
   });
 
-  it('shows, saves, and deletes the key through explicit controls', async () => {
+  it('shows, saves, deletes, and replaces the key through explicit controls', async () => {
     const user = userEvent.setup();
     renderView();
     const keyInput = screen.getByLabelText('OpenRouter API key');
 
+    await user.clear(keyInput);
     await user.type(keyInput, '  sk-new-secret  ');
     await user.click(screen.getByRole('button', { name: 'Show API key' }));
     expect(keyInput).toHaveAttribute('type', 'text');
@@ -163,15 +170,43 @@ describe('AiAssistantView connection', () => {
 
     await user.click(screen.getByRole('button', { name: 'Save key' }));
     expect(window.localStorage.getItem(OPENROUTER_KEY_STORAGE_KEY)).toBe('sk-new-secret');
+    expect(window.localStorage.getItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY)).toBeNull();
 
     await user.click(screen.getByRole('button', { name: 'Delete key' }));
     expect(keyInput).toHaveValue('');
     expect(window.localStorage.getItem(OPENROUTER_KEY_STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY)).toBe('true');
+
+    await user.type(keyInput, 'sk-replacement');
+    await user.click(screen.getByRole('button', { name: 'Save key' }));
+    expect(window.localStorage.getItem(OPENROUTER_KEY_STORAGE_KEY)).toBe('sk-replacement');
+    expect(window.localStorage.getItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY)).toBeNull();
+  });
+
+  it('persists the selected model and passes it to the assistant service', async () => {
+    const user = userEvent.setup();
+    mockedRunAiAssistant.mockResolvedValue({ ok: true, content: 'Ready.' });
+    renderView();
+
+    await user.click(screen.getByLabelText('OpenRouter model'));
+    await user.click(screen.getByRole('option', { name: 'DeepSeek V4 Flash' }));
+    expect(window.localStorage.getItem(OPENROUTER_MODEL_STORAGE_KEY)).toBe(
+      'deepseek/deepseek-v4-flash',
+    );
+
+    await user.type(screen.getByLabelText('Message the AI assistant'), 'Analyze my cards');
+    await user.click(screen.getByRole('button', { name: 'Send message' }));
+
+    expect(mockedRunAiAssistant.mock.calls[0][0]).toMatchObject({
+      apiKey: OPENROUTER_TRIAL_KEY,
+      modelId: 'deepseek/deepseek-v4-flash',
+    });
   });
 
   it('focuses the key input and skips the service when sending without a key', async () => {
     const user = userEvent.setup();
     renderView();
+    await user.click(screen.getByRole('button', { name: 'Delete key' }));
     await user.type(screen.getByLabelText('Message the AI assistant'), 'Help me study');
     await user.click(screen.getByRole('button', { name: 'Send message' }));
 

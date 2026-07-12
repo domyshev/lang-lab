@@ -1,6 +1,13 @@
 export const OPENROUTER_CHAT_URL =
   'https://openrouter.ai/api/v1/chat/completions';
-export const AI_ASSISTANT_MODEL_ID = 'deepseek/deepseek-v4-flash';
+export {
+  DEFAULT_OPENROUTER_MODEL_ID,
+  type OpenRouterModelId,
+} from './openRouterKeyStorage';
+import {
+  DEFAULT_OPENROUTER_MODEL_ID,
+  type OpenRouterModelId,
+} from './openRouterKeyStorage';
 
 export interface OpenRouterToolCall {
   id: string;
@@ -52,6 +59,7 @@ export type OpenRouterChatResult =
 export async function sendOpenRouterChat(input: {
   apiKey: string;
   messages: OpenRouterChatMessage[];
+  modelId?: OpenRouterModelId;
   tools: OpenRouterToolDefinition[];
   signal?: AbortSignal;
 }): Promise<OpenRouterChatResult> {
@@ -66,7 +74,7 @@ export async function sendOpenRouterChat(input: {
         'X-OpenRouter-Title': 'Language Lab',
       },
       body: JSON.stringify({
-        model: AI_ASSISTANT_MODEL_ID,
+        model: input.modelId ?? DEFAULT_OPENROUTER_MODEL_ID,
         messages: input.messages,
         tools: input.tools,
         tool_choice: 'auto',
