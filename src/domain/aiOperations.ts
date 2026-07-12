@@ -175,8 +175,32 @@ export function planAiOperation(input: {
     workingSetsById.set(after.id, after);
   }
 
+  const updatedCardSets = input.cardSets.flatMap((existingSet) => {
+    const finalSet = workingSetsById.get(existingSet.id);
+    if (!finalSet || entitiesEqual(existingSet, finalSet)) {
+      return [];
+    }
+    return [{ before: cloneCardSet(existingSet), after: cloneCardSet(finalSet) }];
+  });
+
   const finalCardSets = [...workingSetsById.values()];
-  const conflictingCardSet = finalCardSets.find((cardSet) =>
+  const nameChangedSetIds = new Set<string>();
+  for (const change of proposal.cardSetChanges ?? []) {
+    if (change.type === 'update' && change.names) {
+      nameChangedSetIds.add(change.cardSetId);
+    }
+  }
+  const cardSetsWithIntroducedNames = [
+    ...createdCardSets,
+    ...updatedCardSets
+      .filter(
+        ({ before, after }) =>
+          nameChangedSetIds.has(after.id) &&
+          (before.name !== after.name || !entitiesEqual(before.names, after.names)),
+      )
+      .map(({ after }) => after),
+  ];
+  const conflictingCardSet = cardSetsWithIntroducedNames.find((cardSet) =>
     !isArchivedCardSet(cardSet) &&
     cardSet.id !== ALL_CARDS_CARD_SET_ID &&
     findActiveCardSetNameConflict({
@@ -194,14 +218,6 @@ export function planAiOperation(input: {
       ],
     };
   }
-
-  const updatedCardSets = input.cardSets.flatMap((existingSet) => {
-    const finalSet = workingSetsById.get(existingSet.id);
-    if (!finalSet || entitiesEqual(existingSet, finalSet)) {
-      return [];
-    }
-    return [{ before: cloneCardSet(existingSet), after: cloneCardSet(finalSet) }];
-  });
 
   if (
     createdCards.length === 0 &&

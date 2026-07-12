@@ -292,6 +292,36 @@ describe('planAiOperation', () => {
     });
   });
 
+  it('allows card-only AI operations when legacy active set names are already duplicated', () => {
+    const input = plannerInput({
+      title: 'Add love card',
+      summary: 'Create a card without changing sets.',
+      cards: [
+        {
+          clientRef: 'heart',
+          translations: { en: 'heart', ru: 'сердце', es: 'corazon' },
+        },
+      ],
+    });
+    input.cardSets = [
+      cardSet(),
+      cardSet({
+        id: 'set-travel-copy',
+        name: 'Travel',
+        names: { en: 'Travel' },
+        cardIds: [],
+      }),
+    ];
+
+    const result = planAiOperation(input);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.operation.createdCards).toHaveLength(1);
+    expect(result.operation.createdCardSets).toEqual([]);
+    expect(result.operation.updatedCardSets).toEqual([]);
+  });
+
   it.each([
     {
       name: 'create',
