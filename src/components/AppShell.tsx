@@ -173,7 +173,25 @@ export function AppShell({
               value="game"
               label={t(interfaceLanguage, 'gamesTab')}
               onClick={() => onNavigate?.('game')}
-              sx={{ minWidth: '0 !important' }}
+              style={{
+                backgroundColor: 'rgb(255, 247, 205)',
+                borderRadius: '999px',
+              }}
+              sx={{
+                border: '1px solid rgba(206, 157, 29, 0.34)',
+                boxShadow:
+                  'inset 0 1px 0 rgba(255,255,255,0.9), 0 5px 12px rgba(92, 78, 22, 0.14)',
+                color: '#203015',
+                fontWeight: '950 !important',
+                minHeight: '34px !important',
+                minWidth: '0 !important',
+                px: { xs: 1.25, sm: 2.25 },
+                '&.Mui-selected': {
+                  boxShadow:
+                    'inset 0 1px 0 rgba(255,255,255,0.9), 0 7px 16px rgba(92, 78, 22, 0.22)',
+                  color: '#203015',
+                },
+              }}
             />
             <Tab
               data-test="app_shell__tab__cards"

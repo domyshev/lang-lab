@@ -259,7 +259,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
   en: {
     appName: 'Language Lab',
     game: 'Game',
-    gamesTab: 'Games',
+    gamesTab: 'Play',
     cards: 'Cards',
     statistics: 'Statistics',
     cardSets: 'Card sets',
@@ -556,7 +556,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
   ru: {
     appName: 'Language Lab',
     game: 'Игра',
-    gamesTab: 'Игры',
+    gamesTab: 'Играть',
     cards: 'Карточки',
     statistics: 'Статистика',
     cardSets: 'Наборы',
@@ -855,7 +855,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
   es: {
     appName: 'Language Lab',
     game: 'Juego',
-    gamesTab: 'Juegos',
+    gamesTab: 'Jugar',
     cards: 'Tarjetas',
     statistics: 'Estadisticas',
     cardSets: 'Conjuntos',

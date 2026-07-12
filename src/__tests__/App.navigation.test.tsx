@@ -331,7 +331,7 @@ describe('App navigation', () => {
     expect(screen.getByTestId('app__game_setup_section')).toHaveStyle({
       gap: '12px',
     });
-    expect(screen.getByRole('tab', { name: 'Игры' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Играть' })).toBeInTheDocument();
     expect(screen.getByText('Language Lab')).toBeInTheDocument();
     expect(screen.queryByText('Language Crossword Lab')).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Карточки' })).toBeInTheDocument();
@@ -738,7 +738,7 @@ describe('App navigation', () => {
   it.each([
     {
       interfaceLanguage: 'en' as const,
-      gamesTab: 'Games',
+      gamesTab: 'Play',
       title: 'AI Assistant',
       wandLabel: 'Open AI Assistant',
       chatTitle: 'Chat',
@@ -747,7 +747,7 @@ describe('App navigation', () => {
     },
     {
       interfaceLanguage: 'ru' as const,
-      gamesTab: 'Игры',
+      gamesTab: 'Играть',
       title: 'AI помощник',
       wandLabel: 'Открыть AI помощника',
       chatTitle: 'Чат',
@@ -756,7 +756,7 @@ describe('App navigation', () => {
     },
     {
       interfaceLanguage: 'es' as const,
-      gamesTab: 'Juegos',
+      gamesTab: 'Jugar',
       title: 'Asistente IA',
       wandLabel: 'Abrir Asistente IA',
       chatTitle: 'Chat',
@@ -1670,7 +1670,7 @@ describe('App navigation', () => {
     await startExercise(user, 'Пропущенные буквы');
     await answerMissingLettersWrong(user);
 
-    await user.click(screen.getByRole('tab', { name: 'Игры' }));
+    await user.click(screen.getByRole('tab', { name: 'Играть' }));
 
     expect(
       screen.getByText('Результаты упражнения будут зачтены, а упражнение закончено.'),
@@ -1682,7 +1682,7 @@ describe('App navigation', () => {
     );
     expect(screen.getByRole('heading', { name: 'Игра: Пропущенные буквы' })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: 'Игры' }));
+    await user.click(screen.getByRole('tab', { name: 'Играть' }));
     await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
@@ -1756,7 +1756,7 @@ describe('App navigation', () => {
     );
     expect(screen.getByText('Детали упражнения')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: 'Игры' }));
+    await user.click(screen.getByRole('tab', { name: 'Играть' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByTestId('card_set_library__panel')).toBeVisible();
@@ -1808,9 +1808,11 @@ describe('App navigation', () => {
     expect(screen.getByTestId('target_stats__total_exercises__label')).not.toHaveTextContent(
       ':',
     );
-    expect(screen.getByTestId('target_stats__total_exercises__value_chip')).toHaveTextContent(
-      '1 пройдено',
-    );
+    expect(screen.queryByTestId('target_stats__total_exercises__value_chip')).not.toBeInTheDocument();
+    expect(screen.getByTestId('target_stats__total_exercises__value')).toHaveTextContent('1');
+    expect(screen.getByTestId('target_stats__total_exercises__value')).toHaveStyle({
+      fontSize: '42px',
+    });
     expect(screen.getByTestId('target_stats__total_exercises__value_group')).toHaveStyle({
       justifyContent: 'center',
     });
@@ -1823,19 +1825,21 @@ describe('App navigation', () => {
     expect(screen.getByTestId('target_stats__answered_formula__label')).not.toHaveTextContent(
       ':',
     );
-    expect(screen.getByTestId('target_stats__answered_formula__total_chip')).toHaveTextContent(
-      '2 отвечено',
-    );
+    expect(screen.queryByTestId('target_stats__answered_formula__total_chip')).not.toBeInTheDocument();
+    expect(screen.getByTestId('target_stats__answered_formula__total_value')).toHaveTextContent('2');
+    expect(screen.getByTestId('target_stats__answered_formula__total_value')).toHaveStyle({
+      fontSize: '42px',
+    });
     expect(screen.getByTestId('target_stats__answered_formula__equals_icon')).toBeInTheDocument();
     expect(screen.queryByTestId('target_stats__answered_formula__correct_chip')).not.toBeInTheDocument();
     expect(screen.getByTestId('target_stats__answered_formula__incorrect_chip')).toHaveTextContent(
       '2 неверно',
     );
-    await user.hover(screen.getByTestId('target_stats__answered_formula__total_chip'));
+    await user.hover(screen.getByTestId('target_stats__answered_formula__total_value'));
     expect(
       await screen.findByText('всего отвечено карточек во всех упражнениях'),
     ).toBeInTheDocument();
-    await user.unhover(screen.getByTestId('target_stats__answered_formula__total_chip'));
+    await user.unhover(screen.getByTestId('target_stats__answered_formula__total_value'));
     await user.hover(screen.getByTestId('target_stats__answered_formula__incorrect_chip'));
     expect(
       await screen.findByText('количество карточек отвеченных неверно'),

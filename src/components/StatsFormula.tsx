@@ -52,6 +52,7 @@ export function StatsFormula({
   interfaceLanguage,
   labelDisplay,
   rootDataTest,
+  totalDisplay = 'chip',
   totalTooltip,
   valueGroupJustify = 'flex-start',
   showLabel = true,
@@ -67,6 +68,7 @@ export function StatsFormula({
   interfaceLanguage: SupportedLanguage;
   labelDisplay?: ReactNode;
   rootDataTest?: string;
+  totalDisplay?: 'chip' | 'plain';
   totalTooltip?: string;
   valueGroupJustify?: 'center' | 'flex-start';
   showLabel?: boolean;
@@ -112,14 +114,23 @@ export function StatsFormula({
         useFlexGap
         sx={{ justifyContent: valueGroupJustify }}
       >
-        <MetricChip
-          ariaLabel={`${totalLabel}: ${total}`}
-          dataTest={`${dataTestPrefix}__total_chip`}
-          label={total}
-          suffix={t(interfaceLanguage, 'metricAnsweredSuffix')}
-          tone="total"
-          tooltip={totalTooltip ?? t(interfaceLanguage, 'totalAnsweredTooltip')}
-        />
+        {totalDisplay === 'plain' ? (
+          <MetricPlainValue
+            ariaLabel={`${totalLabel}: ${total}`}
+            dataTest={`${dataTestPrefix}__total_value`}
+            label={total}
+            tooltip={totalTooltip ?? t(interfaceLanguage, 'totalAnsweredTooltip')}
+          />
+        ) : (
+          <MetricChip
+            ariaLabel={`${totalLabel}: ${total}`}
+            dataTest={`${dataTestPrefix}__total_chip`}
+            label={total}
+            suffix={t(interfaceLanguage, 'metricAnsweredSuffix')}
+            tone="total"
+            tooltip={totalTooltip ?? t(interfaceLanguage, 'totalAnsweredTooltip')}
+          />
+        )}
         {resultParts.length > 0 && (
           <FormulaIcon dataTest={`${dataTestPrefix}__equals_icon`} label="=">
             <DragHandleRoundedIcon fontSize="inherit" />
@@ -258,6 +269,56 @@ export function MetricChip({
     </CursorAnchoredTooltip>
   ) : (
     chip
+  );
+}
+
+export function MetricPlainValue({
+  ariaLabel,
+  dataTest,
+  label,
+  tooltip,
+}: {
+  ariaLabel: string;
+  dataTest: string;
+  label: number;
+  tooltip?: string;
+}) {
+  const value = (
+    <Typography
+      aria-label={ariaLabel}
+      component="span"
+      data-test={dataTest}
+      sx={{
+        color: '#203015',
+        cursor: tooltip ? 'help' : 'default',
+        display: 'inline-flex',
+        fontSize: 42,
+        fontWeight: 950,
+        letterSpacing: 0,
+        lineHeight: 0.95,
+      }}
+    >
+      {label}
+    </Typography>
+  );
+
+  return tooltip ? (
+    <CursorAnchoredTooltip
+      arrowDataTest={`${dataTest}__tooltip_arrow`}
+      closeOnOtherOpen
+      leaveDelay={0}
+      title={
+        <TooltipContent sx={metricTooltipContentStyles}>
+          {tooltip}
+        </TooltipContent>
+      }
+      transitionTimeout={0}
+      tooltipSx={metricTooltipStyles}
+    >
+      {value}
+    </CursorAnchoredTooltip>
+  ) : (
+    value
   );
 }
 

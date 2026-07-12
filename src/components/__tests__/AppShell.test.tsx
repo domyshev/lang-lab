@@ -249,6 +249,41 @@ describe('AppShell', () => {
     ).toBeInTheDocument();
   });
 
+  it('renders the game tab as a playful play call to action', () => {
+    const store = configureStore({
+      reducer: {
+        app: appReducer,
+      },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          interfaceLanguage: 'ru' as const,
+          playerProfile: {
+            avatarSeed: 'test-player',
+            displayName: 'Илья',
+            isAnonymous: false,
+          },
+        },
+      },
+    });
+
+    render(
+      <Provider store={store}>
+        <AppShell activeSection="game">
+          <div>Content</div>
+        </AppShell>
+      </Provider>,
+    );
+
+    const gameTab = screen.getByRole('tab', { name: 'Играть' });
+    expect(gameTab).toHaveStyle({
+      backgroundColor: 'rgb(255, 247, 205)',
+      borderRadius: '999px',
+      color: 'rgb(32, 48, 21)',
+    });
+    expect(gameTab).toHaveStyle({ fontWeight: '950' });
+  });
+
   it('resets the shell scroll root only when the active section changes', () => {
     const store = configureStore({
       reducer: {

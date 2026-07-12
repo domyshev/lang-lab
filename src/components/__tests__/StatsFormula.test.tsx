@@ -149,6 +149,33 @@ describe('StatsFormula', () => {
     ).toHaveStyle({ marginLeft: '4px' });
   });
 
+  it('can render the total as a plain large number while keeping result chips', () => {
+    render(
+      <StatsFormula
+        correct={1}
+        dataTestPrefix="plain_total_formula"
+        incorrect={1}
+        interfaceLanguage="ru"
+        total={2}
+        totalDisplay="plain"
+        totalLabel="Всего отвечено карточек"
+      />,
+    );
+
+    expect(screen.queryByTestId('plain_total_formula__total_chip')).not.toBeInTheDocument();
+    expect(screen.getByTestId('plain_total_formula__total_value')).toHaveTextContent('2');
+    expect(screen.getByTestId('plain_total_formula__total_value')).toHaveStyle({
+      fontSize: '42px',
+    });
+    expect(screen.getByTestId('plain_total_formula__equals_icon')).toBeInTheDocument();
+    expect(screen.getByTestId('plain_total_formula__correct_chip')).toHaveTextContent(
+      '1 правильно',
+    );
+    expect(screen.getByTestId('plain_total_formula__incorrect_chip')).toHaveTextContent(
+      '1 неверно',
+    );
+  });
+
   it('uses a light readable tooltip for metric chips', async () => {
     const user = userEvent.setup();
     render(

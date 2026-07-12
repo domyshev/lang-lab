@@ -35,7 +35,7 @@ import { GameHelpPanel } from './components/GameHelpPanel';
 import { GameWarningIcon, GameWarningTooltip } from './components/GameWarningTooltip';
 import { HistoryView } from './components/HistoryView';
 import { SplitWordStatsChip } from './components/SplitWordStatsChip';
-import { MetricChip, StatsFormula } from './components/StatsFormula';
+import { MetricPlainValue, StatsFormula } from './components/StatsFormula';
 import { CursorAnchoredTooltip, TooltipContent } from './components/CursorAnchoredTooltip';
 import { CardSetDetailView } from './components/CardSetDetailView';
 import { CardSetListView } from './components/CardSetListView';
@@ -1714,12 +1714,10 @@ export function App() {
                   width: '100%',
                 }}
               >
-                <MetricChip
+                <MetricPlainValue
                   ariaLabel={`${t(interfaceLanguage, 'totalExercises')} ${targetSummaries.length}`}
-                  dataTest="target_stats__total_exercises__value_chip"
+                  dataTest="target_stats__total_exercises__value"
                   label={targetSummaries.length}
-                  suffix={t(interfaceLanguage, 'metricCompletedSuffix')}
-                  tone="total"
                   tooltip={t(interfaceLanguage, 'totalExercisesTooltip')}
                 />
               </Box>
@@ -1780,6 +1778,7 @@ export function App() {
                   rootDataTest="target_stats__answered_formula__stats_root"
                   showLabel={false}
                   total={totalAnswered}
+                  totalDisplay="plain"
                   totalLabel={t(interfaceLanguage, 'targetAnsweredCards')}
                   totalTooltip={t(interfaceLanguage, 'targetAnsweredCardsTooltip')}
                   valueGroupJustify="center"
