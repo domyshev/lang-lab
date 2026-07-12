@@ -151,6 +151,19 @@ describe('executeAiReadTool', () => {
     });
   });
 
+  it('treats an empty optional search card set id as an unscoped search', () => {
+    expect(
+      executeAiReadTool(
+        'search_cards',
+        { cardSetId: '', query: 'airport', languages: ['en'] },
+        snapshot,
+      ),
+    ).toMatchObject({
+      items: [cards[1], cards[2], cards[3], cards[4]],
+      total: 4,
+    });
+  });
+
   it('deduplicates requested ids and makes unknown cards explicit', () => {
     expect(
       executeAiReadTool(

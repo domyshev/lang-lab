@@ -24,9 +24,14 @@ const getCardSetArgumentsSchema = z
   })
   .strict();
 
+const optionalNonEmptyString = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+  z.string().trim().min(1).optional(),
+);
+
 const searchCardsArgumentsSchema = z
   .object({
-    cardSetId: z.string().trim().min(1).optional(),
+    cardSetId: optionalNonEmptyString,
     cursor: z.number().int().nonnegative().optional(),
     languages: z.array(z.enum(supportedLanguages)).optional(),
     limit: z.number().int().positive().optional(),

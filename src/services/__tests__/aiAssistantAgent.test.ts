@@ -162,6 +162,43 @@ describe('runAiAssistant', () => {
     expect(sendChatMock.mock.calls[0][0].modelId).toBe('openai/gpt-5.5');
   });
 
+  it('continues when a model sends an empty optional card set id for search', async () => {
+    const searchCall = toolCall('search-empty-set', 'search_cards', {
+      cardSetId: '',
+      languages: ['en'],
+      query: 'airport',
+    });
+    sendChatMock
+      .mockResolvedValueOnce(success(null, [searchCall]))
+      .mockResolvedValueOnce(success('I found the airport card.'));
+
+    const result = await runAiAssistant({
+      apiKey: 'key',
+      userMessage: 'Find airport.',
+      snapshot,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      content: 'I found the airport card.',
+    });
+    const second = sendChatMock.mock.calls[1][0];
+    expect(second.messages.slice(-2)).toEqual([
+      { role: 'assistant', content: null, tool_calls: [searchCall] },
+      {
+        role: 'tool',
+        tool_call_id: 'search-empty-set',
+        content: JSON.stringify({
+          cursor: 0,
+          items: [snapshot.cards[0]],
+          limit: 20,
+          nextCursor: null,
+          total: 1,
+        }),
+      },
+    ]);
+  });
+
   it.each(['', '   \n\t'])('returns empty-response for blank content %j', async (content) => {
     sendChatMock.mockResolvedValueOnce(success(content));
 
