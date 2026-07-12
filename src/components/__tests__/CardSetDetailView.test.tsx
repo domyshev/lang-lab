@@ -4,7 +4,7 @@ import { render, screen, within } from '@testing-library/react';
 import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ExerciseAttempt } from '../../domain/exercises';
 import { appReducer } from '../../store/appSlice';
 import { attemptsReducer } from '../../store/attemptsSlice';
@@ -16,6 +16,10 @@ import { CardSetDetailView } from '../CardSetDetailView';
 const now = '2026-07-04T00:00:00.000Z';
 
 describe('CardSetDetailView', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('sorts cards by total target attempts and shows compact kind chips with recent stats tooltips', async () => {
     const { container } = render(
       <Provider store={createStore()}>
@@ -325,6 +329,7 @@ describe('CardSetDetailView', () => {
     expect(screen.getByText('airport')).toBeInTheDocument();
     expect(screen.getByText('worth it')).toBeInTheDocument();
 
+    vi.stubGlobal('crypto', { randomUUID: undefined });
     await user.click(screen.getByRole('button', { name: 'Создать активную копию' }));
 
     const copied = store
