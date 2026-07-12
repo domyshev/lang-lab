@@ -13,6 +13,7 @@ const listCardSetsArgumentsSchema = z
     cursor: z.number().int().nonnegative().optional(),
     limit: z.number().int().positive().optional(),
     query: z.string().optional(),
+    archiveFilter: z.enum(['active', 'archived', 'all']).optional(),
   })
   .strict();
 
@@ -85,6 +86,12 @@ export const aiReadToolDefinitions = [
           cursor: { type: 'integer', minimum: 0 },
           limit: { type: 'integer', minimum: 1, maximum: CARD_SET_PAGE_LIMIT },
           query: { type: 'string' },
+          archiveFilter: {
+            type: 'string',
+            enum: ['active', 'archived', 'all'],
+            description:
+              'active lists active sets plus All cards, archived lists archived sets only, all lists both.',
+          },
         },
       },
     },
@@ -172,6 +179,8 @@ function listCardSets(
   snapshot: AiLibrarySnapshot,
 ): Page<CardSetSummary> {
   const query = normalizeSearchValue(arguments_.query ?? '');
+  const archiveFilter = arguments_.archiveFilter ?? 'active';
+  const includeAllCards = archiveFilter === 'active';
   const cardCounts = createCardCounts(snapshot.cardSets, snapshot.cards);
   const allCards = {
     cardCount: snapshot.cards.length,
@@ -179,9 +188,15 @@ function listCardSets(
     name: t(snapshot.interfaceLanguage, 'allCards'),
   };
   const cardSets = [
-    ...(normalizeSearchValue(allCards.name).includes(query) ? [allCards] : []),
+    ...(includeAllCards && normalizeSearchValue(allCards.name).includes(query)
+      ? [allCards]
+      : []),
     ...snapshot.cardSets
-      .filter((cardSet) => cardSetNameMatchesQuery(cardSet, query))
+      .filter((cardSet) => {
+        if (archiveFilter === 'active' && cardSet.archivedAt) return false;
+        if (archiveFilter === 'archived' && !cardSet.archivedAt) return false;
+        return cardSetNameMatchesQuery(cardSet, query);
+      })
       .map((cardSet) =>
         toCardSetSummary(cardSet, snapshot.interfaceLanguage, cardCounts),
       ),

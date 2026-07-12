@@ -97,7 +97,10 @@ describe('runAiAssistant', () => {
     expect(first.messages[0]).toMatchObject({ role: 'system' });
     expect(first.messages[0].content).toContain('# Language Card JSON Format');
     expect(first.messages[0].content).toContain('limited authority');
-    expect(first.messages[0].content).toContain('archive normal card sets');
+    expect(first.messages[0].content).toContain('archive: true');
+    expect(first.messages[0].content).toContain('must not archive all-cards');
+    expect(first.messages[0].content).toContain('archiveFilter');
+    expect(first.messages[0].content).not.toContain('archive or delete card sets');
     expect(first.messages[0].content).toContain('never dispatch');
     expect(first.messages[0].content).toContain(
       'Current selected model id: deepseek/deepseek-v4-flash',

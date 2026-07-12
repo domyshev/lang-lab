@@ -104,15 +104,51 @@ describe('executeAiReadTool', () => {
           id: 'travel',
           name: 'Viajes',
         },
+      ],
+      limit: 50,
+      nextCursor: null,
+      total: 1,
+    });
+  });
+
+  it('lists only active card sets by default and can include archived sets explicitly', () => {
+    expect(
+      executeAiReadTool('list_card_sets', { query: 'viaj' }, snapshot),
+    ).toMatchObject({
+      items: [
+        {
+          archivedAt: undefined,
+          id: 'travel',
+          name: 'Viajes',
+        },
+      ],
+      total: 1,
+    });
+
+    expect(
+      executeAiReadTool(
+        'list_card_sets',
+        { query: 'viaj', archiveFilter: 'archived' },
+        snapshot,
+      ),
+    ).toMatchObject({
+      items: [
         {
           archivedAt: '2026-07-10T09:00:00.000Z',
-          cardCount: 1,
           id: 'archive',
           name: 'Viajes antiguos',
         },
       ],
-      limit: 50,
-      nextCursor: null,
+      total: 1,
+    });
+
+    expect(
+      executeAiReadTool(
+        'list_card_sets',
+        { query: 'viaj', archiveFilter: 'all' },
+        snapshot,
+      ),
+    ).toMatchObject({
       total: 2,
     });
   });
