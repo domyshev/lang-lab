@@ -1,4 +1,5 @@
 import { RefObject, useEffect, useState } from 'react';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
@@ -159,6 +160,7 @@ export function AiConnectionPanel({
                 {isLocked ? (
                   <Tooltip
                     arrow
+                    placement="left"
                     slotProps={{
                       arrow: {
                         sx: {
@@ -167,6 +169,17 @@ export function AiConnectionPanel({
                               ? 'rgba(29, 26, 43, 0.98)'
                               : 'rgba(255, 255, 255, 0.98)',
                         },
+                      },
+                      popper: {
+                        ...({
+                          'data-test': 'ai_connection__locked_model_tooltip_popper',
+                        } as Record<string, string>),
+                        modifiers: [
+                          {
+                            name: 'flip',
+                            enabled: false,
+                          },
+                        ],
                       },
                       tooltip: {
                         ...({
@@ -179,24 +192,60 @@ export function AiConnectionPanel({
                               : 'rgba(255, 255, 255, 0.98)',
                           border: (theme) =>
                             theme.palette.mode === 'dark'
-                              ? '1px solid rgba(211, 188, 255, 0.28)'
-                              : '1px solid rgba(92, 66, 142, 0.18)',
-                          borderRadius: 2,
+                              ? '1px solid rgba(239, 210, 116, 0.34)'
+                              : '1px solid rgba(166, 113, 216, 0.24)',
+                          borderRadius: 2.5,
                           boxShadow:
-                            '0 16px 34px rgba(67, 45, 103, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.35) inset',
+                            '0 18px 38px rgba(67, 45, 103, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.48) inset',
                           color: (theme) =>
-                            theme.palette.mode === 'dark' ? '#f6efff' : '#22331f',
+                            theme.palette.mode === 'dark' ? '#f9f0ff' : '#33402d',
                           fontSize: '14px',
                           maxWidth: 280,
-                          px: 1.5,
-                          py: 1.1,
+                          px: 1.75,
+                          py: 1.25,
                         },
                       },
                     }}
                     title={
-                      <Typography sx={{ fontSize: '14px', fontWeight: 700 }}>
-                        {t(language, 'aiModelRequiresOwnKey')}
-                      </Typography>
+                      <Stack spacing={0.75}>
+                        <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
+                          <Box
+                            aria-hidden="true"
+                            data-test="ai_connection__locked_model_tooltip_badge"
+                            sx={{
+                              alignItems: 'center',
+                              background:
+                                'linear-gradient(135deg, #fff0a8 0%, #f0dcff 100%)',
+                              border: '1px solid rgba(128, 78, 204, 0.22)',
+                              borderRadius: 999,
+                              color: '#6845b8',
+                              display: 'inline-flex',
+                              fontSize: 11,
+                              fontWeight: 850,
+                              gap: 0.35,
+                              letterSpacing: '0.02em',
+                              px: 0.9,
+                              py: 0.25,
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            <AutoAwesomeIcon sx={{ fontSize: 13 }} />
+                            OpenRouter
+                          </Box>
+                        </Stack>
+                        <Typography
+                          data-test="ai_connection__locked_model_tooltip_body"
+                          sx={{
+                            color: (theme) =>
+                              theme.palette.mode === 'dark' ? '#efe5ff' : '#4b5745',
+                            fontSize: '14px',
+                            fontWeight: 500,
+                            lineHeight: 1.35,
+                          }}
+                        >
+                          {t(language, 'aiModelRequiresOwnKey')}
+                        </Typography>
+                      </Stack>
                     }
                   >
                     <Box

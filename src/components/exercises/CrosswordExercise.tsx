@@ -23,7 +23,10 @@ import {
   CrosswordPuzzle,
 } from '../../domain/crossword';
 import { shouldStrikeAnswerCharacter } from '../../domain/answerCharacters';
-import { getCrosswordCellTone } from '../../domain/crosswordResults';
+import {
+  getCrosswordCellTone,
+  getIncorrectCrosswordEntries,
+} from '../../domain/crosswordResults';
 import type { CrosswordAttemptSnapshot } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
@@ -160,10 +163,11 @@ export function CrosswordExercise({
   ) => {
     const key = toCellKey(cell.row, cell.col);
     const value = event.target.value.slice(-1);
-    setCellValues((current) => ({
-      ...current,
+    const nextCellValues = {
+      ...cellValues,
       [key]: value,
-    }));
+    };
+    setCellValues(nextCellValues);
 
     if (!value) {
       return;
@@ -177,7 +181,9 @@ export function CrosswordExercise({
     );
     activeEntryIdRef.current = activeEntry?.cardId ?? null;
 
-    const nextKey = activeEntry ? getNextCellKey(cell, activeEntry) : undefined;
+    const nextKey = activeEntry
+      ? getNextEmptyCellKey(cell, activeEntry, nextCellValues)
+      : undefined;
     if (nextKey) {
       inputRefs.current[nextKey]?.focus();
     }
@@ -316,16 +322,24 @@ export function CrosswordExercise({
               }
 
               const startEntryNumber = startEntryNumbers.get(key);
+              const rawCellValue = cellValues[key] ?? '';
               const cellTone = getCrosswordCellTone(
                 cell,
                 submittedCorrectness,
               );
-              const tooltipEntry = getActiveEntryForCell(
-                cell,
-                puzzle.entries,
-                entryMap,
-                activeEntryIdRef.current,
-              );
+              const ghostValue =
+                hasSubmittedAnswers && !rawCellValue.trim() && !cellTone
+                  ? cell.solution
+                  : '';
+              const displayCellValue = rawCellValue || ghostValue;
+              const isGhostValue = Boolean(ghostValue);
+              const incorrectEntries = submittedAnswers
+                ? getIncorrectCrosswordEntries(
+                    cell,
+                    puzzle,
+                    submittedCorrectness,
+                  )
+                : [];
 
               const cellInput = (
                 <Box
@@ -421,7 +435,7 @@ export function CrosswordExercise({
                     component="input"
                     aria-label={`Crossword cell ${displayRow} ${displayCol}`}
                     data-test={`crossword_exercise__input_cell__${displayRow}_${displayCol}`}
-                    value={cellValues[key] ?? ''}
+                    value={displayCellValue}
                     onChange={(event) => handleCellChange(event, cell)}
                     onFocus={() => handleCellFocus(cell)}
                     disabled={hasSubmittedAnswers}
@@ -432,8 +446,9 @@ export function CrosswordExercise({
                     sx={letterCellStyles}
                     style={{
                       ...getSubmittedCellStyle(cellTone),
+                      ...(isGhostValue ? ghostCellStyle : {}),
                       textDecorationLine: shouldStrikeAnswerCharacter({
-                        actual: cellValues[key] ?? '',
+                        actual: rawCellValue,
                         expected: cell.solution,
                         isIncorrect: cellTone === 'incorrect',
                       })
@@ -445,20 +460,17 @@ export function CrosswordExercise({
                 </Box>
               );
 
-              if (submittedAnswers && tooltipEntry) {
+              if (submittedAnswers && incorrectEntries.length > 0) {
                 return (
-                  <RecentAnswersTooltip
-                    dataTestPrefix={`crossword_exercise__cell_recent__${displayRow}_${displayCol}`}
+                  <CorrectionTooltip
+                    dataTestPrefix={`crossword_exercise__correction__${displayRow}_${displayCol}`}
+                    entries={incorrectEntries}
                     interfaceLanguage={interfaceLanguage}
                     key={key}
-                    recentResults={
-                      recentResultsByCardId[tooltipEntry.cardId]?.slice(0, 10) ??
-                      []
-                    }
-                    subject={tooltipEntry.answer}
+                    recentResultsByCardId={recentResultsByCardId}
                   >
                     {cellInput}
-                  </RecentAnswersTooltip>
+                  </CorrectionTooltip>
                 );
               }
 
@@ -509,18 +521,21 @@ function range(from: number, to: number): number[] {
   return Array.from({ length: to - from + 1 }, (_, index) => from + index);
 }
 
-function RecentAnswersTooltip({
+function CorrectionTooltip({
   children,
   dataTestPrefix,
+  entries,
   interfaceLanguage,
-  recentResults,
-  subject,
+  recentResultsByCardId,
 }: {
   children: ReactElement;
   dataTestPrefix: string;
+  entries: CrosswordEntry[];
   interfaceLanguage: SupportedLanguage;
-  recentResults: Array<{ isCorrect: boolean; occurredAt: string }>;
-  subject: string;
+  recentResultsByCardId: Record<
+    string,
+    Array<{ isCorrect: boolean; occurredAt: string }>
+  >;
 }) {
   return (
     <CursorAnchoredTooltip
@@ -530,68 +545,128 @@ function RecentAnswersTooltip({
       transitionTimeout={0}
       tooltipSx={recentAnswersTooltipStyles}
       title={
-        <Stack data-test={`${dataTestPrefix}__recent_tooltip`} spacing={0.75}>
-          <Typography
-            data-test={`${dataTestPrefix}__recent_tooltip_title`}
-            sx={{ color: '#203015', fontSize: 14, fontWeight: 850 }}
-          >
-            {t(interfaceLanguage, 'recentAnswersTitle')}
-          </Typography>
-          <Typography
-            data-test={`${dataTestPrefix}__recent_tooltip_subject`}
-            sx={{
-              color: 'rgba(32, 48, 21, 0.68)',
-              fontSize: 11,
-              fontWeight: 750,
-              lineHeight: 1.25,
-            }}
-          >
-            {subject}
-          </Typography>
-          <Stack data-test={`${dataTestPrefix}__recent_results`} spacing={0.5}>
-            {recentResults.map((result, index) => (
-              <Stack
-                data-test={`${dataTestPrefix}__recent_result__${index}`}
-                direction="row"
-                key={`${result.occurredAt}-${index}`}
-                spacing={0.75}
-                sx={{ alignItems: 'center' }}
-              >
-                <Chip
-                  data-test={`${dataTestPrefix}__recent_result_chip__${index}`}
-                  label={t(
-                    interfaceLanguage,
-                    result.isCorrect
-                      ? 'metricCorrectSuffix'
-                      : 'metricIncorrectSuffix',
-                  )}
-                  size="small"
-                  sx={{
-                    bgcolor: result.isCorrect
-                      ? 'rgb(235, 247, 225)'
-                      : 'rgb(253, 235, 238)',
-                    border: '1px solid',
-                    borderColor: result.isCorrect ? '#8fc773' : '#f2a7b4',
-                    color: '#111111',
-                    fontSize: 12,
-                    fontWeight: 800,
-                    height: 24,
-                  }}
-                />
-                <Typography
-                  data-test={`${dataTestPrefix}__recent_result_date__${index}`}
-                  sx={{ color: 'rgba(32, 48, 21, 0.72)', fontSize: 11 }}
-                >
-                  {formatAttemptDate(result.occurredAt)}
-                </Typography>
-              </Stack>
-            ))}
-          </Stack>
+        <Stack data-test={`${dataTestPrefix}__tooltip`} spacing={1.25}>
+          {entries.map((entry) => (
+            <Stack
+              alignItems="center"
+              data-test={`${dataTestPrefix}__entry__${encodeURIComponent(entry.cardId)}`}
+              key={entry.cardId}
+              spacing={0.75}
+            >
+              <AnswerCells
+                dataTestPrefix={`${dataTestPrefix}__entry__${encodeURIComponent(
+                  entry.cardId,
+                )}__answer`}
+                value={entry.answer}
+              />
+              <RecentResultsBlock
+                dataTestPrefix={`${dataTestPrefix}__entry__${encodeURIComponent(
+                  entry.cardId,
+                )}`}
+                interfaceLanguage={interfaceLanguage}
+                recentResults={recentResultsByCardId[entry.cardId]?.slice(0, 10) ?? []}
+              />
+            </Stack>
+          ))}
         </Stack>
       }
     >
       {children}
     </CursorAnchoredTooltip>
+  );
+}
+
+function RecentResultsBlock({
+  dataTestPrefix,
+  interfaceLanguage,
+  recentResults,
+}: {
+  dataTestPrefix: string;
+  interfaceLanguage: SupportedLanguage;
+  recentResults: Array<{ isCorrect: boolean; occurredAt: string }>;
+}) {
+  return (
+    <Stack data-test={`${dataTestPrefix}__recent`} spacing={0.5}>
+      <Typography
+        data-test={`${dataTestPrefix}__recent_title`}
+        sx={{
+          color: '#203015',
+          fontSize: 14,
+          fontWeight: 850,
+          mt: '10px',
+        }}
+      >
+        {t(interfaceLanguage, 'recentAnswersTitle')}
+      </Typography>
+      <Stack data-test={`${dataTestPrefix}__recent_results`} spacing={0.5}>
+        {recentResults.map((result, index) => (
+          <Stack
+            data-test={`${dataTestPrefix}__recent_result__${index}`}
+            direction="row"
+            key={`${result.occurredAt}-${index}`}
+            spacing={0.75}
+            sx={{ alignItems: 'center' }}
+          >
+            <Chip
+              data-test={`${dataTestPrefix}__recent_result_chip__${index}`}
+              label={t(
+                interfaceLanguage,
+                result.isCorrect ? 'metricCorrectSuffix' : 'metricIncorrectSuffix',
+              )}
+              size="small"
+              sx={recentResultChipStyles(result.isCorrect)}
+            />
+            <Typography
+              data-test={`${dataTestPrefix}__recent_result_date__${index}`}
+              sx={{ color: 'rgba(32, 48, 21, 0.72)', fontSize: 11 }}
+            >
+              {formatAttemptDate(result.occurredAt)}
+            </Typography>
+          </Stack>
+        ))}
+      </Stack>
+    </Stack>
+  );
+}
+
+function AnswerCells({
+  dataTestPrefix,
+  value,
+}: {
+  dataTestPrefix: string;
+  value: string;
+}) {
+  return (
+    <Stack
+      aria-label={value}
+      data-test={dataTestPrefix}
+      direction="row"
+      flexWrap="wrap"
+      justifyContent="center"
+      spacing={0.5}
+      useFlexGap
+    >
+      {value.split('').map((character, index) =>
+        character.trim() === '' ? (
+          <Box
+            aria-hidden="true"
+            component="span"
+            data-test={`${dataTestPrefix}__space__${index}`}
+            key={`space-${index}`}
+            sx={correctionAnswerSpaceStyles}
+          />
+        ) : (
+          <Box
+            component="span"
+            data-test={`${dataTestPrefix}__cell__${index}`}
+            key={`${character}-${index}`}
+            sx={correctionAnswerCellStyles}
+          >
+            {character}
+          </Box>
+        ),
+      )}
+    </Stack>
   );
 }
 
@@ -746,20 +821,26 @@ function getActiveEntryForCell(
   );
 }
 
-function getNextCellKey(
+function getNextEmptyCellKey(
   cell: CrosswordCell,
   entry: CrosswordEntry,
+  cellValues: Record<string, string>,
 ): string | undefined {
   const index =
     entry.direction === 'across' ? cell.col - entry.col : cell.row - entry.row;
-  const nextIndex = index + 1;
-  if (nextIndex >= entry.answer.length) {
-    return undefined;
+
+  for (let nextIndex = index + 1; nextIndex < entry.answer.length; nextIndex += 1) {
+    const key =
+      entry.direction === 'across'
+        ? toCellKey(entry.row, entry.col + nextIndex)
+        : toCellKey(entry.row + nextIndex, entry.col);
+
+    if (!cellValues[key]?.trim()) {
+      return key;
+    }
   }
 
-  return entry.direction === 'across'
-    ? toCellKey(entry.row, entry.col + nextIndex)
-    : toCellKey(entry.row + nextIndex, entry.col);
+  return undefined;
 }
 
 const letterCellShellStyles = {
@@ -818,6 +899,45 @@ const emptyCellStyles = {
   width: '100%',
 };
 
+const ghostCellStyle = {
+  backgroundColor: 'transparent',
+  color: 'rgba(32, 48, 21, 0.38)',
+};
+
+const correctionAnswerCellStyles = {
+  alignItems: 'center',
+  bgcolor: 'rgb(235, 247, 225)',
+  border: '1px solid #8fc773',
+  borderRadius: 1,
+  color: '#203015',
+  display: 'inline-flex',
+  fontSize: 20,
+  fontWeight: 800,
+  height: 34,
+  justifyContent: 'center',
+  lineHeight: 1,
+  textTransform: 'lowercase',
+  width: 34,
+};
+
+const correctionAnswerSpaceStyles = {
+  display: 'inline-flex',
+  height: 34,
+  width: 34,
+};
+
+function recentResultChipStyles(isCorrect: boolean) {
+  return {
+    bgcolor: isCorrect ? 'rgb(235, 247, 225)' : 'rgb(253, 235, 238)',
+    border: '1px solid',
+    borderColor: isCorrect ? '#8fc773' : '#f2a7b4',
+    color: '#111111',
+    fontSize: 12,
+    fontWeight: 800,
+    height: 24,
+  };
+}
+
 const crosswordCardSetChipStyles = {
   bgcolor: '#e7eefc',
   border: '1px solid rgba(68, 94, 150, 0.26)',
@@ -852,6 +972,6 @@ const recentAnswersTooltipStyles = {
   border: '1px solid rgba(32, 48, 21, 0.14)',
   boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
   color: '#203015',
-  maxWidth: 280,
+  maxWidth: 'min(520px, calc(100vw - 32px))',
   p: 1.25,
 };

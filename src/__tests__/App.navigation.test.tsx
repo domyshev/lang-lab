@@ -836,7 +836,7 @@ describe('App navigation', () => {
       screen.queryByText(/"тупой" тренажер/),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Понятно!' }));
+    await user.click(screen.getByRole('button', { name: 'Далее' }));
 
     expect(screen.queryByText(/лаборатория изучения языков/i)).not.toBeInTheDocument();
     expect(screen.getByTestId('game_help__chat_slide')).toHaveTextContent(
@@ -844,6 +844,9 @@ describe('App navigation', () => {
     );
     expect(screen.getByTestId('game_help__chat_slide')).toHaveTextContent(
       /создавать наборы карточек/i,
+    );
+    expect(screen.getByTestId('game_help__chat_slide')).toHaveTextContent(
+      /подбирать игры/i,
     );
     expect(store.getState().app.isGameHelpCollapsed).toBe(true);
     expect(screen.queryByTestId('game_help__coachmark_icon')).not.toBeInTheDocument();
@@ -870,7 +873,7 @@ describe('App navigation', () => {
     });
 
     await user.click(screen.getByTestId('app_shell__tab__help'));
-    await user.click(screen.getByRole('button', { name: 'Понятно!' }));
+    await user.click(screen.getByRole('button', { name: 'Далее' }));
 
     expect(store.getState().app.isGameHelpCollapsed).toBe(true);
     expect(store.getState().app.hasGameHelpCoachmarkBeenShown).toBe(true);

@@ -1,4 +1,4 @@
-import { Box, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import { shouldStrikeAnswerCharacter } from '../../domain/answerCharacters';
 import {
   getCrosswordCellTone,
@@ -8,16 +8,19 @@ import type { CrosswordAttemptSnapshot } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import type { SupportedLanguage } from '../../domain/languages';
 import { CursorAnchoredTooltip } from '../CursorAnchoredTooltip';
+import { formatAttemptDate, type RecentCardResult } from './RecentAnswersChip';
 
 export function CrosswordHistoryReplay({
   correctness,
   dataTestPrefix,
   interfaceLanguage,
+  recentResultsByCardId = {},
   snapshot,
 }: {
   correctness: Record<string, boolean>;
   dataTestPrefix: string;
   interfaceLanguage: SupportedLanguage;
+  recentResultsByCardId?: Record<string, RecentCardResult[]>;
   snapshot: CrosswordAttemptSnapshot;
 }) {
   const { bounds } = snapshot.puzzle;
@@ -74,6 +77,8 @@ export function CrosswordHistoryReplay({
           const startEntry = startEntryByKey.get(key);
           const value = snapshot.cellValues[key] ?? '';
           const tone = getCrosswordCellTone(cell, correctness);
+          const ghostValue = !value.trim() && !tone ? cell.solution : '';
+          const displayValue = value || ghostValue;
           const incorrectEntries = getIncorrectCrosswordEntries(
             cell,
             snapshot.puzzle,
@@ -108,9 +113,10 @@ export function CrosswordHistoryReplay({
                       : undefined,
                 textDecorationLine: shouldStrike ? 'line-through' : 'none',
                 textDecorationThickness: '2px',
+                ...(ghostValue ? ghostCellStyle : {}),
               }}
             >
-              {value}
+              {displayValue}
             </Box>
           );
 
@@ -213,6 +219,14 @@ export function CrosswordHistoryReplay({
                                 ),
                               )}
                             </Stack>
+                            <RecentResultsBlock
+                              dataTestPrefix={entryDataTest}
+                              interfaceLanguage={interfaceLanguage}
+                              recentResults={
+                                recentResultsByCardId[entry.cardId]?.slice(0, 10) ??
+                                []
+                              }
+                            />
                           </Stack>
                         );
                       })}
@@ -308,6 +322,76 @@ const emptyCellStyles = {
   minWidth: 0,
   width: '100%',
 };
+
+const ghostCellStyle = {
+  backgroundColor: 'transparent',
+  color: 'rgba(32, 48, 21, 0.38)',
+};
+
+function RecentResultsBlock({
+  dataTestPrefix,
+  interfaceLanguage,
+  recentResults,
+}: {
+  dataTestPrefix: string;
+  interfaceLanguage: SupportedLanguage;
+  recentResults: RecentCardResult[];
+}) {
+  return (
+    <Stack data-test={`${dataTestPrefix}__recent`} spacing={0.5}>
+      <Typography
+        data-test={`${dataTestPrefix}__recent_title`}
+        sx={{
+          color: '#203015',
+          fontSize: 14,
+          fontWeight: 850,
+          mt: '10px',
+        }}
+      >
+        {t(interfaceLanguage, 'recentAnswersTitle')}
+      </Typography>
+      <Stack data-test={`${dataTestPrefix}__recent_results`} spacing={0.5}>
+        {recentResults.map((result, index) => (
+          <Stack
+            data-test={`${dataTestPrefix}__recent_result__${index}`}
+            direction="row"
+            key={`${result.occurredAt}-${index}`}
+            spacing={0.75}
+            sx={{ alignItems: 'center' }}
+          >
+            <Chip
+              data-test={`${dataTestPrefix}__recent_result_chip__${index}`}
+              label={t(
+                interfaceLanguage,
+                result.isCorrect ? 'metricCorrectSuffix' : 'metricIncorrectSuffix',
+              )}
+              size="small"
+              sx={recentResultChipStyles(result.isCorrect)}
+            />
+            <Typography
+              data-test={`${dataTestPrefix}__recent_result_date__${index}`}
+              sx={{ color: 'rgba(32, 48, 21, 0.72)', fontSize: 11 }}
+            >
+              {formatAttemptDate(result.occurredAt)}
+            </Typography>
+          </Stack>
+        ))}
+      </Stack>
+    </Stack>
+  );
+}
+
+function recentResultChipStyles(isCorrect: boolean) {
+  return {
+    bgcolor: isCorrect ? 'rgb(235, 247, 225)' : 'rgb(253, 235, 238)',
+    border: '1px solid',
+    borderColor: isCorrect ? '#8fc773' : '#f2a7b4',
+    color: '#111111',
+    fontSize: 12,
+    fontWeight: 800,
+    height: 24,
+  };
+}
 
 function getClueTooltipSlotProps(dataTest: string) {
   return {

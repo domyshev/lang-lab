@@ -1,6 +1,13 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
+import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import MilitaryTechOutlinedIcon from '@mui/icons-material/MilitaryTechOutlined';
+import PsychologyOutlinedIcon from '@mui/icons-material/PsychologyOutlined';
+import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
+import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
 import {
   AppBar,
   Box,
@@ -51,6 +58,10 @@ export function AppShell({
   );
   const playerProfile = useSelector(
     (state: RootState) => state.app.playerProfile,
+  );
+  const completedGameCount = useSelector(
+    (state: RootState & { attempts?: RootState['attempts'] }) =>
+      state.attempts?.attempts.length ?? 0,
   );
   const dispatch = useDispatch<AppDispatch>();
   const scrollRootRef = useRef<HTMLDivElement>(null);
@@ -180,7 +191,7 @@ export function AppShell({
               sx={{
                 border: '1px solid rgba(206, 157, 29, 0.34)',
                 boxShadow:
-                  'inset 0 1px 0 rgba(255,255,255,0.9), 0 5px 12px rgba(92, 78, 22, 0.14)',
+                  'inset 0 1px 0 rgba(255,255,255,0.9), 0 0 0 4px rgba(255, 218, 96, 0.18)',
                 color: '#203015',
                 fontWeight: '950 !important',
                 minHeight: '34px !important',
@@ -188,7 +199,7 @@ export function AppShell({
                 px: { xs: 1.25, sm: 2.25 },
                 '&.Mui-selected': {
                   boxShadow:
-                    'inset 0 1px 0 rgba(255,255,255,0.9), 0 7px 16px rgba(92, 78, 22, 0.22)',
+                    'inset 0 1px 0 rgba(255,255,255,0.9), 0 0 0 5px rgba(255, 203, 74, 0.24)',
                   color: '#203015',
                 },
               }}
@@ -232,6 +243,8 @@ export function AppShell({
             {playerProfile && (
               <PlayerGreeting
                 avatarSeed={playerProfile.avatarSeed}
+                completedGameCount={completedGameCount}
+                interfaceLanguage={interfaceLanguage}
                 name={
                   playerProfile.isAnonymous
                     ? t(interfaceLanguage, 'playerAnonymousName')
@@ -291,11 +304,17 @@ export function AppShell({
 
 function PlayerGreeting({
   avatarSeed,
+  completedGameCount,
+  interfaceLanguage,
   name,
 }: {
   avatarSeed: string;
+  completedGameCount: number;
+  interfaceLanguage: RootState['app']['interfaceLanguage'];
   name: string;
 }) {
+  const playerLevel = getPlayerLevel(completedGameCount, interfaceLanguage);
+
   return (
     <Tooltip
       arrow
@@ -309,11 +328,99 @@ function PlayerGreeting({
                 : 'rgba(255, 255, 255, 0.98)',
             color: (theme) =>
               theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
+            backgroundColor: (theme) =>
+              theme.palette.mode === 'dark'
+                ? 'rgba(29, 26, 43, 0.98)'
+                : 'rgba(255, 255, 255, 0.98)',
             fontSize: 14,
-            fontWeight: 800,
+            fontWeight: 700,
+            maxWidth: 310,
           }}
         >
-          {name}
+          <Stack spacing={1.1}>
+            <Stack
+              data-test="player_greeting__level_summary"
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: 'center',
+                background:
+                  'linear-gradient(135deg, rgba(255, 239, 164, 0.72), rgba(232, 246, 251, 0.92))',
+                border: `1px solid ${playerLevel.color}55`,
+                borderRadius: 2,
+                p: 1,
+              }}
+            >
+              <Box
+                aria-hidden="true"
+                data-test="player_greeting__level_icon"
+                sx={{
+                  alignItems: 'center',
+                  bgcolor: playerLevel.bg,
+                  border: `1px solid ${playerLevel.color}66`,
+                  borderRadius: '50%',
+                  color: playerLevel.color,
+                  display: 'inline-flex',
+                  flexShrink: 0,
+                  height: 34,
+                  justifyContent: 'center',
+                  width: 34,
+                  '& .MuiSvgIcon-root': {
+                    fontSize: 20,
+                  },
+                }}
+              >
+                <PlayerLevelIcon index={playerLevel.index} />
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  data-test="player_greeting__level_title"
+                  sx={{
+                    color: '#203015',
+                    fontSize: 15,
+                    fontWeight: 950,
+                    lineHeight: 1.15,
+                  }}
+                >
+                  {playerLevel.title}
+                </Typography>
+                <Typography
+                  data-test="player_greeting__level_count"
+                  sx={{
+                    color: '#5e6657',
+                    fontSize: 13,
+                    fontWeight: 850,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {formatCompletedGames(completedGameCount, interfaceLanguage)}
+                </Typography>
+              </Box>
+            </Stack>
+            <Typography
+              data-test="player_greeting__tooltip_name"
+              sx={{
+                color: (theme) =>
+                  theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
+                fontSize: 14,
+                fontWeight: 900,
+                lineHeight: 1.2,
+              }}
+            >
+              {name}
+            </Typography>
+            <Typography
+              data-test="player_greeting__level_explanation"
+              sx={{
+                color: (theme) =>
+                  theme.palette.mode === 'dark' ? '#ded4f8' : '#53604b',
+                fontSize: 14,
+                lineHeight: 1.35,
+              }}
+            >
+              {playerLevel.description}
+            </Typography>
+          </Stack>
         </Box>
       }
       slotProps={{
@@ -353,6 +460,7 @@ function PlayerGreeting({
           borderRadius: 999,
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.74)',
           boxSizing: 'border-box',
+          cursor: 'default',
           flexShrink: 0,
           justifyContent: 'center',
           maxWidth: 230,
@@ -360,6 +468,7 @@ function PlayerGreeting({
           overflow: 'hidden',
           position: 'relative',
           py: 0,
+          userSelect: 'none',
           width: 'fit-content',
         }}
       >
@@ -388,6 +497,7 @@ function PlayerGreeting({
           sx={{
             color: '#203015',
             alignItems: 'center',
+            cursor: 'default',
             display: 'flex',
             fontSize: 14,
             fontWeight: 950,
@@ -409,6 +519,196 @@ function PlayerGreeting({
       </Stack>
     </Tooltip>
   );
+}
+
+interface PlayerLevelView {
+  bg: string;
+  color: string;
+  description: string;
+  index: number;
+  title: string;
+}
+
+const PLAYER_LEVEL_THRESHOLDS = [0, 30, 60, 100, 160, 250, 400] as const;
+
+const playerLevelCopies: Record<
+  RootState['app']['interfaceLanguage'],
+  Array<Omit<PlayerLevelView, 'bg' | 'color' | 'index'>>
+> = {
+  en: [
+    {
+      title: 'Newcomer',
+      description:
+        'Your game level starts here: play a few more rounds and the lab will begin to see your learning rhythm.',
+    },
+    {
+      title: 'Advanced newcomer',
+      description:
+        'Your game level already has momentum: you know the rules and are building a steady training trail.',
+    },
+    {
+      title: 'Confident player',
+      description:
+        'Your game level shows stable practice: the library is becoming a tool you can actually steer.',
+    },
+    {
+      title: 'Card collector',
+      description:
+        'Your game level says the vocabulary engine is warming up: sets, repeats, and results start working together.',
+    },
+    {
+      title: 'Training strategist',
+      description:
+        'Your game level is tactical now: you have enough history to choose weaker cards with intent.',
+    },
+    {
+      title: 'Language master',
+      description:
+        'Your game level is serious: the lab has enough games to make progress patterns visible.',
+    },
+    {
+      title: 'Lab legend',
+      description:
+        'Your game level is legendary: this is no longer a warm-up, it is a personal language machine.',
+    },
+  ],
+  ru: [
+    {
+      title: 'Новичок',
+      description:
+        'Игровой уровень начинается здесь: сыграй еще несколько игр, и лаборатория начнет видеть твой ритм обучения.',
+    },
+    {
+      title: 'Продвинутый новичок',
+      description:
+        'Игровой уровень уже набирает ход: ты понял правила и прокладываешь стабильную тренировочную тропу.',
+    },
+    {
+      title: 'Уверенный игрок',
+      description:
+        'Игровой уровень показывает устойчивую практику: библиотека становится инструментом, которым ты управляешь.',
+    },
+    {
+      title: 'Собиратель карточек',
+      description:
+        'Игровой уровень говорит, что словарный двигатель прогрелся: наборы, повторы и результаты начинают работать вместе.',
+    },
+    {
+      title: 'Стратег тренировки',
+      description:
+        'Игровой уровень уже тактический: истории достаточно, чтобы выбирать слабые карточки осознанно.',
+    },
+    {
+      title: 'Мастер языков',
+      description:
+        'Игровой уровень серьезный: лаборатория накопила достаточно игр, чтобы видеть рисунок прогресса.',
+    },
+    {
+      title: 'Легенда лаборатории',
+      description:
+        'Игровой уровень легендарный: это уже не разминка, а личная языковая машина.',
+    },
+  ],
+  es: [
+    {
+      title: 'Principiante',
+      description:
+        'Tu nivel de juego empieza aqui: juega algunas rondas mas y el laboratorio vera tu ritmo de aprendizaje.',
+    },
+    {
+      title: 'Principiante avanzado',
+      description:
+        'Tu nivel de juego ya tiene impulso: conoces las reglas y construyes una ruta de practica estable.',
+    },
+    {
+      title: 'Jugador seguro',
+      description:
+        'Tu nivel de juego muestra practica constante: la biblioteca empieza a ser una herramienta que diriges.',
+    },
+    {
+      title: 'Coleccionista de tarjetas',
+      description:
+        'Tu nivel de juego dice que el motor de vocabulario se calienta: conjuntos, repeticiones y resultados trabajan juntos.',
+    },
+    {
+      title: 'Estratega de practica',
+      description:
+        'Tu nivel de juego ya es tactico: tienes historia suficiente para elegir tarjetas debiles con intencion.',
+    },
+    {
+      title: 'Maestro de idiomas',
+      description:
+        'Tu nivel de juego es serio: el laboratorio tiene suficientes juegos para mostrar patrones de progreso.',
+    },
+    {
+      title: 'Leyenda del laboratorio',
+      description:
+        'Tu nivel de juego es legendario: ya no es calentamiento, es tu maquina personal de idiomas.',
+    },
+  ],
+};
+
+const playerLevelColors = [
+  { bg: '#eef7ff', color: '#2f7d9b' },
+  { bg: '#fff5d7', color: '#9b6a12' },
+  { bg: '#eef8e8', color: '#4d8a2f' },
+  { bg: '#f3edff', color: '#6845b8' },
+  { bg: '#fff0f7', color: '#9b445c' },
+  { bg: '#ecf7f4', color: '#17716a' },
+  { bg: '#fff0d8', color: '#b45f06' },
+] as const;
+
+function getPlayerLevel(
+  completedGameCount: number,
+  interfaceLanguage: RootState['app']['interfaceLanguage'],
+): PlayerLevelView {
+  const normalizedCount = Math.max(0, completedGameCount);
+  let index = 0;
+  for (const [levelIndex, threshold] of PLAYER_LEVEL_THRESHOLDS.entries()) {
+    if (normalizedCount >= threshold) {
+      index = levelIndex;
+    }
+  }
+  const copy = playerLevelCopies[interfaceLanguage][index];
+  const colors = playerLevelColors[index];
+
+  return {
+    ...copy,
+    ...colors,
+    index,
+  };
+}
+
+function formatCompletedGames(
+  completedGameCount: number,
+  interfaceLanguage: RootState['app']['interfaceLanguage'],
+): string {
+  if (interfaceLanguage === 'ru') {
+    return `${completedGameCount} пройдено игр`;
+  }
+  if (interfaceLanguage === 'es') {
+    return `${completedGameCount} juegos completados`;
+  }
+  return `${completedGameCount} games completed`;
+}
+
+function PlayerLevelIcon({ index }: { index: number }) {
+  switch (index) {
+    case 0:
+      return <SchoolOutlinedIcon />;
+    case 1:
+      return <ExploreOutlinedIcon />;
+    case 2:
+      return <RocketLaunchOutlinedIcon />;
+    case 3:
+      return <WorkspacePremiumOutlinedIcon />;
+    case 4:
+      return <PsychologyOutlinedIcon />;
+    case 5:
+      return <MilitaryTechOutlinedIcon />;
+    default:
+      return <EmojiEventsOutlinedIcon />;
+  }
 }
 
 function PlayerOnboardingDialog({

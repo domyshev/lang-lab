@@ -92,7 +92,6 @@ import {
   acknowledgeGameHelp,
   getComplementaryLanguageForTarget,
   markFinishExerciseLampShown,
-  markGameHelpCoachmarkShown,
   markHypersonicJumpLampShown,
 } from './store/appSlice';
 import { seedDefaultCards } from './store/cardsSlice';
@@ -234,9 +233,6 @@ export function App() {
   );
   const isGameHelpCollapsed = useSelector((state: RootState) =>
     Boolean(state.app.isGameHelpCollapsed),
-  );
-  const hasGameHelpCoachmarkBeenShown = useSelector((state: RootState) =>
-    Boolean(state.app.hasGameHelpCoachmarkBeenShown),
   );
   const practiceSettings = useSelector(
     (state: RootState) => state.app.practiceSettings,
@@ -981,11 +977,9 @@ export function App() {
       return (
         <Box data-test="app__help_section">
           <GameHelpPanel
-            hasCoachmarkBeenShown={hasGameHelpCoachmarkBeenShown}
             interfaceLanguage={interfaceLanguage}
             isInitiallyCollapsed={isGameHelpCollapsed}
             onAcknowledge={() => dispatch(acknowledgeGameHelp())}
-            onCoachmarkShown={() => dispatch(markGameHelpCoachmarkShown())}
           />
         </Box>
       );

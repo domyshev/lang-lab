@@ -181,6 +181,12 @@ type I18nKey =
   | 'gameHelpTeacher'
   | 'gameHelpOwnTrainer'
   | 'gameHelpGotIt'
+  | 'gameHelpNext'
+  | 'gameHelpAiChatTitle'
+  | 'gameHelpAiChatCards'
+  | 'gameHelpAiChatGames'
+  | 'gameHelpAiChatStats'
+  | 'gameHelpAiChatControl'
   | 'gameHelpCoachmarkTitle'
   | 'gameHelpCoachmarkReturnTitle'
   | 'gameHelpCoachmarkReturnBody'
@@ -479,6 +485,16 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     gameHelpOwnTrainer:
       'Unlike most apps, this is not a "dumb" trainer someone built for you. You create your own trainer and play by your own rules!',
     gameHelpGotIt: 'Got it!',
+    gameHelpNext: 'Next',
+    gameHelpAiChatTitle: 'AI helper chat inside the games',
+    gameHelpAiChatCards:
+      'The chat can create card sets from the words and phrases you bring into the lab.',
+    gameHelpAiChatGames:
+      'It helps choose games for the current set: crossword, missing letters, phrases, or a quick three-option check.',
+    gameHelpAiChatStats:
+      'It reads game results and points out which cards deserve the next repetition.',
+    gameHelpAiChatControl:
+      'Before changing the library, the AI shows an operation for approval, so you stay in control.',
     gameHelpCoachmarkTitle: 'Help stays here',
     gameHelpCoachmarkReturnTitle: 'Always available',
     gameHelpCoachmarkReturnBody:
@@ -783,6 +799,16 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     gameHelpOwnTrainer:
       'В отличие от большинства приложений это не "мертвый" тренажер, который кто-то сделал за вас. Вы сами создаете свой тренажер и играете по своим правилам!',
     gameHelpGotIt: 'Понятно!',
+    gameHelpNext: 'Далее',
+    gameHelpAiChatTitle: 'Чат AI-помощника в играх',
+    gameHelpAiChatCards:
+      'Чат AI-помощника умеет создавать наборы карточек из слов и фраз, которые ты приносишь в лабораторию.',
+    gameHelpAiChatGames:
+      'Он помогает подбирать игры под текущий набор: кроссворд, пропущенные буквы, фразы или быстрый вопрос с вариантами.',
+    gameHelpAiChatStats:
+      'Он читает результаты игр и подсказывает, какие карточки лучше повторить следующими.',
+    gameHelpAiChatControl:
+      'Перед изменениями AI показывает операцию на проверку, поэтому библиотека остается под твоим контролем.',
     gameHelpCoachmarkTitle: 'Помощь остается здесь',
     gameHelpCoachmarkReturnTitle: 'Всегда под рукой',
     gameHelpCoachmarkReturnBody:
@@ -1087,6 +1113,16 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     gameHelpOwnTrainer:
       'A diferencia de la mayoria de apps, esto no es un entrenador "tonto" hecho por otra persona. Tu creas tu propio entrenador y juegas con tus propias reglas!',
     gameHelpGotIt: 'Entendido!',
+    gameHelpNext: 'Siguiente',
+    gameHelpAiChatTitle: 'Chat del asistente AI dentro de los juegos',
+    gameHelpAiChatCards:
+      'El chat puede crear conjuntos de tarjetas a partir de palabras y frases que traes al laboratorio.',
+    gameHelpAiChatGames:
+      'Ayuda a elegir juegos para el conjunto actual: crucigrama, letras faltantes, frases o una prueba rapida de tres opciones.',
+    gameHelpAiChatStats:
+      'Lee los resultados de los juegos y muestra que tarjetas conviene repetir primero.',
+    gameHelpAiChatControl:
+      'Antes de cambiar la biblioteca, el AI muestra una operacion para aprobar, asi que tu mantienes el control.',
     gameHelpCoachmarkTitle: 'La ayuda queda aqui',
     gameHelpCoachmarkReturnTitle: 'Siempre disponible',
     gameHelpCoachmarkReturnBody:

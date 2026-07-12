@@ -101,6 +101,19 @@ function AttemptHistoryCard({
       savedAttempt.exerciseType === 'crossword' &&
       Boolean(savedAttempt.crosswordSnapshot),
   );
+  const crosswordRecentResultsByCardId =
+    crosswordAttempt?.crosswordSnapshot
+      ? Object.fromEntries(
+          crosswordAttempt.crosswordSnapshot.puzzle.entries.map((entry) => [
+            entry.cardId,
+            getRecentCardResults({
+              attempts: allAttempts,
+              cardId: entry.cardId,
+              targetLanguage: crosswordAttempt.targetLanguage,
+            }),
+          ]),
+        )
+      : {};
 
   return (
     <Accordion
@@ -163,6 +176,7 @@ function AttemptHistoryCard({
             correctness={crosswordAttempt.correctness}
             dataTestPrefix={`history_view__crossword_replay__${attemptDomKey}`}
             interfaceLanguage={interfaceLanguage}
+            recentResultsByCardId={crosswordRecentResultsByCardId}
             snapshot={crosswordAttempt.crosswordSnapshot}
           />
         ) : (

@@ -50,6 +50,14 @@ describe('CrosswordHistoryReplay', () => {
         correctness={{ cat: true }}
         dataTestPrefix="crossword_history"
         interfaceLanguage="ru"
+        recentResultsByCardId={{
+          tea: [
+            {
+              isCorrect: false,
+              occurredAt: '2026-07-04T10:00:00.000Z',
+            },
+          ],
+        }}
         snapshot={snapshot}
       />,
     );
@@ -65,8 +73,17 @@ describe('CrosswordHistoryReplay', () => {
       'c',
     );
     expect(screen.getByTestId('crossword_history__cell__3_3')).toHaveTextContent(
-      '',
+      'a',
     );
+    expect(screen.getByTestId('crossword_history__cell__3_3')).toHaveStyle({
+      color: 'rgba(32, 48, 21, 0.38)',
+    });
+    expect(screen.getByTestId('crossword_history__cell__3_3')).not.toHaveStyle({
+      backgroundColor: 'rgb(235, 247, 225)',
+    });
+    expect(screen.getByTestId('crossword_history__cell__3_3')).not.toHaveStyle({
+      backgroundColor: 'rgb(253, 235, 238)',
+    });
     expect(
       screen.getByTestId('crossword_history__empty_cell__2_1'),
     ).toBeInTheDocument();
@@ -90,6 +107,14 @@ describe('CrosswordHistoryReplay', () => {
         correctness={{ cat: true, tea: false }}
         dataTestPrefix="crossword_history"
         interfaceLanguage="ru"
+        recentResultsByCardId={{
+          tea: [
+            {
+              isCorrect: false,
+              occurredAt: '2026-07-04T10:00:00.000Z',
+            },
+          ],
+        }}
         snapshot={{
           ...snapshot,
           cellValues: { ...snapshot.cellValues, '2:2': 'x' },
@@ -132,8 +157,18 @@ describe('CrosswordHistoryReplay', () => {
       ),
     ).toHaveStyle({
       backgroundColor: 'rgb(235, 247, 225)',
-      borderColor: '#8fc773',
+        borderColor: '#8fc773',
+      });
+    expect(
+      within(correctionTooltip).getByTestId(
+        'crossword_history__correction__2_3__entry__tea__recent_title',
+      ),
+    ).toHaveStyle({
+      marginTop: '10px',
     });
+    expect(
+      within(correctionTooltip).getByText('10 последних ответов'),
+    ).toBeInTheDocument();
     expect(
       screen.getByTestId('crossword_history__correction__2_3__tooltip_arrow'),
     ).toBeInTheDocument();

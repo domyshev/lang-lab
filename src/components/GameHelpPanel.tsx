@@ -1,51 +1,38 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import EditNoteIcon from '@mui/icons-material/EditNote';
+import ManageSearchIcon from '@mui/icons-material/ManageSearch';
 import SchoolIcon from '@mui/icons-material/School';
 import ScienceIcon from '@mui/icons-material/Science';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Box,
-  Button,
-  Paper,
-  Popper,
-  Stack,
-  Typography,
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import TuneIcon from '@mui/icons-material/Tune';
+import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import { t } from '../domain/i18n';
 import { SupportedLanguage } from '../domain/languages';
 
 interface GameHelpPanelProps {
-  hasCoachmarkBeenShown: boolean;
   interfaceLanguage: SupportedLanguage;
   isInitiallyCollapsed: boolean;
   onAcknowledge: () => void;
-  onCoachmarkShown: () => void;
 }
 
+type HelpSlide = 'intro' | 'chat';
+
 export function GameHelpPanel({
-  hasCoachmarkBeenShown,
   interfaceLanguage,
   isInitiallyCollapsed,
   onAcknowledge,
-  onCoachmarkShown,
 }: GameHelpPanelProps) {
-  const summaryRef = useRef<HTMLDivElement | null>(null);
-  const [expanded, setExpanded] = useState(!isInitiallyCollapsed);
-  const [isCoachmarkOpen, setIsCoachmarkOpen] = useState(false);
+  const [slide, setSlide] = useState<HelpSlide>(
+    isInitiallyCollapsed ? 'chat' : 'intro',
+  );
 
   useEffect(() => {
-    if (isInitiallyCollapsed) {
-      setExpanded(false);
-    }
+    setSlide(isInitiallyCollapsed ? 'chat' : 'intro');
   }, [isInitiallyCollapsed]);
 
-  const rows = [
+  const introRows = [
     {
       color: '#2f7d9b',
       bg: '#e8f6fb',
@@ -77,53 +64,56 @@ export function GameHelpPanel({
       key: 'gameHelpOwnTrainer' as const,
     },
   ];
+  const chatRows = [
+    {
+      color: '#6845b8',
+      bg: '#f1ecff',
+      icon: <ChatBubbleOutlineIcon fontSize="small" />,
+      key: 'gameHelpAiChatCards' as const,
+    },
+    {
+      color: '#a05f00',
+      bg: '#fff2d8',
+      icon: <SportsEsportsIcon fontSize="small" />,
+      key: 'gameHelpAiChatGames' as const,
+    },
+    {
+      color: '#17716a',
+      bg: '#e4f7f3',
+      icon: <ManageSearchIcon fontSize="small" />,
+      key: 'gameHelpAiChatStats' as const,
+    },
+    {
+      color: '#8b436a',
+      bg: '#fff0f7',
+      icon: <TuneIcon fontSize="small" />,
+      key: 'gameHelpAiChatControl' as const,
+    },
+  ];
 
-  const handleGotIt = () => {
-    setExpanded(false);
+  const showChatSlide = () => {
+    setSlide('chat');
     onAcknowledge();
-    if (!hasCoachmarkBeenShown) {
-      onCoachmarkShown();
-      setIsCoachmarkOpen(true);
-    }
   };
 
   return (
-    <>
-      <Accordion
-        data-test="game_help__accordion"
-        expanded={expanded}
-        onChange={(_, nextExpanded) => setExpanded(nextExpanded)}
-        disableGutters
-        slotProps={{ transition: { unmountOnExit: true } }}
-        sx={{
-          bgcolor: 'rgba(255, 255, 255, 0.92)',
-          border: '1px solid',
-          borderColor: isCoachmarkOpen
-            ? 'rgba(37, 118, 150, 0.48)'
-            : 'rgba(37, 118, 150, 0.16)',
-          borderRadius: '8px',
-          boxShadow: isCoachmarkOpen
-            ? '0 0 0 5px rgba(37, 118, 150, 0.16), 0 16px 32px rgba(23, 78, 105, 0.14)'
-            : '0 10px 28px rgba(23, 78, 105, 0.08)',
-          maxWidth: 760,
-          mx: 'auto',
-          overflow: 'hidden',
-          transition: 'box-shadow 180ms ease, border-color 180ms ease',
-          width: '100%',
-          '&:before': { display: 'none' },
-        }}
-      >
-        <AccordionSummary
-          data-test="game_help__summary"
-          expandIcon={<ExpandMoreIcon data-test="game_help__expand_icon" />}
-          ref={summaryRef}
-          sx={{
-            '& .MuiAccordionSummary-content': {
-              alignItems: 'center',
-              gap: 1,
-            },
-          }}
-        >
+    <Paper
+      data-test="game_help__panel"
+      elevation={0}
+      sx={{
+        bgcolor: 'rgba(255, 255, 255, 0.94)',
+        border: '1px solid rgba(37, 118, 150, 0.16)',
+        borderRadius: '8px',
+        boxShadow: '0 10px 28px rgba(23, 78, 105, 0.08)',
+        maxWidth: 760,
+        mx: 'auto',
+        overflow: 'hidden',
+        p: { xs: 2, md: 2.5 },
+        width: '100%',
+      }}
+    >
+      <Stack data-test="game_help__content" spacing={2.25}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Box
             aria-hidden="true"
             data-test="game_help__title_icon"
@@ -141,54 +131,22 @@ export function GameHelpPanel({
           >
             <AutoAwesomeIcon fontSize="small" />
           </Box>
-          <Typography data-test="game_help__title" fontWeight={900}>
+          <Typography
+            component="h1"
+            data-test="game_help__title"
+            sx={{ color: '#203015', fontSize: 24, fontWeight: 950, lineHeight: 1.1 }}
+          >
             {t(interfaceLanguage, 'gameHelpTitle')}
           </Typography>
-        </AccordionSummary>
-        <AccordionDetails data-test="game_help__details">
-          <Stack data-test="game_help__content" spacing={2}>
-            <Stack data-test="game_help__rows" spacing={1.25}>
-              {rows.map((row) => (
-                <Stack
-                  data-test={`game_help__row__${row.key}`}
-                  key={row.key}
-                  direction="row"
-                  spacing={1.25}
-                  alignItems="flex-start"
-                >
-                  <Box
-                    aria-hidden="true"
-                    data-test={`game_help__row_icon__${row.key}`}
-                    sx={{
-                      alignItems: 'center',
-                      bgcolor: row.bg,
-                      border: `1px solid ${row.color}26`,
-                      borderRadius: 1.5,
-                      color: row.color,
-                      display: 'inline-flex',
-                      flexShrink: 0,
-                      height: 22,
-                      justifyContent: 'center',
-                      mt: 0.1,
-                      width: 22,
-                      '& .MuiSvgIcon-root': {
-                        fontSize: 15,
-                      },
-                    }}
-                  >
-                    {row.icon}
-                  </Box>
-                  <Typography data-test={`game_help__row_text__${row.key}`}>
-                    {t(interfaceLanguage, row.key)}
-                  </Typography>
-                </Stack>
-              ))}
-            </Stack>
+        </Stack>
 
+        {slide === 'intro' ? (
+          <Stack data-test="game_help__intro_slide" spacing={2}>
+            <HelpRows rows={introRows} interfaceLanguage={interfaceLanguage} />
             <Button
-              data-test="game_help__got_it_button"
+              data-test="game_help__next_button"
               variant="outlined"
-              onClick={handleGotIt}
+              onClick={showChatSlide}
               sx={{
                 alignSelf: 'flex-start',
                 bgcolor: '#f5fbff',
@@ -197,157 +155,99 @@ export function GameHelpPanel({
                 boxShadow: '0 8px 18px rgba(23, 78, 105, 0.12)',
                 color: '#174e69',
                 fontWeight: 900,
-                px: 2,
+                px: 2.5,
+                textTransform: 'none',
                 '&:hover': {
                   bgcolor: '#e9f6fb',
                   borderColor: 'rgba(37, 118, 150, 0.52)',
                 },
               }}
             >
-              {t(interfaceLanguage, 'gameHelpGotIt')}
+              {t(interfaceLanguage, 'gameHelpNext')}
             </Button>
           </Stack>
-        </AccordionDetails>
-      </Accordion>
-
-      <Popper
-        data-test="game_help__coachmark_popper"
-        open={isCoachmarkOpen}
-        anchorEl={summaryRef.current}
-        placement="bottom-start"
-        modifiers={[{ name: 'offset', options: { offset: [0, 8] } }]}
-        sx={{ zIndex: (theme) => theme.zIndex.modal }}
-      >
-        <Paper
-          data-test="game_help__coachmark_surface"
-          sx={{
-            bgcolor: '#f5fbff',
-            border: '1px solid rgba(37, 118, 150, 0.28)',
-            borderRadius: 2,
-            boxShadow: '0 18px 38px rgba(23, 78, 105, 0.18)',
-            maxWidth: 330,
-            p: 1.5,
-          }}
-        >
-          <Stack
-            data-test="game_help__coachmark"
-            role="dialog"
-            aria-label={t(interfaceLanguage, 'gameHelpCoachmarkTitle')}
-            spacing={1.25}
-          >
-            <Stack
-              data-test="game_help__coachmark_title_row"
-              direction="row"
-              spacing={0.75}
-              alignItems="center"
+        ) : (
+          <Stack data-test="game_help__chat_slide" spacing={1.5}>
+            <Typography
+              data-test="game_help__chat_title"
+              sx={{
+                color: '#6845b8',
+                fontSize: 18,
+                fontWeight: 950,
+                lineHeight: 1.2,
+              }}
             >
-              <Box
-                aria-hidden="true"
-                data-test="game_help__coachmark_icon"
-                sx={{
-                  alignItems: 'center',
-                  bgcolor: '#0f6d7a',
-                  borderRadius: '50%',
-                  color: '#ffd166',
-                  display: 'inline-flex',
-                  height: 24,
-                  justifyContent: 'center',
-                  width: 24,
-                }}
-              >
-                <TipsAndUpdatesIcon sx={{ fontSize: 16 }} />
-              </Box>
-              <Typography
-                data-test="game_help__coachmark_title"
-                sx={{
-                  color: '#174e69',
-                  fontSize: 13,
-                  fontWeight: 900,
-                  lineHeight: 1.2,
-                }}
-              >
-                {t(interfaceLanguage, 'gameHelpCoachmarkTitle')}
-              </Typography>
-            </Stack>
-            <Stack data-test="game_help__coachmark_items" spacing={0.75}>
-              <CoachmarkItem
-                body={t(interfaceLanguage, 'gameHelpCoachmarkReturnBody')}
-                dataTest="game_help__coachmark_item__return"
-                title={t(interfaceLanguage, 'gameHelpCoachmarkReturnTitle')}
-              />
-              <CoachmarkItem
-                body={t(interfaceLanguage, 'gameHelpCoachmarkSmartBody')}
-                dataTest="game_help__coachmark_item__smart"
-                title={t(interfaceLanguage, 'gameHelpCoachmarkSmartTitle')}
-              />
-            </Stack>
-            <Button
-              data-test="game_help__coachmark_close_button"
-              size="small"
-              variant="outlined"
-              onClick={() => setIsCoachmarkOpen(false)}
-              sx={{ alignSelf: 'flex-start' }}
-            >
-              {t(interfaceLanguage, 'tutorialClose')}
-            </Button>
+              {t(interfaceLanguage, 'gameHelpAiChatTitle')}
+            </Typography>
+            <HelpRows rows={chatRows} interfaceLanguage={interfaceLanguage} />
           </Stack>
-        </Paper>
-      </Popper>
-    </>
+        )}
+      </Stack>
+    </Paper>
   );
 }
 
-function CoachmarkItem({
-  body,
-  dataTest,
-  title,
+function HelpRows({
+  interfaceLanguage,
+  rows,
 }: {
-  body: string;
-  dataTest: string;
-  title: string;
+  interfaceLanguage: SupportedLanguage;
+  rows: Array<{
+    bg: string;
+    color: string;
+    icon: JSX.Element;
+    key:
+      | 'gameHelpLab'
+      | 'gameHelpPlayer'
+      | 'gameHelpVocabulary'
+      | 'gameHelpTeacher'
+      | 'gameHelpOwnTrainer'
+      | 'gameHelpAiChatCards'
+      | 'gameHelpAiChatGames'
+      | 'gameHelpAiChatStats'
+      | 'gameHelpAiChatControl';
+  }>;
 }) {
   return (
-    <Stack
-      data-test={dataTest}
-      direction="row"
-      spacing={0.75}
-      alignItems="flex-start"
-    >
-      <Box
-        aria-hidden="true"
-        data-test={`${dataTest}__dot`}
-        sx={{
-          bgcolor: '#ffd166',
-          borderRadius: '50%',
-          flexShrink: 0,
-          height: 7,
-          mt: 0.65,
-          width: 7,
-        }}
-      />
-      <Box data-test={`${dataTest}__text`}>
-        <Typography
-          data-test={`${dataTest}__title`}
-          sx={{
-            color: '#174e69',
-            fontSize: 12,
-            fontWeight: 850,
-            lineHeight: 1.25,
-          }}
+    <Stack data-test="game_help__rows" spacing={1.25}>
+      {rows.map((row) => (
+        <Stack
+          data-test={`game_help__row__${row.key}`}
+          key={row.key}
+          direction="row"
+          spacing={1.25}
+          alignItems="flex-start"
         >
-          {title}
-        </Typography>
-        <Typography
-          data-test={`${dataTest}__body`}
-          sx={{
-            color: '#426579',
-            fontSize: 12,
-            lineHeight: 1.3,
-          }}
-        >
-          {body}
-        </Typography>
-      </Box>
+          <Box
+            aria-hidden="true"
+            data-test={`game_help__row_icon__${row.key}`}
+            sx={{
+              alignItems: 'center',
+              bgcolor: row.bg,
+              border: `1px solid ${row.color}26`,
+              borderRadius: 1.5,
+              color: row.color,
+              display: 'inline-flex',
+              flexShrink: 0,
+              height: 22,
+              justifyContent: 'center',
+              mt: 0.1,
+              width: 22,
+              '& .MuiSvgIcon-root': {
+                fontSize: 15,
+              },
+            }}
+          >
+            {row.icon}
+          </Box>
+          <Typography
+            data-test={`game_help__row_text__${row.key}`}
+            sx={{ lineHeight: 1.35 }}
+          >
+            {t(interfaceLanguage, row.key)}
+          </Typography>
+        </Stack>
+      ))}
     </Stack>
   );
 }

@@ -3,7 +3,9 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
+import type { ExerciseAttempt } from '../../domain/exercises';
 import { appReducer } from '../../store/appSlice';
+import { attemptsReducer } from '../../store/attemptsSlice';
 import { AppShell } from '../AppShell';
 
 describe('AppShell', () => {
@@ -96,11 +98,13 @@ describe('AppShell', () => {
     });
   });
 
-  it('keeps the player greeting compact, centered, and readable when truncated', async () => {
+  it('keeps the player greeting compact, centered, and shows the player level tooltip', async () => {
     const user = userEvent.setup();
+    const attempts = createAttempts(45);
     const store = configureStore({
       reducer: {
         app: appReducer,
+        attempts: attemptsReducer,
       },
       preloadedState: {
         app: {
@@ -110,6 +114,9 @@ describe('AppShell', () => {
             displayName: 'Илья-Супер-Длинное-Имя-Для-Проверки-Эллипсиса',
             isAnonymous: false,
           },
+        },
+        attempts: {
+          attempts,
         },
       },
     });
@@ -141,6 +148,7 @@ describe('AppShell', () => {
     });
     expect(screen.getByTestId('player_greeting__label')).toHaveStyle({
       alignItems: 'center',
+      cursor: 'default',
       display: 'flex',
       justifyContent: 'center',
       overflow: 'hidden',
@@ -156,6 +164,10 @@ describe('AppShell', () => {
     expect(tooltip).toHaveTextContent(
       'Илья-Супер-Длинное-Имя-Для-Проверки-Эллипсиса',
     );
+    expect(tooltip).toHaveTextContent('Продвинутый новичок');
+    expect(tooltip).toHaveTextContent('45 пройдено игр');
+    expect(tooltip).toHaveTextContent(/игровой уровень/i);
+    expect(screen.getByTestId('player_greeting__level_icon')).toBeInTheDocument();
     expect(tooltip).toHaveStyle({
       backgroundColor: 'rgba(255, 255, 255, 0.98)',
       fontSize: '14px',
@@ -282,6 +294,10 @@ describe('AppShell', () => {
       color: 'rgb(32, 48, 21)',
     });
     expect(gameTab).toHaveStyle({ fontWeight: '950' });
+    expect(gameTab).not.toHaveStyle({
+      boxShadow:
+        'inset 0 1px 0 rgba(255,255,255,0.9), 0 5px 12px rgba(92, 78, 22, 0.14)',
+    });
   });
 
   it('resets the shell scroll root only when the active section changes', () => {
@@ -332,6 +348,23 @@ describe('AppShell', () => {
     expect(scrollRoot.scrollTop).toBe(212);
   });
 });
+
+function createAttempts(count: number): ExerciseAttempt[] {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `attempt-${index}`,
+    exerciseSessionId: `session-${index}`,
+    exerciseType: 'missingLetters',
+    cardSetId: 'all-cards',
+    targetLanguage: 'en',
+    createdAt: `2026-07-03T10:${String(index % 60).padStart(2, '0')}:00.000Z`,
+    completedAt: `2026-07-03T10:${String(index % 60).padStart(2, '0')}:30.000Z`,
+    cardSnapshots: [],
+    prompts: [],
+    answers: {},
+    correctness: {},
+    hintsUsed: {},
+  }));
+}
 
 function findMediaStyleRule({
   element,

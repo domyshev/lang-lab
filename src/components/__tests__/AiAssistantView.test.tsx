@@ -202,6 +202,12 @@ describe('AiAssistantView connection', () => {
     );
 
     const tooltip = await screen.findByTestId('ai_connection__locked_model_tooltip');
+    expect(
+      screen.getByTestId('ai_connection__locked_model_tooltip_popper'),
+    ).toHaveAttribute('data-popper-placement', 'left');
+    expect(
+      screen.getByTestId('ai_connection__locked_model_tooltip_body'),
+    ).toHaveStyle({ fontWeight: '500' });
     expect(tooltip).toHaveTextContent(
       'Введите свой ключ OpenRouter, чтобы открыть эту модель.',
     );
