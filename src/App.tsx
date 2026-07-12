@@ -170,7 +170,6 @@ export function App() {
   const hasMergedDefaultCardSetMetadata = useRef(false);
   const [activeSection, setActiveSection] =
     useState<AppShellSection>('game');
-  const [gameAiAssistantOpenSignal, setGameAiAssistantOpenSignal] = useState(0);
   const [selectedExerciseType, setSelectedExerciseType] =
     useState<ExerciseType | null>(null);
   const [selectedGameCardSetId, setSelectedGameCardSetId] = useState('');
@@ -665,8 +664,7 @@ export function App() {
 
   function openGameAiAssistant() {
     setProfileAssistantId(null);
-    setActiveSection('game');
-    setGameAiAssistantOpenSignal((signal) => signal + 1);
+    setActiveSection('chat');
     const scrollRoot = document.querySelector<HTMLElement>(
       '[data-test="app_shell__root"]',
     );
@@ -680,9 +678,6 @@ export function App() {
       if (nextScrollRoot) {
         nextScrollRoot.scrollTop = 0;
       }
-      document
-        .querySelector<HTMLElement>('[data-test="game_ai_assistant__section"]')
-        ?.scrollIntoView?.({ block: 'start' });
     });
   }
 
@@ -973,6 +968,22 @@ export function App() {
       );
     }
 
+    if (activeSection === 'chat') {
+      return (
+        <Box
+          data-test="app__chat_section"
+          sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}
+        >
+          <AiAssistantView
+            collapsible={false}
+            dataTest="app_chat__assistant"
+            embedded
+            showManualImport={false}
+          />
+        </Box>
+      );
+    }
+
     if (activeSection === 'help') {
       return (
         <Box data-test="app__help_section">
@@ -992,12 +1003,6 @@ export function App() {
     if (!isExerciseStarted) {
       return (
         <Stack data-test="app__game_setup_section" style={{ gap: 12 }}>
-          <AiAssistantView
-            dataTest="game_ai_assistant__section"
-            embedded
-            openSignal={gameAiAssistantOpenSignal}
-            showManualImport={false}
-          />
           <GameSetup />
         </Stack>
       );

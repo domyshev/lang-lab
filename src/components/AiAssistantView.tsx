@@ -14,6 +14,7 @@ import {
   DialogContentText,
   DialogTitle,
   IconButton,
+  Paper,
   Stack,
   Tooltip,
   Typography,
@@ -54,6 +55,7 @@ import { AiOperationHistory } from './ai/AiOperationHistory';
 import { ManualCardImportPanel } from './ManualCardImportPanel';
 
 interface AiAssistantViewProps {
+  collapsible?: boolean;
   dataTest?: string;
   embedded?: boolean;
   openSignal?: number;
@@ -61,6 +63,7 @@ interface AiAssistantViewProps {
 }
 
 export function AiAssistantView({
+  collapsible = true,
   dataTest = 'ai_assistant__page',
   embedded = false,
   openSignal,
@@ -355,6 +358,7 @@ export function AiAssistantView({
           width: '100%',
         }}
       >
+        {collapsible ? (
         <Accordion
           data-test="ai_assistant__chat_accordion"
           disableGutters
@@ -540,6 +544,152 @@ export function AiAssistantView({
             </Stack>
           </AccordionDetails>
         </Accordion>
+        ) : (
+          <Paper
+            data-test="ai_assistant__chat_surface"
+            variant="outlined"
+            sx={{
+              bgcolor: '#fff',
+              border: '1px solid rgba(40, 60, 34, 0.12)',
+              borderRadius: 3,
+              boxShadow: '0 10px 24px rgba(32, 45, 26, 0.08)',
+              overflow: 'hidden',
+            }}
+          >
+            <Box
+              data-test="ai_assistant__chat_header"
+              sx={{
+                px: { xs: 1.5, sm: 2 },
+                py: 1.5,
+              }}
+            >
+              <Stack
+                data-test="ai_assistant__chat_summary_content"
+                sx={{
+                  alignItems: 'center',
+                  display: 'grid',
+                  gap: 1,
+                  gridTemplateColumns: {
+                    xs: 'minmax(0, 1fr)',
+                    sm: 'minmax(0, 1fr) auto minmax(0, 1fr)',
+                  },
+                  minWidth: 0,
+                  width: '100%',
+                }}
+              >
+                <Typography
+                  data-test="ai_chat__title"
+                  component="h3"
+                  variant="h6"
+                  fontWeight={800}
+                  sx={{ minWidth: 0 }}
+                >
+                  {t(interfaceLanguage, 'aiChatTitle')}
+                </Typography>
+                <AiConnectionPanel
+                  apiKey={apiKey}
+                  inputRef={keyInputRef}
+                  isKeyVisible={isKeyVisible}
+                  isRestoreTrialAvailable={!isOpenRouterTrialKey(savedApiKey)}
+                  isSaveDisabled={apiKey.trim() === savedApiKey.trim()}
+                  isTrialKeySelected={isTrialKeySelected}
+                  language={interfaceLanguage}
+                  missingKey={missingKey}
+                  modelId={modelId}
+                  modelOptions={OPENROUTER_AVAILABLE_MODELS}
+                  onApiKeyChange={(value) => {
+                    setApiKey(value);
+                    if (value.trim()) setMissingKey(false);
+                  }}
+                  onDelete={() => {
+                    removeOpenRouterKey(keyStorageRef.current);
+                    setApiKey('');
+                    setSavedApiKey('');
+                    setIsKeyVisible(false);
+                  }}
+                  onModelChange={(value) => {
+                    if (isTrialKeySelected && value === OPENROUTER_GPT_MODEL_ID) {
+                      return;
+                    }
+                    saveOpenRouterModel(value, keyStorageRef.current);
+                    setModelId(loadOpenRouterModel(keyStorageRef.current));
+                  }}
+                  onRestoreTrial={() => {
+                    restoreOpenRouterTrialKey(keyStorageRef.current);
+                    const storedKey = loadOpenRouterKey(keyStorageRef.current);
+                    setApiKey(storedKey);
+                    setSavedApiKey(storedKey);
+                    setMissingKey(false);
+                  }}
+                  onSave={() => {
+                    saveOpenRouterKey(apiKey, keyStorageRef.current);
+                    const storedKey = loadOpenRouterKey(keyStorageRef.current);
+                    setApiKey(storedKey);
+                    setSavedApiKey(storedKey);
+                    setMissingKey(!storedKey);
+                  }}
+                  onToggleVisibility={() => setIsKeyVisible((visible) => !visible)}
+                />
+                <Stack
+                  data-test="ai_assistant__chat_summary_actions"
+                  direction="row"
+                  alignItems="center"
+                  spacing={0.5}
+                  sx={{ justifySelf: 'end', mr: '20px' }}
+                >
+                  <Tooltip title={t(interfaceLanguage, 'aiHistoryTitle')}>
+                    <IconButton
+                      aria-label={t(interfaceLanguage, 'aiHistoryTitle')}
+                      data-test="ai_assistant__operation_history_button"
+                      onClick={() => setIsHistoryOpen(true)}
+                      size="small"
+                      sx={chatHeaderActionButtonSx}
+                    >
+                      <HistoryIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title={t(interfaceLanguage, 'aiClearChat')}>
+                    <span>
+                      <IconButton
+                        aria-label={t(interfaceLanguage, 'aiClearChat')}
+                        data-test="ai_chat__clear_button"
+                        disabled={displayedMessages.length === 0}
+                        onClick={() => setIsClearChatDialogOpen(true)}
+                        size="small"
+                        sx={chatHeaderActionButtonSx}
+                      >
+                        <DeleteSweepOutlinedIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                </Stack>
+              </Stack>
+            </Box>
+            <Box
+              data-test="ai_assistant__chat_details"
+              sx={{ px: { xs: 1.5, sm: 2 }, pb: 2, pt: 0 }}
+            >
+              <Stack data-test="ai_assistant__chat_details_content" spacing={1}>
+                <AiChatPanel
+                  draft={draft}
+                  height={400}
+                  isThinking={isThinking}
+                  language={interfaceLanguage}
+                  messages={displayedMessages}
+                  operationError={operationError}
+                  onApplyOperation={handleApplyOperation}
+                  onCancel={handleCancel}
+                  onClear={handleClearChat}
+                  onCancelPreview={() => dispatch(cancelStagedAiOperation())}
+                  onDraftChange={setDraft}
+                  onRetry={sendPrompt}
+                  onSend={() => void sendPrompt(draft)}
+                  showHeader={false}
+                />
+              </Stack>
+            </Box>
+          </Paper>
+        )}
 
         <Dialog
           aria-labelledby="ai-operation-history-dialog-title"

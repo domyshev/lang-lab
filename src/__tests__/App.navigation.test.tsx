@@ -334,6 +334,7 @@ describe('App navigation', () => {
     expect(screen.getByRole('tab', { name: 'Играть' })).toBeInTheDocument();
     expect(screen.getByText('Language Lab')).toBeInTheDocument();
     expect(screen.queryByText('Language Crossword Lab')).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Чат' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Карточки' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Статистика' })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'AI помощник' })).not.toBeInTheDocument();
@@ -427,6 +428,8 @@ describe('App navigation', () => {
       getComputedStyle(screen.getByTestId('exercise_picker__option_label__crossword'))
         .backgroundImage,
     );
+    expect(screen.queryByTestId('game_ai_assistant__section')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('ai_assistant__chat_accordion')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
     expect(screen.queryByTestId('game_setup__warning_alert')).not.toBeInTheDocument();
     expect(screen.getByTestId('game_setup__start_warning_icon')).toHaveTextContent('!');
@@ -763,8 +766,9 @@ describe('App navigation', () => {
       historyTitle: 'Historial de operaciones',
       importTitle: 'Importacion manual de tarjetas',
     },
-  ])('opens the embedded AI Assistant from the library wands in $interfaceLanguage', async ({
+  ])('opens the dedicated chat tab from the library wands in $interfaceLanguage', async ({
     interfaceLanguage,
+    gamesTab,
     title,
     wandLabel,
     chatTitle,
@@ -777,9 +781,27 @@ describe('App navigation', () => {
     scrollRoot.scrollTop = 336.5;
 
     expect(screen.queryByRole('tab', { name: title })).not.toBeInTheDocument();
-    expect(screen.getByTestId('game_ai_assistant__section')).toBeInTheDocument();
-    expect(screen.queryByTestId('ai_connection__panel')).not.toBeInTheDocument();
-    expect(screen.getByTestId('ai_assistant__chat_accordion')).toHaveTextContent(chatTitle);
+    expect(screen.getByRole('tab', { name: chatTitle })).toBeInTheDocument();
+    expect(screen.queryByTestId('game_ai_assistant__section')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('ai_assistant__chat_accordion')).not.toBeInTheDocument();
+
+    const gameLibraryWand = screen.getByTestId('game_library__ai_assistant_button');
+    const cardSetLibraryWand = screen.getByTestId('card_set_library__ai_assistant_button');
+    expect(gameLibraryWand).toHaveAttribute('aria-label', wandLabel);
+    expect(cardSetLibraryWand).toHaveAttribute('aria-label', wandLabel);
+
+    scrollRoot.scrollTop = 336.5;
+    await user.click(gameLibraryWand);
+
+    expect(scrollRoot.scrollTop).toBe(0);
+    expect(screen.getByRole('tab', { name: chatTitle })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByTestId('app__chat_section')).toBeInTheDocument();
+    expect(screen.getByTestId('app__chat_section')).toHaveTextContent(chatTitle);
+    expect(screen.queryByTestId('ai_assistant__chat_accordion')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('ai_assistant__collapse_chat_button')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: historyTitle })).toBeInTheDocument();
     expect(
       screen.queryByRole('heading', { name: historyTitle }),
@@ -788,28 +810,16 @@ describe('App navigation', () => {
     expect(screen.queryByRole('heading', { name: importTitle })).not.toBeInTheDocument();
     expect(screen.queryByText(/trial|триальн|prueba/i)).not.toBeInTheDocument();
 
-    const chatSummary = screen.getByTestId('ai_assistant__chat_summary');
-    const gameLibraryWand = screen.getByTestId('game_library__ai_assistant_button');
-    const cardSetLibraryWand = screen.getByTestId('card_set_library__ai_assistant_button');
-    expect(gameLibraryWand).toHaveAttribute('aria-label', wandLabel);
-    expect(cardSetLibraryWand).toHaveAttribute('aria-label', wandLabel);
-
-    await user.click(chatSummary);
-    expect(chatSummary).toHaveAttribute('aria-expanded', 'false');
-    scrollRoot.scrollTop = 336.5;
-    await user.click(gameLibraryWand);
-
-    expect(scrollRoot.scrollTop).toBe(0);
-    expect(chatSummary).toHaveAttribute('aria-expanded', 'true');
-
-    await user.click(chatSummary);
-    expect(chatSummary).toHaveAttribute('aria-expanded', 'false');
+    await user.click(screen.getByRole('tab', { name: gamesTab }));
     scrollRoot.scrollTop = 336.5;
     await user.click(screen.getByTestId('card_set_library__ai_assistant_button'));
 
     expect(scrollRoot.scrollTop).toBe(0);
-    expect(chatSummary).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByTestId('game_ai_assistant__section')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: chatTitle })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByTestId('app__chat_section')).toBeInTheDocument();
   });
 
   it('shows fixed help slides on the dedicated icon-only Help tab', async () => {

@@ -90,7 +90,7 @@ export function AiChatPanel({
   }, [isThinking, scrollSignature]);
 
   const handleComposerKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== 'Enter' || (!event.metaKey && !event.ctrlKey)) {
+    if (event.key !== 'Enter' || event.shiftKey) {
       return;
     }
 
@@ -280,11 +280,11 @@ export function AiChatPanel({
                     spacing={0.75}
                     sx={{ alignItems: 'center', flexWrap: 'wrap' }}
                   >
-                    <ShortcutKey>⌘ Enter</ShortcutKey>
+                    <ShortcutKey>Enter</ShortcutKey>
                     <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>
                       /
                     </Typography>
-                    <ShortcutKey>Ctrl Enter</ShortcutKey>
+                    <ShortcutKey>Shift Enter</ShortcutKey>
                   </Stack>
                 </Stack>
               }

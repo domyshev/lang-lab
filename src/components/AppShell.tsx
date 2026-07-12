@@ -7,6 +7,7 @@ import MilitaryTechOutlinedIcon from '@mui/icons-material/MilitaryTechOutlined';
 import PsychologyOutlinedIcon from '@mui/icons-material/PsychologyOutlined';
 import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
 import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
 import {
   AppBar,
@@ -35,6 +36,7 @@ import { createPlayerAvatarSeed, PlayerPixelAvatar } from './PlayerPixelAvatar';
 
 export type AppShellSection =
   | 'game'
+  | 'chat'
   | 'cards'
   | 'statistics'
   | 'help'
@@ -201,6 +203,20 @@ export function AppShell({
                   boxShadow:
                     'inset 0 1px 0 rgba(255,255,255,0.9), 0 0 0 5px rgba(255, 203, 74, 0.24)',
                   color: '#203015',
+                },
+              }}
+            />
+            <Tab
+              data-test="app_shell__tab__chat"
+              value="chat"
+              icon={<SmartToyOutlinedIcon data-test="app_shell__tab_icon__chat" />}
+              iconPosition="start"
+              label={t(interfaceLanguage, 'aiChatTitle')}
+              sx={{
+                color: '#3a285f',
+                minWidth: '0 !important',
+                '& .MuiSvgIcon-root': {
+                  fontSize: 19,
                 },
               }}
             />
@@ -820,6 +836,7 @@ function PlayerOnboardingDialog({
 
 const visibleTabSections: AppShellSection[] = [
   'game',
+  'chat',
   'cards',
   'statistics',
   'help',

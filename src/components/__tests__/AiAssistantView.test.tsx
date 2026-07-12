@@ -371,18 +371,26 @@ describe('AiAssistantView chat', () => {
     ]);
   });
 
-  it('keeps plain Enter as composer input without sending', async () => {
+  it('sends with Enter and keeps Shift+Enter as composer newline', async () => {
     const user = userEvent.setup();
     saveOpenRouterKey('sk-test');
-    mockedRunAiAssistant.mockResolvedValue({ ok: true, content: 'Unexpected.' });
+    mockedRunAiAssistant.mockResolvedValue({ ok: true, content: 'Enter accepted.' });
     renderView();
 
     const composer = screen.getByLabelText('Message the AI assistant');
     await user.type(composer, 'First line');
-    await user.keyboard('{Enter}');
+    await user.keyboard('{Shift>}{Enter}{/Shift}');
 
     expect(mockedRunAiAssistant).not.toHaveBeenCalled();
     expect(composer).toHaveValue('First line\n');
+
+    await user.type(composer, 'Second line');
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => expect(mockedRunAiAssistant).toHaveBeenCalledOnce());
+    expect(mockedRunAiAssistant.mock.calls[0][0].userMessage).toBe(
+      'First line\nSecond line',
+    );
   });
 
   it('shows a shortcut tooltip and glam AI styling on the send button', async () => {
@@ -402,8 +410,8 @@ describe('AiAssistantView chat', () => {
 
     const tooltip = await screen.findByTestId('ai_chat__send_tooltip');
     expect(tooltip).toHaveTextContent('Отправить сообщение');
-    expect(tooltip).toHaveTextContent('⌘ Enter');
-    expect(tooltip).toHaveTextContent('Ctrl Enter');
+    expect(tooltip).toHaveTextContent('Enter');
+    expect(tooltip).toHaveTextContent('Shift Enter');
     expect(tooltip).toHaveStyle({
       backgroundColor: 'rgba(255, 255, 255, 0.98)',
       fontSize: '14px',
