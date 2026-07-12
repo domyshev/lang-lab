@@ -80,6 +80,7 @@ const createCardSetChangeSchema = z
 const updateCardSetChangeSchema = z
   .object({
     addCardRefs: uniqueStringsSchema.optional(),
+    archive: z.literal(true).optional(),
     cardSetId: nonEmptyStringSchema,
     names: cardSetNamesSchema.optional(),
     removeCardIds: uniqueStringsSchema.optional(),
@@ -88,6 +89,7 @@ const updateCardSetChangeSchema = z
   .strict()
   .superRefine((change, context) => {
     if (
+      !change.archive &&
       !change.names &&
       (change.addCardRefs?.length ?? 0) === 0 &&
       (change.removeCardIds?.length ?? 0) === 0

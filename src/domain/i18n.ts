@@ -87,6 +87,7 @@ type I18nKey =
   | 'aiUpdatedCards'
   | 'aiPendingDuplicates'
   | 'aiCreatedCardSets'
+  | 'aiArchivedCardSets'
   | 'aiRenamedCardSets'
   | 'aiMembershipAdditions'
   | 'aiMembershipRemovals'
@@ -363,6 +364,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiUpdatedCards: 'Cards updated',
     aiPendingDuplicates: 'Pending duplicates',
     aiCreatedCardSets: 'Sets created',
+    aiArchivedCardSets: 'Archived card sets',
     aiRenamedCardSets: 'Sets renamed',
     aiMembershipAdditions: 'Membership additions',
     aiMembershipRemovals: 'Membership removals',
@@ -664,6 +666,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiUpdatedCards: 'Обновлено карточек',
     aiPendingDuplicates: 'Дубликаты в ожидании',
     aiCreatedCardSets: 'Создано наборов',
+    aiArchivedCardSets: 'Заархивированные наборы',
     aiRenamedCardSets: 'Переименовано наборов',
     aiMembershipAdditions: 'Добавлено в наборы',
     aiMembershipRemovals: 'Удалено из наборов',
@@ -968,6 +971,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiUpdatedCards: 'Tarjetas actualizadas',
     aiPendingDuplicates: 'Duplicados pendientes',
     aiCreatedCardSets: 'Conjuntos creados',
+    aiArchivedCardSets: 'Conjuntos archivados',
     aiRenamedCardSets: 'Conjuntos renombrados',
     aiMembershipAdditions: 'Tarjetas anadidas a conjuntos',
     aiMembershipRemovals: 'Tarjetas retiradas de conjuntos',

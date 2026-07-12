@@ -85,6 +85,7 @@ describe('planAiOperation', () => {
         updatedCards: 0,
         pendingDuplicates: 0,
         createdCardSets: 1,
+        archivedCardSets: 0,
         renamedCardSets: 0,
         membershipAdditions: 1,
         membershipRemovals: 0,
@@ -173,9 +174,74 @@ describe('planAiOperation', () => {
       updatedCards: 1,
       pendingDuplicates: 0,
       createdCardSets: 0,
+      archivedCardSets: 0,
       renamedCardSets: 1,
       membershipAdditions: 1,
       membershipRemovals: 1,
+    });
+  });
+
+  it('plans card-set archival through an update operation', () => {
+    const result = planAiOperation(
+      plannerInput({
+        title: 'Archive Travel',
+        summary: 'Archive the old travel set.',
+        cardSetChanges: [
+          {
+            type: 'update',
+            cardSetId: 'set-travel',
+            archive: true,
+          },
+        ],
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.operation.updatedCardSets).toEqual([
+      {
+        before: cardSet(),
+        after: cardSet({
+          archivedAt: now,
+          updatedAt: now,
+        }),
+      },
+    ]);
+    expect(result.operation.previewCounts).toMatchObject({
+      archivedCardSets: 1,
+      membershipAdditions: 0,
+      membershipRemovals: 0,
+    });
+  });
+
+  it('rejects attempts to archive all-cards or already archived sets', () => {
+    expect(
+      planAiOperation(
+        plannerInput({
+          title: 'Archive all',
+          summary: 'Invalid archive.',
+          cardSetChanges: [
+            { type: 'update', cardSetId: 'all-cards', archive: true },
+          ],
+        }),
+      ),
+    ).toEqual({
+      ok: false,
+      errors: ['The all-cards set cannot be updated.'],
+    });
+
+    const input = plannerInput({
+      title: 'Archive again',
+      summary: 'Invalid archive.',
+      cardSetChanges: [
+        { type: 'update', cardSetId: 'set-travel', archive: true },
+      ],
+    });
+    input.cardSets = [cardSet({ archivedAt: now })];
+
+    expect(planAiOperation(input)).toEqual({
+      ok: false,
+      errors: ['Card set set-travel is already archived.'],
     });
   });
 

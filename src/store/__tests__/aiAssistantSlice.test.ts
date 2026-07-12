@@ -25,6 +25,7 @@ const operation: PlannedAiOperation = {
     updatedCards: 0,
     pendingDuplicates: 0,
     createdCardSets: 0,
+    archivedCardSets: 0,
     renamedCardSets: 0,
     membershipAdditions: 0,
     membershipRemovals: 0,

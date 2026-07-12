@@ -56,6 +56,7 @@ function createOperation(id = 'operation-1'): PlannedAiOperation {
       updatedCards: 2,
       pendingDuplicates: 3,
       createdCardSets: 4,
+      archivedCardSets: 0,
       renamedCardSets: 5,
       membershipAdditions: 6,
       membershipRemovals: 7,

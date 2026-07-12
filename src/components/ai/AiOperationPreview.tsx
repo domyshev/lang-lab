@@ -8,6 +8,7 @@ const countItems = [
   ['updatedCards', 'aiUpdatedCards'],
   ['pendingDuplicates', 'aiPendingDuplicates'],
   ['createdCardSets', 'aiCreatedCardSets'],
+  ['archivedCardSets', 'aiArchivedCardSets'],
   ['renamedCardSets', 'aiRenamedCardSets'],
   ['membershipAdditions', 'aiMembershipAdditions'],
   ['membershipRemovals', 'aiMembershipRemovals'],

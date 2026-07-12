@@ -109,6 +109,7 @@ describe('ImportCardsView compatibility wrapper', () => {
         updatedCards: 0,
         pendingDuplicates: 0,
         createdCardSets: 1,
+        archivedCardSets: 0,
         renamedCardSets: 0,
         membershipAdditions: 1,
         membershipRemovals: 0,

@@ -22,6 +22,7 @@ export interface AiOperationPreviewCounts {
   updatedCards: number;
   pendingDuplicates: number;
   createdCardSets: number;
+  archivedCardSets: number;
   renamedCardSets: number;
   membershipAdditions: number;
   membershipRemovals: number;
@@ -163,6 +164,7 @@ export function planAiOperation(input: {
       name: deriveCanonicalName(names, current.name),
       names,
       cardIds: unique([...remainingIds, ...addedIds]),
+      ...(change.archive ? { archivedAt: input.now } : {}),
       updatedAt: input.now,
     };
     workingSetsById.set(after.id, after);
@@ -295,6 +297,9 @@ function validateReferences(input: {
       errors.push(`Unknown card set: ${change.cardSetId}.`);
       continue;
     }
+    if (change.archive && cardSet.archivedAt) {
+      errors.push(`Card set ${cardSet.id} is already archived.`);
+    }
     change.addCardRefs?.forEach((ref) => {
       if (!isKnownCardRef(ref)) {
         errors.push(`Unknown card reference: ${ref}.`);
@@ -324,6 +329,7 @@ function buildPreviewCounts(input: {
     0,
   );
   let membershipRemovals = 0;
+  let archivedCardSets = 0;
   let renamedCardSets = 0;
 
   input.updatedCardSets.forEach(({ before, after }) => {
@@ -334,6 +340,9 @@ function buildPreviewCounts(input: {
     if (before.name !== after.name || !entitiesEqual(before.names, after.names)) {
       renamedCardSets += 1;
     }
+    if (!before.archivedAt && after.archivedAt) {
+      archivedCardSets += 1;
+    }
   });
 
   return {
@@ -341,6 +350,7 @@ function buildPreviewCounts(input: {
     updatedCards: input.updatedCards.length,
     pendingDuplicates: input.pendingDuplicates.length,
     createdCardSets: input.createdCardSets.length,
+    archivedCardSets,
     renamedCardSets,
     membershipAdditions,
     membershipRemovals,
