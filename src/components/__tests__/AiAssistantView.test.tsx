@@ -325,6 +325,45 @@ describe('AiAssistantView chat', () => {
     );
   });
 
+  it('passes prior chat messages to the assistant service for follow-up requests', async () => {
+    const user = userEvent.setup();
+    saveOpenRouterKey('sk-test');
+    mockedRunAiAssistant.mockResolvedValue({ ok: true, content: 'I staged it.' });
+    renderView({
+      messages: [
+        {
+          id: 'message-love-request',
+          role: 'user',
+          content: 'Show me five interesting Love cards.',
+          createdAt: now,
+        },
+        {
+          id: 'message-love-answer',
+          role: 'assistant',
+          content: 'I picked soulmate, longing, cherish, blush, and flirt.',
+          createdAt: now,
+        },
+      ],
+    });
+
+    await user.type(
+      screen.getByLabelText('Message the AI assistant'),
+      'Use these cards to create a new set.',
+    );
+    await user.click(screen.getByRole('button', { name: 'Send message' }));
+
+    expect(mockedRunAiAssistant.mock.calls[0][0].chatHistory).toEqual([
+      {
+        role: 'user',
+        content: 'Show me five interesting Love cards.',
+      },
+      {
+        role: 'assistant',
+        content: 'I picked soulmate, longing, cherish, blush, and flirt.',
+      },
+    ]);
+  });
+
   it('keeps plain Enter as composer input without sending', async () => {
     const user = userEvent.setup();
     saveOpenRouterKey('sk-test');
@@ -873,10 +912,11 @@ describe('AiAssistantView operation preview and history', () => {
     expect(styles.backgroundColor).toBe('rgb(245, 240, 255)');
   });
 
-  it('shows all preview counts and applies exactly once', async () => {
+  it('shows all preview counts, applies exactly once, and confirms the write in chat', async () => {
     const user = userEvent.setup();
     const operation = createOperation();
     const store = renderView({
+      language: 'ru',
       stagedOperation: operation,
       messages: [
         {
@@ -894,12 +934,18 @@ describe('AiAssistantView operation preview and history', () => {
     for (const count of [1, 2, 3, 4, 5, 6, 7]) {
       expect(within(preview).getByText(String(count))).toBeInTheDocument();
     }
-    await user.click(within(preview).getByRole('button', { name: 'Apply changes' }));
+    await user.click(within(preview).getByRole('button', { name: 'Применить изменения' }));
     expect(store.getState().aiAssistant.operations).toHaveLength(1);
     expect(store.getState().cards.cards).toHaveLength(1);
     expect(store.getState().aiAssistant.stagedOperation).toBeUndefined();
-    expect(within(preview).getByRole('button', { name: 'Apply changes' })).toBeDisabled();
-    expect(within(preview).getByRole('button', { name: 'Cancel preview' })).toBeDisabled();
+    expect(within(preview).getByRole('button', { name: 'Применить изменения' })).toBeDisabled();
+    expect(within(preview).getByRole('button', { name: 'Отменить предпросмотр' })).toBeDisabled();
+    expect(screen.getByText('Изменения записаны.')).toBeInTheDocument();
+    const messages = store.getState().aiAssistant.messages;
+    expect(messages[messages.length - 1]).toMatchObject({
+      role: 'assistant',
+      content: 'Изменения записаны.',
+    });
   });
 
   it('cancels a preview and disables apply for a blocking operation error', async () => {
@@ -914,6 +960,31 @@ describe('AiAssistantView operation preview and history', () => {
     expect(screen.getByText('The operation cannot be applied because the library changed.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Cancel preview' }));
     expect(store.getState().aiAssistant.stagedOperation).toBeUndefined();
+  });
+
+  it('does not confirm a write when a stale preview is rejected by the store', async () => {
+    const user = userEvent.setup();
+    const operation = createOperation();
+    const store = renderView({
+      messages: [
+        {
+          id: 'stale-operation-preview-message',
+          role: 'assistant',
+          content: 'Review this stale operation.',
+          createdAt: now,
+          operationPreview: operation,
+          previewStatus: 'pending',
+        },
+      ],
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+
+    expect(store.getState().aiAssistant.operations).toHaveLength(0);
+    expect(store.getState().aiAssistant.operationError).toBe(
+      'The staged AI operation is no longer current.',
+    );
+    expect(screen.queryByText('Changes have been recorded.')).not.toBeInTheDocument();
   });
 
   it('shows newest history first and reverts a valid operation', async () => {
@@ -1043,9 +1114,27 @@ describe('AiAssistantView localization and manual import', () => {
     expect(screen.getByTestId('ai_assistant__chat_accordion')).toBeInTheDocument();
     expect(screen.getByTestId('ai_chat__panel')).toHaveStyle({ height: '400px' });
     expect(screen.getByTestId('ai_chat__composer')).toHaveStyle({ alignItems: 'center' });
+    expect(screen.getByTestId('ai_assistant__collapse_chat_action_row')).toHaveStyle({
+      justifyContent: 'flex-start',
+      marginTop: '5px',
+    });
+    expect(screen.getByTestId('ai_assistant__collapse_chat_button')).toHaveTextContent(
+      'Collapse chat',
+    );
     expect(
       screen.queryByRole('heading', { name: 'Operation history' }),
     ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Collapse chat' }));
+    expect(screen.getByTestId('ai_assistant__chat_summary')).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    await user.click(screen.getByTestId('ai_assistant__chat_summary'));
+    expect(screen.getByTestId('ai_assistant__chat_summary')).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
 
     await user.click(screen.getByRole('button', { name: 'Operation history' }));
 

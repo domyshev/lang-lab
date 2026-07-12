@@ -103,7 +103,7 @@ describe('runAiAssistant', () => {
     );
     expect(first.messages[0].content).toContain('Current effort: default');
     expect(first.messages[0].content).toContain(
-      'You may answer questions about your current model id and effort',
+      'You may answer questions about the supplied recent chat history',
     );
 
     const second = sendChatMock.mock.calls[1][0];
@@ -157,6 +157,39 @@ describe('runAiAssistant', () => {
     });
   });
 
+  it('sends recent chat history before the current user message', async () => {
+    sendChatMock.mockResolvedValueOnce(success('I created the follow-up set.'));
+
+    await runAiAssistant({
+      apiKey: 'key',
+      userMessage: 'Use these cards to create a new set.',
+      chatHistory: [
+        {
+          role: 'user',
+          content: 'Show me five interesting Love cards.',
+        },
+        {
+          role: 'assistant',
+          content: 'I picked soulmate, longing, cherish, blush, and flirt.',
+        },
+      ],
+      snapshot,
+    });
+
+    const first = sendChatMock.mock.calls[0][0];
+    expect(first.messages).toHaveLength(4);
+    expect(first.messages[0]).toMatchObject({ role: 'system' });
+    expect(first.messages[0].content).toContain('recent chat history');
+    expect(first.messages.slice(1)).toEqual([
+      { role: 'user', content: 'Show me five interesting Love cards.' },
+      {
+        role: 'assistant',
+        content: 'I picked soulmate, longing, cherish, blush, and flirt.',
+      },
+      { role: 'user', content: 'Use these cards to create a new set.' },
+    ]);
+  });
+
   it('uses the default OpenRouter model when no model is selected', async () => {
     sendChatMock.mockResolvedValueOnce(success('Ready.'));
 
@@ -208,6 +241,64 @@ describe('runAiAssistant', () => {
     ]);
   });
 
+  it('lets the model recover after it asks for an unknown direct-write tool', async () => {
+    const unknownWriteCall = toolCall('direct-write-1', 'create_card_set', {
+      name: 'Funny love',
+      cardRefs: ['crush', 'attraction'],
+    });
+    const proposalCall = toolCall('proposal-after-tool-error', 'propose_library_operation', {
+      title: 'Funny love',
+      summary: 'Create a set from the funny love cards selected earlier.',
+      cardSetChanges: [
+        {
+          type: 'create',
+          clientRef: 'funny-love-set',
+          names: { en: 'Funny love', ru: 'краш любовь', es: 'Amor divertido' },
+          cardRefs: ['existing-airport'],
+        },
+      ],
+    });
+    sendChatMock
+      .mockResolvedValueOnce(success(null, [unknownWriteCall]))
+      .mockResolvedValueOnce(success(null, [proposalCall]))
+      .mockResolvedValueOnce(success('I staged the corrected card-set proposal.'));
+
+    const result = await runAiAssistant({
+      apiKey: 'key',
+      userMessage: 'Create a new set from those cards.',
+      chatHistory: [
+        {
+          role: 'assistant',
+          content: 'I selected crush, attraction, chemistry, blush, and cuddle.',
+        },
+      ],
+      snapshot,
+      now: () => now,
+      idFactory: (prefix) => `${prefix}-fixed`,
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.content).toBe('I staged the corrected card-set proposal.');
+    expect(result.stagedOperation?.title).toBe('Funny love');
+
+    const second = sendChatMock.mock.calls[1][0];
+    expect(second.messages.slice(-2)).toEqual([
+      { role: 'assistant', content: null, tool_calls: [unknownWriteCall] },
+      {
+        role: 'tool',
+        tool_call_id: 'direct-write-1',
+        content: JSON.stringify({
+          ok: false,
+          error: 'unknown_tool',
+          toolName: 'create_card_set',
+          message:
+            'Use propose_library_operation for writes and read tools for inspection.',
+        }),
+      },
+    ]);
+  });
+
   it.each(['', '   \n\t'])('returns empty-response for blank content %j', async (content) => {
     sendChatMock.mockResolvedValueOnce(success(content));
 
@@ -226,45 +317,33 @@ describe('runAiAssistant', () => {
     });
   });
 
-  it('returns a controlled unknown-tool failure', async () => {
-    sendChatMock.mockResolvedValueOnce(
-      success(null, [toolCall('bad-1', 'delete_everything', {})]),
-    );
-
-    const result = await runAiAssistant({
-      apiKey: 'key',
-      userMessage: 'Delete everything.',
-      snapshot,
-    });
-
-    expect(result).toEqual({
-      ok: false,
-      failure: {
-        kind: 'unknown-tool',
-        message: 'The model requested an unknown tool.',
-        toolName: 'delete_everything',
-      },
-    });
-  });
-
   it.each([
-    ['malformed JSON', '{bad-json'],
-    ['invalid arguments', JSON.stringify({ query: '' })],
-  ])('returns a controlled argument failure for %s', async (_name, arguments_ ) => {
-    sendChatMock.mockResolvedValueOnce({
-      ok: true,
-      message: {
-        role: 'assistant',
-        content: null,
-        tool_calls: [
-          {
-            id: 'bad-args',
-            type: 'function',
-            function: { name: 'search_cards', arguments: arguments_ },
-          },
-        ],
-      },
-    });
+    [
+      'malformed JSON',
+      '{bad-json',
+      'Tool arguments must be valid JSON matching the tool schema.',
+    ],
+    [
+      'invalid arguments',
+      JSON.stringify({ query: '' }),
+      'The supplied arguments did not match the tool schema. Correct them and call the tool again.',
+    ],
+  ])('lets the model recover after %s for a read tool', async (_name, arguments_, message) => {
+    const invalidCall = {
+      id: 'bad-args',
+      type: 'function' as const,
+      function: { name: 'search_cards', arguments: arguments_ },
+    };
+    sendChatMock
+      .mockResolvedValueOnce({
+        ok: true,
+        message: {
+          role: 'assistant',
+          content: null,
+          tool_calls: [invalidCall],
+        },
+      })
+      .mockResolvedValueOnce(success('I corrected the tool call.'));
 
     const result = await runAiAssistant({
       apiKey: 'key',
@@ -272,14 +351,21 @@ describe('runAiAssistant', () => {
       snapshot,
     });
 
-    expect(result).toEqual({
-      ok: false,
-      failure: {
-        kind: 'invalid-tool-arguments',
-        message: 'The model supplied invalid tool arguments.',
-        toolName: 'search_cards',
+    expect(result).toEqual({ ok: true, content: 'I corrected the tool call.' });
+    const second = sendChatMock.mock.calls[1][0];
+    expect(second.messages.slice(-2)).toEqual([
+      { role: 'assistant', content: null, tool_calls: [invalidCall] },
+      {
+        role: 'tool',
+        tool_call_id: 'bad-args',
+        content: JSON.stringify({
+          ok: false,
+          error: 'invalid_tool_arguments',
+          toolName: 'search_cards',
+          message,
+        }),
       },
-    });
+    ]);
   });
 
   it('retains an invalid schema proposal as a blocked preview for inspection', async () => {

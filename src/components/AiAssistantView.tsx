@@ -18,8 +18,13 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useDispatch, useSelector } from 'react-redux';
-import { AiRollbackConflict, AppliedAiOperation, findAiRollbackConflict } from '../domain/aiOperations';
+import { useDispatch, useSelector, useStore } from 'react-redux';
+import {
+  AiRollbackConflict,
+  AppliedAiOperation,
+  PlannedAiOperation,
+  findAiRollbackConflict,
+} from '../domain/aiOperations';
 import { t } from '../domain/i18n';
 import { AiAgentFailure, runAiAssistant } from '../services/aiAssistantAgent';
 import {
@@ -62,6 +67,7 @@ export function AiAssistantView({
   showManualImport = true,
 }: AiAssistantViewProps = {}) {
   const dispatch = useDispatch<AppDispatch>();
+  const storeRef = useStore();
   const keyStorageRef = useRef<Storage>(getOpenRouterStorage());
   const cards = useSelector((state: RootState) => state.cards.cards);
   const cardSets = useSelector((state: RootState) => state.cardSets.cardSets);
@@ -145,6 +151,7 @@ export function AiAssistantView({
           apiKey: key,
           modelId,
           userMessage: prompt,
+          chatHistory: messages.map(({ role, content }) => ({ role, content })),
           snapshot: { cards, cardSets, interfaceLanguage },
           signal: controller.signal,
         });
@@ -218,7 +225,16 @@ export function AiAssistantView({
         }
       }
     },
-    [apiKey, cardSets, cards, dispatch, interfaceLanguage, isThinking, modelId],
+    [
+      apiKey,
+      cardSets,
+      cards,
+      dispatch,
+      interfaceLanguage,
+      isThinking,
+      messages,
+      modelId,
+    ],
   );
 
   const handleCancel = () => {
@@ -237,6 +253,32 @@ export function AiAssistantView({
   const handleConfirmClearChat = () => {
     handleClearChat();
     setIsClearChatDialogOpen(false);
+  };
+
+  const handleApplyOperation = (operation: PlannedAiOperation) => {
+    const operationCountBefore =
+      (storeRef.getState() as RootState).aiAssistant.operations.length;
+    dispatch(
+      applyAiOperation({
+        operation,
+        appliedAt: new Date().toISOString(),
+      }),
+    );
+    const operationsAfter = (storeRef.getState() as RootState).aiAssistant.operations;
+    if (
+      operationsAfter.length <= operationCountBefore ||
+      operationsAfter[0]?.id !== operation.id
+    ) {
+      return;
+    }
+    dispatch(
+      appendAiMessage({
+        id: createUiId('assistant-operation-applied'),
+        role: 'assistant',
+        content: t(interfaceLanguage, 'aiChangesAppliedMessage'),
+        createdAt: new Date().toISOString(),
+      }),
+    );
   };
 
   const displayedMessages = useMemo(() => {
@@ -445,30 +487,57 @@ export function AiAssistantView({
               </Stack>
             </Stack>
           </AccordionSummary>
-          <AccordionDetails data-test="ai_assistant__chat_details" sx={{ px: { xs: 1.5, sm: 2 }, pb: 2, pt: 0 }}>
-            <AiChatPanel
-              draft={draft}
-              height={400}
-              isThinking={isThinking}
-              language={interfaceLanguage}
-              messages={displayedMessages}
-              operationError={operationError}
-              onApplyOperation={(operation) =>
-                dispatch(
-                  applyAiOperation({
-                    operation,
-                    appliedAt: new Date().toISOString(),
-                  }),
-                )
-              }
-              onCancel={handleCancel}
-              onClear={handleClearChat}
-              onCancelPreview={() => dispatch(cancelStagedAiOperation())}
-              onDraftChange={setDraft}
-              onRetry={sendPrompt}
-              onSend={() => void sendPrompt(draft)}
-              showHeader={false}
-            />
+          <AccordionDetails
+            data-test="ai_assistant__chat_details"
+            sx={{ px: { xs: 1.5, sm: 2 }, pb: 2, pt: 0 }}
+          >
+            <Stack data-test="ai_assistant__chat_details_content" spacing={1}>
+              <AiChatPanel
+                draft={draft}
+                height={400}
+                isThinking={isThinking}
+                language={interfaceLanguage}
+                messages={displayedMessages}
+                operationError={operationError}
+                onApplyOperation={handleApplyOperation}
+                onCancel={handleCancel}
+                onClear={handleClearChat}
+                onCancelPreview={() => dispatch(cancelStagedAiOperation())}
+                onDraftChange={setDraft}
+                onRetry={sendPrompt}
+                onSend={() => void sendPrompt(draft)}
+                showHeader={false}
+              />
+              <Box
+                data-test="ai_assistant__collapse_chat_action_row"
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  mt: '5px',
+                }}
+              >
+                <Button
+                  data-test="ai_assistant__collapse_chat_button"
+                  onClick={() => setIsChatExpanded(false)}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    borderColor: 'rgba(91, 76, 115, 0.36)',
+                    borderRadius: 999,
+                    color: 'rgba(91, 76, 115, 0.88)',
+                    fontWeight: 800,
+                    px: 2,
+                    textTransform: 'none',
+                    '&:hover': {
+                      bgcolor: 'rgba(118, 90, 151, 0.08)',
+                      borderColor: 'rgba(91, 76, 115, 0.52)',
+                    },
+                  }}
+                >
+                  {t(interfaceLanguage, 'aiCollapseChat')}
+                </Button>
+              </Box>
+            </Stack>
           </AccordionDetails>
         </Accordion>
 

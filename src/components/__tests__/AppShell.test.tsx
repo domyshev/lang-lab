@@ -32,7 +32,7 @@ describe('AppShell', () => {
     });
   });
 
-  it('asks for a first player name and greets an anonymous stranger with an avatar', async () => {
+  it('asks for a first player name and shows an anonymous stranger name with an avatar', async () => {
     const user = userEvent.setup();
     const store = configureStore({
       reducer: {
@@ -57,9 +57,7 @@ describe('AppShell', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Как тебя зовут?' })).not.toBeInTheDocument();
     });
-    expect(screen.getByTestId('player_greeting__label')).toHaveTextContent(
-      'Привет, странник',
-    );
+    expect(screen.getByTestId('player_greeting__label').textContent).toBe('странник');
     expect(screen.getByTestId('player_greeting__avatar')).toBeInTheDocument();
     expect(store.getState().app.playerProfile).toMatchObject({
       isAnonymous: true,
@@ -91,16 +89,15 @@ describe('AppShell', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Как тебя зовут?' })).not.toBeInTheDocument();
     });
-    expect(screen.getByTestId('player_greeting__label')).toHaveTextContent(
-      'Привет, Илья',
-    );
+    expect(screen.getByTestId('player_greeting__label').textContent).toBe('Илья');
     expect(store.getState().app.playerProfile).toMatchObject({
       displayName: 'Илья',
       isAnonymous: false,
     });
   });
 
-  it('keeps the player greeting centered inside the header', () => {
+  it('keeps the player greeting compact, centered, and readable when truncated', async () => {
+    const user = userEvent.setup();
     const store = configureStore({
       reducer: {
         app: appReducer,
@@ -110,7 +107,7 @@ describe('AppShell', () => {
           ...appReducer(undefined, { type: 'test/init' }),
           playerProfile: {
             avatarSeed: 'test-player',
-            displayName: 'Илюха',
+            displayName: 'Илья-Супер-Длинное-Имя-Для-Проверки-Эллипсиса',
             isAnonymous: false,
           },
         },
@@ -133,9 +130,10 @@ describe('AppShell', () => {
     expect(screen.getByTestId('player_greeting__root')).toHaveStyle({
       alignSelf: 'center',
       justifyContent: 'center',
+      maxWidth: '230px',
       minHeight: '36px',
       position: 'relative',
-      width: '250px',
+      width: 'fit-content',
     });
     expect(screen.getByTestId('player_greeting__avatar_slot')).toHaveStyle({
       left: '6px',
@@ -145,8 +143,22 @@ describe('AppShell', () => {
       alignItems: 'center',
       display: 'flex',
       justifyContent: 'center',
+      overflow: 'hidden',
       textAlign: 'center',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
       width: '100%',
+    });
+
+    await user.hover(screen.getByTestId('player_greeting__root'));
+
+    const tooltip = await screen.findByTestId('player_greeting__tooltip');
+    expect(tooltip).toHaveTextContent(
+      'Илья-Супер-Длинное-Имя-Для-Проверки-Эллипсиса',
+    );
+    expect(tooltip).toHaveStyle({
+      backgroundColor: 'rgba(255, 255, 255, 0.98)',
+      fontSize: '14px',
     });
   });
 
@@ -214,8 +226,11 @@ describe('AppShell', () => {
     expect(
       getComputedStyle(screen.getByTestId('app_shell__tab__help')).minWidth,
     ).toBe('0');
-    expect(screen.getByTestId('app_shell__tab__help')).toHaveStyle({
-      marginLeft: '15px',
+    const tabsFlexContainer = screen
+      .getByTestId('app_shell__main_tabs')
+      .querySelector('.MuiTabs-flexContainer');
+    expect(tabsFlexContainer).toHaveStyle({
+      gap: '10px',
     });
     const selectorsSlot = screen.getByTestId('app_shell__selectors_slot');
     expect(selectorsSlot).toHaveStyle({ flexShrink: '0' });

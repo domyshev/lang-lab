@@ -59,6 +59,7 @@ type I18nKey =
   | 'aiCancelRequest'
   | 'aiRetry'
   | 'aiClearChat'
+  | 'aiCollapseChat'
   | 'aiClearChatDialogTitle'
   | 'aiClearChatDialogBody'
   | 'aiEraseChat'
@@ -76,6 +77,7 @@ type I18nKey =
   | 'aiErrorTool'
   | 'aiErrorLoop'
   | 'aiApplyChanges'
+  | 'aiChangesAppliedMessage'
   | 'aiCancelPreview'
   | 'aiOperationBlocked'
   | 'aiBlockedPreviewTitle'
@@ -320,6 +322,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiCancelRequest: 'Cancel request',
     aiRetry: 'Retry',
     aiClearChat: 'Clear chat',
+    aiCollapseChat: 'Collapse chat',
     aiClearChatDialogTitle: 'Erase chat?',
     aiClearChatDialogBody:
       'This will erase the visible chat messages. Operation history will stay available.',
@@ -345,6 +348,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiErrorLoop:
       'The AI assistant stopped after too many tool steps. Nothing was applied.',
     aiApplyChanges: 'Apply changes',
+    aiChangesAppliedMessage: 'Changes have been recorded.',
     aiCancelPreview: 'Cancel preview',
     aiOperationBlocked: 'The operation cannot be applied because the library changed.',
     aiBlockedPreviewTitle: 'Review required',
@@ -615,6 +619,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiCancelRequest: 'Отменить запрос',
     aiRetry: 'Повторить',
     aiClearChat: 'Очистить чат',
+    aiCollapseChat: 'Свернуть чат',
     aiClearChatDialogTitle: 'Стереть чат?',
     aiClearChatDialogBody:
       'Видимые сообщения чата будут стерты. История операций останется доступной.',
@@ -640,6 +645,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiErrorLoop:
       'AI-ассистент остановился после слишком большого числа шагов. Ничего не было применено.',
     aiApplyChanges: 'Применить изменения',
+    aiChangesAppliedMessage: 'Изменения записаны.',
     aiCancelPreview: 'Отменить предпросмотр',
     aiOperationBlocked: 'Операцию нельзя применить, потому что библиотека изменилась.',
     aiBlockedPreviewTitle: 'Требуется проверка',
@@ -913,6 +919,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiCancelRequest: 'Cancelar solicitud',
     aiRetry: 'Reintentar',
     aiClearChat: 'Limpiar chat',
+    aiCollapseChat: 'Contraer chat',
     aiClearChatDialogTitle: 'Borrar chat?',
     aiClearChatDialogBody:
       'Se borraran los mensajes visibles del chat. El historial de operaciones seguira disponible.',
@@ -938,6 +945,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiErrorLoop:
       'El asistente de IA se detuvo tras demasiados pasos. No se aplico nada.',
     aiApplyChanges: 'Aplicar cambios',
+    aiChangesAppliedMessage: 'Cambios registrados.',
     aiCancelPreview: 'Cancelar vista previa',
     aiOperationBlocked: 'La operacion no se puede aplicar porque la biblioteca cambio.',
     aiBlockedPreviewTitle: 'Revision necesaria',

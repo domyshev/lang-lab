@@ -18,6 +18,7 @@ import {
 } from './openRouterClient';
 
 const MAX_MODEL_RESPONSES = 8;
+const MAX_CHAT_HISTORY_MESSAGES = 20;
 const PROPOSAL_TOOL_NAME = 'propose_library_operation';
 const readToolNames = new Set<string>(
   aiReadToolDefinitions.map((tool) => tool.function.name),
@@ -53,6 +54,7 @@ export async function runAiAssistant(input: {
   apiKey: string;
   modelId?: OpenRouterModelId;
   userMessage: string;
+  chatHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
   snapshot: AiLibrarySnapshot;
   signal?: AbortSignal;
   now?: () => string;
@@ -65,6 +67,7 @@ export async function runAiAssistant(input: {
         input.modelId ?? DEFAULT_OPENROUTER_MODEL_ID,
       ),
     },
+    ...readRecentChatHistory(input.chatHistory),
     { role: 'user', content: input.userMessage },
   ];
   let stagedOperation: PlannedAiOperation | undefined;
@@ -120,19 +123,25 @@ export async function runAiAssistant(input: {
     for (const toolCall of toolCalls) {
       const toolName = toolCall.function.name;
       if (!readToolNames.has(toolName) && toolName !== PROPOSAL_TOOL_NAME) {
-        return {
+        messages.push(toolError(toolCall.id, {
           ok: false,
-          failure: {
-            kind: 'unknown-tool',
-            message: 'The model requested an unknown tool.',
-            toolName,
-          },
-        };
+          error: 'unknown_tool',
+          toolName,
+          message:
+            'Use propose_library_operation for writes and read tools for inspection.',
+        }));
+        continue;
       }
 
       const parsedArguments = parseArguments(toolCall.function.arguments);
       if (!parsedArguments.ok) {
-        return invalidArguments(toolName);
+        messages.push(toolError(toolCall.id, {
+          ok: false,
+          error: 'invalid_tool_arguments',
+          toolName,
+          message: 'Tool arguments must be valid JSON matching the tool schema.',
+        }));
+        continue;
       }
 
       if (toolName === PROPOSAL_TOOL_NAME) {
@@ -176,7 +185,13 @@ export async function runAiAssistant(input: {
           content: JSON.stringify(result),
         });
       } catch {
-        return invalidArguments(toolName);
+        messages.push(toolError(toolCall.id, {
+          ok: false,
+          error: 'invalid_tool_arguments',
+          toolName,
+          message:
+            'The supplied arguments did not match the tool schema. Correct them and call the tool again.',
+        }));
       }
     }
   }
@@ -196,13 +211,23 @@ You may inspect the supplied current library only through the four read tools.
 You may propose writes only through propose_library_operation. That tool stages a plan for user review; you never dispatch Redux actions, apply changes, delete global cards, or archive or delete card sets.
 Never invent an id for an existing card or card set. Read the current library to obtain existing ids.
 Ask for clarification when a requested word, phrase, or meaning is ambiguous.
-You may answer questions about your current model id and effort. For any other non-library topic, say you can only manage Language Lab card sets and vocabulary.
+You receive recent chat history as prior user and assistant messages before the current user request. Use that recent chat history to resolve references like "these cards", "that set", or "the words you just selected". Do not claim you have no access to chat history when those prior messages are supplied; if the needed reference is absent from the recent messages, explain exactly what is missing.
+You may answer questions about the supplied recent chat history, your current model id, and effort. For any other non-library topic, say you can only manage Language Lab card sets and vocabulary.
 Current selected model id: ${modelId}
 Current effort: default
 
 The following raw English skill document is authoritative for card quality and format:
 
 ${languageCardSkill}`;
+}
+
+function readRecentChatHistory(
+  chatHistory: Array<{ role: 'user' | 'assistant'; content: string }> | undefined,
+): OpenRouterChatMessage[] {
+  return (chatHistory ?? [])
+    .map(({ role, content }) => ({ role, content: content.trim() }))
+    .filter(({ content }) => content.length > 0)
+    .slice(-MAX_CHAT_HISTORY_MESSAGES);
 }
 
 function parseArguments(
@@ -223,6 +248,17 @@ function invalidArguments(toolName: string): AiAgentResult {
       message: 'The model supplied invalid tool arguments.',
       toolName,
     },
+  };
+}
+
+function toolError(
+  toolCallId: string,
+  content: Record<string, unknown>,
+): OpenRouterChatMessage {
+  return {
+    role: 'tool',
+    tool_call_id: toolCallId,
+    content: JSON.stringify(content),
   };
 }
 

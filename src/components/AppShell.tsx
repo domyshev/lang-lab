@@ -14,6 +14,7 @@ import {
   Tab,
   Tabs,
   TextField,
+  Tooltip,
   Toolbar,
   Typography,
 } from '@mui/material';
@@ -155,6 +156,9 @@ export function AppShell({
                   px: 1,
                 },
               },
+              '& .MuiTabs-flexContainer': {
+                gap: '10px',
+              },
               '& .Mui-selected': {
                 color: '#203015',
               },
@@ -210,7 +214,6 @@ export function AppShell({
             {playerProfile && (
               <PlayerGreeting
                 avatarSeed={playerProfile.avatarSeed}
-                interfaceLanguage={interfaceLanguage}
                 name={
                   playerProfile.isAnonymous
                     ? t(interfaceLanguage, 'playerAnonymousName')
@@ -270,74 +273,123 @@ export function AppShell({
 
 function PlayerGreeting({
   avatarSeed,
-  interfaceLanguage,
   name,
 }: {
   avatarSeed: string;
-  interfaceLanguage: RootState['app']['interfaceLanguage'];
   name: string;
 }) {
   return (
-    <Stack
-      data-test="player_greeting__root"
-      direction="row"
-      sx={{
-        alignItems: 'center',
-        alignSelf: 'center',
-        bgcolor: 'rgba(255, 251, 226, 0.72)',
-        border: '1px solid rgba(131, 88, 17, 0.18)',
-        borderRadius: 999,
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.74)',
-        flexShrink: 0,
-        justifyContent: 'center',
-        maxWidth: '100%',
-        minHeight: 36,
-        position: 'relative',
-        px: 1,
-        py: 0,
-        width: 250,
+    <Tooltip
+      arrow
+      title={
+        <Box
+          data-test="player_greeting__tooltip"
+          sx={{
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark'
+                ? 'rgba(29, 26, 43, 0.98)'
+                : 'rgba(255, 255, 255, 0.98)',
+            color: (theme) =>
+              theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
+            fontSize: 14,
+            fontWeight: 800,
+          }}
+        >
+          {name}
+        </Box>
+      }
+      slotProps={{
+        arrow: {
+          sx: {
+            color: (theme) =>
+              theme.palette.mode === 'dark'
+                ? 'rgba(29, 26, 43, 0.98)'
+                : 'rgba(255, 255, 255, 0.98)',
+          },
+        },
+        tooltip: {
+          sx: {
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark'
+                ? 'rgba(29, 26, 43, 0.98)'
+                : 'rgba(255, 255, 255, 0.98)',
+            boxShadow: '0 10px 24px rgba(32, 45, 26, 0.16)',
+            color: (theme) =>
+              theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
+            fontSize: 14,
+            fontWeight: 800,
+            px: 1.5,
+            py: 1,
+          },
+        },
       }}
     >
-      <Box
-        data-test="player_greeting__avatar_slot"
+      <Stack
+        data-test="player_greeting__root"
+        direction="row"
         sx={{
           alignItems: 'center',
-          display: 'flex',
+          alignSelf: 'center',
+          bgcolor: 'rgba(255, 251, 226, 0.72)',
+          border: '1px solid rgba(131, 88, 17, 0.18)',
+          borderRadius: 999,
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.74)',
+          boxSizing: 'border-box',
+          flexShrink: 0,
           justifyContent: 'center',
-          left: 6,
-          position: 'absolute',
-          top: '50%',
-          transform: 'translateY(-50%)',
+          maxWidth: 230,
+          minHeight: 36,
+          overflow: 'hidden',
+          position: 'relative',
+          py: 0,
+          width: 'fit-content',
         }}
       >
-        <PlayerPixelAvatar
-          ariaLabel={name}
-          dataTest="player_greeting__avatar"
-          seed={avatarSeed}
-          size={30}
-        />
-      </Box>
-      <Typography
-        data-test="player_greeting__label"
-        noWrap
-        sx={{
-          color: '#203015',
-          alignItems: 'center',
-          display: 'flex',
-          fontSize: 14,
-          fontWeight: 950,
-          justifyContent: 'center',
-          lineHeight: 1,
-          minWidth: 0,
-          px: 5,
-          textAlign: 'center',
-          textShadow: '0 1px 0 rgba(255,255,255,0.74)',
-          width: '100%',
-        }}
-      >
-        {t(interfaceLanguage, 'playerGreetingPrefix')}, {name}
-      </Typography>
-    </Stack>
+        <Box
+          data-test="player_greeting__avatar_slot"
+          sx={{
+            alignItems: 'center',
+            display: 'flex',
+            justifyContent: 'center',
+            left: 6,
+            position: 'absolute',
+            top: '50%',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <PlayerPixelAvatar
+            ariaLabel={name}
+            dataTest="player_greeting__avatar"
+            seed={avatarSeed}
+            size={30}
+          />
+        </Box>
+        <Typography
+          data-test="player_greeting__label"
+          noWrap
+          sx={{
+            color: '#203015',
+            alignItems: 'center',
+            display: 'flex',
+            fontSize: 14,
+            fontWeight: 950,
+            justifyContent: 'center',
+            lineHeight: 1,
+            minWidth: 0,
+            overflow: 'hidden',
+            pl: 5,
+            pr: 1.5,
+            textAlign: 'center',
+            textOverflow: 'ellipsis',
+            textShadow: '0 1px 0 rgba(255,255,255,0.74)',
+            whiteSpace: 'nowrap',
+            width: '100%',
+          }}
+        >
+          {name}
+        </Typography>
+      </Stack>
+    </Tooltip>
   );
 }
 
