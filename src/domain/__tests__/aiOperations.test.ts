@@ -245,6 +245,117 @@ describe('planAiOperation', () => {
     });
   });
 
+  it.each([
+    {
+      name: 'create',
+      proposal: {
+        title: 'Duplicate travel',
+        summary: 'Invalid duplicate.',
+        cardSetChanges: [
+          {
+            type: 'create' as const,
+            clientRef: 'duplicate-travel',
+            names: { en: 'Travel' },
+            cardRefs: [],
+          },
+        ],
+      },
+    },
+    {
+      name: 'rename',
+      proposal: {
+        title: 'Rename duplicate',
+        summary: 'Invalid duplicate.',
+        cardSetChanges: [
+          {
+            type: 'update' as const,
+            cardSetId: 'set-holidays',
+            names: { en: 'Travel' },
+          },
+        ],
+      },
+    },
+  ])('rejects an AI $name that duplicates an active card set name', ({ proposal }) => {
+    const input = plannerInput(proposal);
+    input.cardSets = [
+      cardSet(),
+      cardSet({
+        id: 'set-holidays',
+        name: 'Holidays',
+        names: { en: 'Holidays' },
+      }),
+    ];
+
+    expect(planAiOperation(input)).toEqual({
+      ok: false,
+      errors: ['Card set name conflicts with active card set: Travel.'],
+    });
+  });
+
+  it.each([
+    {
+      name: 'create',
+      proposal: {
+        title: 'Reuse archived travel',
+        summary: 'Create a new active set.',
+        cardSetChanges: [
+          {
+            type: 'create' as const,
+            clientRef: 'new-travel',
+            names: { en: 'Travel' },
+            cardRefs: [],
+          },
+        ],
+      },
+    },
+    {
+      name: 'rename',
+      proposal: {
+        title: 'Reuse archived travel',
+        summary: 'Rename an active set.',
+        cardSetChanges: [
+          {
+            type: 'update' as const,
+            cardSetId: 'set-holidays',
+            names: { en: 'Travel' },
+          },
+        ],
+      },
+    },
+  ])('allows an AI $name that only matches an archived card set', ({ proposal }) => {
+    const input = plannerInput(proposal);
+    input.cardSets = [
+      cardSet({ archivedAt: now }),
+      cardSet({
+        id: 'set-holidays',
+        name: 'Holidays',
+        names: { en: 'Holidays' },
+      }),
+    ];
+
+    expect(planAiOperation(input).ok).toBe(true);
+  });
+
+  it('rejects every AI update to an already archived card set', () => {
+    const input = plannerInput({
+      title: 'Rename archived travel',
+      summary: 'Invalid archived update.',
+      cardSetChanges: [
+        {
+          type: 'update',
+          cardSetId: 'set-travel',
+          names: { en: 'Trips' },
+        },
+      ],
+    });
+    input.cardSets = [cardSet({ archivedAt: now })];
+
+    expect(planAiOperation(input)).toEqual({
+      ok: false,
+      errors: ['Card set set-travel is already archived.'],
+    });
+  });
+
   it('records conflicting duplicate metadata while resolving its set ref', () => {
     const existing = card({
       definitions: { en: 'Existing definition.' },
@@ -426,7 +537,7 @@ describe('planAiOperation', () => {
   it.each([
     [{ es: 'Viajes' }, 'Viajes'],
     [{ ru: 'Путешествия', es: 'Viajes' }, 'Путешествия'],
-    [{ en: 'Travel', ru: 'Путешествия', es: 'Viajes' }, 'Travel'],
+    [{ en: 'Journeys', ru: 'Путешествия', es: 'Viajes' }, 'Journeys'],
   ])('derives a created set canonical name by en, ru, es priority', (names, expected) => {
     const result = planAiOperation(
       plannerInput({

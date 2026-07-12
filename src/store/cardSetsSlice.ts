@@ -1,5 +1,10 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
-import { ALL_CARDS_CARD_SET_ID, CardSet } from '../domain/cardSets';
+import {
+  ALL_CARDS_CARD_SET_ID,
+  CardSet,
+  findActiveCardSetNameConflict,
+  isArchivedCardSet,
+} from '../domain/cardSets';
 import { applyAiOperation, commitAiRollback } from './aiAssistantActions';
 
 export interface CardSetsState {
@@ -42,6 +47,17 @@ const cardSetsSlice = createSlice({
       });
     },
     addCardSet(state, action: PayloadAction<CardSet>) {
+      if (
+        action.payload.id !== ALL_CARDS_CARD_SET_ID &&
+        !isArchivedCardSet(action.payload) &&
+        findActiveCardSetNameConflict({
+          cardSets: state.cardSets,
+          name: action.payload.name,
+          names: action.payload.names ?? {},
+        })
+      ) {
+        return;
+      }
       state.cardSets.push(action.payload);
       state.selectedCardSetId = action.payload.id;
     },
@@ -80,6 +96,17 @@ const cardSetsSlice = createSlice({
         (item) => item.id === action.payload.sourceCardSetId,
       );
       if (!source?.archivedAt || source.id === ALL_CARDS_CARD_SET_ID) {
+        return;
+      }
+      if (
+        action.payload.newCardSetId === ALL_CARDS_CARD_SET_ID ||
+        state.cardSets.some(({ id }) => id === action.payload.newCardSetId) ||
+        findActiveCardSetNameConflict({
+          cardSets: state.cardSets,
+          name: source.name,
+          names: source.names ?? {},
+        })
+      ) {
         return;
       }
 

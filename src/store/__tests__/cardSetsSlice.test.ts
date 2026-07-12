@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PlannedAiOperation } from '../../domain/aiOperations';
 import { applyAiOperation } from '../aiAssistantActions';
 import {
+  addCardSet,
   archiveCardSet,
   cardSetsReducer,
   copyArchivedCardSet,
@@ -118,4 +119,71 @@ describe('cardSetsSlice archive behavior', () => {
       ).cardSets,
     ).toEqual([activeSet]);
   });
+
+  it('rejects duplicate active names but allows an archived name to be reused', () => {
+    const duplicate = { ...activeSet, id: 'set-love-duplicate' };
+    const rejectedState = cardSetsReducer(
+      { cardSets: [activeSet], selectedCardSetId: 'all-cards' },
+      addCardSet(duplicate),
+    );
+    expect(rejectedState.cardSets).toEqual([activeSet]);
+    expect(rejectedState.selectedCardSetId).toBe('all-cards');
+
+    const archived = {
+      ...activeSet,
+      archivedAt: '2026-07-12T12:00:00.000Z',
+    };
+    const allowedState = cardSetsReducer(
+      { cardSets: [archived], selectedCardSetId: 'all-cards' },
+      addCardSet(duplicate),
+    );
+    expect(allowedState.cardSets).toEqual([archived, duplicate]);
+    expect(allowedState.selectedCardSetId).toBe('set-love-duplicate');
+  });
+
+  it('rejects archived copies that conflict with an active name', () => {
+    const archived = {
+      ...activeSet,
+      archivedAt: '2026-07-12T12:00:00.000Z',
+    };
+    const active = { ...activeSet, id: 'set-active-love' };
+    const state = cardSetsReducer(
+      { cardSets: [archived, active], selectedCardSetId: 'all-cards' },
+      copyArchivedCardSet({
+        sourceCardSetId: 'set-love',
+        newCardSetId: 'set-love-copy',
+        now: '2026-07-12T13:00:00.000Z',
+      }),
+    );
+
+    expect(state.cardSets).toEqual([archived, active]);
+    expect(state.selectedCardSetId).toBe('all-cards');
+  });
+
+  it.each(['set-love', 'set-existing', 'all-cards'])(
+    'rejects an archived copy with an existing id (%s)',
+    (newCardSetId) => {
+      const archived = {
+        ...activeSet,
+        archivedAt: '2026-07-12T12:00:00.000Z',
+      };
+      const existing = {
+        ...activeSet,
+        id: 'set-existing',
+        name: 'Family',
+        names: { en: 'Family', ru: 'Семья' },
+      };
+      const state = cardSetsReducer(
+        { cardSets: [archived, existing], selectedCardSetId: 'all-cards' },
+        copyArchivedCardSet({
+          sourceCardSetId: 'set-love',
+          newCardSetId,
+          now: '2026-07-12T13:00:00.000Z',
+        }),
+      );
+
+      expect(state.cardSets).toEqual([archived, existing]);
+      expect(state.selectedCardSetId).toBe('all-cards');
+    },
+  );
 });

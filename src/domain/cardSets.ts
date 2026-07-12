@@ -39,12 +39,14 @@ export function getCardSetSearchValues(
 
 export function findActiveCardSetNameConflict(input: {
   cardSets: CardSet[];
+  name?: string;
   names: Partial<Record<SupportedLanguage, string>>;
   excludeCardSetId?: string;
 }): CardSet | undefined {
-  const proposedNames = Object.values(input.names)
-    .map((value) => normalizeCardSetName(value ?? ''))
-    .filter(Boolean);
+  const proposedNames = getCardSetSearchValues({
+    name: input.name ?? '',
+    names: input.names,
+  });
 
   if (proposedNames.length === 0) {
     return undefined;

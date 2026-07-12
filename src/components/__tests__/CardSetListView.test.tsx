@@ -43,7 +43,7 @@ function renderList() {
           },
           {
             id: 'set-old-love',
-            name: 'Love',
+            name: 'Old Love',
             names: { en: 'Love archive', ru: 'Старая любовь' },
             cardIds: ['card-a'],
             createdAt: now,
@@ -110,7 +110,7 @@ describe('CardSetListView archive browsing', () => {
     expect(copied?.id).not.toBe('set-old-love');
     expect(copied?.id).not.toBe('set-love');
     expect(copied).toMatchObject({
-      name: 'Love',
+      name: 'Old Love',
       cardIds: ['card-a'],
     });
     expect(copied).not.toHaveProperty('archivedAt');

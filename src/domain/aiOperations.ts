@@ -2,7 +2,12 @@ import {
   AiLibraryProposal,
   aiLibraryProposalSchema,
 } from './aiAssistantSchemas';
-import { ALL_CARDS_CARD_SET_ID, CardSet } from './cardSets';
+import {
+  ALL_CARDS_CARD_SET_ID,
+  CardSet,
+  findActiveCardSetNameConflict,
+  isArchivedCardSet,
+} from './cardSets';
 import { LanguageCard } from './cards';
 import {
   DuplicateProcessingEntry,
@@ -170,6 +175,26 @@ export function planAiOperation(input: {
     workingSetsById.set(after.id, after);
   }
 
+  const finalCardSets = [...workingSetsById.values()];
+  const conflictingCardSet = finalCardSets.find((cardSet) =>
+    !isArchivedCardSet(cardSet) &&
+    cardSet.id !== ALL_CARDS_CARD_SET_ID &&
+    findActiveCardSetNameConflict({
+      cardSets: finalCardSets,
+      name: cardSet.name,
+      names: cardSet.names ?? {},
+      excludeCardSetId: cardSet.id,
+    }),
+  );
+  if (conflictingCardSet) {
+    return {
+      ok: false,
+      errors: [
+        `Card set name conflicts with active card set: ${conflictingCardSet.name}.`,
+      ],
+    };
+  }
+
   const updatedCardSets = input.cardSets.flatMap((existingSet) => {
     const finalSet = workingSetsById.get(existingSet.id);
     if (!finalSet || entitiesEqual(existingSet, finalSet)) {
@@ -297,8 +322,9 @@ function validateReferences(input: {
       errors.push(`Unknown card set: ${change.cardSetId}.`);
       continue;
     }
-    if (change.archive && cardSet.archivedAt) {
+    if (cardSet.archivedAt) {
       errors.push(`Card set ${cardSet.id} is already archived.`);
+      continue;
     }
     change.addCardRefs?.forEach((ref) => {
       if (!isKnownCardRef(ref)) {
