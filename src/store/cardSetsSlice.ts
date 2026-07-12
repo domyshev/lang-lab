@@ -68,6 +68,32 @@ const cardSetsSlice = createSlice({
         state.selectedCardSetId = ALL_CARDS_CARD_SET_ID;
       }
     },
+    copyArchivedCardSet(
+      state,
+      action: PayloadAction<{
+        sourceCardSetId: string;
+        newCardSetId: string;
+        now: string;
+      }>,
+    ) {
+      const source = state.cardSets.find(
+        (item) => item.id === action.payload.sourceCardSetId,
+      );
+      if (!source?.archivedAt || source.id === ALL_CARDS_CARD_SET_ID) {
+        return;
+      }
+
+      const copy: CardSet = {
+        id: action.payload.newCardSetId,
+        name: source.name,
+        ...(source.names ? { names: { ...source.names } } : {}),
+        cardIds: [...source.cardIds],
+        createdAt: action.payload.now,
+        updatedAt: action.payload.now,
+      };
+      state.cardSets.push(copy);
+      state.selectedCardSetId = copy.id;
+    },
     addCardToCardSet(
       state,
       action: PayloadAction<{ cardSetId: string; cardId: string; now: string }>,
@@ -135,6 +161,7 @@ const cardSetsSlice = createSlice({
 export const {
   addCardSet,
   archiveCardSet,
+  copyArchivedCardSet,
   selectCardSet,
   addCardToCardSet,
   mergeCardSetMetadata,
