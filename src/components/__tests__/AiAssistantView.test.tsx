@@ -588,6 +588,29 @@ describe('AiAssistantView chat', () => {
     expect(store.getState().aiAssistant.stagedOperation?.id).toBe(operation.id);
   });
 
+  it('hides verbal confirmation requests when preview actions already confirm the operation', async () => {
+    const user = userEvent.setup();
+    const operation = createOperation();
+    saveOpenRouterKey('sk-test');
+    mockedRunAiAssistant.mockResolvedValue({
+      ok: true,
+      content:
+        'Я подготовил предпросмотр набора.\nПодтвердите словами, если хотите применить изменения.',
+      stagedOperation: operation,
+    });
+    const store = renderView();
+
+    await user.type(screen.getByLabelText('Message the AI assistant'), operation.userPrompt);
+    await user.click(screen.getByRole('button', { name: 'Send message' }));
+
+    expect(await screen.findByText(/Я подготовил предпросмотр набора/)).toBeInTheDocument();
+    expect(screen.queryByText(/Подтвердите словами/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Apply changes' })).toBeInTheDocument();
+    expect(store.getState().aiAssistant.messages[1]?.content).toBe(
+      'Я подготовил предпросмотр набора.',
+    );
+  });
+
   it('stages an invalid proposal as a blocked preview while keeping the chat error retryable', async () => {
     const user = userEvent.setup();
     saveOpenRouterKey('sk-test');

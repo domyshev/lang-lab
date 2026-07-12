@@ -169,7 +169,7 @@ export function AiAssistantView({
                 message: {
                   id: createUiId('assistant-message'),
                   role: 'assistant',
-                  content: result.content,
+                  content: stripAiOperationVerbalConfirmation(result.content),
                   createdAt: new Date().toISOString(),
                   operationPreview: result.stagedOperation,
                   previewStatus: 'pending',
@@ -844,6 +844,58 @@ function failureMessage(
     case 'cancelled':
       return t(language, 'aiRequestFailed');
   }
+}
+
+const aiOperationVerbalConfirmationPatterns = [
+  /\b(confirm|approve|accept)\b.*\b(chat|message|reply|say|type|write|text)\b/i,
+  /\b(reply|say|type|write|text)\b.*\b(confirm|approve|accept|yes|ok)\b/i,
+  /\bplease\b.*\b(confirm|approve|accept)\b/i,
+  /\bwould you like\b.*\b(apply|proceed|confirm|approve)\b/i,
+  /\bif you want\b.*\b(apply|proceed|confirm|approve)\b/i,
+  /подтверд/i,
+  /напиш(?:и|ите).*(?:да|ок|подтверж|примен)/i,
+  /ответ(?:ь|ьте).*(?:да|ок|подтверж|примен)/i,
+  /если хотите.*(?:примен|подтверж)/i,
+  /confirma|confirmar|confirmes|aprobar|aprueba/i,
+];
+
+function stripAiOperationVerbalConfirmation(content: string): string {
+  return content
+    .split(/\n/)
+    .map((line) => stripAiOperationVerbalConfirmationLine(line))
+    .filter((line, index, lines) => line.trim() || hasNeighborText(lines, index))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function stripAiOperationVerbalConfirmationLine(line: string): string {
+  return splitLineIntoSentences(line)
+    .filter(
+      (sentence) =>
+        !aiOperationVerbalConfirmationPatterns.some((pattern) =>
+          pattern.test(sentence),
+        ),
+    )
+    .join(' ')
+    .trim();
+}
+
+function splitLineIntoSentences(line: string): string[] {
+  const trimmed = line.trim();
+  if (!trimmed) {
+    return [''];
+  }
+
+  return (
+    trimmed.match(/[^.!?。！？]+[.!?。！？]+|[^.!?。！？]+$/g)?.map((part) =>
+      part.trim(),
+    ) ?? [trimmed]
+  );
+}
+
+function hasNeighborText(lines: string[], index: number): boolean {
+  return Boolean(lines[index - 1]?.trim() || lines[index + 1]?.trim());
 }
 
 function createUiId(prefix: string): string {
