@@ -89,6 +89,35 @@ describe('LanguageSelectors', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows four visible football assistants and hides the legacy assistant', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Provider store={createStore()}>
+        <LanguageSelectors />
+      </Provider>,
+    );
+
+    await user.click(screen.getByRole('combobox', { name: 'Персонаж' }));
+
+    expect(screen.getAllByTestId(/language_selectors__assistant_option__/)).toHaveLength(4);
+    expect(
+      screen.getByTestId('language_selectors__assistant_option__studyTroll'),
+    ).toHaveAccessibleName(/Испанский вингер: Взрывает фланг/);
+    expect(
+      screen.getByTestId('language_selectors__assistant_option__greenPower'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId('language_selectors__assistant_option__webRunner'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId('language_selectors__assistant_option__capeChampion'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId('language_selectors__assistant_option__trollMama'),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows language options in their own languages', async () => {
     const user = userEvent.setup();
 

@@ -17,10 +17,10 @@ import type { ReactElement } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   AssistantId,
-  assistantCharacters,
   defaultAssistantId,
   getAssistantTooltip,
   resolveAssistantId,
+  visibleAssistantCharacters,
 } from '../domain/assistants';
 import {
   languageFlags,
@@ -161,7 +161,7 @@ export function LanguageSelectors() {
             },
           }}
         >
-          {assistantCharacters.map((assistant) => (
+          {visibleAssistantCharacters.map((assistant) => (
             <MenuItem
               data-test={`language_selectors__assistant_option__${assistant.id}`}
               key={assistant.id}

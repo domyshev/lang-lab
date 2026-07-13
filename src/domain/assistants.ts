@@ -20,16 +20,16 @@ export interface AssistantCharacter {
 export const assistantCharacters: AssistantCharacter[] = [
   {
     id: 'studyTroll',
-    label: 'Yamal Flash',
+    label: 'Spain Winger',
     motto: {
       en: 'One touch, one sprint, one brave answer.',
       ru: 'Одно касание, один рывок, один смелый ответ.',
       es: 'Un toque, una carrera, una respuesta valiente.',
     },
     name: {
-      en: 'Yamal Flash',
-      ru: 'Ямал-молния',
-      es: 'Yamal Relampago',
+      en: 'Spanish Winger',
+      ru: 'Испанский вингер',
+      es: 'Extremo Espanol',
     },
     description: {
       en: 'A fearless wing wonderkid for fast games and brave guesses. He keeps the tempo bright, attacks weak cards early, and turns a difficult prompt into a chance to break through the flank.',
@@ -102,21 +102,21 @@ export const assistantCharacters: AssistantCharacter[] = [
   },
   {
     id: 'capeChampion',
-    label: 'Casillas Wall',
+    label: 'German Saver',
     motto: {
-      en: 'Hold the line, save the point.',
-      ru: 'Держи линию, спасай очко.',
-      es: 'Mantén la linea, salva el punto.',
+      en: 'Read the strike, own the line, keep the match alive.',
+      ru: 'Читай удар, держи линию, сохраняй матч живым.',
+      es: 'Lee el tiro, domina la linea y salva el partido.',
     },
     name: {
-      en: 'Casillas Wall',
-      ru: 'Касильяс-стена',
-      es: 'Muro Casillas',
+      en: 'German Saver',
+      ru: 'Немецкий сейвер',
+      es: 'Salvador Aleman',
     },
     description: {
-      en: 'A legendary keeper for defensive focus and pressure moments. He protects the session from panic, asks for one clean save, and makes even a wrong answer useful for the next attack.',
-      ru: 'Легендарный вратарь для концентрации и моментов давления. Он защищает сессию от паники, просит один чистый сейв и делает даже неверный ответ полезным для следующей атаки.',
-      es: 'Un portero legendario para concentracion y momentos de presion. Protege la partida del panico, pide una parada limpia y convierte un fallo en informacion para el siguiente ataque.',
+      en: 'A German keeper for defensive focus and pressure moments. He protects the session from panic, asks for one clean save, and makes even a wrong answer useful for the next attack.',
+      ru: 'Немецкий вратарь для концентрации и моментов давления. Он защищает игру от паники, просит один чистый сейв и делает даже неверный ответ полезным для следующей атаки.',
+      es: 'Un portero aleman para concentracion y momentos de presion. Protege la partida del panico, pide una parada limpia y convierte un fallo en informacion para el siguiente ataque.',
     },
     abilities: {
       en: [
@@ -136,28 +136,28 @@ export const assistantCharacters: AssistantCharacter[] = [
       ],
     },
     superpower: {
-      en: 'Turns pressure into a clean save and protects the learning streak.',
-      ru: 'Превращает давление в чистый сейв и защищает серию обучения.',
+      en: 'Turns pressure into a clean save and protects the match streak.',
+      ru: 'Превращает давление в чистый сейв и защищает игровую серию.',
       es: 'Convierte la presion en parada limpia y protege la racha.',
     },
   },
   {
     id: 'greenPower',
-    label: 'Ramos Captain',
+    label: 'Portugal Striker',
     motto: {
-      en: 'Fight for the ball until the last whistle.',
-      ru: 'Борись за мяч до последнего свистка.',
-      es: 'Pelea el balon hasta el ultimo silbato.',
+      en: 'Shoot early, press high, celebrate loud.',
+      ru: 'Бей рано, прессингуй высоко, празднуй громко.',
+      es: 'Remata pronto, presiona arriba y celebra fuerte.',
     },
     name: {
-      en: 'Ramos Captain',
-      ru: 'Рамос-капитан',
-      es: 'Capitan Ramos',
+      en: 'Portuguese Striker',
+      ru: 'Португальский бомбардир',
+      es: 'Goleador Portugues',
     },
     description: {
-      en: 'A captain with late-match fire for stubborn words and heavy spelling. He tackles long answers in pieces and refuses to let difficult cards boss the midfield.',
-      ru: 'Капитан с огнем последних минут для упрямых слов и тяжелого написания. Он отбирает длинные ответы по частям и не дает сложным карточкам командовать центром поля.',
-      es: 'Un capitan con fuego de ultimo minuto para palabras tercas y ortografia pesada. Entra a respuestas largas por partes y no deja que las tarjetas dificiles manden en el centro.',
+      en: 'A Portuguese finisher for stubborn words and heavy spelling. He attacks long answers in pieces and turns a difficult card into a shot on target.',
+      ru: 'Португальский финишер для упрямых слов и тяжелого написания. Он атакует длинные ответы по частям и превращает сложную карточку в удар в створ.',
+      es: 'Un rematador portugues para palabras tercas y ortografia pesada. Ataca respuestas largas por partes y convierte una tarjeta dificil en tiro a puerta.',
     },
     abilities: {
       en: [
@@ -177,28 +177,28 @@ export const assistantCharacters: AssistantCharacter[] = [
       ],
     },
     superpower: {
-      en: 'Tackles long words into chunks and wins them in stoppage time.',
-      ru: 'Отбирает длинные слова по частям и выигрывает их в добавленное время.',
-      es: 'Entra a palabras largas por bloques y las gana en el descuento.',
+      en: 'Breaks long answers into shots and finishes them under pressure.',
+      ru: 'Разбивает длинные ответы на удары и завершает их под давлением.',
+      es: 'Divide respuestas largas en remates y las define bajo presion.',
     },
   },
   {
     id: 'webRunner',
-    label: 'Xavi Conductor',
+    label: 'England Captain',
     motto: {
-      en: 'See the pass before the pass exists.',
-      ru: 'Увидь пас раньше, чем он появился.',
-      es: 'Ve el pase antes de que exista.',
+      en: 'Lead the press, call the pass, keep the shape.',
+      ru: 'Веди прессинг, зови пас, держи схему.',
+      es: 'Lidera la presion, pide el pase y guarda la forma.',
     },
     name: {
-      en: 'Xavi Conductor',
-      ru: 'Хави-дирижер',
-      es: 'Xavi Director',
+      en: 'English Captain',
+      ru: 'Английский капитан',
+      es: 'Capitan Ingles',
     },
     description: {
-      en: 'A midfield conductor for patterns, passing triangles, and language links. He sees similar words early, spots false friends, and makes the whole library feel like a team shape.',
-      ru: 'Дирижер центра поля для паттернов, треугольников паса и языковых связей. Он рано видит похожие слова, замечает ложных друзей и превращает библиотеку в командную схему.',
-      es: 'Un director del centro para patrones, triangulos de pase y enlaces entre idiomas. Ve palabras parecidas pronto, detecta falsos amigos y convierte la biblioteca en forma de equipo.',
+      en: 'An English captain for patterns, passing lanes, and language links. He sees similar words early, spots false friends, and makes the whole library feel like a team shape.',
+      ru: 'Английский капитан для паттернов, линий паса и языковых связей. Он рано видит похожие слова, замечает ложных друзей и превращает библиотеку в командную схему.',
+      es: 'Un capitan ingles para patrones, lineas de pase y enlaces entre idiomas. Ve palabras parecidas pronto, detecta falsos amigos y convierte la biblioteca en forma de equipo.',
     },
     abilities: {
       en: [
@@ -218,17 +218,31 @@ export const assistantCharacters: AssistantCharacter[] = [
       ],
     },
     superpower: {
-      en: 'Builds passing triangles between cards so the answer has a route.',
-      ru: 'Строит треугольники паса между карточками, чтобы у ответа был маршрут.',
-      es: 'Construye triangulos de pase entre tarjetas para que la respuesta tenga ruta.',
+      en: 'Organizes cards into passing lanes so every answer has a route.',
+      ru: 'Собирает карточки в линии паса, чтобы у каждого ответа был маршрут.',
+      es: 'Ordena tarjetas en lineas de pase para que cada respuesta tenga ruta.',
     },
   },
 ];
 
 export const defaultAssistantId: AssistantId = 'studyTroll';
 
+export const visibleAssistantIds: AssistantId[] = [
+  'studyTroll',
+  'greenPower',
+  'webRunner',
+  'capeChampion',
+];
+
+export const visibleAssistantCharacters = assistantCharacters.filter((assistant) =>
+  visibleAssistantIds.includes(assistant.id),
+);
+
 export function resolveAssistantId(value: unknown): AssistantId {
-  return assistantCharacters.some((assistant) => assistant.id === value)
+  if (value === 'trollMama') {
+    return defaultAssistantId;
+  }
+  return visibleAssistantIds.some((assistantId) => assistantId === value)
     ? (value as AssistantId)
     : defaultAssistantId;
 }
