@@ -55,6 +55,7 @@ export function StatsFormula({
   labelDisplay,
   rootDataTest,
   resultColors = footballResultColors,
+  resultDisplay = 'chips',
   totalDisplay = 'chip',
   totalTooltip,
   valueGroupJustify = 'flex-start',
@@ -72,7 +73,8 @@ export function StatsFormula({
   labelDisplay?: ReactNode;
   rootDataTest?: string;
   resultColors?: WorldResultColors;
-  totalDisplay?: 'chip' | 'plain';
+  resultDisplay?: 'chips' | 'text';
+  totalDisplay?: 'chip' | 'plain' | 'plainWithSuffix';
   totalTooltip?: string;
   valueGroupJustify?: 'center' | 'flex-start';
   showLabel?: boolean;
@@ -111,18 +113,23 @@ export function StatsFormula({
       )}
       <Stack
         data-test={`${dataTestPrefix}__value_group`}
-        direction="row"
+        direction={resultDisplay === 'text' ? 'column' : 'row'}
         spacing={0.75}
-        alignItems="center"
+        alignItems={resultDisplay === 'text' ? 'flex-start' : 'center'}
         flexWrap="wrap"
         useFlexGap
         sx={{ justifyContent: valueGroupJustify }}
       >
-        {totalDisplay === 'plain' ? (
+        {totalDisplay === 'plain' || totalDisplay === 'plainWithSuffix' ? (
           <MetricPlainValue
             ariaLabel={`${totalLabel}: ${total}`}
             dataTest={`${dataTestPrefix}__total_value`}
             label={total}
+            suffix={
+              totalDisplay === 'plainWithSuffix'
+                ? t(interfaceLanguage, 'metricAnsweredSuffix')
+                : undefined
+            }
             tooltip={totalTooltip ?? t(interfaceLanguage, 'totalAnsweredTooltip')}
           />
         ) : (
@@ -135,37 +142,49 @@ export function StatsFormula({
             tooltip={totalTooltip ?? t(interfaceLanguage, 'totalAnsweredTooltip')}
           />
         )}
-        {resultParts.length > 0 && (
-          <FormulaIcon dataTest={`${dataTestPrefix}__equals_icon`} label="=">
-            <DragHandleRoundedIcon fontSize="inherit" />
-          </FormulaIcon>
-        )}
-        {hasCorrect && (
-          <MetricChip
-            ariaLabel={`${correctLabel}: ${correct}`}
-            dataTest={`${dataTestPrefix}__correct_chip`}
-            label={correct}
+        {resultDisplay === 'text' ? (
+          <FormulaTextBreakdown
+            correct={correct}
+            dataTestPrefix={dataTestPrefix}
+            incorrect={incorrect}
+            interfaceLanguage={interfaceLanguage}
             resultColors={resultColors}
-            suffix={t(interfaceLanguage, 'metricCorrectSuffix')}
-            tone="correct"
-            tooltip={correctTooltip ?? t(interfaceLanguage, 'correctAnsweredTooltip')}
           />
-        )}
-        {hasCorrect && hasIncorrect && (
-          <FormulaIcon dataTest={`${dataTestPrefix}__plus_icon`} label="+">
-            <AddRoundedIcon fontSize="inherit" />
-          </FormulaIcon>
-        )}
-        {hasIncorrect && (
-          <MetricChip
-            ariaLabel={`${incorrectLabel}: ${incorrect}`}
-            dataTest={`${dataTestPrefix}__incorrect_chip`}
-            label={incorrect}
-            resultColors={resultColors}
-            suffix={t(interfaceLanguage, 'metricIncorrectSuffix')}
-            tone="incorrect"
-            tooltip={incorrectTooltip ?? t(interfaceLanguage, 'incorrectAnsweredTooltip')}
-          />
+        ) : (
+          <>
+            {resultParts.length > 0 && (
+              <FormulaIcon dataTest={`${dataTestPrefix}__equals_icon`} label="=">
+                <DragHandleRoundedIcon fontSize="inherit" />
+              </FormulaIcon>
+            )}
+            {hasCorrect && (
+              <MetricChip
+                ariaLabel={`${correctLabel}: ${correct}`}
+                dataTest={`${dataTestPrefix}__correct_chip`}
+                label={correct}
+                resultColors={resultColors}
+                suffix={t(interfaceLanguage, 'metricCorrectSuffix')}
+                tone="correct"
+                tooltip={correctTooltip ?? t(interfaceLanguage, 'correctAnsweredTooltip')}
+              />
+            )}
+            {hasCorrect && hasIncorrect && (
+              <FormulaIcon dataTest={`${dataTestPrefix}__plus_icon`} label="+">
+                <AddRoundedIcon fontSize="inherit" />
+              </FormulaIcon>
+            )}
+            {hasIncorrect && (
+              <MetricChip
+                ariaLabel={`${incorrectLabel}: ${incorrect}`}
+                dataTest={`${dataTestPrefix}__incorrect_chip`}
+                label={incorrect}
+                resultColors={resultColors}
+                suffix={t(interfaceLanguage, 'metricIncorrectSuffix')}
+                tone="incorrect"
+                tooltip={incorrectTooltip ?? t(interfaceLanguage, 'incorrectAnsweredTooltip')}
+              />
+            )}
+          </>
         )}
       </Stack>
     </Stack>
@@ -284,11 +303,13 @@ export function MetricPlainValue({
   ariaLabel,
   dataTest,
   label,
+  suffix,
   tooltip,
 }: {
   ariaLabel: string;
   dataTest: string;
   label: number;
+  suffix?: string;
   tooltip?: string;
 }) {
   const value = (
@@ -306,7 +327,37 @@ export function MetricPlainValue({
         lineHeight: 0.95,
       }}
     >
-      {label}
+      <Box
+        component="span"
+        data-test={`${dataTest}__label`}
+        sx={{
+          alignItems: 'baseline',
+          display: 'inline-flex',
+          gap: suffix ? 0.65 : 0,
+        }}
+      >
+        <Box
+          component="span"
+          data-test={`${dataTest}__number`}
+          sx={{ fontSize: 42, lineHeight: 0.95 }}
+        >
+          {label}
+        </Box>
+        {suffix && (
+          <Box
+            component="span"
+            data-test={`${dataTest}__suffix`}
+            sx={{
+              fontSize: 16,
+              fontWeight: 900,
+              lineHeight: 1,
+              textTransform: 'lowercase',
+            }}
+          >
+            {` ${suffix}`}
+          </Box>
+        )}
+      </Box>
     </Typography>
   );
 
@@ -327,6 +378,64 @@ export function MetricPlainValue({
     </CursorAnchoredTooltip>
   ) : (
     value
+  );
+}
+
+function FormulaTextBreakdown({
+  correct,
+  dataTestPrefix,
+  incorrect,
+  interfaceLanguage,
+  resultColors,
+}: {
+  correct: number;
+  dataTestPrefix: string;
+  incorrect: number;
+  interfaceLanguage: SupportedLanguage;
+  resultColors: WorldResultColors;
+}) {
+  if (correct <= 0 && incorrect <= 0) {
+    return null;
+  }
+
+  return (
+    <Typography
+      data-test={`${dataTestPrefix}__breakdown`}
+      sx={{
+        color: '#203015',
+        fontSize: 16,
+        fontWeight: 850,
+        lineHeight: 1.25,
+      }}
+    >
+      {correct > 0 && (
+        <Box
+          component="span"
+          data-test={`${dataTestPrefix}__correct_text`}
+          sx={{ color: resultColors.correct.border }}
+        >
+          {correct} {t(interfaceLanguage, 'metricCorrectSuffix')}
+        </Box>
+      )}
+      {correct > 0 && incorrect > 0 ? (
+        <Box
+          component="span"
+          data-test={`${dataTestPrefix}__plus_text`}
+          sx={{ color: 'rgba(32, 48, 21, 0.62)' }}
+        >
+          {' + '}
+        </Box>
+      ) : null}
+      {incorrect > 0 && (
+        <Box
+          component="span"
+          data-test={`${dataTestPrefix}__incorrect_text`}
+          sx={{ color: resultColors.incorrect.border }}
+        >
+          {incorrect} {t(interfaceLanguage, 'metricIncorrectSuffix')}
+        </Box>
+      )}
+    </Typography>
   );
 }
 

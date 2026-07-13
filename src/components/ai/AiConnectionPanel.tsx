@@ -2,6 +2,7 @@ import { RefObject, useEffect, useState } from 'react';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -18,6 +19,7 @@ import {
   IconButton,
   InputAdornment,
   InputLabel,
+  Link,
   ListItemIcon,
   ListItemText,
   MenuItem,
@@ -96,183 +98,262 @@ export function AiConnectionPanel({
       onFocus={(event) => event.stopPropagation()}
       sx={{ minWidth: 0 }}
     >
-      <FormControl
-        data-test="ai_connection__model_control"
-        size="small"
-        sx={{
-          minWidth: 176,
-          '& .MuiInputLabel-root': {
-            fontSize: '0.8rem',
-          },
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 2,
-            fontSize: '0.8rem',
-          },
-          '& .MuiSelect-select': {
-            minHeight: '0 !important',
-            py: 0.45,
-          },
-        }}
+      <Stack
+        data-test="ai_connection__model_row"
+        direction="row"
+        sx={{ alignItems: 'center', minWidth: 0 }}
       >
-        <InputLabel id="ai-connection-model-label">
-          {t(language, 'aiModelLabel')}
-        </InputLabel>
-        <Select
-          data-test="ai_connection__model_select"
-          label={t(language, 'aiModelLabel')}
-          labelId="ai-connection-model-label"
-          onChange={(event) => {
-            const value = event.target.value;
-            if (value === SETTINGS_MENU_VALUE) {
-              setIsSettingsOpen(true);
-              return;
-            }
-            if (isTrialKeySelected && value === OPENROUTER_GPT_MODEL_ID) {
-              return;
-            }
-            onModelChange(value);
+        <FormControl
+          data-test="ai_connection__model_control"
+          size="small"
+          sx={{
+            minWidth: 176,
+            '& .MuiInputLabel-root': {
+              fontSize: '0.8rem',
+            },
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              fontSize: '0.8rem',
+            },
+            '& .MuiSelect-select': {
+              minHeight: '0 !important',
+              py: 0.45,
+            },
           }}
-          value={modelId}
         >
-          {modelOptions.map((option) => {
-            const isLocked = isTrialKeySelected && option.id === OPENROUTER_GPT_MODEL_ID;
+          <InputLabel id="ai-connection-model-label">
+            {t(language, 'aiModelLabel')}
+          </InputLabel>
+          <Select
+            data-test="ai_connection__model_select"
+            label={t(language, 'aiModelLabel')}
+            labelId="ai-connection-model-label"
+            onChange={(event) => {
+              const value = event.target.value;
+              if (value === SETTINGS_MENU_VALUE) {
+                setIsSettingsOpen(true);
+                return;
+              }
+              if (isTrialKeySelected && value === OPENROUTER_GPT_MODEL_ID) {
+                return;
+              }
+              onModelChange(value);
+            }}
+            value={modelId}
+          >
+            {modelOptions.map((option) => {
+              const isLocked = isTrialKeySelected && option.id === OPENROUTER_GPT_MODEL_ID;
 
-            return (
-              <MenuItem
-                data-test={`ai_connection__model_option__${option.id}`}
-                disabled={isLocked}
-                key={option.id}
-                sx={
-                  isLocked
-                    ? {
-                        cursor: 'not-allowed',
-                        opacity: 0.46,
-                        pointerEvents: 'auto',
-                        '&.Mui-disabled': {
+              return (
+                <MenuItem
+                  data-test={`ai_connection__model_option__${option.id}`}
+                  disabled={isLocked}
+                  key={option.id}
+                  sx={
+                    isLocked
+                      ? {
+                          cursor: 'not-allowed',
                           opacity: 0.46,
                           pointerEvents: 'auto',
-                        },
-                      }
-                    : undefined
-                }
-                value={option.id}
-              >
-                {isLocked ? (
-                  <Tooltip
-                    arrow
-                    placement="left"
-                    slotProps={{
-                      arrow: {
-                        sx: {
-                          color: (theme) =>
-                            theme.palette.mode === 'dark'
-                              ? 'rgba(29, 26, 43, 0.98)'
-                              : 'rgba(255, 255, 255, 0.98)',
-                        },
-                      },
-                      popper: {
-                        ...({
-                          'data-test': 'ai_connection__locked_model_tooltip_popper',
-                        } as Record<string, string>),
-                        modifiers: [
-                          {
-                            name: 'flip',
-                            enabled: false,
+                          '&.Mui-disabled': {
+                            opacity: 0.46,
+                            pointerEvents: 'auto',
                           },
-                        ],
-                      },
-                      tooltip: {
-                        ...({
-                          'data-test': 'ai_connection__locked_model_tooltip',
-                        } as Record<string, string>),
-                        sx: {
-                          bgcolor: (theme) =>
-                            theme.palette.mode === 'dark'
-                              ? 'rgba(29, 26, 43, 0.98)'
-                              : 'rgba(255, 255, 255, 0.98)',
-                          border: (theme) =>
-                            theme.palette.mode === 'dark'
-                              ? '1px solid rgba(239, 210, 116, 0.34)'
-                              : '1px solid rgba(166, 113, 216, 0.24)',
-                          borderRadius: 2.5,
-                          boxShadow:
-                            '0 18px 38px rgba(67, 45, 103, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.48) inset',
-                          color: (theme) =>
-                            theme.palette.mode === 'dark' ? '#f9f0ff' : '#33402d',
-                          fontSize: '14px',
-                          maxWidth: 280,
-                          px: 1.75,
-                          py: 1.25,
+                        }
+                      : undefined
+                  }
+                  value={option.id}
+                >
+                  {isLocked ? (
+                    <Tooltip
+                      arrow
+                      placement="left"
+                      slotProps={{
+                        arrow: {
+                          sx: {
+                            color: (theme) =>
+                              theme.palette.mode === 'dark'
+                                ? 'rgba(29, 26, 43, 0.98)'
+                                : 'rgba(255, 255, 255, 0.98)',
+                          },
                         },
-                      },
-                    }}
-                    title={
-                      <Stack spacing={0.75}>
-                        <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
-                          <Box
-                            aria-hidden="true"
-                            data-test="ai_connection__locked_model_tooltip_badge"
+                        popper: {
+                          ...({
+                            'data-test': 'ai_connection__locked_model_tooltip_popper',
+                          } as Record<string, string>),
+                          modifiers: [
+                            {
+                              name: 'flip',
+                              enabled: false,
+                            },
+                          ],
+                        },
+                        tooltip: {
+                          ...({
+                            'data-test': 'ai_connection__locked_model_tooltip',
+                          } as Record<string, string>),
+                          sx: {
+                            bgcolor: (theme) =>
+                              theme.palette.mode === 'dark'
+                                ? 'rgba(29, 26, 43, 0.98)'
+                                : 'rgba(255, 255, 255, 0.98)',
+                            border: (theme) =>
+                              theme.palette.mode === 'dark'
+                                ? '1px solid rgba(239, 210, 116, 0.34)'
+                                : '1px solid rgba(166, 113, 216, 0.24)',
+                            borderRadius: 2.5,
+                            boxShadow:
+                              '0 18px 38px rgba(67, 45, 103, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.48) inset',
+                            color: (theme) =>
+                              theme.palette.mode === 'dark' ? '#f9f0ff' : '#33402d',
+                            fontSize: '14px',
+                            maxWidth: 280,
+                            px: 1.75,
+                            py: 1.25,
+                          },
+                        },
+                      }}
+                      title={
+                        <Stack spacing={0.75}>
+                          <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
+                            <Box
+                              aria-hidden="true"
+                              data-test="ai_connection__locked_model_tooltip_badge"
+                              sx={{
+                                alignItems: 'center',
+                                background:
+                                  'linear-gradient(135deg, #fff0a8 0%, #f0dcff 100%)',
+                                border: '1px solid rgba(128, 78, 204, 0.22)',
+                                borderRadius: 999,
+                                color: '#6845b8',
+                                display: 'inline-flex',
+                                fontSize: 11,
+                                fontWeight: 850,
+                                gap: 0.35,
+                                letterSpacing: '0.02em',
+                                px: 0.9,
+                                py: 0.25,
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              <AutoAwesomeIcon sx={{ fontSize: 13 }} />
+                              OpenRouter
+                            </Box>
+                          </Stack>
+                          <Typography
+                            data-test="ai_connection__locked_model_tooltip_body"
                             sx={{
-                              alignItems: 'center',
-                              background:
-                                'linear-gradient(135deg, #fff0a8 0%, #f0dcff 100%)',
-                              border: '1px solid rgba(128, 78, 204, 0.22)',
-                              borderRadius: 999,
-                              color: '#6845b8',
-                              display: 'inline-flex',
-                              fontSize: 11,
-                              fontWeight: 850,
-                              gap: 0.35,
-                              letterSpacing: '0.02em',
-                              px: 0.9,
-                              py: 0.25,
-                              textTransform: 'uppercase',
+                              color: (theme) =>
+                                theme.palette.mode === 'dark' ? '#efe5ff' : '#4b5745',
+                              fontSize: '14px',
+                              fontWeight: 500,
+                              lineHeight: 1.35,
                             }}
                           >
-                            <AutoAwesomeIcon sx={{ fontSize: 13 }} />
-                            OpenRouter
-                          </Box>
+                            {t(language, 'aiModelRequiresOwnKey')}
+                          </Typography>
                         </Stack>
-                        <Typography
-                          data-test="ai_connection__locked_model_tooltip_body"
-                          sx={{
-                            color: (theme) =>
-                              theme.palette.mode === 'dark' ? '#efe5ff' : '#4b5745',
-                            fontSize: '14px',
-                            fontWeight: 500,
-                            lineHeight: 1.35,
-                          }}
-                        >
-                          {t(language, 'aiModelRequiresOwnKey')}
-                        </Typography>
-                      </Stack>
-                    }
-                  >
-                    <Box
-                      data-test={`ai_connection__model_option__${option.id}__locked_content`}
-                      sx={{ pointerEvents: 'auto', width: '100%' }}
+                      }
                     >
-                      {option.label}
-                    </Box>
-                  </Tooltip>
-                ) : (
-                  option.label
-                )}
-              </MenuItem>
-            );
-          })}
-          <Divider />
-          <MenuItem
-            data-test="ai_connection__settings_option"
-            value={SETTINGS_MENU_VALUE}
+                      <Box
+                        data-test={`ai_connection__model_option__${option.id}__locked_content`}
+                        sx={{ pointerEvents: 'auto', width: '100%' }}
+                      >
+                        {option.label}
+                      </Box>
+                    </Tooltip>
+                  ) : (
+                    option.label
+                  )}
+                </MenuItem>
+              );
+            })}
+            <Divider />
+            <MenuItem
+              data-test="ai_connection__settings_option"
+              value={SETTINGS_MENU_VALUE}
+            >
+              <ListItemIcon sx={{ minWidth: 34 }}>
+                <SettingsOutlinedIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>{t(language, 'aiConnectionSettings')}</ListItemText>
+            </MenuItem>
+          </Select>
+        </FormControl>
+        <Box data-test="ai_connection__openrouter_info_wrapper" sx={{ ml: '5px' }}>
+          <Tooltip
+            arrow
+            placement="bottom"
+            slotProps={{
+              arrow: {
+                sx: {
+                  color: (theme) =>
+                    theme.palette.mode === 'dark'
+                      ? 'rgba(29, 26, 43, 0.98)'
+                      : 'rgba(255, 255, 255, 0.98)',
+                },
+              },
+              tooltip: {
+                ...({
+                  'data-test': 'ai_connection__openrouter_info_tooltip',
+                } as Record<string, string>),
+                sx: {
+                  bgcolor: (theme) =>
+                    theme.palette.mode === 'dark'
+                      ? 'rgba(29, 26, 43, 0.98)'
+                      : 'rgba(255, 255, 255, 0.98)',
+                  border: (theme) =>
+                    theme.palette.mode === 'dark'
+                      ? '1px solid rgba(246, 240, 255, 0.18)'
+                      : '1px solid rgba(32, 48, 21, 0.14)',
+                  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.16)',
+                  color: (theme) =>
+                    theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  lineHeight: 1.38,
+                  maxWidth: 320,
+                  px: 1.75,
+                  py: 1.2,
+                },
+              },
+            }}
+            title={
+              <Stack spacing={0.75}>
+                <Typography sx={{ fontSize: '14px', fontWeight: 700, lineHeight: 1.35 }}>
+                  {getOpenRouterInfoText(language)}
+                </Typography>
+                <Link
+                  href="https://openrouter.ai/"
+                  rel="noreferrer"
+                  target="_blank"
+                  sx={{ color: '#1877c9', fontSize: '14px', fontWeight: 850 }}
+                >
+                  OpenRouter
+                </Link>
+              </Stack>
+            }
           >
-            <ListItemIcon sx={{ minWidth: 34 }}>
-              <SettingsOutlinedIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>{t(language, 'aiConnectionSettings')}</ListItemText>
-          </MenuItem>
-        </Select>
-      </FormControl>
+            <IconButton
+              aria-label={getOpenRouterInfoLabel(language)}
+              data-test="ai_connection__openrouter_info_button"
+              size="small"
+              sx={{
+                bgcolor: 'rgba(255, 255, 255, 0.46)',
+                border: '1px solid rgba(32, 48, 21, 0.14)',
+                color: '#4c6650',
+                height: 24,
+                width: 24,
+                '&:hover': {
+                  bgcolor: 'rgba(255, 255, 255, 0.78)',
+                },
+              }}
+            >
+              <InfoOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Stack>
 
         <Dialog
           aria-labelledby="ai-connection-settings-title"
@@ -398,4 +479,26 @@ export function AiConnectionPanel({
         </Dialog>
     </Box>
   );
+}
+
+function getOpenRouterInfoLabel(language: SupportedLanguage): string {
+  const labels: Record<SupportedLanguage, string> = {
+    en: 'About OpenRouter',
+    es: 'Sobre OpenRouter',
+    ru: 'Об OpenRouter',
+    uk: 'Про OpenRouter',
+  };
+
+  return labels[language];
+}
+
+function getOpenRouterInfoText(language: SupportedLanguage): string {
+  const texts: Record<SupportedLanguage, string> = {
+    en: 'OpenRouter is the gateway Language Lab uses to send chat requests to the selected model. You can use the built-in limited key or save your own key in the connection settings.',
+    es: 'OpenRouter es la puerta que Language Lab usa para enviar solicitudes del chat al modelo elegido. Puedes usar la clave integrada limitada o guardar tu propia clave en los ajustes.',
+    ru: 'OpenRouter - это шлюз, через который Language Lab отправляет запросы чата в выбранную модель. Можно пользоваться встроенным ключом с лимитом или сохранить свой ключ в настройках подключения.',
+    uk: 'OpenRouter - це шлюз, через який Language Lab надсилає запити чату до вибраної моделі. Можна користуватися вбудованим ключем з лімітом або зберегти власний ключ у налаштуваннях.',
+  };
+
+  return texts[language];
 }

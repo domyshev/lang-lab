@@ -227,6 +227,81 @@ describe('LanguageSelectors', () => {
     expect(store.getState().app.complementaryLanguages.en).toEqual(['uk', 'es']);
   });
 
+  it('explains the header language selectors with readable info tooltips', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Provider store={createStore()}>
+        <LanguageSelectors />
+      </Provider>,
+    );
+
+    expect(
+      screen.getByTestId('language_selectors__interface_language_info_wrapper'),
+    ).toHaveStyle({ marginRight: '5px' });
+
+    await user.hover(screen.getByTestId('language_selectors__interface_language_info_button'));
+    let tooltip = await screen.findByTestId('language_selectors__interface_language_info_tooltip');
+    expect(tooltip).toHaveTextContent(
+      'Язык интерфейса меняет подписи, меню и подсказки приложения.',
+    );
+    expect(tooltip).toHaveStyle({
+      backgroundColor: 'rgba(255, 255, 255, 0.98)',
+      fontSize: '14px',
+    });
+
+    await user.unhover(screen.getByTestId('language_selectors__interface_language_info_button'));
+    await user.hover(screen.getByTestId('language_selectors__target_language_info_button'));
+    tooltip = await screen.findByTestId('language_selectors__target_language_info_tooltip');
+    expect(tooltip).toHaveTextContent(
+      'Это язык, который вы тренируете и на котором вводите ответы в играх.',
+    );
+
+    await user.unhover(screen.getByTestId('language_selectors__target_language_info_button'));
+    await user.hover(screen.getByTestId('language_selectors__companion_languages_info_button'));
+    tooltip = await screen.findByTestId('language_selectors__companion_languages_info_tooltip');
+    expect(tooltip).toHaveTextContent(
+      'Сопутствующие языки показываются как переводы-подсказки в играх.',
+    );
+    expect(tooltip).toHaveTextContent(
+      'Порядок и выбор запоминаются отдельно для каждого языка-цели.',
+    );
+    expect(tooltip).toHaveTextContent(
+      'По умолчанию: English -> Русский, Español, Українська.',
+    );
+  });
+
+  it('explains every game setting except the app world setting', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Provider store={createStore()}>
+        <LanguageSelectors />
+      </Provider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Настройки игр' }));
+
+    expect(screen.queryByTestId('language_selectors__world_info_button')).not.toBeInTheDocument();
+
+    const expectedTooltips = [
+      ['fivePlus', 'Если карточка отвечена верно 5 и более раз подряд'],
+      ['four', 'Если карточка отвечена верно 4 раза подряд'],
+      ['three', 'Если карточка отвечена верно 3 раза подряд'],
+      ['mistake_repeat_frequency', 'Чем выше процент, тем чаще карточки с последними ошибками'],
+      ['new_card_mix_frequency', 'Чем выше процент, тем чаще в очередь добавляются новые карточки'],
+    ] as const;
+
+    for (const [key, text] of expectedTooltips) {
+      const button = screen.getByTestId(`language_selectors__settings_info_button__${key}`);
+      await user.hover(button);
+      expect(
+        await screen.findByTestId(`language_selectors__settings_info_tooltip__${key}`),
+      ).toHaveTextContent(text);
+      await user.unhover(button);
+    }
+  });
+
 });
 
 function createStore() {

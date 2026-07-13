@@ -1,6 +1,8 @@
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import KeyboardArrowUpRoundedIcon from '@mui/icons-material/KeyboardArrowUpRounded';
+import type { ReactNode } from 'react';
 import { useId, useState } from 'react';
 import {
   Box,
@@ -13,6 +15,7 @@ import {
   Select,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
@@ -165,45 +168,55 @@ export function LanguageSelectors() {
         width: { xs: '100%', md: 'auto' },
       }}
     >
-      <FormControl
-        data-test="language_selectors__interface_language_control"
-        size="small"
-        sx={{ minWidth: { xs: 138, sm: 150 } }}
+      <Stack
+        data-test="language_selectors__interface_language_group"
+        direction="row"
+        sx={{ alignItems: 'center', minWidth: 0 }}
       >
-        <InputLabel
-          data-test="language_selectors__interface_language_label"
-          id={interfaceLabelId}
+        <FormControl
+          data-test="language_selectors__interface_language_control"
+          size="small"
+          sx={{ minWidth: { xs: 138, sm: 150 } }}
         >
-          {t(interfaceLanguage, 'interfaceLanguage')}
-        </InputLabel>
-        <Select
-          data-test="language_selectors__interface_language_select"
-          labelId={interfaceLabelId}
-          label={t(interfaceLanguage, 'interfaceLanguage')}
-          value={interfaceLanguage}
-          onChange={handleInterfaceChange}
-          renderValue={(value) => (
-            <LanguageLabel
-              dataTestPrefix="language_selectors__interface_language_selected"
-              language={value as SupportedLanguage}
-            />
-          )}
-          sx={compactSelectSx}
-        >
-          {supportedLanguages.map((language) => (
-            <MenuItem
-              data-test={`language_selectors__interface_language_option__${language}`}
-              key={language}
-              value={language}
-            >
+          <InputLabel
+            data-test="language_selectors__interface_language_label"
+            id={interfaceLabelId}
+          >
+            {t(interfaceLanguage, 'interfaceLanguage')}
+          </InputLabel>
+          <Select
+            data-test="language_selectors__interface_language_select"
+            labelId={interfaceLabelId}
+            label={t(interfaceLanguage, 'interfaceLanguage')}
+            value={interfaceLanguage}
+            onChange={handleInterfaceChange}
+            renderValue={(value) => (
               <LanguageLabel
-                dataTestPrefix={`language_selectors__interface_language_option_label__${language}`}
-                language={language}
+                dataTestPrefix="language_selectors__interface_language_selected"
+                language={value as SupportedLanguage}
               />
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+            )}
+            sx={compactSelectSx}
+          >
+            {supportedLanguages.map((language) => (
+              <MenuItem
+                data-test={`language_selectors__interface_language_option__${language}`}
+                key={language}
+                value={language}
+              >
+                <LanguageLabel
+                  dataTestPrefix={`language_selectors__interface_language_option_label__${language}`}
+                  language={language}
+                />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <SelectorInfoIcon
+          interfaceLanguage={interfaceLanguage}
+          kind="interface"
+        />
+      </Stack>
 
       <Stack
         data-test="language_selectors__target_settings_group"
@@ -212,87 +225,102 @@ export function LanguageSelectors() {
         alignItems="center"
         sx={{ flexShrink: 0 }}
       >
-        <FormControl
-          data-test="language_selectors__target_language_control"
-          size="small"
-          sx={{ width: 224 }}
+        <Stack
+          data-test="language_selectors__target_language_group"
+          direction="row"
+          sx={{ alignItems: 'center', minWidth: 0 }}
         >
-          <InputLabel
-            data-test="language_selectors__target_language_label"
-            id={targetLabelId}
+          <FormControl
+            data-test="language_selectors__target_language_control"
+            size="small"
+            sx={{ width: 224 }}
           >
-            {t(interfaceLanguage, 'targetLearningLanguages')}
-          </InputLabel>
-          <Select
-            data-test="language_selectors__target_language_select"
-            labelId={targetLabelId}
-            label={t(interfaceLanguage, 'targetLearningLanguages')}
-            value={targetLanguage}
-            onChange={handleTargetChange}
-            renderValue={(value) => (
-              <LanguageLabel
-                dataTestPrefix="language_selectors__target_language_selected"
-                language={value as SupportedLanguage}
-              />
-            )}
-            sx={compactSelectSx}
-          >
-            {supportedLanguages.map((language) => (
-              <MenuItem
-                data-test={`language_selectors__target_language_option__${language}`}
-                key={language}
-                value={language}
-              >
+            <InputLabel
+              data-test="language_selectors__target_language_label"
+              id={targetLabelId}
+            >
+              {t(interfaceLanguage, 'targetLearningLanguages')}
+            </InputLabel>
+            <Select
+              data-test="language_selectors__target_language_select"
+              labelId={targetLabelId}
+              label={t(interfaceLanguage, 'targetLearningLanguages')}
+              value={targetLanguage}
+              onChange={handleTargetChange}
+              renderValue={(value) => (
                 <LanguageLabel
-                  dataTestPrefix={`language_selectors__target_language_option_label__${language}`}
-                  language={language}
+                  dataTestPrefix="language_selectors__target_language_selected"
+                  language={value as SupportedLanguage}
                 />
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <FormControl
-          data-test="language_selectors__companion_languages_control"
-          size="small"
-          sx={{ maxWidth: 224, width: 224 }}
-        >
-          <InputLabel
-            data-test="language_selectors__companion_languages_label"
-            id={companionLabelId}
-          >
-            {t(interfaceLanguage, 'complementaryLanguage')}
-          </InputLabel>
-          <Select
-            data-test="language_selectors__companion_languages_select"
-            labelId={companionLabelId}
-            label={t(interfaceLanguage, 'complementaryLanguage')}
-            multiple
-            value={companionLanguages}
-            onChange={handleCompanionLanguagesChange}
-            renderValue={(value) => (
-              <Stack
-                component="span"
-                data-test="language_selectors__companion_languages_selected__root"
-                direction="row"
-                spacing={0.75}
-                sx={{
-                  alignItems: 'center',
-                  maxWidth: '100%',
-                  minWidth: 0,
-                  overflow: 'hidden',
-                }}
-              >
-                {(value as SupportedLanguage[]).map((language) => (
+              )}
+              sx={compactSelectSx}
+            >
+              {supportedLanguages.map((language) => (
+                <MenuItem
+                  data-test={`language_selectors__target_language_option__${language}`}
+                  key={language}
+                  value={language}
+                >
                   <LanguageLabel
-                    dataTestPrefix={`language_selectors__companion_languages_selected__${language}`}
-                    key={language}
+                    dataTestPrefix={`language_selectors__target_language_option_label__${language}`}
                     language={language}
                   />
-                ))}
-              </Stack>
-            )}
-            sx={compactSelectSx}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <SelectorInfoIcon
+            interfaceLanguage={interfaceLanguage}
+            kind="target"
+          />
+        </Stack>
+
+        <Stack
+          data-test="language_selectors__companion_languages_group"
+          direction="row"
+          sx={{ alignItems: 'center', minWidth: 0 }}
+        >
+          <FormControl
+            data-test="language_selectors__companion_languages_control"
+            size="small"
+            sx={{ maxWidth: 224, width: 224 }}
+          >
+            <InputLabel
+              data-test="language_selectors__companion_languages_label"
+              id={companionLabelId}
+            >
+              {t(interfaceLanguage, 'complementaryLanguage')}
+            </InputLabel>
+            <Select
+              data-test="language_selectors__companion_languages_select"
+              labelId={companionLabelId}
+              label={t(interfaceLanguage, 'complementaryLanguage')}
+              multiple
+              value={companionLanguages}
+              onChange={handleCompanionLanguagesChange}
+              renderValue={(value) => (
+                <Stack
+                  component="span"
+                  data-test="language_selectors__companion_languages_selected__root"
+                  direction="row"
+                  spacing={0.75}
+                  sx={{
+                    alignItems: 'center',
+                    maxWidth: '100%',
+                    minWidth: 0,
+                    overflow: 'hidden',
+                  }}
+                >
+                  {(value as SupportedLanguage[]).map((language) => (
+                    <LanguageLabel
+                      dataTestPrefix={`language_selectors__companion_languages_selected__${language}`}
+                      key={language}
+                      language={language}
+                    />
+                  ))}
+                </Stack>
+              )}
+              sx={compactSelectSx}
           >
             {orderedCompanionLanguageOptions.map((language) => {
               const isSelected = companionLanguages.includes(language);
@@ -353,8 +381,13 @@ export function LanguageSelectors() {
                 </MenuItem>
               );
             })}
-          </Select>
-        </FormControl>
+            </Select>
+          </FormControl>
+          <SelectorInfoIcon
+            interfaceLanguage={interfaceLanguage}
+            kind="companion"
+          />
+        </Stack>
 
         <IconButton
           aria-label={t(interfaceLanguage, 'practiceSettings')}
@@ -433,68 +466,86 @@ export function LanguageSelectors() {
             </Select>
           </FormControl>
           {cooldownFields.map((field) => (
-            <TextField
-              data-test={`language_selectors__cooldown_input__${field.key}`}
+            <SettingsFieldRow
+              infoKey={field.key}
+              interfaceLanguage={interfaceLanguage}
               key={field.key}
-              label={t(interfaceLanguage, field.labelKey)}
+            >
+              <TextField
+                data-test={`language_selectors__cooldown_input__${field.key}`}
+                fullWidth
+                label={t(interfaceLanguage, field.labelKey)}
+                size="small"
+                type="number"
+                value={
+                  practiceSettings.correctStreakCooldownMonths[field.key]
+                }
+                onChange={(event) =>
+                  dispatch(
+                    setCorrectStreakCooldownMonths({
+                      months: Number(event.target.value),
+                      streak: field.key,
+                    }),
+                  )
+                }
+                inputProps={{
+                  min: 0,
+                  step: 0.5,
+                }}
+                helperText={t(interfaceLanguage, 'cooldownMonths')}
+              />
+            </SettingsFieldRow>
+          ))}
+          <SettingsFieldRow
+            infoKey="mistake_repeat_frequency"
+            interfaceLanguage={interfaceLanguage}
+          >
+            <TextField
+              data-test="language_selectors__mistake_repeat_frequency_input"
+              fullWidth
+              label={t(interfaceLanguage, 'recentMistakeRepeatFrequency')}
               size="small"
               type="number"
-              value={
-                practiceSettings.correctStreakCooldownMonths[field.key]
-              }
+              value={practiceSettings.recentMistakeRepeatFrequencyPercent}
               onChange={(event) =>
                 dispatch(
-                  setCorrectStreakCooldownMonths({
-                    months: Number(event.target.value),
-                    streak: field.key,
-                  }),
+                  setRecentMistakeRepeatFrequencyPercent(
+                    Number(event.target.value),
+                  ),
                 )
               }
               inputProps={{
+                max: 100,
                 min: 0,
-                step: 0.5,
+                step: 5,
               }}
-              helperText={t(interfaceLanguage, 'cooldownMonths')}
+              helperText={t(interfaceLanguage, 'frequencyPercent')}
             />
-          ))}
-          <TextField
-            data-test="language_selectors__mistake_repeat_frequency_input"
-            label={t(interfaceLanguage, 'recentMistakeRepeatFrequency')}
-            size="small"
-            type="number"
-            value={practiceSettings.recentMistakeRepeatFrequencyPercent}
-            onChange={(event) =>
-              dispatch(
-                setRecentMistakeRepeatFrequencyPercent(
-                  Number(event.target.value),
-                ),
-              )
-            }
-            inputProps={{
-              max: 100,
-              min: 0,
-              step: 5,
-            }}
-            helperText={t(interfaceLanguage, 'frequencyPercent')}
-          />
-          <TextField
-            data-test="language_selectors__new_card_mix_frequency_input"
-            label={t(interfaceLanguage, 'newCardMixFrequency')}
-            size="small"
-            type="number"
-            value={practiceSettings.newCardMixFrequencyPercent}
-            onChange={(event) =>
-              dispatch(
-                setNewCardMixFrequencyPercent(Number(event.target.value)),
-              )
-            }
-            inputProps={{
-              max: 100,
-              min: 0,
-              step: 5,
-            }}
-            helperText={t(interfaceLanguage, 'frequencyPercent')}
-          />
+          </SettingsFieldRow>
+          <SettingsFieldRow
+            infoKey="new_card_mix_frequency"
+            interfaceLanguage={interfaceLanguage}
+          >
+            <TextField
+              data-test="language_selectors__new_card_mix_frequency_input"
+              fullWidth
+              label={t(interfaceLanguage, 'newCardMixFrequency')}
+              size="small"
+              type="number"
+              value={practiceSettings.newCardMixFrequencyPercent}
+              onChange={(event) =>
+                dispatch(
+                  setNewCardMixFrequencyPercent(Number(event.target.value)),
+                )
+              }
+              inputProps={{
+                max: 100,
+                min: 0,
+                step: 5,
+              }}
+              helperText={t(interfaceLanguage, 'frequencyPercent')}
+            />
+          </SettingsFieldRow>
         </Stack>
       </Menu>
     </Stack>
@@ -522,6 +573,339 @@ const compactSelectSx = {
     py: 0.25,
   },
 };
+
+const readableTooltipSlotProps = {
+  arrow: {
+    sx: {
+      color: (theme: any) =>
+        theme.palette.mode === 'dark'
+          ? 'rgba(29, 26, 43, 0.98)'
+          : 'rgba(255, 255, 255, 0.98)',
+    },
+  },
+  tooltip: {
+    sx: {
+      bgcolor: (theme: any) =>
+        theme.palette.mode === 'dark'
+          ? 'rgba(29, 26, 43, 0.98)'
+          : 'rgba(255, 255, 255, 0.98)',
+      border: (theme: any) =>
+        theme.palette.mode === 'dark'
+          ? '1px solid rgba(246, 240, 255, 0.18)'
+          : '1px solid rgba(32, 48, 21, 0.14)',
+      boxShadow: '0 12px 28px rgba(32, 48, 21, 0.16)',
+      color: (theme: any) =>
+        theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
+      fontSize: '14px',
+      fontWeight: 600,
+      lineHeight: 1.38,
+      maxWidth: 320,
+      px: 1.75,
+      py: 1.2,
+    },
+  },
+};
+
+type SelectorInfoKind = 'interface' | 'target' | 'companion';
+type SettingsInfoKey =
+  | CorrectStreakCooldownKey
+  | 'mistake_repeat_frequency'
+  | 'new_card_mix_frequency';
+
+function SelectorInfoIcon({
+  interfaceLanguage,
+  kind,
+}: {
+  interfaceLanguage: SupportedLanguage;
+  kind: SelectorInfoKind;
+}) {
+  return (
+    <Box
+      data-test={`language_selectors__${selectorInfoDataKey[kind]}_info_wrapper`}
+      sx={{ mr: '5px' }}
+    >
+      <Tooltip
+        arrow
+        placement="bottom"
+        slotProps={{
+          ...readableTooltipSlotProps,
+          tooltip: {
+            ...readableTooltipSlotProps.tooltip,
+            ...({
+              'data-test': `language_selectors__${selectorInfoDataKey[kind]}_info_tooltip`,
+            } as Record<string, string>),
+          },
+        }}
+        title={
+          <Stack spacing={0.65}>
+            {getSelectorInfoText(interfaceLanguage, kind).map((line) => (
+              <Typography
+                key={line}
+                sx={{ fontSize: '14px', fontWeight: 600, lineHeight: 1.35 }}
+              >
+                {line}
+              </Typography>
+            ))}
+          </Stack>
+        }
+      >
+        <IconButton
+          aria-label={getSelectorInfoLabel(interfaceLanguage, kind)}
+          data-test={`language_selectors__${selectorInfoDataKey[kind]}_info_button`}
+          size="small"
+          sx={infoButtonSx}
+        >
+          <InfoOutlinedIcon fontSize="inherit" />
+        </IconButton>
+      </Tooltip>
+    </Box>
+  );
+}
+
+function SettingsFieldRow({
+  children,
+  infoKey,
+  interfaceLanguage,
+}: {
+  children: ReactNode;
+  infoKey: SettingsInfoKey;
+  interfaceLanguage: SupportedLanguage;
+}) {
+  return (
+    <Stack
+      data-test={`language_selectors__settings_field_row__${infoKey}`}
+      direction="row"
+      spacing={0.75}
+      sx={{ alignItems: 'flex-start' }}
+    >
+      <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
+      <SettingsInfoIcon infoKey={infoKey} interfaceLanguage={interfaceLanguage} />
+    </Stack>
+  );
+}
+
+function SettingsInfoIcon({
+  infoKey,
+  interfaceLanguage,
+}: {
+  infoKey: SettingsInfoKey;
+  interfaceLanguage: SupportedLanguage;
+}) {
+  return (
+    <Tooltip
+      arrow
+      placement="left"
+      slotProps={{
+        ...readableTooltipSlotProps,
+        tooltip: {
+          ...readableTooltipSlotProps.tooltip,
+          ...({
+            'data-test': `language_selectors__settings_info_tooltip__${infoKey}`,
+          } as Record<string, string>),
+        },
+      }}
+      title={getSettingsInfoText(interfaceLanguage, infoKey)}
+    >
+      <IconButton
+        aria-label={getSettingsInfoLabel(interfaceLanguage, infoKey)}
+        data-test={`language_selectors__settings_info_button__${infoKey}`}
+        size="small"
+        sx={{ ...infoButtonSx, mt: 0.25 }}
+      >
+        <InfoOutlinedIcon fontSize="inherit" />
+      </IconButton>
+    </Tooltip>
+  );
+}
+
+const infoButtonSx = {
+  bgcolor: 'rgba(255, 255, 255, 0.46)',
+  border: '1px solid rgba(32, 48, 21, 0.14)',
+  color: '#4c6650',
+  height: 24,
+  width: 24,
+  '&:hover': {
+    bgcolor: 'rgba(255, 255, 255, 0.78)',
+  },
+};
+
+const selectorInfoDataKey: Record<SelectorInfoKind, string> = {
+  companion: 'companion_languages',
+  interface: 'interface_language',
+  target: 'target_language',
+};
+
+function getSelectorInfoLabel(
+  language: SupportedLanguage,
+  kind: SelectorInfoKind,
+): string {
+  const labels: Record<SupportedLanguage, Record<SelectorInfoKind, string>> = {
+    en: {
+      companion: 'About companion languages',
+      interface: 'About interface language',
+      target: 'About target learning language',
+    },
+    es: {
+      companion: 'Sobre los idiomas acompanantes',
+      interface: 'Sobre el idioma de interfaz',
+      target: 'Sobre el idioma objetivo',
+    },
+    ru: {
+      companion: 'О сопутствующих языках',
+      interface: 'О языке интерфейса',
+      target: 'О языке - цели изучения',
+    },
+    uk: {
+      companion: 'Про супутні мови',
+      interface: 'Про мову інтерфейсу',
+      target: 'Про мову - ціль вивчення',
+    },
+  };
+
+  return labels[language][kind];
+}
+
+function getSelectorInfoText(
+  language: SupportedLanguage,
+  kind: SelectorInfoKind,
+): string[] {
+  const texts: Record<SupportedLanguage, Record<SelectorInfoKind, string[]>> = {
+    en: {
+      interface: [
+        'Interface language changes app labels, menus, and hints.',
+        'It does not decide which language you practice in games.',
+      ],
+      target: [
+        'This is the language you train and type answers in during games.',
+        'Game statistics are tracked separately for every target language.',
+      ],
+      companion: [
+        'Companion languages are shown as translation hints in games.',
+        'Their order and selection are remembered separately for each target language.',
+        'Defaults: English -> Русский, Español, Українська. Русский -> English, Español, Українська. Español -> Русский, English, Українська. Українська -> Русский, English, Español.',
+      ],
+    },
+    es: {
+      interface: [
+        'El idioma de interfaz cambia textos, menus y pistas de la aplicacion.',
+        'No decide que idioma practicas en los juegos.',
+      ],
+      target: [
+        'Este es el idioma que entrenas y en el que escribes respuestas en los juegos.',
+        'La estadistica se guarda por separado para cada idioma objetivo.',
+      ],
+      companion: [
+        'Los idiomas acompanantes aparecen como traducciones de ayuda en los juegos.',
+        'El orden y la seleccion se recuerdan por separado para cada idioma objetivo.',
+        'Por defecto: English -> Русский, Español, Українська. Русский -> English, Español, Українська. Español -> Русский, English, Українська. Українська -> Русский, English, Español.',
+      ],
+    },
+    ru: {
+      interface: [
+        'Язык интерфейса меняет подписи, меню и подсказки приложения.',
+        'Он не выбирает язык, который вы тренируете в играх.',
+      ],
+      target: [
+        'Это язык, который вы тренируете и на котором вводите ответы в играх.',
+        'Статистика игр ведется отдельно для каждого языка-цели.',
+      ],
+      companion: [
+        'Сопутствующие языки показываются как переводы-подсказки в играх.',
+        'Порядок и выбор запоминаются отдельно для каждого языка-цели.',
+        'По умолчанию: English -> Русский, Español, Українська. Русский -> English, Español, Українська. Español -> Русский, English, Українська. Українська -> Русский, English, Español.',
+      ],
+    },
+    uk: {
+      interface: [
+        'Мова інтерфейсу змінює підписи, меню та підказки застосунку.',
+        'Вона не визначає мову, яку ви тренуєте в іграх.',
+      ],
+      target: [
+        'Це мова, яку ви тренуєте і якою вводите відповіді в іграх.',
+        'Статистика ігор ведеться окремо для кожної мови-цілі.',
+      ],
+      companion: [
+        'Супутні мови показуються як переклади-підказки в іграх.',
+        'Порядок і вибір запамʼятовуються окремо для кожної мови-цілі.',
+        'За замовчуванням: English -> Русский, Español, Українська. Русский -> English, Español, Українська. Español -> Русский, English, Українська. Українська -> Русский, English, Español.',
+      ],
+    },
+  };
+
+  return texts[language][kind];
+}
+
+function getSettingsInfoLabel(
+  language: SupportedLanguage,
+  infoKey: SettingsInfoKey,
+): string {
+  const prefix: Record<SupportedLanguage, string> = {
+    en: 'About setting',
+    es: 'Sobre el ajuste',
+    ru: 'О настройке',
+    uk: 'Про налаштування',
+  };
+
+  return `${prefix[language]}: ${infoKey}`;
+}
+
+function getSettingsInfoText(
+  language: SupportedLanguage,
+  infoKey: SettingsInfoKey,
+): string {
+  const texts: Record<SupportedLanguage, Record<SettingsInfoKey, string>> = {
+    en: {
+      fivePlus:
+        'If a card was answered correctly 5 or more times in a row, this setting says how many months it can rest before returning to games.',
+      four:
+        'If a card was answered correctly 4 times in a row, this setting says how many months it waits before returning.',
+      three:
+        'If a card was answered correctly 3 times in a row, this setting says how many months it waits before returning.',
+      mistake_repeat_frequency:
+        'The higher the percent, the more often cards with recent mistakes rise in the game queue.',
+      new_card_mix_frequency:
+        'The higher the percent, the more often never-practiced cards are mixed into the queue.',
+    },
+    es: {
+      fivePlus:
+        'Si una tarjeta se respondio bien 5 o mas veces seguidas, este ajuste indica cuantos meses descansa antes de volver.',
+      four:
+        'Si una tarjeta se respondio bien 4 veces seguidas, este ajuste indica cuantos meses espera antes de volver.',
+      three:
+        'Si una tarjeta se respondio bien 3 veces seguidas, este ajuste indica cuantos meses espera antes de volver.',
+      mistake_repeat_frequency:
+        'Cuanto mayor sea el porcentaje, mas a menudo suben en la cola las tarjetas con errores recientes.',
+      new_card_mix_frequency:
+        'Cuanto mayor sea el porcentaje, mas a menudo se mezclan tarjetas nuevas en la cola.',
+    },
+    ru: {
+      fivePlus:
+        'Если карточка отвечена верно 5 и более раз подряд, настройка задает, сколько месяцев она отдыхает перед возвращением в игры.',
+      four:
+        'Если карточка отвечена верно 4 раза подряд, настройка задает, сколько месяцев она ждет перед возвращением.',
+      three:
+        'Если карточка отвечена верно 3 раза подряд, настройка задает, сколько месяцев она ждет перед возвращением.',
+      mistake_repeat_frequency:
+        'Чем выше процент, тем чаще карточки с последними ошибками поднимаются выше в очереди игр.',
+      new_card_mix_frequency:
+        'Чем выше процент, тем чаще в очередь добавляются новые карточки, которые еще не тренировались.',
+    },
+    uk: {
+      fivePlus:
+        'Якщо картку відповіли правильно 5 і більше разів поспіль, налаштування визначає, скільки місяців вона відпочиває перед поверненням в ігри.',
+      four:
+        'Якщо картку відповіли правильно 4 рази поспіль, налаштування визначає, скільки місяців вона чекає перед поверненням.',
+      three:
+        'Якщо картку відповіли правильно 3 рази поспіль, налаштування визначає, скільки місяців вона чекає перед поверненням.',
+      mistake_repeat_frequency:
+        'Що вищий відсоток, то частіше картки з останніми помилками піднімаються вище в черзі ігор.',
+      new_card_mix_frequency:
+        'Що вищий відсоток, то частіше в чергу додаються нові картки, які ще не тренувалися.',
+    },
+  };
+
+  return texts[language][infoKey];
+}
 
 function LanguageLabel({
   dataTestPrefix,

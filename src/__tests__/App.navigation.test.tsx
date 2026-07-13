@@ -902,6 +902,22 @@ describe('App navigation', () => {
     expect(progressChip).toHaveTextContent('0 пройдено / 4 всего');
   });
 
+  it('uses the forest green palette for the setup play button in the forest world', async () => {
+    const user = userEvent.setup();
+    renderApp({ app: { worldId: 'forest' } });
+
+    await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
+    await selectAllCardsCardSet(user);
+
+    const startButton = screen.getByTestId('game_setup__start_button');
+    expect(startButton).toBeEnabled();
+    expect(startButton).toHaveStyle({
+      background:
+        'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)',
+      color: '#183813',
+    });
+  });
+
   it.each([
     {
       interfaceLanguage: 'en' as const,
@@ -2128,10 +2144,25 @@ describe('App navigation', () => {
     expect(attemptCards).toHaveLength(1);
     expect(attemptCards[0]).toHaveTextContent('Пропущенные буквы');
     expect(
-      within(attemptCards[0]).getByTestId(
+      within(attemptCards[0]).queryByTestId(
         /^history_view__attempt_formula__.*__total_chip$/,
       ),
+    ).not.toBeInTheDocument();
+    expect(
+      within(attemptCards[0]).queryByTestId(
+        /^history_view__attempt_formula__.*__incorrect_chip$/,
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      within(attemptCards[0]).getByTestId(
+        /^history_view__attempt_formula__.*__total_value$/,
+      ),
     ).toHaveTextContent('2 отвечено');
+    expect(
+      within(attemptCards[0]).getByTestId(
+        /^history_view__attempt_formula__.*__incorrect_text$/,
+      ),
+    ).toHaveTextContent('2 неверно');
     expect(
       within(attemptCards[0]).queryByText('Всего отвечено вопросов: 2'),
     ).not.toBeInTheDocument();

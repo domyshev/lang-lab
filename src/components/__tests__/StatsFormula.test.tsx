@@ -106,6 +106,45 @@ describe('StatsFormula', () => {
     });
   });
 
+  it('can render compact exercise formulas as large answered text plus colored result text', () => {
+    render(
+      <StatsFormula
+        correct={2}
+        dataTestPrefix="exercise_text_formula"
+        incorrect={6}
+        interfaceLanguage="ru"
+        resultDisplay="text"
+        showLabel={false}
+        total={8}
+        totalDisplay="plainWithSuffix"
+        totalLabel="Всего отвечено вопросов"
+      />,
+    );
+
+    expect(screen.queryByTestId('exercise_text_formula__total_chip')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('exercise_text_formula__correct_chip')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('exercise_text_formula__incorrect_chip')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('exercise_text_formula__equals_icon')).not.toBeInTheDocument();
+    expect(screen.getByTestId('exercise_text_formula__total_value')).toHaveTextContent(
+      '8 отвечено',
+    );
+    expect(screen.getByTestId('exercise_text_formula__total_value__number')).toHaveStyle({
+      fontSize: '42px',
+    });
+    expect(screen.getByTestId('exercise_text_formula__total_value__suffix')).toHaveStyle({
+      fontSize: '16px',
+    });
+    expect(screen.getByTestId('exercise_text_formula__breakdown')).toHaveTextContent(
+      '2 верно + 6 неверно',
+    );
+    expect(screen.getByTestId('exercise_text_formula__correct_text')).toHaveStyle({
+      color: '#7fc77a',
+    });
+    expect(screen.getByTestId('exercise_text_formula__incorrect_text')).toHaveStyle({
+      color: '#f39aa4',
+    });
+  });
+
   it('shows small text suffixes after metric chip numbers', () => {
     render(
       <>

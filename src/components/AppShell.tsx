@@ -44,7 +44,6 @@ import {
 import { t } from '../domain/i18n';
 import {
   WorldId,
-  forestLilacAccent,
   getDefaultAssistantIdForWorld,
   getWorldAccent,
   resolveWorldId,
@@ -1551,6 +1550,7 @@ function getWorldChoiceButtonSx(world: WorldId, isSelected: boolean) {
     glow: 'rgba(95, 155, 62, 0.36)',
     line: '#4f8e5b',
     lineSoft: '#7bae63',
+    stripeDark: 'rgba(32, 48, 21, 0.58)',
   };
   const footballSx = {
     background:
@@ -1559,17 +1559,21 @@ function getWorldChoiceButtonSx(world: WorldId, isSelected: boolean) {
     glow: 'rgba(198, 11, 30, 0.35)',
     line: '#8b1b16',
     lineSoft: '#b24b2a',
+    stripeDark: 'rgba(51, 23, 16, 0.62)',
   };
   const palette = world === 'forest' ? forestSx : footballSx;
+  const stripedSelectionBackground =
+    `${palette.background} padding-box, ` +
+    `repeating-linear-gradient(135deg, ${palette.stripeDark} 0 3px, rgba(255, 253, 244, 0.94) 3px 7px) border-box`;
 
   return {
-    background: palette.background,
+    background: isSelected ? stripedSelectionBackground : palette.background,
     color: palette.color,
-    border: '2px solid',
-    borderColor: isSelected ? palette.line : palette.lineSoft,
+    border: '3px solid',
+    borderColor: isSelected ? 'transparent' : palette.lineSoft,
     borderRadius: 3,
     boxShadow: isSelected
-      ? `0 0 0 3px rgba(255, 253, 244, 0.9), 0 0 20px ${palette.glow}, 0 14px 26px rgba(32, 48, 21, 0.22), inset 0 -8px 16px rgba(32, 48, 21, 0.08)`
+      ? `0 0 20px ${palette.glow}, 0 14px 26px rgba(32, 48, 21, 0.22), inset 0 -8px 16px rgba(32, 48, 21, 0.08)`
       : `0 0 14px ${palette.glow}, 0 7px 15px rgba(32, 48, 21, 0.12), inset 0 1px 0 rgba(255,255,255,0.78)`,
     fontSize: 17,
     fontWeight: 950,
@@ -1582,8 +1586,9 @@ function getWorldChoiceButtonSx(world: WorldId, isSelected: boolean) {
       'box-shadow 160ms ease, filter 160ms ease, opacity 160ms ease',
     '&:hover': {
       filter: 'saturate(1.12) brightness(1.02)',
+      background: isSelected ? stripedSelectionBackground : palette.background,
       boxShadow: isSelected
-        ? `0 0 0 3px rgba(255, 253, 244, 0.96), 0 0 24px ${palette.glow}, 0 16px 30px rgba(32, 48, 21, 0.25), inset 0 -8px 16px rgba(32, 48, 21, 0.08)`
+        ? `0 0 24px ${palette.glow}, 0 16px 30px rgba(32, 48, 21, 0.25), inset 0 -8px 16px rgba(32, 48, 21, 0.08)`
         : `0 0 18px ${palette.glow}, 0 11px 22px rgba(32, 48, 21, 0.17), inset 0 1px 0 rgba(255,255,255,0.84)`,
     },
   };
@@ -1610,9 +1615,21 @@ function getPlayerSupporterCountry(
   worldId: WorldId,
   assistantId: AssistantId | string | undefined,
 ): SupporterCountry {
-  return worldId === 'forest'
-    ? 'forest'
-    : getAssistantSupporterCountry(assistantId);
+  if (worldId !== 'forest') {
+    return getAssistantSupporterCountry(assistantId);
+  }
+
+  switch (assistantId) {
+    case 'forestElf':
+      return 'forest-elf';
+    case 'unicorn':
+      return 'unicorn';
+    case 'ladybug':
+      return 'ladybug';
+    case 'studyTroll':
+    default:
+      return 'forest';
+  }
 }
 
 function getAppBarWorldSx(worldId: WorldId) {
@@ -1639,15 +1656,15 @@ function getGameTabSx(worldId: WorldId) {
   const isForest = worldId === 'forest';
   return {
     background: isForest
-      ? `linear-gradient(180deg, ${forestLilacAccent.light} 0%, ${forestLilacAccent.mid} 52%, ${forestLilacAccent.main} 100%)`
+      ? 'linear-gradient(180deg, #fbfff4 0%, #a9d957 50%, #6ea33f 100%)'
       : 'linear-gradient(180deg, #fff9d6 0%, #ffd24a 50%, #ee9825 100%)',
     border: '0 !important',
     borderRadius: '999px',
     boxSizing: 'border-box',
     boxShadow: isForest
-      ? 'inset 0 0 0 1px rgba(52, 34, 79, 0.14), inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(52, 34, 79, 0.14)'
+      ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.14), inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(36, 74, 28, 0.14)'
       : 'inset 0 0 0 1px rgba(116, 63, 8, 0.13), inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(121, 68, 8, 0.12)',
-    color: isForest ? forestLilacAccent.dark : '#203015',
+    color: isForest ? '#213f17' : '#203015',
     fontWeight: '950 !important',
     height: '36px !important',
     lineHeight: '1 !important',
@@ -1665,15 +1682,15 @@ function getGameTabSx(worldId: WorldId) {
     },
     '&.Mui-selected': {
       background: isForest
-        ? `linear-gradient(180deg, ${forestLilacAccent.light} 0%, ${forestLilacAccent.mid} 52%, ${forestLilacAccent.main} 100%)`
+        ? 'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)'
         : 'linear-gradient(180deg, #fff6b5 0%, #ffc52b 50%, #e98312 100%)',
       boxShadow: isForest
-        ? 'inset 0 0 0 1px rgba(52, 34, 79, 0.16), inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -3px 0 rgba(52, 34, 79, 0.18)'
+        ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.16), inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -3px 0 rgba(36, 74, 28, 0.18)'
         : 'inset 0 0 0 1px rgba(116, 63, 8, 0.15), inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -3px 0 rgba(121, 68, 8, 0.15)',
-      color: isForest ? forestLilacAccent.dark : '#203015',
+      color: isForest ? '#183813' : '#203015',
       '&:hover': {
         boxShadow: isForest
-          ? 'inset 0 0 0 1px rgba(52, 34, 79, 0.14), inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -3px 0 rgba(52, 34, 79, 0.16)'
+          ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.14), inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -3px 0 rgba(36, 74, 28, 0.16)'
           : 'inset 0 0 0 1px rgba(116, 63, 8, 0.13), inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -3px 0 rgba(121, 68, 8, 0.13)',
       },
     },

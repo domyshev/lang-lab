@@ -123,12 +123,12 @@ describe('CardSetListView archive browsing', () => {
     ).toHaveTextContent('0 cards');
   });
 
-  it('uses the soft lilac forest accent for the add button and selected card-set frame', () => {
+  it('uses the forest green palette for the add button and keeps the selected card-set frame', () => {
     renderList({ worldId: 'forest' });
 
     expect(screen.getByTestId('card_set_list__add_button')).toHaveStyle({
-      background: 'linear-gradient(135deg, #fff7ff 0%, #d8bcff 52%, #a989df 100%)',
-      color: '#34224f',
+      background: 'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)',
+      color: '#183813',
     });
     expect(screen.getByTestId('card_set_list__tile__all-cards')).toHaveStyle({
       borderColor: '#a989df',

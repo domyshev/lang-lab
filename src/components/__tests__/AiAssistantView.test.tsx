@@ -201,6 +201,9 @@ describe('AiAssistantView connection', () => {
     expect(screen.getByTestId('ai_connection__model_control')).toHaveStyle({
       minWidth: '176px',
     });
+    expect(
+      within(chatSummary).getByTestId('ai_connection__openrouter_info_wrapper'),
+    ).toHaveStyle({ marginLeft: '5px' });
     expect(screen.getByTestId('ai_assistant__chat_summary_actions')).toHaveStyle({
       marginRight: '20px',
     });
@@ -224,6 +227,25 @@ describe('AiAssistantView connection', () => {
     expect(screen.getByText(/built-in application key/i)).toBeInTheDocument();
     expect(screen.getByText(/unencrypted in this browser/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save key' })).toBeDisabled();
+  });
+
+  it('explains OpenRouter next to the model selector with a readable linked tooltip', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    await user.hover(screen.getByTestId('ai_connection__openrouter_info_button'));
+
+    const tooltip = await screen.findByTestId('ai_connection__openrouter_info_tooltip');
+    expect(tooltip).toHaveTextContent(
+      'OpenRouter is the gateway Language Lab uses to send chat requests to the selected model.',
+    );
+    expect(tooltip).toHaveStyle({
+      backgroundColor: 'rgba(255, 255, 255, 0.98)',
+      fontSize: '14px',
+    });
+    expect(
+      within(tooltip).getByRole('link', { name: 'OpenRouter' }),
+    ).toHaveAttribute('href', 'https://openrouter.ai/');
   });
 
   it('locks GPT behind a custom key when the built-in key is selected', async () => {

@@ -175,8 +175,10 @@ function AttemptHistoryCard({
             incorrect={attempt.incorrect}
             interfaceLanguage={interfaceLanguage}
             resultColors={resultColors}
+            resultDisplay="text"
             showLabel={false}
             total={attempt.total}
+            totalDisplay="plainWithSuffix"
             totalLabel={t(interfaceLanguage, 'totalAnsweredQuestions')}
           />
         </Stack>

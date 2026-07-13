@@ -13,7 +13,10 @@ export type SupporterCountry =
   | 'portugal'
   | 'england'
   | 'germany'
-  | 'forest';
+  | 'forest'
+  | 'forest-elf'
+  | 'unicorn'
+  | 'ladybug';
 
 export function PlayerPixelAvatar({
   ariaLabel,
@@ -100,6 +103,106 @@ function SupporterFlag({
   dataTest: string;
 }) {
   switch (country) {
+    case 'ladybug':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__ladybug_meadow`}
+            fill="#e8f9cf"
+            height="38"
+            width="54"
+          />
+          <rect fill="#8cc66f" height="13" width="54" y="25" />
+          <circle
+            data-test={`${dataTest}__ladybug_shell`}
+            cx="34"
+            cy="19"
+            fill="#d9463e"
+            r="11"
+            stroke="#203015"
+            strokeWidth="1.3"
+          />
+          <path
+            d="M34 9v20"
+            stroke="#203015"
+            strokeLinecap="round"
+            strokeWidth="1.2"
+          />
+          <circle cx="29" cy="16" fill="#203015" r="1.8" />
+          <circle cx="39" cy="16" fill="#203015" r="1.8" />
+          <circle cx="31" cy="23" fill="#203015" r="1.8" />
+          <circle cx="37" cy="23" fill="#203015" r="1.8" />
+        </>
+      );
+    case 'unicorn':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__unicorn_sky`}
+            fill="#eef7ff"
+            height="38"
+            width="54"
+          />
+          <path
+            d="M0 28c9-7 17-7 25-2 9 5 18 5 29-3v15H0Z"
+            fill="#dff2c4"
+          />
+          <path
+            data-test={`${dataTest}__unicorn_mane`}
+            d="M14 28c5-13 17-18 27-12-2 11-13 18-27 12Z"
+            fill="#f6efff"
+            stroke="#6f4fa6"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M20 25c5-3 11-6 18-9"
+            fill="none"
+            stroke="#ffb6d5"
+            strokeLinecap="round"
+            strokeWidth="2"
+          />
+          <path
+            d="M34 14l5-8 2 10Z"
+            fill="#ffe08a"
+            stroke="#7c5a14"
+            strokeLinejoin="round"
+            strokeWidth="1"
+          />
+        </>
+      );
+    case 'forest-elf':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__forest_elf_glade`}
+            fill="#f4ffd8"
+            height="38"
+            width="54"
+          />
+          <rect fill="#75b85a" height="15" width="54" y="23" />
+          <path
+            data-test={`${dataTest}__forest_elf_leaf_shield`}
+            d="M12 24c6-15 18-19 31-12-5 14-18 19-31 12Z"
+            fill="#58a76f"
+            stroke="#203015"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M19 23c7-5 14-8 22-11"
+            fill="none"
+            stroke="#f7ffe5"
+            strokeLinecap="round"
+            strokeWidth="1.5"
+          />
+          <path
+            d="M13 15l7 4-7 4ZM42 15l-7 4 7 4Z"
+            fill="#bdeba2"
+            stroke="#203015"
+            strokeLinejoin="round"
+            strokeWidth="1"
+          />
+        </>
+      );
     case 'forest':
       return (
         <>

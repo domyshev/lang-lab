@@ -69,6 +69,13 @@ describe('AppShell', () => {
       within(dialog).getByRole('button', { name: /Forest Elves/ }),
     ).toHaveAttribute('aria-pressed', 'true');
     expect(
+      within(dialog).getByRole('button', { name: /Forest Elves/ }),
+    ).toHaveStyle({
+      background:
+        'linear-gradient(135deg, #f4ffd8 0%, #b8ec9d 46%, #7fd4b0 100%) padding-box, repeating-linear-gradient(135deg, rgba(32, 48, 21, 0.58) 0 3px, rgba(255, 253, 244, 0.94) 3px 7px) border-box',
+      borderColor: 'transparent',
+    });
+    expect(
       within(dialog).getByRole('button', { name: /^Football$/ }),
     ).not.toHaveTextContent('FIFA WK 2026');
     expect(
@@ -109,6 +116,13 @@ describe('AppShell', () => {
     ).not.toBeInTheDocument();
 
     await user.click(within(dialog).getByRole('button', { name: /^Football$/ }));
+    expect(
+      within(dialog).getByRole('button', { name: /^Football$/ }),
+    ).toHaveStyle({
+      background:
+        'linear-gradient(135deg, #fff1a8 0%, #ffc400 36%, #c60b1e 100%) padding-box, repeating-linear-gradient(135deg, rgba(51, 23, 16, 0.62) 0 3px, rgba(255, 253, 244, 0.94) 3px 7px) border-box',
+      borderColor: 'transparent',
+    });
     await user.click(
       within(dialog).getByTestId('player_onboarding__assistant_figure__greenPower'),
     );
@@ -220,6 +234,41 @@ describe('AppShell', () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByTestId('player_greeting__avatar__spain_yellow_stripe'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows a distinct forest flag for the selected forest assistant in the top bar', () => {
+    const store = configureStore({
+      reducer: {
+        app: appReducer,
+      },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          assistantId: 'unicorn' as const,
+          playerProfile: {
+            avatarSeed: 'supporter:forest:legacy-seed',
+            displayName: 'Илья',
+            isAnonymous: false,
+          },
+          worldId: 'forest' as const,
+        },
+      },
+    });
+
+    render(
+      <Provider store={store}>
+        <AppShell>
+          <div>Content</div>
+        </AppShell>
+      </Provider>,
+    );
+
+    expect(
+      screen.getByTestId('player_greeting__avatar__unicorn_mane'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId('player_greeting__avatar__forest_leaf'),
     ).not.toBeInTheDocument();
   });
 
@@ -532,8 +581,8 @@ describe('AppShell', () => {
 
     expect(screen.getByRole('tab', { name: 'Играть' })).toHaveStyle({
       background:
-        'linear-gradient(180deg, #fff7ff 0%, #d8bcff 52%, #a989df 100%)',
-      color: '#34224f',
+        'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)',
+      color: '#183813',
     });
   });
 

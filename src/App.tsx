@@ -1317,7 +1317,7 @@ export function App() {
                 setGenerationSeed((seed) => seed + 1);
               }}
               disabled={!canStart}
-              sx={{ minWidth: 160 }}
+              sx={getGameSetupStartButtonSx(worldId)}
             >
               {t(interfaceLanguage, 'start')}
             </Button>
@@ -2004,6 +2004,40 @@ export function App() {
       />
     </AppShell>
   );
+}
+
+function getGameSetupStartButtonSx(worldId: WorldId) {
+  const isForest = worldId === 'forest';
+  const background = isForest
+    ? 'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)'
+    : 'linear-gradient(180deg, #fff6b5 0%, #ffc52b 50%, #e98312 100%)';
+  const hoverBackground = isForest
+    ? 'linear-gradient(180deg, #fbffe8 0%, #9ed54c 50%, #5b9636 100%)'
+    : 'linear-gradient(180deg, #fff8c0 0%, #ffd03f 50%, #ee941b 100%)';
+
+  return {
+    background,
+    borderRadius: 2,
+    boxShadow: isForest
+      ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.16), inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -3px 0 rgba(36, 74, 28, 0.18), 0 8px 18px rgba(63, 91, 38, 0.18)'
+      : 'inset 0 0 0 1px rgba(116, 63, 8, 0.15), inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -3px 0 rgba(121, 68, 8, 0.15), 0 8px 18px rgba(124, 21, 24, 0.16)',
+    color: isForest ? '#183813' : '#203015',
+    fontWeight: 950,
+    minWidth: 160,
+    textTransform: 'none',
+    '&:hover': {
+      background: hoverBackground,
+      boxShadow: isForest
+        ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.16), inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -3px 0 rgba(36, 74, 28, 0.16), 0 10px 22px rgba(63, 91, 38, 0.20)'
+        : 'inset 0 0 0 1px rgba(116, 63, 8, 0.13), inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -3px 0 rgba(121, 68, 8, 0.13), 0 10px 22px rgba(124, 21, 24, 0.18)',
+    },
+    '&.Mui-disabled': {
+      background: isForest
+        ? 'linear-gradient(180deg, #f6faef 0%, #c7dea5 50%, #9abc79 100%)'
+        : 'linear-gradient(180deg, #fff8d8 0%, #f3cf69 50%, #d9a34c 100%)',
+      color: isForest ? 'rgba(24, 56, 19, 0.58)' : 'rgba(32, 48, 21, 0.56)',
+    },
+  };
 }
 
 function TargetStatsWorldBackground({ worldId }: { worldId: WorldId }) {
