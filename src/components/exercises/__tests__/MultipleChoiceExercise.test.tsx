@@ -15,10 +15,10 @@ const prompt = {
 };
 
 describe('MultipleChoiceExercise', () => {
-  it('puts the complementary translation first and makes it visually primary', () => {
+  it('puts companion translations first and moves extra hints to the second row', () => {
     render(
       <MultipleChoiceExercise
-        complementaryLanguage="es"
+        complementaryLanguages={['es', 'ru']}
         interfaceLanguage="ru"
         prompt={prompt}
         onAnswer={vi.fn()}
@@ -47,6 +47,11 @@ describe('MultipleChoiceExercise', () => {
         'multiple_choice_exercise__prompt_hint__airport__secondary_language_code__ru',
       ),
     ).toHaveStyle({ marginRight: '4px' });
+    expect(
+      screen.getByTestId(
+        'multiple_choice_exercise__prompt_hint__airport__secondary_row',
+      ),
+    ).toHaveStyle({ marginTop: '8px' });
   });
 
   it('shows white answer options and marks the selected result before next', async () => {

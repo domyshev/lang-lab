@@ -92,7 +92,7 @@ import { createCardById, getCardsByIds } from './domain/cardIndexes';
 import { forgetExerciseSession, saveAttempt } from './store/attemptsSlice';
 import {
   acknowledgeGameHelp,
-  getComplementaryLanguageForTarget,
+  getComplementaryLanguagesForTarget,
   markFinishExerciseLampShown,
   markHypersonicJumpLampShown,
 } from './store/appSlice';
@@ -255,10 +255,12 @@ export function App() {
   const complementaryLanguages = useSelector(
     (state: RootState) => state.app.complementaryLanguages,
   );
-  const complementaryLanguage = getComplementaryLanguageForTarget(
+  const complementaryLanguagesForTarget = getComplementaryLanguagesForTarget(
     complementaryLanguages,
     targetLanguage,
+    interfaceLanguage,
   );
+  const complementaryLanguage = complementaryLanguagesForTarget[0];
   const cardById = useMemo(() => createCardById(cards), [cards]);
   const practiceOrderingAttempts = useMemo(
     () =>
@@ -1536,7 +1538,7 @@ export function App() {
       return (
         <MultipleChoiceExercise
           key={`${exercisePreview.prompt.cardId}:${generationSeed}`}
-          complementaryLanguage={complementaryLanguage}
+          complementaryLanguages={complementaryLanguagesForTarget}
           interfaceLanguage={interfaceLanguage}
           progressCompletedCount={completedMultipleChoiceCardIds.length}
           progressTotalCount={eligibleCards.length}
@@ -1601,7 +1603,7 @@ export function App() {
       return (
         <MissingLettersExercise
           key={missingLettersPrompt.practiceKey}
-          complementaryLanguage={complementaryLanguage}
+          complementaryLanguages={complementaryLanguagesForTarget}
           interfaceLanguage={interfaceLanguage}
           isRepeatedPrompt={completedMissingLettersCardIds.includes(
             missingLettersPrompt.cardId,
@@ -1674,7 +1676,7 @@ export function App() {
     return (
       <MissingWordExercise
         key={missingWordPrompt.practiceKey}
-        complementaryLanguage={complementaryLanguage}
+        complementaryLanguages={complementaryLanguagesForTarget}
         finishAction={renderFinishExerciseAction(
           buildMissingWordJumpSelector(missingWordPrompt),
         )}
@@ -2181,29 +2183,101 @@ function CurrentPromptStatsPanel({
     cardId: prompt.cardId,
     targetLanguage,
   });
+  const recentResults =
+    getRecentResultsByCardId({
+      attempts,
+      cardIds: [prompt.cardId],
+      targetLanguage,
+    })[prompt.cardId] ?? [];
 
   return (
-    <Paper
-      data-test={`current_prompt_stats__panel__${prompt.cardId}`}
-      sx={{ p: 2, borderLeft: '4px solid', borderColor: 'primary.main' }}
+    <CursorAnchoredTooltip
+      arrowDataTest={`current_prompt_stats__tooltip_arrow__${prompt.cardId}`}
+      closeOnOtherOpen
+      leaveDelay={0}
+      transitionTimeout={0}
+      tooltipSx={{
+        bgcolor: '#ffffff',
+        border: '1px solid rgba(32, 48, 21, 0.14)',
+        boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
+        color: '#203015',
+        p: 1.25,
+      }}
+      title={
+        <Stack data-test={`current_prompt_stats__tooltip__${prompt.cardId}`} spacing={1}>
+          <SplitWordStatsChip
+            correct={stats.correct}
+            dataTestPrefix={`current_prompt_stats__tooltip_split_stats__${prompt.cardId}`}
+            incorrect={stats.incorrect}
+            interfaceLanguage={interfaceLanguage}
+            resultColors={resultColors}
+            statsLabel={statsLabel}
+          />
+          <Typography
+            data-test={`current_prompt_stats__recent_title__${prompt.cardId}`}
+            sx={{ color: '#203015', fontSize: 14, fontWeight: 850 }}
+          >
+            {t(interfaceLanguage, 'recentAnswersTitle')}
+          </Typography>
+          <Stack data-test={`current_prompt_stats__recent_results__${prompt.cardId}`} spacing={0.5}>
+            {recentResults.slice(0, 10).map((result, index) => (
+              <Stack
+                data-test={`current_prompt_stats__recent_result__${prompt.cardId}__${index}`}
+                direction="row"
+                key={`${result.occurredAt}-${index}`}
+                spacing={0.75}
+                sx={{ alignItems: 'center' }}
+              >
+                <Chip
+                  data-test={`current_prompt_stats__recent_result_chip__${prompt.cardId}__${index}`}
+                  label={t(
+                    interfaceLanguage,
+                    result.isCorrect
+                      ? 'metricCorrectSuffix'
+                      : 'metricIncorrectSuffix',
+                  )}
+                  size="small"
+                  sx={{
+                    bgcolor: result.isCorrect
+                      ? resultColors.correct.soft
+                      : resultColors.incorrect.soft,
+                    border: '1px solid',
+                    borderColor: result.isCorrect
+                      ? resultColors.correct.border
+                      : resultColors.incorrect.border,
+                    color: '#111111',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    height: 24,
+                  }}
+                />
+                <Typography sx={{ color: 'rgba(32, 48, 21, 0.72)', fontSize: 11 }}>
+                  {formatAttemptDate(result.occurredAt)}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
+        </Stack>
+      }
     >
-      <Stack data-test={`current_prompt_stats__content__${prompt.cardId}`} spacing={1}>
-        <Typography
-          data-test={`current_prompt_stats__label__${prompt.cardId}`}
-          variant="overline"
-        >
-          {statsLabel}
-        </Typography>
-        <SplitWordStatsChip
-          correct={stats.correct}
-          dataTestPrefix={`current_prompt_stats__split_stats__${prompt.cardId}`}
-          incorrect={stats.incorrect}
-          interfaceLanguage={interfaceLanguage}
-          resultColors={resultColors}
-          statsLabel={statsLabel}
-        />
-      </Stack>
-    </Paper>
+      <Chip
+        component="button"
+        data-test={`current_prompt_stats__chip__${prompt.cardId}`}
+        label={statsLabel}
+        type="button"
+        variant="outlined"
+        sx={{
+          alignSelf: 'flex-start',
+          bgcolor: 'rgba(18, 60, 105, 0.06)',
+          borderColor: 'rgba(18, 60, 105, 0.34)',
+          color: '#123c69',
+          cursor: 'pointer',
+          fontSize: 13,
+          fontWeight: 850,
+          height: 30,
+        }}
+      />
+    </CursorAnchoredTooltip>
   );
 }
 

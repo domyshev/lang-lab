@@ -12,6 +12,8 @@ type I18nKey =
   | 'history'
   | 'interfaceLanguage'
   | 'targetLanguage'
+  | 'targetLearningLanguage'
+  | 'targetLearningLanguages'
   | 'world'
   | 'appWorld'
   | 'footballWorld'
@@ -290,8 +292,10 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     statistics: 'Statistics',
     cardSets: 'Card sets',
     history: 'History',
-    interfaceLanguage: 'Interface',
+    interfaceLanguage: 'Interface language',
     targetLanguage: 'Target',
+    targetLearningLanguage: 'Target learning language',
+    targetLearningLanguages: 'Target learning languages',
     world: 'World',
     appWorld: 'App world',
     footballWorld: 'Football',
@@ -310,7 +314,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     playerGreetingPrefix: 'Hello',
     playerAnonymousName: 'wanderer',
     practiceSettings: 'Practice settings',
-    complementaryLanguage: 'Complementary language',
+    complementaryLanguage: 'Companion languages',
     correctStreakCooldownFivePlus: 'Last 5 or more answers correct',
     correctStreakCooldownFour: 'Last 4 answers correct',
     correctStreakCooldownThree: 'Last 3 answers correct',
@@ -617,8 +621,10 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     statistics: 'Статистика',
     cardSets: 'Наборы',
     history: 'История',
-    interfaceLanguage: 'Интерфейс',
+    interfaceLanguage: 'Язык интерфейса',
     targetLanguage: 'Цель',
+    targetLearningLanguage: 'Язык - цель изучения',
+    targetLearningLanguages: 'Языки - цель изучения',
     world: 'Мир',
     appWorld: 'Мир приложения',
     footballWorld: 'Футбол',
@@ -637,7 +643,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     playerGreetingPrefix: 'Привет',
     playerAnonymousName: 'странник',
     practiceSettings: 'Настройки практики',
-    complementaryLanguage: 'Дополняющий язык',
+    complementaryLanguage: 'Сопутствующие языки',
     correctStreakCooldownFivePlus: 'Последние 5 и более раз верно',
     correctStreakCooldownFour: 'Последние 4 раза верно',
     correctStreakCooldownThree: 'Последние 3 раза верно',
@@ -946,8 +952,10 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     statistics: 'Estadisticas',
     cardSets: 'Conjuntos',
     history: 'Historial',
-    interfaceLanguage: 'Interfaz',
+    interfaceLanguage: 'Idioma de interfaz',
     targetLanguage: 'Objetivo',
+    targetLearningLanguage: 'Idioma objetivo de estudio',
+    targetLearningLanguages: 'Idiomas objetivo de estudio',
     world: 'Mundo',
     appWorld: 'Mundo de la app',
     footballWorld: 'Futbol',
@@ -966,7 +974,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     playerGreetingPrefix: 'Hola',
     playerAnonymousName: 'viajero',
     practiceSettings: 'Ajustes de practica',
-    complementaryLanguage: 'Idioma complementario',
+    complementaryLanguage: 'Idiomas acompanantes',
     correctStreakCooldownFivePlus: 'Ultimas 5 o mas respuestas correctas',
     correctStreakCooldownFour: 'Ultimas 4 respuestas correctas',
     correctStreakCooldownThree: 'Ultimas 3 respuestas correctas',
@@ -1287,7 +1295,7 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   chooseCardSet: 'Виберіть набір карток',
   chooseCardSetPlaceholder: 'Виберіть набір карток',
   chooseExercise: 'Виберіть гру',
-  complementaryLanguage: 'Додаткова мова',
+  complementaryLanguage: 'Супутні мови',
   continueAnonymously: 'Продовжити анонімно',
   crossword: 'Кросворд',
   editPlayerName: "Змінити ім'я",
@@ -1299,7 +1307,7 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   gameLibrary: 'Бібліотека ігор',
   gamesTab: 'Грати',
   history: 'Історія',
-  interfaceLanguage: 'Інтерфейс',
+  interfaceLanguage: 'Мова інтерфейсу',
   missingLetters: 'Пропущені літери',
   missingWord: 'Пропущене слово',
   multipleChoice: 'Питання з 3 варіантами',
@@ -1320,6 +1328,8 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   statistics: 'Статистика',
   submit: 'Надіслати',
   targetLanguage: 'Ціль',
+  targetLearningLanguage: 'Мова - ціль вивчення',
+  targetLearningLanguages: 'Мови - ціль вивчення',
   targetAnswerLabel: 'Цільова мова',
   world: 'Світ',
 };

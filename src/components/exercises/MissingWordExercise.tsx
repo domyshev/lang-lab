@@ -39,6 +39,7 @@ type SubmissionOutcome = 'correct' | 'incorrect' | 'memorize';
 
 export function MissingWordExercise({
   complementaryLanguage,
+  complementaryLanguages,
   isRepeatedPrompt = false,
   prompt,
   repeatProgress,
@@ -55,6 +56,7 @@ export function MissingWordExercise({
   targetLanguage = 'en',
 }: {
   complementaryLanguage?: SupportedLanguage;
+  complementaryLanguages?: SupportedLanguage[];
   isRepeatedPrompt?: boolean;
   prompt: MissingWordPrompt;
   repeatProgress?: { current: number; total: number };
@@ -212,6 +214,11 @@ export function MissingWordExercise({
             >
               {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'missingWord')}
             </Typography>
+            <ExerciseTargetLanguageChip
+              dataTest={`missing_word_exercise__target_language_chip__${prompt.cardId}`}
+              interfaceLanguage={interfaceLanguage}
+              targetLanguage={targetLanguage}
+            />
             <Stack
               data-test={`missing_word_exercise__metadata_row__${prompt.cardId}`}
               direction="row"
@@ -226,11 +233,6 @@ export function MissingWordExercise({
                   cardSetName={cardSetName}
                 />
               )}
-              <ExerciseTargetLanguageChip
-                dataTest={`missing_word_exercise__target_language_chip__${prompt.cardId}`}
-                interfaceLanguage={interfaceLanguage}
-                targetLanguage={targetLanguage}
-              />
               {progressCompletedCount !== undefined &&
                 progressTotalCount !== undefined && (
                   <ExerciseProgressChip
@@ -252,6 +254,7 @@ export function MissingWordExercise({
         >
           <TranslationHintRow
             complementaryLanguage={complementaryLanguage}
+            complementaryLanguages={complementaryLanguages}
             dataTest={`missing_word_exercise__prompt__${prompt.cardId}`}
             fallbackPrompt={prompt.prompt}
             hints={prompt.translationHints}

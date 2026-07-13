@@ -4,11 +4,13 @@ import { SupportedLanguage } from '../../domain/languages';
 
 export function TranslationHintRow({
   complementaryLanguage,
+  complementaryLanguages,
   dataTest,
   fallbackPrompt,
   hints,
 }: {
   complementaryLanguage?: SupportedLanguage;
+  complementaryLanguages?: SupportedLanguage[];
   dataTest: string;
   fallbackPrompt: string;
   hints: TranslationHint[];
@@ -21,18 +23,18 @@ export function TranslationHintRow({
     );
   }
 
-  const preferredLanguage = complementaryLanguage ?? hints[0].language;
-  const orderedHints = orderTranslationHints(hints, preferredLanguage);
+  const preferredLanguages =
+    complementaryLanguages ??
+    (complementaryLanguage ? [complementaryLanguage] : [hints[0].language]);
+  const orderedHints = orderTranslationHints(hints, preferredLanguages);
   const [primaryHint, ...secondaryHints] = orderedHints;
   const hintPartDataTest = dataTest.replace('__prompt__', '__prompt_hint__');
 
   return (
     <Stack
       data-test={dataTest}
-      direction="row"
       spacing={0.75}
-      sx={{ alignItems: 'center', flexWrap: 'wrap' }}
-      useFlexGap
+      sx={{ alignItems: 'flex-start' }}
     >
       {primaryHint && (
         <Box
@@ -49,23 +51,33 @@ export function TranslationHintRow({
           {primaryHint.value}
         </Box>
       )}
-      {secondaryHints.map((hint) => (
-        <Box
-          component="span"
-          data-test={`${hintPartDataTest}__secondary__${hint.language}`}
-          key={`${hint.language}:${hint.value}`}
-          sx={secondaryTranslationHintStyles}
+      {secondaryHints.length > 0 && (
+        <Stack
+          data-test={`${hintPartDataTest}__secondary_row`}
+          direction="row"
+          spacing={1.25}
+          sx={{ alignItems: 'center', flexWrap: 'wrap', mt: 1 }}
+          useFlexGap
         >
-          <Box
-            component="span"
-            data-test={`${hintPartDataTest}__secondary_language_code__${hint.language}`}
-            sx={secondaryLanguageCodeStyles}
-          >
-            {hint.language}:
-          </Box>{' '}
-          {hint.value}
-        </Box>
-      ))}
+          {secondaryHints.map((hint) => (
+            <Box
+              component="span"
+              data-test={`${hintPartDataTest}__secondary__${hint.language}`}
+              key={`${hint.language}:${hint.value}`}
+              sx={secondaryTranslationHintStyles}
+            >
+              <Box
+                component="span"
+                data-test={`${hintPartDataTest}__secondary_language_code__${hint.language}`}
+                sx={secondaryLanguageCodeStyles}
+              >
+                {hint.language}:
+              </Box>{' '}
+              {hint.value}
+            </Box>
+          ))}
+        </Stack>
+      )}
     </Stack>
   );
 }
@@ -97,7 +109,6 @@ const secondaryTranslationHintStyles = {
   fontSize: { xs: 17, sm: 18 },
   fontWeight: 650,
   lineHeight: 1.3,
-  ml: '10px',
 };
 
 const languageCodeStyles = {

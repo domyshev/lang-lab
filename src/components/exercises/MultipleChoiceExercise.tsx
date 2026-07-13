@@ -23,6 +23,7 @@ import { TranslationHintRow } from './TranslationHintRow';
 
 export function MultipleChoiceExercise({
   complementaryLanguage,
+  complementaryLanguages,
   interfaceLanguage,
   progressCompletedCount,
   progressTotalCount,
@@ -37,6 +38,7 @@ export function MultipleChoiceExercise({
   targetLanguage = 'en',
 }: {
   complementaryLanguage?: SupportedLanguage;
+  complementaryLanguages?: SupportedLanguage[];
   interfaceLanguage: SupportedLanguage;
   prompt: MultipleChoicePrompt;
   resultColors?: WorldResultColors;
@@ -88,6 +90,11 @@ export function MultipleChoiceExercise({
             >
               {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'multipleChoice')}
             </Typography>
+            <ExerciseTargetLanguageChip
+              dataTest={`multiple_choice_exercise__target_language_chip__${prompt.cardId}`}
+              interfaceLanguage={interfaceLanguage}
+              targetLanguage={targetLanguage}
+            />
             <Stack
               data-test={`multiple_choice_exercise__metadata_row__${prompt.cardId}`}
               direction="row"
@@ -102,11 +109,6 @@ export function MultipleChoiceExercise({
                   cardSetName={cardSetName}
                 />
               )}
-              <ExerciseTargetLanguageChip
-                dataTest={`multiple_choice_exercise__target_language_chip__${prompt.cardId}`}
-                interfaceLanguage={interfaceLanguage}
-                targetLanguage={targetLanguage}
-              />
               {progressCompletedCount !== undefined &&
                 progressTotalCount !== undefined && (
                   <ExerciseProgressChip
@@ -122,6 +124,7 @@ export function MultipleChoiceExercise({
         </Stack>
         <TranslationHintRow
           complementaryLanguage={complementaryLanguage}
+          complementaryLanguages={complementaryLanguages}
           dataTest={`multiple_choice_exercise__prompt__${prompt.cardId}`}
           fallbackPrompt={prompt.prompt}
           hints={prompt.translationHints}

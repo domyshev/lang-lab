@@ -37,6 +37,7 @@ export function MissingLettersExercise({
   interfaceLanguage,
   isRepeatedPrompt = false,
   complementaryLanguage,
+  complementaryLanguages,
   onNext,
   onMemorizeResult,
   progressCompletedCount,
@@ -54,6 +55,7 @@ export function MissingLettersExercise({
   interfaceLanguage: SupportedLanguage;
   isRepeatedPrompt?: boolean;
   complementaryLanguage?: SupportedLanguage;
+  complementaryLanguages?: SupportedLanguage[];
   prompt: MissingLettersPrompt;
   repeatProgress?: { current: number; total: number };
   onAnswer: (answer: string) => void;
@@ -202,6 +204,11 @@ export function MissingLettersExercise({
             >
               {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'missingLetters')}
             </Typography>
+            <ExerciseTargetLanguageChip
+              dataTest={`missing_letters_exercise__target_language_chip__${prompt.cardId}`}
+              interfaceLanguage={interfaceLanguage}
+              targetLanguage={targetLanguage}
+            />
             <Stack
               data-test={`missing_letters_exercise__metadata_row__${prompt.cardId}`}
               direction="row"
@@ -216,11 +223,6 @@ export function MissingLettersExercise({
                   cardSetName={cardSetName}
                 />
               )}
-              <ExerciseTargetLanguageChip
-                dataTest={`missing_letters_exercise__target_language_chip__${prompt.cardId}`}
-                interfaceLanguage={interfaceLanguage}
-                targetLanguage={targetLanguage}
-              />
               {progressCompletedCount !== undefined &&
                 progressTotalCount !== undefined && (
                   <ExerciseProgressChip
@@ -242,6 +244,7 @@ export function MissingLettersExercise({
         >
           <TranslationHintRow
             complementaryLanguage={complementaryLanguage}
+            complementaryLanguages={complementaryLanguages}
             dataTest={`missing_letters_exercise__prompt__${prompt.cardId}`}
             fallbackPrompt={prompt.prompt}
             hints={prompt.translationHints}

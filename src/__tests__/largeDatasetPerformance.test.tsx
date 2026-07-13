@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
 import { App } from '../App';
 import { appReducer } from '../store/appSlice';
+import type { ComplementaryLanguages } from '../store/appSlice';
 import { attemptsReducer } from '../store/attemptsSlice';
 import { cardsReducer } from '../store/cardsSlice';
 import { cardSetsReducer } from '../store/cardSetsSlice';
@@ -92,11 +93,11 @@ function renderLargeApp(cardCount: number) {
         ...appReducer(undefined, { type: 'test/init' }),
         assistantId: 'studyTroll' as const,
         complementaryLanguages: {
-          en: 'ru',
-          ru: 'en',
-          es: 'en',
-          uk: 'ru',
-        } as const,
+          en: ['ru'],
+          ru: ['en'],
+          es: ['en'],
+          uk: ['ru'],
+        } satisfies ComplementaryLanguages,
         interfaceLanguage: 'ru' as const,
         playerProfile: {
           avatarSeed: 'test-player',

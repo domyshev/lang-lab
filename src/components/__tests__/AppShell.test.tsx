@@ -51,20 +51,29 @@ describe('AppShell', () => {
     );
 
     expect(
-      screen.getByRole('dialog', { name: 'Как тебя зовут?' }),
+      screen.getByRole('dialog', { name: 'What should we call you?' }),
     ).toBeInTheDocument();
-    const dialog = screen.getByRole('dialog', { name: 'Как тебя зовут?' });
+    const dialog = screen.getByRole('dialog', {
+      name: 'What should we call you?',
+    });
 
-    expect(within(dialog).getByRole('combobox', { name: 'Мир' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('combobox', { name: 'Персонаж' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('combobox', { name: 'Интерфейс' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('combobox', { name: 'Цель' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Продолжить анонимно' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: /I love the forest/ })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: /I adore football/ })).toBeInTheDocument();
+    expect(within(dialog).getByTestId('player_onboarding__world_icon__football')).toBeInTheDocument();
+    expect(within(dialog).getByTestId('player_onboarding__world_icon__forest')).toBeInTheDocument();
+    expect(
+      within(dialog).getByTestId('player_onboarding__assistant_figure__greenPower'),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByRole('combobox', { name: 'Interface language' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('combobox', { name: 'Target learning language' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Continue anonymously' })).toBeDisabled();
 
-    await selectOnboardingOption(user, dialog, 'Мир', 'Футбол');
-    await selectOnboardingOption(user, dialog, 'Персонаж', 'Португальский бомбардир');
-    await selectOnboardingOption(user, dialog, 'Интерфейс', 'English');
-    await selectOnboardingOption(user, dialog, 'Target', 'Español');
+    await user.click(within(dialog).getByRole('button', { name: /I adore football/ }));
+    await user.click(
+      within(dialog).getByTestId('player_onboarding__assistant_figure__greenPower'),
+    );
+    await selectOnboardingOption(user, dialog, 'Interface language', 'English');
+    await selectOnboardingOption(user, dialog, 'Target learning language', 'Español');
     await user.click(within(dialog).getByRole('button', { name: 'Continue anonymously' }));
 
     await waitFor(() => {
@@ -109,11 +118,15 @@ describe('AppShell', () => {
       </Provider>,
     );
 
-    const dialog = screen.getByRole('dialog', { name: 'Как тебя зовут?' });
-    await selectOnboardingOption(user, dialog, 'Мир', 'Лес');
-    await selectOnboardingOption(user, dialog, 'Персонаж', 'Веселый листочек');
-    await selectOnboardingOption(user, dialog, 'Интерфейс', 'Русский');
-    await selectOnboardingOption(user, dialog, 'Цель', 'English');
+    const dialog = screen.getByRole('dialog', {
+      name: 'What should we call you?',
+    });
+    await user.click(within(dialog).getByRole('button', { name: /I love the forest/ }));
+    await selectOnboardingOption(user, dialog, 'Interface language', 'Русский');
+    await user.click(
+      within(dialog).getByTestId('player_onboarding__assistant_figure__studyTroll'),
+    );
+    await selectOnboardingOption(user, dialog, 'Язык - цель изучения', 'English');
     await user.type(within(dialog).getByLabelText('Имя игрока'), 'Илья');
     await user.click(within(dialog).getByRole('button', { name: 'Сохранить' }));
 
@@ -195,11 +208,11 @@ describe('AppShell', () => {
 
     await user.hover(screen.getByTestId('player_greeting__root'));
     const tooltip = await screen.findByTestId('player_greeting__tooltip');
-    const nameInput = within(tooltip).getByLabelText('Изменить имя');
+    const nameInput = within(tooltip).getByLabelText('Edit name');
 
     await user.clear(nameInput);
     await user.type(nameInput, 'Педро');
-    await user.click(within(tooltip).getByRole('button', { name: 'Сохранить имя' }));
+    await user.click(within(tooltip).getByRole('button', { name: 'Save name' }));
 
     await waitFor(() => {
       expect(screen.getByTestId('player_greeting__label')).toHaveTextContent('Педро');
@@ -279,9 +292,9 @@ describe('AppShell', () => {
     expect(tooltip).toHaveTextContent(
       'Илья-Супер-Длинное-Имя-Для-Проверки-Эллипсиса',
     );
-    expect(tooltip).toHaveTextContent('Продвинутый новичок');
-    expect(tooltip).toHaveTextContent('45 пройдено игр');
-    expect(tooltip).toHaveTextContent(/игровой уровень/i);
+    expect(tooltip).toHaveTextContent('Advanced newcomer');
+    expect(tooltip).toHaveTextContent('45 games completed');
+    expect(tooltip).toHaveTextContent(/game level/i);
     expect(screen.getByTestId('player_greeting__level_icon')).toBeInTheDocument();
     expect(tooltip).toHaveStyle({
       backgroundColor: 'rgba(255, 255, 255, 0.98)',

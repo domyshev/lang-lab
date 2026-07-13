@@ -682,6 +682,10 @@ function renderHistoryView(customAttempts?: ExerciseAttempt[]) {
       cardSets: cardSetsReducer,
     },
     preloadedState: {
+      app: {
+        ...appReducer(undefined, { type: 'test/init' }),
+        interfaceLanguage: 'ru' as const,
+      },
       attempts: {
         attempts,
       },

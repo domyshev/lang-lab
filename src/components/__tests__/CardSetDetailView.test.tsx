@@ -7,6 +7,7 @@ import { Provider } from 'react-redux';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ExerciseAttempt } from '../../domain/exercises';
 import { appReducer } from '../../store/appSlice';
+import type { ComplementaryLanguages } from '../../store/appSlice';
 import { attemptsReducer } from '../../store/attemptsSlice';
 import { cardsReducer } from '../../store/cardsSlice';
 import { statsReducer } from '../../store/statsSlice';
@@ -428,6 +429,10 @@ function createStore({
       cardSets: cardSetsReducer,
     },
     preloadedState: {
+      app: {
+        ...appReducer(undefined, { type: 'test/init' }),
+        interfaceLanguage: 'ru' as const,
+      },
       cards: {
         cards: [
           {
@@ -518,11 +523,11 @@ function createStoreWithLargeCardList(count: number) {
       app: {
         assistantId: 'studyTroll' as const,
         complementaryLanguages: {
-          en: 'ru',
-          ru: 'en',
-          es: 'en',
-          uk: 'ru',
-        } as const,
+          en: ['ru'],
+          ru: ['en'],
+          es: ['en'],
+          uk: ['ru'],
+        } satisfies ComplementaryLanguages,
         interfaceLanguage: 'ru' as const,
         targetLanguage: 'en' as const,
       },

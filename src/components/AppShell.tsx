@@ -33,11 +33,15 @@ import type { SelectChangeEvent } from '@mui/material/Select';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   AssistantId,
+  getAssistantTooltip,
+  getAssistantProfile,
   getVisibleAssistantCharacters,
+  resolveAssistantId,
 } from '../domain/assistants';
 import { t } from '../domain/i18n';
 import {
   WorldId,
+  getDefaultAssistantIdForWorld,
   getWorldAccent,
   resolveWorldId,
   worldDefinitions,
@@ -52,6 +56,7 @@ import {
 } from '../store/appSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { AppLogo } from './AppLogo';
+import { AssistantStickerIcon } from './assistantAssets';
 import { LanguageSelectors } from './LanguageSelectors';
 import {
   createPlayerAvatarSeed,
@@ -296,6 +301,7 @@ export function AppShell({
           >
             {playerProfile && (
               <PlayerGreeting
+                assistantId={assistantId}
                 avatarCountry={getPlayerSupporterCountry(worldId, assistantId)}
                 avatarSeed={playerProfile.avatarSeed}
                 completedGameCount={completedGameCount}
@@ -318,6 +324,24 @@ export function AppShell({
                     }),
                   );
                 }}
+                onAssistantChange={(nextAssistantId) => {
+                  dispatch(setAssistantId(nextAssistantId));
+                  const name =
+                    playerProfile.isAnonymous
+                      ? ''
+                      : (playerProfile.displayName ?? '');
+                  dispatch(
+                    setPlayerProfile({
+                      avatarSeed: createPlayerAvatarSeed(
+                        name,
+                        getPlayerSupporterCountry(worldId, nextAssistantId),
+                      ),
+                      displayName: name || undefined,
+                      isAnonymous: !name,
+                    }),
+                  );
+                }}
+                worldId={worldId}
               />
             )}
           </Box>
@@ -421,21 +445,29 @@ function FootballAiChatIcon({ accent }: { accent: ReturnType<typeof getWorldAcce
 }
 
 function PlayerGreeting({
+  assistantId,
   avatarCountry,
   avatarSeed,
   completedGameCount,
   interfaceLanguage,
   name,
+  onAssistantChange,
   onNameChange,
+  worldId,
 }: {
+  assistantId: AssistantId;
   avatarCountry: SupporterCountry;
   avatarSeed: string;
   completedGameCount: number;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   name: string;
+  onAssistantChange: (assistantId: AssistantId) => void;
   onNameChange: (name: string) => void;
+  worldId: WorldId;
 }) {
   const playerLevel = getPlayerLevel(completedGameCount, interfaceLanguage);
+  const resolvedAssistantId = resolveAssistantId(assistantId, worldId);
+  const visibleAssistants = getVisibleAssistantCharacters(worldId);
   const [draftName, setDraftName] = useState(name);
 
   useEffect(() => {
@@ -675,7 +707,7 @@ function PlayerGreeting({
             minWidth: 0,
             overflow: 'hidden',
             pl: 5,
-            pr: 1.5,
+            pr: 5,
             textAlign: 'center',
             textOverflow: 'ellipsis',
             textShadow: '0 1px 0 rgba(255,255,255,0.74)',
@@ -685,6 +717,85 @@ function PlayerGreeting({
         >
           {name}
         </Typography>
+        <Box
+          data-test="player_greeting__assistant_slot"
+          sx={{
+            alignItems: 'center',
+            display: 'flex',
+            justifyContent: 'center',
+            position: 'absolute',
+            right: 2,
+            top: '50%',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <Select
+            aria-label={t(interfaceLanguage, 'assistant')}
+            data-test="player_greeting__assistant_select"
+            value={resolvedAssistantId}
+            variant="standard"
+            disableUnderline
+            onChange={(event: SelectChangeEvent<AssistantId>) =>
+              onAssistantChange(event.target.value as AssistantId)
+            }
+            renderValue={(value) => (
+              <AssistantStickerIcon
+                ariaLabel={getAssistantTooltip(value, interfaceLanguage, worldId)}
+                assistantId={value}
+                dataTest={`player_greeting__assistant_selected_sticker__${value}`}
+                size={26}
+                worldId={worldId}
+              />
+            )}
+            sx={{
+              height: 30,
+              minWidth: 42,
+              '& .MuiSelect-select': {
+                alignItems: 'center',
+                display: 'flex',
+                justifyContent: 'center',
+                p: 0,
+              },
+              '& .MuiSelect-icon': {
+                fontSize: 18,
+                right: -2,
+              },
+            }}
+          >
+            {visibleAssistants.map((assistant) => {
+              const tooltip = getAssistantTooltip(
+                assistant.id,
+                interfaceLanguage,
+                worldId,
+              );
+              return (
+                <MenuItem
+                  aria-label={tooltip}
+                  data-test={`player_greeting__assistant_option__${assistant.id}`}
+                  key={assistant.id}
+                  value={assistant.id}
+                  sx={{ justifyContent: 'center' }}
+                >
+                  <Tooltip arrow title={tooltip}>
+                    <Box
+                      component="span"
+                      data-test={`player_greeting__assistant_option_icon__${assistant.id}`}
+                      sx={{ display: 'inline-flex' }}
+                    >
+                      <AssistantStickerIcon
+                        ariaLabel={tooltip}
+                        assistantId={assistant.id}
+                        dataTest={`player_greeting__assistant_option_sticker__${assistant.id}`}
+                        size={36}
+                        worldId={worldId}
+                      />
+                    </Box>
+                  </Tooltip>
+                </MenuItem>
+              );
+            })}
+          </Select>
+        </Box>
       </Stack>
     </Tooltip>
   );
@@ -942,8 +1053,6 @@ function PlayerOnboardingDialog({
   worldId: WorldId;
 }) {
   const titleId = useId();
-  const worldLabelId = useId();
-  const assistantLabelId = useId();
   const interfaceLabelId = useId();
   const targetLabelId = useId();
   const [name, setName] = useState('');
@@ -964,7 +1073,7 @@ function PlayerOnboardingDialog({
   const previewCountry = selectedAssistantId
     ? getPlayerSupporterCountry(resolvedSelectedWorldId, selectedAssistantId)
     : getPlayerSupporterCountry(resolvedSelectedWorldId, assistantId);
-  const copyLanguage = selectedInterfaceLanguage || interfaceLanguage;
+  const copyLanguage = selectedInterfaceLanguage || 'en';
   const visibleAssistants = getVisibleAssistantCharacters(resolvedSelectedWorldId);
   const isReady = Boolean(
     selectedWorldId &&
@@ -1017,53 +1126,111 @@ function PlayerOnboardingDialog({
               {t(copyLanguage, 'playerOnboardingBody')}
             </Typography>
           </Stack>
-          <FormControl
-            data-test="player_onboarding__world_control"
-            fullWidth
+          <Stack
+            data-test="player_onboarding__world_choice"
+            sx={{
+              borderRadius: 3,
+              boxShadow:
+                '0 12px 22px rgba(32, 48, 21, 0.16), inset 0 1px 0 rgba(255,255,255,0.86)',
+              overflow: 'hidden',
+            }}
           >
-            <InputLabel id={worldLabelId}>
-              {t(copyLanguage, 'world')}
-            </InputLabel>
-            <Select
-              data-test="player_onboarding__world_select"
-              label={t(copyLanguage, 'world')}
-              labelId={worldLabelId}
-              value={selectedWorldId}
-              onChange={(event: SelectChangeEvent<WorldId | ''>) => {
-                setSelectedWorldId(event.target.value as WorldId);
+            <Button
+              aria-pressed={selectedWorldId === 'forest'}
+              data-test="player_onboarding__world_button__forest"
+              fullWidth
+              onClick={() => {
+                setSelectedWorldId('forest');
                 setSelectedAssistantId('');
               }}
+              sx={getWorldChoiceButtonSx('forest', selectedWorldId === 'forest')}
             >
-              {worldIds.map((world) => (
-                <MenuItem key={world} value={world}>
-                  {worldDefinitions[world].label[copyLanguage]}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl
-            data-test="player_onboarding__assistant_control"
-            fullWidth
+              <PlayerPixelAvatar
+                ariaLabel={worldDefinitions.forest.label[copyLanguage]}
+                country="forest"
+                dataTest="player_onboarding__world_icon__forest"
+                seed="onboarding-world-forest"
+                size={32}
+              />
+              I love the forest
+            </Button>
+            <Box
+              aria-hidden="true"
+              data-test="player_onboarding__world_divider"
+              sx={{
+                bgcolor: 'rgba(32, 48, 21, 0.28)',
+                height: 3,
+                transform: 'skewX(-11deg)',
+              }}
+            />
+            <Button
+              aria-pressed={selectedWorldId === 'football'}
+              data-test="player_onboarding__world_button__football"
+              fullWidth
+              onClick={() => {
+                setSelectedWorldId('football');
+                setSelectedAssistantId('');
+              }}
+              sx={getWorldChoiceButtonSx(
+                'football',
+                selectedWorldId === 'football',
+              )}
+            >
+              <PlayerPixelAvatar
+                ariaLabel={worldDefinitions.football.label[copyLanguage]}
+                country="spain"
+                dataTest="player_onboarding__world_icon__football"
+                seed="onboarding-world-football"
+                size={32}
+              />
+              I adore football
+            </Button>
+          </Stack>
+          <Stack
+            data-test="player_onboarding__assistant_figures"
+            direction="row"
+            spacing={1}
+            sx={{ flexWrap: 'wrap' }}
+            useFlexGap
           >
-            <InputLabel id={assistantLabelId}>
-              {t(copyLanguage, 'assistant')}
-            </InputLabel>
-            <Select
-              data-test="player_onboarding__assistant_select"
-              label={t(copyLanguage, 'assistant')}
-              labelId={assistantLabelId}
-              value={selectedAssistantId}
-              onChange={(event: SelectChangeEvent<AssistantId | ''>) =>
-                setSelectedAssistantId(event.target.value as AssistantId)
-              }
-            >
-              {visibleAssistants.map((assistant) => (
-                <MenuItem key={assistant.id} value={assistant.id}>
-                  {assistant.name[copyLanguage]}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+            {visibleAssistants.map((assistant) => {
+              const tooltip = getAssistantTooltip(
+                assistant.id,
+                copyLanguage,
+                resolvedSelectedWorldId,
+              );
+              const isSelected = selectedAssistantId === assistant.id;
+
+              return (
+                <Tooltip arrow key={assistant.id} title={tooltip}>
+                  <Button
+                    aria-label={assistant.name[copyLanguage]}
+                    aria-pressed={isSelected}
+                    data-test={`player_onboarding__assistant_figure__${assistant.id}`}
+                    onClick={() => setSelectedAssistantId(assistant.id)}
+                    sx={{
+                      border: '2px solid',
+                      borderColor: isSelected ? '#123c69' : 'rgba(32, 48, 21, 0.14)',
+                      borderRadius: 3,
+                      minWidth: 64,
+                      p: 0.75,
+                      bgcolor: isSelected
+                        ? 'rgba(255, 246, 196, 0.92)'
+                        : 'rgba(255,255,255,0.72)',
+                    }}
+                  >
+                    <AssistantStickerIcon
+                      ariaLabel={tooltip}
+                      assistantId={assistant.id}
+                      dataTest={`player_onboarding__assistant_sticker__${assistant.id}`}
+                      size={48}
+                      worldId={resolvedSelectedWorldId}
+                    />
+                  </Button>
+                </Tooltip>
+              );
+            })}
+          </Stack>
           <FormControl
             data-test="player_onboarding__interface_language_control"
             fullWidth
@@ -1098,11 +1265,11 @@ function PlayerOnboardingDialog({
             fullWidth
           >
             <InputLabel id={targetLabelId}>
-              {t(copyLanguage, 'targetLanguage')}
+              {t(copyLanguage, 'targetLearningLanguage')}
             </InputLabel>
             <Select
               data-test="player_onboarding__target_language_select"
-              label={t(copyLanguage, 'targetLanguage')}
+              label={t(copyLanguage, 'targetLearningLanguage')}
               labelId={targetLabelId}
               value={selectedTargetLanguage}
               onChange={(event: SelectChangeEvent<SupportedLanguage | ''>) =>
@@ -1176,6 +1343,38 @@ function PlayerOnboardingDialog({
       </DialogActions>
     </Dialog>
   );
+}
+
+function getWorldChoiceButtonSx(world: WorldId, isSelected: boolean) {
+  const forestSx = {
+    background:
+      'linear-gradient(135deg, #f4ffd8 0%, #b8ec9d 46%, #7fd4b0 100%)',
+    color: '#1f3c1c',
+  };
+  const footballSx = {
+    background:
+      'linear-gradient(135deg, #fff1a8 0%, #ffc400 36%, #c60b1e 100%)',
+    color: '#331710',
+  };
+
+  return {
+    ...(world === 'forest' ? forestSx : footballSx),
+    borderRadius: 0,
+    boxShadow: isSelected
+      ? 'inset 0 0 0 3px rgba(18, 60, 105, 0.72)'
+      : 'inset 0 1px 0 rgba(255,255,255,0.7)',
+    fontSize: 17,
+    fontWeight: 950,
+    gap: 1,
+    justifyContent: 'flex-start',
+    minHeight: 56,
+    px: 2,
+    textTransform: 'none',
+    '&:hover': {
+      filter: 'saturate(1.08)',
+      transform: 'translateY(-1px)',
+    },
+  };
 }
 
 function getAssistantSupporterCountry(

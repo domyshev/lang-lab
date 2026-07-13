@@ -240,6 +240,11 @@ export function CrosswordExercise({
             >
               {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'crossword')}
             </Typography>
+            <ExerciseTargetLanguageChip
+              dataTest="crossword_exercise__target_language_chip"
+              interfaceLanguage={interfaceLanguage}
+              targetLanguage={targetLanguage}
+            />
             <Stack
               data-test="crossword_exercise__metadata_row"
               direction="row"
@@ -267,11 +272,6 @@ export function CrosswordExercise({
                   />
                 </CursorAnchoredTooltip>
               )}
-              <ExerciseTargetLanguageChip
-                dataTest="crossword_exercise__target_language_chip"
-                interfaceLanguage={interfaceLanguage}
-                targetLanguage={targetLanguage}
-              />
               <ExerciseProgressChip
                 completed={filledEntryCount}
                 dataTest="crossword_exercise__progress_chip"

@@ -53,6 +53,7 @@ function renderApp({
 } = {}) {
   const appState = {
     ...appReducer(undefined, { type: 'test/init' }),
+    interfaceLanguage: 'ru' as const,
     playerProfile: {
       avatarSeed: 'test-player',
       displayName: 'Тест',
@@ -230,6 +231,7 @@ describe('App navigation', () => {
       preloadedState: {
         app: {
           ...appReducer(undefined, { type: 'test/init' }),
+          interfaceLanguage: 'ru' as const,
           playerProfile: {
             avatarSeed: 'test-player',
             displayName: 'Тест',
@@ -886,9 +888,6 @@ describe('App navigation', () => {
     expect(getByDataTestPrefix('missing_letters_exercise__metadata_row__')[0]).toContainElement(
       getByDataTestPrefix('missing_letters_exercise__progress_chip__')[0],
     );
-    expect(getByDataTestPrefix('missing_letters_exercise__metadata_row__')[0]).toContainElement(
-      getByDataTestPrefix('missing_letters_exercise__target_language_chip__')[0],
-    );
     expect(getByDataTestPrefix('missing_letters_exercise__card_set_chip__')[0]).toHaveTextContent(
       'Набор карточек: All cards',
     );
@@ -1187,9 +1186,7 @@ describe('App navigation', () => {
       display: 'none',
     });
     const firstPrompt = getVisibleMissingLettersPrompt();
-    expect(
-      screen.getByLabelText('Статистика по слову: Верно 0, Неверно 0'),
-    ).toBeInTheDocument();
+    await expectCurrentPromptStats(user, firstPrompt.cardId, 'Статистика по слову', 0, 0);
 
     const missingLetterInputs = await answerMissingLettersWrong(user);
 
@@ -1202,9 +1199,7 @@ describe('App navigation', () => {
     expect(screen.queryByText(/direct/)).not.toBeInTheDocument();
     expect(screen.queryByText(/weighted/)).not.toBeInTheDocument();
     expect(screen.queryByText('missingLetters')).not.toBeInTheDocument();
-    expect(
-      screen.getByLabelText('Статистика по слову: Верно 0, Неверно 1'),
-    ).toBeInTheDocument();
+    await expectCurrentPromptStats(user, firstPrompt.cardId, 'Статистика по слову', 0, 1);
     expect(
       getByDataTestPrefix('attempt_summary__incorrect_answer_cells__'),
     ).toHaveLength(0);
@@ -1221,9 +1216,7 @@ describe('App navigation', () => {
 
     const nextPrompt = getVisibleMissingLettersPrompt();
     expect(nextPrompt.answer).not.toBe(firstPrompt.answer);
-    expect(
-      screen.getByLabelText('Статистика по слову: Верно 0, Неверно 0'),
-    ).toBeInTheDocument();
+    await expectCurrentPromptStats(user, nextPrompt.cardId, 'Статистика по слову', 0, 0);
     expect(screen.getAllByLabelText(/Missing letter/)[0]).not.toBeDisabled();
   });
 
@@ -1243,7 +1236,7 @@ describe('App navigation', () => {
       `exercise_finish_action__jump_option__${cardIdByAnswer(firstPrompt.answer)}__0`,
     );
     expect(answeredOption).toHaveStyle({ opacity: '0.52' });
-    expect(answeredOption).toHaveTextContent(firstPrompt.ru);
+    expect(answeredOption).toHaveTextContent(firstPrompt.es);
     expect(answeredOption).not.toHaveTextContent(firstPrompt.answer);
 
     await user.click(answeredOption);
@@ -1334,16 +1327,6 @@ describe('App navigation', () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(screen.getByRole('button', { name: 'Настройки практики' }));
-    await user.click(screen.getByRole('combobox', {
-      name: 'Дополняющий язык для English',
-    }));
-    await user.click(screen.getByRole('option', { name: /Español/ }));
-    await user.keyboard('{Escape}');
-    await waitFor(() =>
-      expect(screen.queryByRole('menu')).not.toBeInTheDocument(),
-    );
-
     await startExercise(user, 'Пропущенные буквы');
 
     const currentPrompt = getVisibleMissingLettersPrompt();
@@ -1421,7 +1404,7 @@ describe('App navigation', () => {
       ),
     ).toHaveLength(1);
     expect(updatedJumpOptions.map((option) => option.textContent)).toEqual(
-      expect.arrayContaining([expect.stringContaining('аэропорт (2)')]),
+      expect.arrayContaining([expect.stringContaining('aeropuerto (2)')]),
     );
   });
 
@@ -1462,9 +1445,7 @@ describe('App navigation', () => {
         .stats.cardStats.find((stat) => stat.cardId === firstPrompt.cardId)
         ?.incorrect,
     ).toBe(1);
-    expect(
-      screen.getByLabelText('Статистика по слову: Верно 0, Неверно 1'),
-    ).toBeInTheDocument();
+    await expectCurrentPromptStats(user, firstPrompt.cardId, 'Статистика по слову', 0, 1);
 
     await user.click(screen.getByRole('button', { name: 'Запомнить!' }));
 
@@ -1531,14 +1512,11 @@ describe('App navigation', () => {
 
     await startExercise(user, 'Пропущенные буквы');
 
-    expect(getVisibleMissingLettersPrompt().answer).toBe('airport');
-    expect(
-      screen.getByLabelText('Статистика по слову: Верно 0, Неверно 1'),
-    ).toBeInTheDocument();
+    const missedPrompt = getVisibleMissingLettersPrompt();
+    expect(missedPrompt.answer).toBe('airport');
+    await expectCurrentPromptStats(user, missedPrompt.cardId, 'Статистика по слову', 0, 1);
     await answerMissingLettersCorrect(user, 'airport');
-    expect(
-      screen.getByLabelText('Статистика по слову: Верно 1, Неверно 1'),
-    ).toBeInTheDocument();
+    await expectCurrentPromptStats(user, missedPrompt.cardId, 'Статистика по слову', 1, 1);
     expect(store.getState().attempts.attempts).toHaveLength(2);
     expect(
       store.getState().attempts.attempts[1].correctness['card-airport'],
@@ -1592,7 +1570,7 @@ describe('App navigation', () => {
     expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
     expect(getVisibleMissingLettersPrompt().answer).toBe(prompt.answer);
     expect(screen.getByRole('combobox', { name: 'Прыжки' })).toHaveTextContent(
-      prompt.ru,
+      prompt.es,
     );
   });
 
@@ -2310,8 +2288,8 @@ describe('App navigation', () => {
     expect(jumpOptions[1]).toHaveStyle({ backgroundColor: 'rgb(250, 246, 255)' });
     expect(jumpOptions.map((option) => option.textContent)).toEqual(
       expect.arrayContaining([
-        expect.stringContaining('оно того стоит'),
-        expect.stringContaining('с нетерпением ждать'),
+        expect.stringContaining('vale la pena'),
+        expect.stringContaining('esperar con ganas'),
       ]),
     );
 
@@ -2453,15 +2431,12 @@ describe('App navigation', () => {
     await startExercise(user, 'Пропущенное слово');
 
     const firstPromptText = getVisibleMissingWordSentence();
-    expect(
-      screen.getByLabelText('Статистика по фразе: Верно 0, Неверно 0'),
-    ).toBeInTheDocument();
+    const firstCardId = getVisibleMissingWordCardId();
+    await expectCurrentPromptStats(user, firstCardId, 'Статистика по фразе', 0, 0);
     await answerMissingWordWrong(user);
 
     expect(screen.getByText('Статистика по фразе')).toBeInTheDocument();
-    expect(
-      screen.getByLabelText('Статистика по фразе: Верно 0, Неверно 1'),
-    ).toBeInTheDocument();
+    await expectCurrentPromptStats(user, firstCardId, 'Статистика по фразе', 0, 1);
     expect(
       getByDataTestPrefix('attempt_summary__incorrect_answer_cells__'),
     ).toHaveLength(0);
@@ -2469,9 +2444,13 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Неверно' }));
 
     expect(getVisibleMissingWordSentence()).not.toBe(firstPromptText);
-    expect(
-      screen.getByLabelText('Статистика по фразе: Верно 0, Неверно 0'),
-    ).toBeInTheDocument();
+    await expectCurrentPromptStats(
+      user,
+      getVisibleMissingWordCardId(),
+      'Статистика по фразе',
+      0,
+      0,
+    );
   });
 
   it('saves a missing word memorize result as an incorrect partial answer', async () => {
@@ -2487,9 +2466,7 @@ describe('App navigation', () => {
     expect(store.getState().attempts.attempts).toHaveLength(1);
     expect(store.getState().attempts.attempts[0].correctness[firstCardId]).toBe(false);
     expect(store.getState().attempts.attempts[0].answers[firstCardId]).toContain('_');
-    expect(
-      screen.getByLabelText('Статистика по фразе: Верно 0, Неверно 1'),
-    ).toBeInTheDocument();
+    await expectCurrentPromptStats(user, firstCardId, 'Статистика по фразе', 0, 1);
     await user.click(screen.getByRole('button', { name: 'Запомнить!' }));
     expect(getVisibleMissingWordSentence()).not.toBe(firstPromptText);
 
@@ -3025,6 +3002,27 @@ function getVisibleMultipleChoiceCardId(): string {
   }
 
   return dataTest.replace('multiple_choice_exercise__panel__', '');
+}
+
+async function expectCurrentPromptStats(
+  user: ReturnType<typeof userEvent.setup>,
+  cardId: string,
+  statsLabel: string,
+  correct: number,
+  incorrect: number,
+) {
+  const chip = screen.getByTestId(`current_prompt_stats__chip__${cardId}`);
+  expect(chip).toHaveTextContent(statsLabel);
+
+  await user.hover(chip);
+
+  const tooltip = await screen.findByTestId(`current_prompt_stats__tooltip__${cardId}`);
+  expect(
+    within(tooltip).getByLabelText(
+      `${statsLabel}: Верно ${correct}, Неверно ${incorrect}`,
+    ),
+  ).toBeInTheDocument();
+  expect(within(tooltip).getByText('10 последних ответов')).toBeInTheDocument();
 }
 
 function getByDataTestPrefix(prefix: string): HTMLElement[] {
