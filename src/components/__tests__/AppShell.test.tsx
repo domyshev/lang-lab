@@ -77,7 +77,7 @@ describe('AppShell', () => {
     expect(within(dialog).getByTestId('player_onboarding__world_icon__football')).toBeInTheDocument();
     expect(within(dialog).getByTestId('player_onboarding__world_icon__forest')).toBeInTheDocument();
     expect(
-      within(dialog).getByTestId('player_onboarding__assistant_figure__greenPower'),
+      within(dialog).getByTestId('player_onboarding__assistant_figure__forestElf'),
     ).toBeInTheDocument();
     expect(within(dialog).getByRole('combobox', { name: 'Interface language' })).toBeInTheDocument();
     expect(within(dialog).getByRole('combobox', { name: 'Target learning language' })).toBeInTheDocument();
@@ -463,10 +463,14 @@ describe('AppShell', () => {
       color: 'rgb(32, 48, 21)',
     });
     expect(gameTab).toHaveStyle({
+      border: '0',
       background:
-        'linear-gradient(180deg, #fff27a 0%, #ffc52b 44%, #e98312 100%)',
+        'linear-gradient(180deg, #fff6b5 0%, #ffc52b 50%, #e98312 100%)',
     });
     expect(gameTab).toHaveStyle({ fontWeight: '950' });
+    expect(gameTab).toHaveStyle({
+      transition: 'box-shadow 150ms ease,filter 150ms ease',
+    });
     expect(
       screen.getByTestId('app_shell__main_tabs').querySelector('.MuiTabs-indicator'),
     ).toHaveStyle({ display: 'none' });
@@ -505,7 +509,7 @@ describe('AppShell', () => {
 
     expect(screen.getByRole('tab', { name: 'Играть' })).toHaveStyle({
       background:
-        'linear-gradient(180deg, #f2ffcf 0%, #93cc46 45%, #4f8730 100%)',
+        'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)',
       color: '#183813',
     });
   });

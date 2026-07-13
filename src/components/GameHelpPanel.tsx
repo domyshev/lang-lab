@@ -146,22 +146,23 @@ export function GameHelpPanel({
         </Stack>
 
         {slide === 'intro' ? (
-          <Stack data-test="game_help__intro_slide" spacing={2}>
+          <Stack data-test="game_help__intro_slide" spacing={1.5}>
+            <HelpSlideTitle
+              color={palette.primary}
+              dataTest="game_help__intro_title"
+            >
+              {t(interfaceLanguage, 'gameHelpIntroTitle')}
+            </HelpSlideTitle>
             <HelpRows rows={introRows} interfaceLanguage={interfaceLanguage} />
           </Stack>
         ) : (
           <Stack data-test="game_help__chat_slide" spacing={1.5}>
-            <Typography
-              data-test="game_help__chat_title"
-              sx={{
-                color: palette.primary,
-                fontSize: 18,
-                fontWeight: 950,
-                lineHeight: 1.2,
-              }}
+            <HelpSlideTitle
+              color={palette.primary}
+              dataTest="game_help__chat_title"
             >
               {t(interfaceLanguage, 'gameHelpAiChatTitle')}
-            </Typography>
+            </HelpSlideTitle>
             <HelpRows rows={chatRows} interfaceLanguage={interfaceLanguage} />
           </Stack>
         )}
@@ -202,6 +203,30 @@ export function GameHelpPanel({
         </Stack>
       </Stack>
     </Paper>
+  );
+}
+
+function HelpSlideTitle({
+  children,
+  color,
+  dataTest,
+}: {
+  children: string;
+  color: string;
+  dataTest: string;
+}) {
+  return (
+    <Typography
+      data-test={dataTest}
+      sx={{
+        color,
+        fontSize: 18,
+        fontWeight: 950,
+        lineHeight: 1.2,
+      }}
+    >
+      {children}
+    </Typography>
   );
 }
 

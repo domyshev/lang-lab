@@ -1013,6 +1013,9 @@ describe('App navigation', () => {
 
     expect(screen.queryByTestId('game_help__accordion')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Помощь' })).toBeInTheDocument();
+    expect(screen.getByTestId('game_help__intro_title')).toHaveTextContent(
+      'Об игре',
+    );
     expect(
       screen.getByText(/лаборатория изучения языков/i),
     ).toBeInTheDocument();

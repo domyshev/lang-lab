@@ -196,6 +196,7 @@ type I18nKey =
   | 'answeredWords'
   | 'fillAllGapsWarning'
   | 'gameHelpTitle'
+  | 'gameHelpIntroTitle'
   | 'gameHelpLab'
   | 'gameHelpPlayer'
   | 'gameHelpVocabulary'
@@ -528,6 +529,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     answeredWords: 'Answered words',
     fillAllGapsWarning: 'Fill all gaps',
     gameHelpTitle: 'Help',
+    gameHelpIntroTitle: 'About the game',
     gameHelpLab: 'This is a language learning laboratory.',
     gameHelpPlayer:
       'Here you are not just a student: you are a player creating your own game and playing by your own rules!',
@@ -874,6 +876,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     answeredWords: 'Отвечено слов',
     fillAllGapsWarning: 'Заполните все пропуски',
     gameHelpTitle: 'Помощь',
+    gameHelpIntroTitle: 'Об игре',
     gameHelpLab: 'Это лаборатория изучения языков.',
     gameHelpPlayer:
       'Здесь Вы не просто ученик: Вы игрок, создающий свою игру и играющий по своим правилам!',
@@ -1222,6 +1225,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     answeredWords: 'Palabras respondidas',
     fillAllGapsWarning: 'Rellena todos los huecos',
     gameHelpTitle: 'Ayuda',
+    gameHelpIntroTitle: 'Sobre el juego',
     gameHelpLab: 'Esto es un laboratorio de aprendizaje de idiomas.',
     gameHelpPlayer:
       'Aqui no eres solo estudiante: eres un jugador que crea su propio juego y juega con sus propias reglas!',
@@ -1374,6 +1378,7 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
     'Ельфійська стежка м’яко веде до вибраної картки: наступною стане та, що йде одразу після неї на стежці.',
   game: 'Гра',
   gameHelpTitle: 'Допомога',
+  gameHelpIntroTitle: 'Про гру',
   gameHelpBack: 'Назад',
   gameHelpPage: 'Сторінка',
   gameLibrary: 'Бібліотека ігор',

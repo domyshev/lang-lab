@@ -231,6 +231,7 @@ export function AppShell({
           >
             <Tab
               data-test="app_shell__tab__game"
+              disableRipple
               value="game"
               label={t(interfaceLanguage, 'gamesTab')}
               onClick={() => onNavigate?.('game')}
@@ -1549,34 +1550,43 @@ function getGameTabSx(worldId: WorldId) {
   const isForest = worldId === 'forest';
   return {
     background: isForest
-      ? 'linear-gradient(180deg, #f7ffe8 0%, #a9d957 48%, #6ea33f 100%)'
-      : 'linear-gradient(180deg, #fff7bd 0%, #ffd24a 48%, #ee9825 100%)',
-    border: isForest
-      ? '1px solid rgba(47, 77, 36, 0.26)'
-      : '1px solid rgba(116, 63, 8, 0.22)',
+      ? 'linear-gradient(180deg, #fbfff4 0%, #a9d957 50%, #6ea33f 100%)'
+      : 'linear-gradient(180deg, #fff9d6 0%, #ffd24a 50%, #ee9825 100%)',
+    border: '0 !important',
     borderRadius: '999px',
+    boxSizing: 'border-box',
     boxShadow: isForest
-      ? 'inset 0 2px 0 rgba(255,255,255,0.82), inset 0 -3px 0 rgba(36, 74, 28, 0.16), 0 3px 0 rgba(54, 92, 36, 0.22), 0 8px 14px rgba(63, 91, 38, 0.14)'
-      : 'inset 0 2px 0 rgba(255,255,255,0.84), inset 0 -3px 0 rgba(121, 68, 8, 0.14), 0 3px 0 rgba(127, 70, 8, 0.22), 0 8px 14px rgba(178, 83, 12, 0.15)',
+      ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.14), inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(36, 74, 28, 0.14)'
+      : 'inset 0 0 0 1px rgba(116, 63, 8, 0.13), inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(121, 68, 8, 0.12)',
     color: isForest ? '#213f17' : '#203015',
     fontWeight: '950 !important',
-    minHeight: '34px !important',
+    height: '36px !important',
+    lineHeight: '1 !important',
+    minHeight: '36px !important',
     minWidth: '0 !important',
+    my: '4px',
+    overflow: 'hidden',
     px: { xs: 1.25, sm: 2.25 },
+    py: '0 !important',
     textShadow: '0 1px 0 rgba(255,255,255,0.62)',
-    transition: 'transform 150ms ease, box-shadow 150ms ease, filter 150ms ease',
+    transition: 'box-shadow 150ms ease, filter 150ms ease',
     '&:hover': {
-      filter: 'saturate(1.06) brightness(1.025)',
-      transform: 'translateY(-1px)',
+      filter: 'saturate(1.05) brightness(1.02)',
+      transform: 'none',
     },
     '&.Mui-selected': {
       background: isForest
-        ? 'linear-gradient(180deg, #f2ffcf 0%, #93cc46 45%, #4f8730 100%)'
-        : 'linear-gradient(180deg, #fff27a 0%, #ffc52b 44%, #e98312 100%)',
+        ? 'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)'
+        : 'linear-gradient(180deg, #fff6b5 0%, #ffc52b 50%, #e98312 100%)',
       boxShadow: isForest
-        ? 'inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(36, 74, 28, 0.18), 0 3px 0 rgba(54, 92, 36, 0.28), 0 10px 18px rgba(63, 91, 38, 0.20), 0 0 0 4px rgba(157, 203, 86, 0.22)'
-        : 'inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(121, 68, 8, 0.18), 0 3px 0 rgba(127, 70, 8, 0.28), 0 10px 18px rgba(198, 78, 0, 0.20), 0 0 0 4px rgba(255, 221, 76, 0.22)',
+        ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.16), inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -3px 0 rgba(36, 74, 28, 0.18)'
+        : 'inset 0 0 0 1px rgba(116, 63, 8, 0.15), inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -3px 0 rgba(121, 68, 8, 0.15)',
       color: isForest ? '#183813' : '#203015',
+      '&:hover': {
+        boxShadow: isForest
+          ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.14), inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -3px 0 rgba(36, 74, 28, 0.16)'
+          : 'inset 0 0 0 1px rgba(116, 63, 8, 0.13), inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -3px 0 rgba(121, 68, 8, 0.13)',
+      },
     },
   };
 }
