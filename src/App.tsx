@@ -1021,6 +1021,7 @@ export function App() {
             interfaceLanguage={interfaceLanguage}
             isInitiallyCollapsed={isGameHelpCollapsed}
             onAcknowledge={() => dispatch(acknowledgeGameHelp())}
+            worldId={worldId}
           />
         </Box>
       );
@@ -1468,6 +1469,7 @@ export function App() {
         onClick={() => openFinishDialog('finish')}
         progressChip={options?.progressChip}
         showHypersonicJumpGuide={options?.showHypersonicJumpGuide}
+        worldId={worldId}
       />
     );
   }
@@ -1896,22 +1898,57 @@ export function App() {
                     t(interfaceLanguage, 'targetAnsweredCards')
                   )}
                 </Typography>
-                <StatsFormula
-                  correct={correct}
-                  correctTooltip={t(interfaceLanguage, 'targetCorrectCardsTooltip')}
-                  dataTestPrefix="target_stats__answered_formula"
-                  incorrect={incorrect}
-                  incorrectTooltip={t(interfaceLanguage, 'targetIncorrectCardsTooltip')}
-                  interfaceLanguage={interfaceLanguage}
-                  resultColors={worldResultColors}
-                  rootDataTest="target_stats__answered_formula__stats_root"
-                  showLabel={false}
-                  total={totalAnswered}
-                  totalDisplay="plain"
-                  totalLabel={t(interfaceLanguage, 'targetAnsweredCards')}
-                  totalTooltip={t(interfaceLanguage, 'targetAnsweredCardsTooltip')}
-                  valueGroupJustify="center"
-                />
+                <Stack
+                  data-test="target_stats__answered_formula__stats_root"
+                  spacing={0.75}
+                  sx={{ alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <MetricPlainValue
+                    ariaLabel={`${t(interfaceLanguage, 'targetAnsweredCards')} ${totalAnswered}`}
+                    dataTest="target_stats__answered_formula__total_value"
+                    label={totalAnswered}
+                    tooltip={t(interfaceLanguage, 'targetAnsweredCardsTooltip')}
+                  />
+                  {(correct > 0 || incorrect > 0) && (
+                    <Typography
+                      data-test="target_stats__answered_formula__breakdown"
+                      sx={{
+                        color: '#203015',
+                        fontSize: 16,
+                        fontWeight: 850,
+                        lineHeight: 1.25,
+                      }}
+                    >
+                      {correct > 0 && (
+                        <Box
+                          component="span"
+                          data-test="target_stats__answered_formula__correct_text"
+                          sx={{ color: worldResultColors.correct.border }}
+                        >
+                          {correct} {t(interfaceLanguage, 'metricCorrectSuffix')}
+                        </Box>
+                      )}
+                      {correct > 0 && incorrect > 0 ? (
+                        <Box
+                          component="span"
+                          data-test="target_stats__answered_formula__plus_text"
+                          sx={{ color: 'rgba(32, 48, 21, 0.62)' }}
+                        >
+                          {' + '}
+                        </Box>
+                      ) : null}
+                      {incorrect > 0 && (
+                        <Box
+                          component="span"
+                          data-test="target_stats__answered_formula__incorrect_text"
+                          sx={{ color: worldResultColors.incorrect.border }}
+                        >
+                          {incorrect} {t(interfaceLanguage, 'metricIncorrectSuffix')}
+                        </Box>
+                      )}
+                    </Typography>
+                  )}
+                </Stack>
               </Stack>
             </Stack>
           </Box>
@@ -2253,6 +2290,7 @@ function CurrentPromptStatsButton({
             incorrect={stats.incorrect}
             interfaceLanguage={interfaceLanguage}
             resultColors={resultColors}
+            size="compact"
             statsLabel={statsLabel}
           />
           <Typography
@@ -2348,12 +2386,14 @@ function FinishExerciseAction({
   onClick,
   progressChip,
   showHypersonicJumpGuide = true,
+  worldId,
 }: {
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   jumpSelector?: FinishExerciseJumpSelector;
   onClick: () => void;
   progressChip?: ReactNode;
   showHypersonicJumpGuide?: boolean;
+  worldId: WorldId;
 }) {
   const dispatch = useDispatch<AppDispatch>();
   const hasFinishExerciseLampBeenShown = useSelector((state: RootState) =>
@@ -2362,6 +2402,14 @@ function FinishExerciseAction({
   const hasHypersonicJumpLampBeenShown = useSelector((state: RootState) =>
     Boolean(state.app.hasHypersonicJumpLampBeenShown),
   );
+  const jumpBenefitKey =
+    worldId === 'forest'
+      ? 'finishExerciseJumpBenefitForest'
+      : 'finishExerciseJumpBenefitFootball';
+  const jumpTooltipKey =
+    worldId === 'forest'
+      ? 'finishExerciseJumpTooltipForest'
+      : 'finishExerciseJumpTooltipFootball';
 
   useEffect(() => {
     if (!jumpSelector || jumpSelector.options.length < 2) {
@@ -2482,13 +2530,13 @@ function FinishExerciseAction({
             hideArrow
             title={
               <TooltipContent sx={jumpInfoTooltipContentStyles}>
-                {t(interfaceLanguage, 'finishExerciseHypersonicJumpTooltip')}
+                {t(interfaceLanguage, jumpTooltipKey)}
               </TooltipContent>
             }
             tooltipSx={jumpInfoTooltipStyles}
           >
             <Box
-              aria-label={t(interfaceLanguage, 'finishExerciseHypersonicJumpTooltip')}
+              aria-label={t(interfaceLanguage, jumpTooltipKey)}
               data-test="exercise_finish_action__thought_icon_anchor"
               onMouseEnter={() => {
                 if (!hasHypersonicJumpLampBeenShown) {
@@ -2562,7 +2610,7 @@ function FinishExerciseAction({
                   textAlign: 'left',
                 }}
               >
-                {t(interfaceLanguage, 'finishExerciseAnytimeBenefit')}
+                {t(interfaceLanguage, jumpBenefitKey)}
               </Typography>
             </Stack>
             {jumpSelector && (
@@ -3144,6 +3192,7 @@ function AttemptSummary({
               incorrect={incorrectCount}
               interfaceLanguage={interfaceLanguage}
               resultColors={resultColors}
+              size="compact"
               statsLabel={statsLabel}
             />
           ) : (

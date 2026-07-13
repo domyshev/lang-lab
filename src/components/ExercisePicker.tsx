@@ -485,17 +485,26 @@ function GameTileArt({
       >
         <rect width="240" height="150" fill="transparent" />
         <path d="M34 42 C70 18 106 28 130 52 C154 76 190 62 214 36" fill="none" stroke={accent} strokeWidth="7" strokeLinecap="round" opacity="0.18" />
-        <text
+        <circle
+          cx="132"
+          cy="32"
           data-test={`exercise_picker__art_wc2026__${type}`}
-          x="132"
-          y="34"
-          textAnchor="middle"
-          fontSize="18"
-          fontWeight="950"
+          fill="#ffffff"
+          opacity="0.72"
+          r="16"
+        />
+        <path
+          d="M118 32 C124 25 140 25 146 32 C140 39 124 39 118 32Z"
           fill={accent}
-        >
-          FIFA WC 2026
-        </text>
+          opacity="0.28"
+        />
+        <path
+          d="M132 16 V48 M116 32 H148"
+          stroke={accent}
+          strokeLinecap="round"
+          strokeWidth="3"
+          opacity="0.22"
+        />
         {[
           [30, 60, 'h', true],
           [70, 60, '', false],

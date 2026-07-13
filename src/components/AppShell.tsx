@@ -7,6 +7,7 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import MilitaryTechOutlinedIcon from '@mui/icons-material/MilitaryTechOutlined';
 import PsychologyOutlinedIcon from '@mui/icons-material/PsychologyOutlined';
 import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
 import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
 import {
@@ -232,22 +233,30 @@ export function AppShell({
               value="game"
               label={t(interfaceLanguage, 'gamesTab')}
               onClick={() => onNavigate?.('game')}
-              style={{
-                backgroundColor: 'rgb(255, 247, 205)',
-                borderRadius: '999px',
-              }}
               sx={{
-                border: '1px solid rgba(206, 157, 29, 0.34)',
+                background:
+                  'linear-gradient(180deg, #fff6a7 0%, #ffd447 47%, #f28b18 100%)',
+                border: '1px solid rgba(116, 63, 8, 0.28)',
+                borderRadius: '999px',
                 boxShadow:
-                  'inset 0 1px 0 rgba(255,255,255,0.9), 0 0 0 4px rgba(255, 218, 96, 0.18)',
+                  'inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -4px 0 rgba(121, 68, 8, 0.18), 0 5px 0 rgba(127, 70, 8, 0.28), 0 10px 18px rgba(178, 83, 12, 0.20)',
                 color: '#203015',
                 fontWeight: '950 !important',
                 minHeight: '34px !important',
                 minWidth: '0 !important',
                 px: { xs: 1.25, sm: 2.25 },
+                textShadow: '0 1px 0 rgba(255,255,255,0.62)',
+                transition:
+                  'transform 150ms ease, box-shadow 150ms ease, filter 150ms ease',
+                '&:hover': {
+                  filter: 'saturate(1.08) brightness(1.03)',
+                  transform: 'translateY(-1px)',
+                },
                 '&.Mui-selected': {
+                  background:
+                    'linear-gradient(180deg, #fff16d 0%, #ffc31f 43%, #e85f00 100%)',
                   boxShadow:
-                    'inset 0 1px 0 rgba(255,255,255,0.9), 0 0 0 5px rgba(255, 203, 74, 0.24)',
+                    'inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -4px 0 rgba(121, 68, 8, 0.22), 0 5px 0 rgba(127, 70, 8, 0.34), 0 12px 22px rgba(198, 78, 0, 0.26), 0 0 0 4px rgba(255, 221, 76, 0.28)',
                   color: '#203015',
                 },
               }}
@@ -479,6 +488,7 @@ function PlayerGreeting({
 
   const saveDraftName = () => {
     onNameChange(draftName);
+    setIsEditingName(false);
   };
 
   const assistantSelect = (
@@ -673,30 +683,80 @@ function PlayerGreeting({
                 minWidth: 0,
               }}
             >
-              <Typography
-                data-test="player_greeting__tooltip_name"
-                sx={{
-                  color: (theme) =>
-                    theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
-                  fontSize: 14,
-                  fontWeight: 900,
-                  lineHeight: 1.2,
-                  minWidth: 0,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {name}
-              </Typography>
+              {isEditingName ? (
+                <TextField
+                  autoFocus
+                  data-test="player_greeting__edit_name_input"
+                  hiddenLabel
+                  inputProps={{
+                    'aria-label': t(interfaceLanguage, 'editPlayerName'),
+                  }}
+                  size="small"
+                  value={draftName}
+                  onChange={(event) => setDraftName(event.target.value)}
+                  onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      saveDraftName();
+                    }
+                  }}
+                  sx={{
+                    minWidth: 0,
+                    width: 170,
+                    '& .MuiInputBase-root': {
+                      bgcolor: (theme) =>
+                        theme.palette.mode === 'dark'
+                          ? 'rgba(255, 255, 255, 0.08)'
+                          : 'rgba(245, 249, 235, 0.92)',
+                      borderRadius: 1.5,
+                      fontSize: 14,
+                      fontWeight: 850,
+                      height: 32,
+                    },
+                    '& .MuiInputBase-input': {
+                      py: 0.3,
+                    },
+                  }}
+                />
+              ) : (
+                <Typography
+                  data-test="player_greeting__tooltip_name"
+                  sx={{
+                    color: (theme) =>
+                      theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
+                    fontSize: 14,
+                    fontWeight: 900,
+                    lineHeight: 1.2,
+                    minWidth: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {name}
+                </Typography>
+              )}
               <IconButton
-                aria-label={t(interfaceLanguage, 'editPlayerName')}
-                data-test="player_greeting__edit_name_button"
+                aria-label={t(
+                  interfaceLanguage,
+                  isEditingName ? 'savePlayerNameChange' : 'editPlayerName',
+                )}
+                data-test={
+                  isEditingName
+                    ? 'player_greeting__save_name_button'
+                    : 'player_greeting__edit_name_button'
+                }
                 size="small"
                 onClick={(event) => {
                   event.stopPropagation();
+                  if (isEditingName) {
+                    saveDraftName();
+                    return;
+                  }
                   setIsEditingName(true);
                 }}
+                onMouseDown={(event) => event.preventDefault()}
                 sx={{
                   bgcolor: (theme) =>
                     theme.palette.mode === 'dark'
@@ -716,7 +776,11 @@ function PlayerGreeting({
                   },
                 }}
               >
-                <EditOutlinedIcon fontSize="inherit" />
+                {isEditingName ? (
+                  <SaveOutlinedIcon fontSize="inherit" />
+                ) : (
+                  <EditOutlinedIcon fontSize="inherit" />
+                )}
               </IconButton>
             </Stack>
             <Typography
@@ -730,58 +794,6 @@ function PlayerGreeting({
             >
               {playerLevel.description}
             </Typography>
-            {isEditingName ? (
-              <Stack
-                data-test="player_greeting__edit_name_form"
-                spacing={0.75}
-                sx={{
-                  bgcolor: (theme) =>
-                    theme.palette.mode === 'dark'
-                      ? 'rgba(255, 255, 255, 0.06)'
-                      : 'rgba(245, 249, 235, 0.86)',
-                  border: '1px solid rgba(118, 146, 79, 0.24)',
-                  borderRadius: 2,
-                  p: 1,
-                }}
-              >
-                <TextField
-                  autoFocus
-                  data-test="player_greeting__edit_name_input"
-                  label={t(interfaceLanguage, 'editPlayerName')}
-                  size="small"
-                  value={draftName}
-                  onChange={(event) => setDraftName(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      saveDraftName();
-                    }
-                  }}
-                />
-                <Button
-                  data-test="player_greeting__save_name_button"
-                  size="small"
-                  variant="outlined"
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    saveDraftName();
-                  }}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    saveDraftName();
-                  }}
-                  sx={{
-                    alignSelf: 'flex-end',
-                    borderColor: 'rgba(198, 11, 30, 0.34)',
-                    color: '#7c1518',
-                    fontWeight: 900,
-                    textTransform: 'none',
-                  }}
-                >
-                  {t(interfaceLanguage, 'savePlayerNameChange')}
-                </Button>
-              </Stack>
-            ) : null}
           </Stack>
         </Box>
         }

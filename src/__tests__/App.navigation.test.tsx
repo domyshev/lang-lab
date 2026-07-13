@@ -474,7 +474,8 @@ describe('App navigation', () => {
     expect(screen.getByTestId('exercise_picker__art_ball__multipleChoice')).toBeInTheDocument();
     expect(
       screen.getByTestId('exercise_picker__art_wc2026__missingLetters'),
-    ).toHaveTextContent('FIFA WC 2026');
+    ).toBeInTheDocument();
+    expect(screen.queryByText('FIFA WC 2026')).not.toBeInTheDocument();
     expect(
       screen.getByTestId('exercise_picker__art_goalkeeper__missingWord'),
     ).toBeInTheDocument();
@@ -1125,7 +1126,7 @@ describe('App navigation', () => {
     });
     const thoughtBubble = screen.getByTestId('exercise_finish_action__thought_bubble');
     expect(thoughtBubble).toHaveTextContent(
-      'Можно делать гиперзвуковые прыжки между карточками.',
+      'Можно делать быстрые пасы между карточками.',
     );
     expect(screen.getByTestId('exercise_finish_action__thought_icon')).toBeInTheDocument();
     expect(screen.getByTestId('exercise_finish_action__thought_icon_anchor')).toHaveStyle({
@@ -1134,7 +1135,7 @@ describe('App navigation', () => {
     });
     await user.hover(screen.getByTestId('exercise_finish_action__thought_icon_anchor'));
     expect(
-      await screen.findByText(/Гиперзвуковой прыжок переносит тебя/),
+      await screen.findByText(/Быстрый пас переводит игру/),
     ).toBeInTheDocument();
     expect(
       screen.getByTestId('exercise_finish_action__thought_icon_tooltip_arrow'),
@@ -1633,18 +1634,18 @@ describe('App navigation', () => {
     });
   });
 
-  it('shows assistant character settings inside the player tooltip', async () => {
+  it('shows assistant character settings next to the player greeting', async () => {
     const user = userEvent.setup();
     renderApp();
 
-    expect(screen.queryByLabelText('Персонаж')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Персонаж')).toBeInTheDocument();
 
     await user.hover(screen.getByTestId('player_greeting__root'));
     const tooltip = await screen.findByTestId('player_greeting__tooltip');
 
-    expect(within(tooltip).getByLabelText('Персонаж')).toBeInTheDocument();
+    expect(within(tooltip).queryByLabelText('Персонаж')).not.toBeInTheDocument();
     expect(
-      within(tooltip).getByLabelText(/Испанский вингер: Взрывает фланг/),
+      screen.getByLabelText(/Испанский вингер: Взрывает фланг/),
     ).toBeInTheDocument();
     expect(screen.queryByText('Forest Tutor')).not.toBeInTheDocument();
   });
@@ -1809,7 +1810,7 @@ describe('App navigation', () => {
     expect(
       within(exerciseHeader).getByTestId('exercise_finish_action__note'),
     ).toHaveTextContent(
-      'Можно делать гиперзвуковые прыжки между карточками.',
+      'Можно делать быстрые пасы между карточками.',
     );
     expect(
       screen.queryByRole('button', { name: 'Выберите игру' }),
@@ -2083,9 +2084,9 @@ describe('App navigation', () => {
     expect(screen.getByTestId('target_stats__answered_formula__total_value')).toHaveStyle({
       fontSize: '42px',
     });
-    expect(screen.getByTestId('target_stats__answered_formula__equals_icon')).toBeInTheDocument();
+    expect(screen.queryByTestId('target_stats__answered_formula__equals_icon')).not.toBeInTheDocument();
     expect(screen.queryByTestId('target_stats__answered_formula__correct_chip')).not.toBeInTheDocument();
-    expect(screen.getByTestId('target_stats__answered_formula__incorrect_chip')).toHaveTextContent(
+    expect(screen.getByTestId('target_stats__answered_formula__incorrect_text')).toHaveTextContent(
       '2 неверно',
     );
     await user.hover(screen.getByTestId('target_stats__answered_formula__total_value'));
@@ -2093,15 +2094,11 @@ describe('App navigation', () => {
       await screen.findByText('всего отвечено карточек во всех играх'),
     ).toBeInTheDocument();
     await user.unhover(screen.getByTestId('target_stats__answered_formula__total_value'));
-    await user.hover(screen.getByTestId('target_stats__answered_formula__incorrect_chip'));
-    expect(
-      await screen.findByText('количество карточек отвеченных неверно'),
-    ).toBeInTheDocument();
     expect(screen.getByTestId('target_stats__metrics')).toHaveStyle({
       display: 'grid',
       gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
     });
-    expect(screen.getByTestId('target_stats__answered_formula__value_group')).toHaveStyle({
+    expect(screen.getByTestId('target_stats__answered_formula__stats_root')).toHaveStyle({
       justifyContent: 'center',
     });
     expect(screen.getByTestId('target_stats__answered_formula__root')).toHaveStyle({
@@ -2224,7 +2221,7 @@ describe('App navigation', () => {
     ).toBeInTheDocument();
     expect(
       within(crosswordHeader).queryByText(
-        'Можно делать гиперзвуковые прыжки между карточками.',
+        'Можно делать быстрые пасы между карточками.',
       ),
     ).not.toBeInTheDocument();
     expect(

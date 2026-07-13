@@ -29,7 +29,10 @@ export function TranslationHintRow({
   const preferredLanguages =
     complementaryLanguages ??
     (complementaryLanguage ? [complementaryLanguage] : [hints[0].language]);
-  const orderedHints = orderTranslationHints(hints, preferredLanguages);
+  const visibleHints = complementaryLanguages
+    ? hints.filter((hint) => complementaryLanguages.includes(hint.language))
+    : hints;
+  const orderedHints = orderTranslationHints(visibleHints, preferredLanguages);
   const [primaryHint, ...secondaryHints] = orderedHints;
   const hintPartDataTest = dataTest.replace('__prompt__', '__prompt_hint__');
 

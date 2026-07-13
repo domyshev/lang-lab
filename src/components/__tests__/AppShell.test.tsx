@@ -459,9 +459,12 @@ describe('AppShell', () => {
 
     const gameTab = screen.getByRole('tab', { name: 'Играть' });
     expect(gameTab).toHaveStyle({
-      backgroundColor: 'rgb(255, 247, 205)',
       borderRadius: '999px',
       color: 'rgb(32, 48, 21)',
+    });
+    expect(gameTab).toHaveStyle({
+      background:
+        'linear-gradient(180deg, #fff16d 0%, #ffc31f 43%, #e85f00 100%)',
     });
     expect(gameTab).toHaveStyle({ fontWeight: '950' });
     expect(gameTab).not.toHaveStyle({

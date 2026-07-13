@@ -103,7 +103,7 @@ describe('LanguageSelectors', () => {
       </Provider>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Настройки практики' }));
+    await user.click(screen.getByRole('button', { name: 'Настройки игр' }));
     const fivePlusInput = screen.getByLabelText(
       'Последние 5 и более раз верно',
     );
@@ -128,15 +128,16 @@ describe('LanguageSelectors', () => {
       </Provider>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Настройки практики' }));
+    await user.click(screen.getByRole('button', { name: 'Настройки игр' }));
 
     const worldSelect = screen.getByRole('combobox', {
-      name: 'Мир приложения',
+      name: 'Игровой мир',
     });
+    expect(worldSelect).toHaveTextContent('⚽');
     expect(worldSelect).toHaveTextContent('Футбол');
 
     await user.click(worldSelect);
-    await user.click(screen.getByRole('option', { name: 'Лесные эльфы' }));
+    await user.click(screen.getByRole('option', { name: /Лесные эльфы/ }));
 
     expect(store.getState().app.worldId).toBe('forest');
     expect(store.getState().app.assistantId).toBe('studyTroll');
@@ -152,7 +153,7 @@ describe('LanguageSelectors', () => {
       </Provider>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Настройки практики' }));
+    await user.click(screen.getByRole('button', { name: 'Настройки игр' }));
 
     const repeatFrequency = screen.getByLabelText('Частота повторов ошибок');
     const newCardMix = screen.getByLabelText('Примешивание новых слов');

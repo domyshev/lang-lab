@@ -407,6 +407,13 @@ export function LanguageSelectors() {
               labelId={worldLabelId}
               value={worldId}
               onChange={handleWorldChange}
+              renderValue={(value) => (
+                <WorldLabel
+                  dataTestPrefix="language_selectors__world_selected"
+                  interfaceLanguage={interfaceLanguage}
+                  world={resolveWorldId(value)}
+                />
+              )}
             >
               {worldIds.map((world) => (
                 <MenuItem
@@ -414,7 +421,11 @@ export function LanguageSelectors() {
                   key={world}
                   value={world}
                 >
-                  {worldDefinitions[world].label[interfaceLanguage]}
+                  <WorldLabel
+                    dataTestPrefix={`language_selectors__world_option_label__${world}`}
+                    interfaceLanguage={interfaceLanguage}
+                    world={world}
+                  />
                 </MenuItem>
               ))}
             </Select>
@@ -544,4 +555,46 @@ function LanguageLabel({
       </Typography>
     </Stack>
   );
+}
+
+function WorldLabel({
+  dataTestPrefix,
+  interfaceLanguage,
+  world,
+}: {
+  dataTestPrefix: string;
+  interfaceLanguage: SupportedLanguage;
+  world: WorldId;
+}) {
+  return (
+    <Stack
+      data-test={`${dataTestPrefix}__root`}
+      component="span"
+      direction="row"
+      spacing={1}
+      alignItems="center"
+      sx={{ minWidth: 0 }}
+    >
+      <Box
+        component="span"
+        aria-hidden="true"
+        data-test={`${dataTestPrefix}__icon`}
+        sx={{ fontSize: 18, lineHeight: 1 }}
+      >
+        {getWorldIcon(world)}
+      </Box>
+      <Typography
+        component="span"
+        data-test={`${dataTestPrefix}__name`}
+        noWrap
+        sx={{ fontSize: 14 }}
+      >
+        {worldDefinitions[world].label[interfaceLanguage]}
+      </Typography>
+    </Stack>
+  );
+}
+
+function getWorldIcon(world: WorldId): string {
+  return world === 'football' ? '⚽' : '🍃';
 }

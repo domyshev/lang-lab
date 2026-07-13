@@ -1,4 +1,5 @@
-import { Chip, Stack, Typography } from '@mui/material';
+import QueryStatsOutlinedIcon from '@mui/icons-material/QueryStatsOutlined';
+import { Chip, IconButton, Stack, Typography } from '@mui/material';
 import type { SupportedLanguage } from '../../domain/languages';
 import { footballResultColors } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
@@ -93,28 +94,31 @@ export function RecentAnswersChip({
         </Stack>
       }
     >
-      <Chip
-        component="button"
+      <IconButton
+        aria-label={t(interfaceLanguage, 'recentAnswerStatsChip')}
         data-test={`${dataTestPrefix}__recent_stats_chip`}
-        label={t(interfaceLanguage, 'recentAnswerStatsChip')}
         size="small"
         type="button"
-        variant="outlined"
         sx={{
           alignSelf: 'flex-start',
-          bgcolor: 'rgba(123, 95, 196, 0.06)',
-          borderColor: 'rgba(123, 95, 196, 0.34)',
-          color: '#4b3a70',
+          bgcolor: 'rgba(32, 48, 21, 0.045)',
+          border: '1px solid rgba(32, 48, 21, 0.12)',
+          color: 'rgba(32, 48, 21, 0.54)',
           cursor: 'pointer',
-          fontSize: 12,
-          fontWeight: 800,
-          height: 28,
+          height: 30,
+          width: 30,
+          '&:hover': {
+            bgcolor: 'rgba(32, 48, 21, 0.08)',
+            color: 'rgba(32, 48, 21, 0.72)',
+          },
           '&:focus-visible': {
             outline: '3px solid #111111',
             outlineOffset: 2,
           },
         }}
-      />
+      >
+        <QueryStatsOutlinedIcon sx={{ fontSize: 18 }} />
+      </IconButton>
     </CursorAnchoredTooltip>
   );
 }
