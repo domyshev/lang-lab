@@ -7,6 +7,10 @@ import {
 } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { ExerciseType } from '../domain/exercises';
+import {
+  FootballGameTileTheme,
+  gameTileThemes,
+} from '../domain/footballTheme';
 import { t } from '../domain/i18n';
 import { RootState } from '../store/store';
 import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
@@ -18,36 +22,22 @@ import {
 const exerciseOptions: Array<{
   type: ExerciseType;
   labelKey: Parameters<typeof t>[1];
-  accent: string;
-  background: string;
 }> = [
   {
     type: 'crossword',
     labelKey: 'crossword',
-    accent: '#c60b1e',
-    background:
-      'radial-gradient(circle at 18% 18%, rgba(255,255,255,0.64) 0 12%, transparent 13%), radial-gradient(circle at 78% 20%, rgba(255,196,0,0.40) 0 15%, transparent 16%), linear-gradient(135deg, #ffc400 0%, #ff7a36 42%, #c60b1e 100%)',
   },
   {
     type: 'multipleChoice',
     labelKey: 'multipleChoice',
-    accent: '#7c1518',
-    background:
-      'radial-gradient(circle at 80% 18%, rgba(255,255,255,0.58) 0 13%, transparent 14%), radial-gradient(circle at 14% 82%, rgba(255,196,0,0.34) 0 13%, transparent 14%), linear-gradient(135deg, #ffe15d 0%, #ff9d2e 46%, #c60b1e 100%)',
   },
   {
     type: 'missingLetters',
     labelKey: 'missingLetters',
-    accent: '#f4b000',
-    background:
-      'radial-gradient(circle at 20% 76%, rgba(255,255,255,0.55) 0 11%, transparent 12%), radial-gradient(circle at 78% 28%, rgba(198,11,30,0.20) 0 13%, transparent 14%), linear-gradient(135deg, #fff06a 0%, #ffc400 44%, #f15b3a 100%)',
   },
   {
     type: 'missingWord',
     labelKey: 'missingWord',
-    accent: '#c60b1e',
-    background:
-      'radial-gradient(circle at 78% 76%, rgba(255,255,255,0.56) 0 12%, transparent 13%), radial-gradient(circle at 22% 18%, rgba(198,11,30,0.20) 0 15%, transparent 16%), linear-gradient(135deg, #fff1a8 0%, #ffc400 45%, #d9272f 100%)',
   },
 ];
 
@@ -99,13 +89,15 @@ export function ExercisePicker({
             const optionLabel = t(interfaceLanguage, option.labelKey);
             const isDisabled = Boolean(disabledExerciseTypes[option.type]);
             const disabledTooltip = disabledExerciseTooltips[option.type];
-            const tileAccent = isDisabled ? disabledTileAccent : option.accent;
+            const theme = gameTileThemes[option.type];
+            const tileAccent = isDisabled ? disabledTileAccent : theme.accent;
             const tileBackground = isDisabled
               ? disabledTileBackground
-              : option.background;
+              : theme.gradient;
             const tileButton = (
               <ToggleButton
                 aria-label={optionLabel}
+                data-football-country={theme.countryKey}
                 data-test={`exercise_picker__option__${option.type}`}
                 disabled={isDisabled}
                 key={option.type}
@@ -147,6 +139,7 @@ export function ExercisePicker({
               >
                 <GameTileArt
                   accent={tileAccent}
+                  art={theme.art}
                   dataTest={`exercise_picker__option_art__${option.type}`}
                   type={option.type}
                 />
@@ -230,14 +223,16 @@ export function ExercisePicker({
 
 function GameTileArt({
   accent,
+  art,
   dataTest,
   type,
 }: {
   accent: string;
+  art: FootballGameTileTheme['art'];
   dataTest: string;
   type: ExerciseType;
 }) {
-  if (type === 'crossword') {
+  if (art === 'goal') {
     return (
       <Box
         aria-hidden="true"
@@ -250,6 +245,10 @@ function GameTileArt({
       >
         <rect width="240" height="150" fill="transparent" />
         <path d="M24 120 C70 86 112 132 166 88 C196 64 214 70 238 52" fill="none" stroke={accent} strokeWidth="8" strokeLinecap="round" opacity="0.22" />
+        <g data-test={`exercise_picker__art_goal__${type}`} opacity="0.36">
+          <rect x="154" y="34" width="62" height="42" rx="4" fill="none" stroke={accent} strokeWidth="5" />
+          <path d="M166 34v42M178 34v42M190 34v42M202 34v42M154 48h62M154 62h62" stroke={accent} strokeWidth="1.8" />
+        </g>
         {[
           [28, 18, 'A'],
           [68, 18, 'Ñ'],
@@ -270,7 +269,7 @@ function GameTileArt({
     );
   }
 
-  if (type === 'multipleChoice') {
+  if (art === 'ball') {
     return (
       <Box
         aria-hidden="true"
@@ -282,8 +281,11 @@ function GameTileArt({
         sx={tileArtStyles}
       >
         <rect width="240" height="150" fill="transparent" />
-        <circle cx="188" cy="34" r="30" fill={accent} opacity="0.14" />
-        <text x="188" y="45" textAnchor="middle" fontSize="42" fontWeight="900" fill={accent} opacity="0.5">?</text>
+        <g data-test={`exercise_picker__art_ball__${type}`} transform="translate(176 32)">
+          <circle r="26" fill="#fffdf4" stroke={accent} strokeWidth="4" />
+          <path d="M0-15 13-5 8 12H-8l-5-17Z" fill={accent} opacity="0.78" />
+          <path d="M0-26v11M0 15v11M-25 0h12M13 0h12" stroke="#203015" strokeWidth="2" opacity="0.34" />
+        </g>
         {[
           [30, 28, '#ffffff', 'A'],
           [48, 66, '#fdf0f4', 'B'],
@@ -301,7 +303,7 @@ function GameTileArt({
     );
   }
 
-  if (type === 'missingLetters') {
+  if (art === 'worldCup2026') {
     return (
       <Box
         aria-hidden="true"
@@ -314,6 +316,17 @@ function GameTileArt({
       >
         <rect width="240" height="150" fill="transparent" />
         <path d="M34 42 C70 18 106 28 130 52 C154 76 190 62 214 36" fill="none" stroke={accent} strokeWidth="7" strokeLinecap="round" opacity="0.18" />
+        <text
+          data-test={`exercise_picker__art_wc2026__${type}`}
+          x="132"
+          y="34"
+          textAnchor="middle"
+          fontSize="18"
+          fontWeight="950"
+          fill={accent}
+        >
+          FIFA WC 2026
+        </text>
         {[
           [30, 60, 'h', true],
           [70, 60, '', false],
@@ -350,6 +363,11 @@ function GameTileArt({
       <path d="M30 46 H122 M30 78 H84 M140 78 H210 M30 110 H190" stroke="#203015" strokeWidth="8" strokeLinecap="round" opacity="0.16" />
       <rect x="88" y="58" width="48" height="34" rx="10" fill="#ffffff" stroke={accent} strokeWidth="2.5" opacity="0.95" />
       <path d="M100 75 H124" stroke={accent} strokeWidth="5" strokeLinecap="round" />
+      <g data-test={`exercise_picker__art_goalkeeper__${type}`} transform="translate(174 42)" opacity="0.72">
+        <circle cx="0" cy="-18" r="10" fill={accent} />
+        <path d="M-6-8 10 8 2 34 -16 28Z" fill={accent} />
+        <path d="M-10-2 -38-20M8 0 34-18M-8 28 -28 48M2 34 24 48" stroke={accent} strokeWidth="8" strokeLinecap="round" />
+      </g>
       <path d="M152 34 C178 30 202 48 210 76 C218 104 190 124 160 114 C134 106 126 78 138 56 C142 46 146 39 152 34Z" fill={accent} opacity="0.18" />
       <path d="M166 58 H196 M156 78 H204 M166 98 H190" stroke={accent} strokeWidth="5" strokeLinecap="round" opacity="0.5" />
     </Box>

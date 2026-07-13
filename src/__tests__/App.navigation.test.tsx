@@ -384,6 +384,30 @@ describe('App navigation', () => {
     expect(screen.getByTestId('exercise_picker__option_art__multipleChoice')).toBeInTheDocument();
     expect(screen.getByTestId('exercise_picker__option_art__missingLetters')).toBeInTheDocument();
     expect(screen.getByTestId('exercise_picker__option_art__missingWord')).toBeInTheDocument();
+    expect(screen.getByTestId('exercise_picker__option__crossword')).toHaveAttribute(
+      'data-football-country',
+      'spain',
+    );
+    expect(screen.getByTestId('exercise_picker__option__multipleChoice')).toHaveAttribute(
+      'data-football-country',
+      'portugal',
+    );
+    expect(screen.getByTestId('exercise_picker__option__missingLetters')).toHaveAttribute(
+      'data-football-country',
+      'england',
+    );
+    expect(screen.getByTestId('exercise_picker__option__missingWord')).toHaveAttribute(
+      'data-football-country',
+      'germany',
+    );
+    expect(screen.getByTestId('exercise_picker__art_goal__crossword')).toBeInTheDocument();
+    expect(screen.getByTestId('exercise_picker__art_ball__multipleChoice')).toBeInTheDocument();
+    expect(
+      screen.getByTestId('exercise_picker__art_wc2026__missingLetters'),
+    ).toHaveTextContent('FIFA WC 2026');
+    expect(
+      screen.getByTestId('exercise_picker__art_goalkeeper__missingWord'),
+    ).toBeInTheDocument();
     expect(screen.getByTestId('exercise_picker__option__crossword')).toHaveStyle({
       height: '184px',
     });
