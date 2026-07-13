@@ -4,157 +4,187 @@
 
 Detailed application requirements: [docs/APP_REQUIREMENTS.md](docs/APP_REQUIREMENTS.md)
 
-## Technology Stack
+## Overview
 
-- Application: TypeScript, React, MUI
-- Runtime: browser
-- Persistence: browser `localStorage`
-- Data format: JSON
-- Repository target: 
-- Optional delivery target: /GitDocs or  Pages for a playable static demo
-
-## Architecture Overview
-
-The intended MVP architecture is a static browser application.
+Language Crossword Lab is a static browser frontend. It keeps all learner data in the browser and generates exercises from local JSON language cards.
 
 ```text
-React + TypeScript + MUI application
+React + MUI UI
         |
         v
-Browser state and localStorage
+Redux Toolkit state
         |
         v
-Bundled JSON assets and user-imported JSON word sets
+Redux Persist + localStorage
+        |
+        v
+Imported language cards, card sets, attempts, statistics, pending duplicates
 ```
 
-The application owns the interactive crossword experience: profile selection, generated name suggestions, word set import flow, crossword grid UI, answer entry, submission, and history screens.
+## Technology Stack
 
-`localStorage` stores user-created data on the current device and browser. This keeps the MVP simple and makes the application easier to deliver as a static playable demo.
+- Application: React, TypeScript, Vite
+- UI: MUI
+- State: Redux Toolkit
+- Persistence: Redux Persist over browser `localStorage`
+- Tests: Vitest
+- Content format: JSON language cards
 
-## Main Components
+## Source Layout
 
-### Application Shell
+```text
+src/
+  domain/      Pure language-card, import, exercise, crossword, stats, and coach logic
+  store/       Redux slices and persisted store configuration
+  components/  MUI application UI and exercise components
+  assets/      Local visual assets used by the frontend
+```
 
-The application shell provides the main layout, current profile state, navigation between views, and common UI structure. It should use MUI components for consistent controls and layout.
+Domain modules are designed to be testable without React. UI components call domain functions and dispatch Redux actions rather than embedding validation or scoring rules.
 
-### Profile Onboarding
+## Core Data Model
 
-The first screen asks the user to enter a display name or choose a generated one.
+### Language Cards
 
-Generated names combine:
+A `LanguageCard` is one learning unit. It may represent a word, phrase, or short expression.
 
-- a funny adjective;
-- a hyphen;
-- the surname of a known contributor to languages, linguistics, dictionaries, literacy, English learning, or Spanish learning.
+Each card contains:
 
-The screen shows five generated names at a time. A "Refresh list" button regenerates the suggestions.
+- generated internal `id`;
+- `translations` for at least two supported languages;
+- optional same-language `definitions`;
+- optional example sentences;
+- optional tags and difficulty;
+- created and updated timestamps.
 
-### Contributor Name Seeds
+Supported languages are:
 
-Contributor data is planned as a local JSON asset. The detailed content requirement is described in [docs/APP_REQUIREMENTS.md](docs/APP_REQUIREMENTS.md).
+- `ru`;
+- `en`;
+- `es`.
 
-The contributor list contains 100 records. Each record contains:
+### Card Sets
 
-- `firstName`;
-- `lastName`;
-- `birthYear`;
-- `contribution.ru`;
-- `contribution.es`;
-- `contribution.en`;
-- `wikipediaUrl`.
+A card set is a learner-created collection of card ids. Card sets are persistent and can be created freely. An exercise is always generated from exactly one selected card set.
 
-Contribution descriptions should be compact and capped at 255 characters per language so they can fit in tooltips, dialogs, or profile-name explanation UI later.
+Card sets are deliberately lightweight because they represent short-term learning focus rather than permanent taxonomy. A future optional topic label can be added as card-set metadata without making it part of the card-set identity.
 
-### Word Set Manager
+### Attempts
 
-The word set manager loads predefined word sets and allows users to import custom JSON word sets. Imported data is validated before it is stored in `localStorage`.
+An exercise attempt stores:
 
-### Crossword Generator
-
-The crossword generator creates a grid from selected word set entries. It should attempt valid word intersections and produce a playable puzzle even when only a subset of words can be placed.
-
-### Gameplay View
-
-The gameplay view renders the crossword, clue list, answer cells, validation controls, and result state. MUI should be used for the surrounding interface, while the crossword grid can use custom layout logic where needed.
-
-### History View
-
-The history view reads saved attempts from `localStorage` and displays previous results for the selected local profile.
-
-### Storage Adapter
-
-A small storage adapter should wrap `localStorage` access. This keeps serialization, parsing, versioning, default values, and malformed-data recovery in one place.
-
-## Local Storage Model
-
-The exact keys may change during implementation, but the model should include:
-
-- profiles;
-- selected profile;
-- imported word sets;
-- crossword attempts;
-- attempt summaries;
-- storage schema version.
-
-Stored records should include enough data to show history even if a word set changes later.
-
-## Language Model
-
-The first version supports Russian, Spanish, and English.
-
-The architecture should not hard-code game concepts to one specific language. Data should be modeled around:
-
-- source language;
+- exercise type;
+- card set id;
 - target language;
-- clue;
-- answer;
-- localized labels;
-- localized descriptions.
+- card snapshots;
+- prompts;
+- submitted answers;
+- correctness per card;
+- hint counters;
+- weighted score;
+- coach comment;
+- timestamps.
 
-This allows the same structure to support additional languages in the future. The application concept focuses on general language-learning mechanics instead of rules that only apply to one language pair.
+Attempts are stored with enough card data to make history useful even if cards are edited later.
 
-## Major Design Decisions
+### Card Statistics
 
-### Static Browser App
+Card statistics are stored per card and target language. They track:
 
-The MVP is a static browser app to keep the challenge scope manageable and make a one-click /GitDocs demo more realistic.
+- attempts;
+- correct and incorrect counts;
+- hints used;
+- accuracy;
+- recent mistakes;
+- last practice date;
+- stability classification.
 
-### Local Profiles Instead of Full Authentication
+Exercise results and card statistics are separate. Card accuracy belongs to the card, while weighted exercise score belongs to one generated attempt.
 
-The MVP does not need secure authentication. A profile is identified by a local display name. This keeps the project focused on game mechanics and learning flow.
+## Import Pipeline
 
-### localStorage for Persistence
+The MVP imports cards through a large pasteable JSON field.
 
-`localStorage` is enough for the first version because the app stores small amounts of local data: profiles, imported word sets, attempts, and history. A storage adapter should isolate direct `localStorage` usage from UI components.
+Import behavior:
 
-### JSON Word Sets
+- root JSON must be an array;
+- each card must include translations for at least two supported languages;
+- unsupported language keys are ignored;
+- ids are generated by the app;
+- duplicates are detected when any incoming translation matches any existing translation;
+- missing duplicate information is safely merged;
+- safe merges are recorded in duplicate processing history;
+- conflicting duplicate data is stored in pending duplicates for later review.
 
-JSON is a good fit for word sets because it is strict, easy to validate, easy for AI tools to generate, and flexible enough to support future metadata such as tags, language, difficulty, examples, and parts of speech.
+Future backend work can route pending duplicate review and dictionary updates through an AI agent.
 
-### TypeScript, React, and MUI
+## Exercise Generation
 
-TypeScript and React provide a practical browser application stack. MUI gives the project a ready-made component system, reducing time spent on low-level UI primitives and helping the app feel complete sooner.
+Exercise generation is local and target-language aware.
 
-## AI Tooling Used
+The current exercise types are:
 
-Initial ideation and documentation were developed with Codex as an AI coding assistant. The workflow is expected to include:
+- crossword;
+- multiple choice;
+- missing letters;
+- missing word in sentence.
 
-- conversational product discovery;
-- specification drafting;
-- implementation planning;
-- code generation and editing;
-- test and validation support;
-- documentation updates;
-- retrospective capture.
+Eligibility is determined by the target language. A card can be used for a target language only when it has a target-language answer and at least one hint source, either another translation or a same-language definition.
 
-## Agent Workflow
+Hints use translations from the other available languages. Definitions use only the current target language.
 
-The intended AI-native workflow is:
+## Crossword Rules
 
-1. Capture requirements and constraints.
-2. Write the initial specification and architecture.
-3. Create an implementation plan.
-4. Implement in small increments.
-5. Validate each increment with tests or manual checks.
-6. Update documentation as the design changes.
-7. Record lessons learned in the retrospective.
+Crosswords are generated from one card set.
+
+Current constraints:
+
+- if a phrase is used, a crossword contains only that phrase;
+- if single words are used, a crossword contains up to six cards;
+- generated ordering is randomized by the frontend seed and does not depend on previous history.
+
+The current grid is intentionally simple. A future crossword engine can replace the layout algorithm while keeping the same card set, attempt, and statistics contracts.
+
+## Language Settings
+
+The app separates:
+
+- interface language;
+- target language.
+
+The target language controls:
+
+- available exercise answers;
+- history filtering;
+- card statistics;
+- coach analysis context.
+
+The interface language controls app copy and coach comments.
+
+## Coach Assistant
+
+The coach assistant is a persistent sports-analytics UI panel. It uses the current attempt and previous per-card statistics to produce concise feedback. It is not a generic encouragement banner; it focuses on accuracy, weak cards, and practice direction.
+
+The MVP uses a local generated portrait asset with subtle CSS motion. Future versions can connect the coach to richer analytics or an LLM-backed explanation layer.
+
+## Persistence
+
+Redux Persist stores the root application state in `localStorage` under a versioned key:
+
+```text
+language-crossword-lab:v1
+```
+
+Persisted data includes:
+
+- app language settings;
+- imported cards;
+- duplicate processing history;
+- pending duplicates;
+- card sets;
+- attempts;
+- card statistics.
+
+## AI-Native Workflow
+
+The repository records the AI-assisted process through specifications, implementation plans, and retrospective notes. The current implementation plan lives under `docs/superpowers/plans/`.

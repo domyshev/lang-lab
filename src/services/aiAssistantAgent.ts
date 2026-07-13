@@ -1,0 +1,458 @@
+import languageCardSkill from '../../docs/LANGUAGE_CARD_FORMAT.md?raw';
+import { aiLibraryProposalSchema } from '../domain/aiAssistantSchemas';
+import {
+  AiLibrarySnapshot,
+  AiReadToolName,
+  aiReadToolDefinitions,
+  executeAiReadTool,
+} from '../domain/aiLibraryTools';
+import { PlannedAiOperation, planAiOperation } from '../domain/aiOperations';
+import type { BlockedAiPreview } from '../domain/aiBlockedPreview';
+import {
+  DEFAULT_OPENROUTER_MODEL_ID,
+  OpenRouterChatMessage,
+  OpenRouterError,
+  OpenRouterModelId,
+  OpenRouterToolDefinition,
+  sendOpenRouterChat,
+} from './openRouterClient';
+
+const MAX_MODEL_RESPONSES = 8;
+const MAX_CHAT_HISTORY_MESSAGES = 20;
+const PROPOSAL_TOOL_NAME = 'propose_library_operation';
+const readToolNames = new Set<string>(
+  aiReadToolDefinitions.map((tool) => tool.function.name),
+);
+
+export const aiAssistantToolDefinitions: OpenRouterToolDefinition[] = [
+  ...aiReadToolDefinitions,
+  {
+    type: 'function',
+    function: {
+      name: PROPOSAL_TOOL_NAME,
+      description:
+        'Stage one validated card-library operation for user review. This does not apply changes.',
+      parameters: proposalToolParameters(),
+    },
+  },
+];
+
+export type AiAgentFailure =
+  | { kind: 'cancelled'; message: string }
+  | { kind: 'transport'; message: string; error: OpenRouterError }
+  | { kind: 'unknown-tool'; message: string; toolName: string }
+  | { kind: 'invalid-tool-arguments'; message: string; toolName: string }
+  | { kind: 'invalid-proposal'; message: string; errors: string[] }
+  | { kind: 'empty-response'; message: string }
+  | { kind: 'loop-limit'; message: string };
+
+export type AiAgentResult =
+  | { ok: true; content: string; stagedOperation?: PlannedAiOperation }
+  | { ok: false; failure: AiAgentFailure; blockedPreview?: BlockedAiPreview };
+
+export async function runAiAssistant(input: {
+  apiKey: string;
+  modelId?: OpenRouterModelId;
+  userMessage: string;
+  chatHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  snapshot: AiLibrarySnapshot;
+  signal?: AbortSignal;
+  now?: () => string;
+  idFactory?: (prefix: string) => string;
+}): Promise<AiAgentResult> {
+  const messages: OpenRouterChatMessage[] = [
+    {
+      role: 'system',
+      content: createSystemMessage(
+        input.modelId ?? DEFAULT_OPENROUTER_MODEL_ID,
+      ),
+    },
+    ...readRecentChatHistory(input.chatHistory),
+    { role: 'user', content: input.userMessage },
+  ];
+  let stagedOperation: PlannedAiOperation | undefined;
+
+  for (let responseCount = 0; responseCount < MAX_MODEL_RESPONSES; responseCount += 1) {
+    const response = await sendOpenRouterChat({
+        apiKey: input.apiKey,
+        messages: [...messages],
+        modelId: input.modelId ?? DEFAULT_OPENROUTER_MODEL_ID,
+        tools: aiAssistantToolDefinitions,
+        signal: input.signal,
+    });
+    if (!response.ok) {
+      if (response.error.kind === 'cancelled') {
+        return {
+          ok: false,
+          failure: { kind: 'cancelled', message: response.error.message },
+        };
+      }
+      return {
+        ok: false,
+        failure: {
+          kind: 'transport',
+          message: response.error.message,
+          error: response.error,
+        },
+      };
+    }
+
+    const assistantMessage = response.message;
+    const toolCalls = assistantMessage.tool_calls ?? [];
+    if (toolCalls.length === 0) {
+      if (
+        typeof assistantMessage.content !== 'string' ||
+        assistantMessage.content.trim().length === 0
+      ) {
+        return {
+          ok: false,
+          failure: {
+            kind: 'empty-response',
+            message: 'The assistant returned neither content nor tool calls.',
+          },
+        };
+      }
+      if (
+        !stagedOperation &&
+        needsOperationToolReprompt(assistantMessage.content)
+      ) {
+        messages.push(assistantMessage);
+        messages.push({
+          role: 'user',
+          content: OPERATION_TOOL_REPROMPT,
+        });
+        continue;
+      }
+      return {
+        ok: true,
+        content: assistantMessage.content,
+        ...(stagedOperation ? { stagedOperation } : {}),
+      };
+    }
+
+    messages.push(assistantMessage);
+    for (const toolCall of toolCalls) {
+      const toolName = toolCall.function.name;
+      if (!readToolNames.has(toolName) && toolName !== PROPOSAL_TOOL_NAME) {
+        messages.push(toolError(toolCall.id, {
+          ok: false,
+          error: 'unknown_tool',
+          toolName,
+          message:
+            'Use propose_library_operation for writes and read tools for inspection.',
+        }));
+        continue;
+      }
+
+      const parsedArguments = parseArguments(toolCall.function.arguments);
+      if (!parsedArguments.ok) {
+        messages.push(toolError(toolCall.id, {
+          ok: false,
+          error: 'invalid_tool_arguments',
+          toolName,
+          message: 'Tool arguments must be valid JSON matching the tool schema.',
+        }));
+        continue;
+      }
+
+      if (toolName === PROPOSAL_TOOL_NAME) {
+        const parsedProposal = aiLibraryProposalSchema.safeParse(parsedArguments.value);
+        if (!parsedProposal.success) {
+          return invalidProposal(
+            parsedProposal.error.issues.map((issue) => issue.message),
+            parsedArguments.value,
+          );
+        }
+        const planned = planAiOperation({
+          cards: input.snapshot.cards,
+          cardSets: input.snapshot.cardSets,
+          proposal: parsedProposal.data,
+          modelId: input.modelId ?? DEFAULT_OPENROUTER_MODEL_ID,
+          now: input.now?.() ?? new Date().toISOString(),
+          userPrompt: input.userMessage,
+          idFactory: input.idFactory,
+        });
+        if (!planned.ok) {
+          return invalidProposal(planned.errors, parsedProposal.data);
+        }
+        stagedOperation = planned.operation;
+        messages.push({
+          role: 'tool',
+          tool_call_id: toolCall.id,
+          content: JSON.stringify(planned),
+        });
+        continue;
+      }
+
+      try {
+        const result = executeAiReadTool(
+          toolName as AiReadToolName,
+          parsedArguments.value,
+          input.snapshot,
+        );
+        messages.push({
+          role: 'tool',
+          tool_call_id: toolCall.id,
+          content: JSON.stringify(result),
+        });
+      } catch {
+        messages.push(toolError(toolCall.id, {
+          ok: false,
+          error: 'invalid_tool_arguments',
+          toolName,
+          message:
+            'The supplied arguments did not match the tool schema. Correct them and call the tool again.',
+        }));
+      }
+    }
+  }
+
+  return {
+    ok: false,
+    failure: {
+      kind: 'loop-limit',
+      message: 'The assistant reached the eight-response limit.',
+    },
+  };
+}
+
+function createSystemMessage(modelId: OpenRouterModelId): string {
+  return `You are the Language Lab card-library assistant with limited authority.
+You may inspect the supplied current library, game history and learning statistics only through the bounded read tools.
+You may propose writes only through propose_library_operation. That tool stages a plan for user review; you never dispatch Redux actions or apply changes.
+When the user requests a create, update, archive, or membership change and enough information exists, call propose_library_operation immediately. Do not first ask the user to confirm by typing words in chat. The app will show explicit Apply changes and Cancel preview buttons for every staged plan.
+Never claim that propose_library_operation was already called, sent, or submitted in a previous step. If the current user asks for a write and enough information exists, call propose_library_operation in this turn.
+Do not tell the user to click Apply changes unless this turn actually returned a staged operation through propose_library_operation.
+You may propose archiving normal card sets through propose_library_operation using cardSetChanges update objects with archive: true.
+You must not archive all-cards, delete card sets, delete global cards, or restore archived sets in place.
+When the user wants to reuse an archived set, propose creating a new active card set based on it instead.
+Use list_card_sets with archiveFilter when you need active, archived, or all card sets explicitly.
+Never invent an id for an existing card or card set. Read the current library to obtain existing ids.
+Ask for clarification when a requested word, phrase, or meaning is ambiguous.
+You receive recent chat history as prior user and assistant messages before the current user request. Use that recent chat history to resolve references like "these cards", "that set", or "the words you just selected". Do not claim you have no access to chat history when those prior messages are supplied; if the needed reference is absent from the recent messages, explain exactly what is missing.
+Do not claim that game history, played games, card progress, correct answers, incorrect answers, or learning statistics are unavailable. Use get_learning_overview, list_recent_games, get_card_learning_stats, or get_card_set_learning_stats for study recommendations and progress analysis.
+You may answer questions about the supplied recent chat history, your current model id, and effort. For any other non-library topic, say you can only manage Language Lab card sets and vocabulary.
+Current selected model id: ${modelId}
+Current effort: default
+
+The following raw English skill document is authoritative for card quality and format:
+
+${languageCardSkill.replace(
+  'or card-set archive or deletion.',
+  'or card-set deletion.',
+)}`;
+}
+
+const OPERATION_TOOL_REPROMPT =
+  'Do not ask the user to confirm this operation by typing words in chat, do not claim that changes were saved, applied, or created in plain text, and do not claim that propose_library_operation was already called in a previous step. If the request has enough information for a safe preview, call propose_library_operation now. If required details are missing, ask only for those missing details.';
+
+const typedOperationApprovalPatterns = [
+  /\b(confirm|approve|accept)\b.*\b(type|reply|chat|message|text|apply|changes|operation|preview)\b/i,
+  /\b(type|reply|write|say)\b.*\b(confirm|approve|accept|yes|ok)\b/i,
+  /\bplease\b.*\b(confirm|approve|accept)\b.*\b(apply|changes|operation|preview)\b/i,
+  /\bif you want\b.*\b(apply|proceed|confirm|approve)\b/i,
+  /\boperation\b.*\b(awaiting|waiting|needs)\b.*\b(confirm|approval|acceptance)\b/i,
+  /\b(confirm|approve|accept)\b.*\b(create|creating|creation|set|operation|changes)\b/i,
+  /подтверд.*(?:словами|в чате|сообщением|примен|измен|операц|предпросмотр)/i,
+  /(?:операц|предпросмотр|набор|измен).*(?:ожидает|жд[её]т).*подтверж/i,
+  /подтвержда(?:ете|ешь|ем|ю|ет).*(?:создан|создат|создание|набор|операц|измен|предпросмотр)/i,
+  /напиш(?:и|ите).*(?:да|ок|подтверж|примен)/i,
+  /ответ(?:ь|ьте).*(?:да|ок|подтверж|примен)/i,
+  /если хотите.*(?:примен|подтверж)/i,
+  /(?:операц|предпросмотр|набор|карточк).*(?:уже|предыдущ|раньше).*(?:propose_library_operation|отправлен|вызван|создан)/i,
+  /(?:уже|предыдущ|раньше).*(?:propose_library_operation|отправлен|вызван).*(?:операц|предпросмотр|набор|карточк)/i,
+  /нажм(?:и|ите).*(?:apply changes|применить изменения).*(?:предпросмотр|окн|создан|заверш)/i,
+  /\b(?:already|previous|earlier)\b.*\b(?:propose_library_operation|proposal tool|tool call|sent|submitted|called)\b.*\b(?:apply changes|preview|operation)\b/i,
+  /\b(?:propose_library_operation|proposal tool|tool call)\b.*\b(?:already|previous|earlier|sent|submitted|called)\b.*\b(?:apply changes|preview|operation)\b/i,
+  /confirma|confirmar|confirmes|aprobar|aprueba/i,
+];
+
+const plainTextWriteClaimPatterns = [
+  /\b(changes|operation|card set|set)\b.*\b(saved|applied|recorded|created)\b/i,
+  /\b(saved|applied|recorded|created)\b.*\b(changes|operation|card set|set)\b/i,
+  /изменения\s+(?:записаны|сохранены|применены)/i,
+  /набор\s+[«"][^»"]+[»"]\s+создан/i,
+  /(?:cambios|operacion|operación|conjunto).*(?:guardad|aplicad|cread)/i,
+];
+
+function needsOperationToolReprompt(content: string): boolean {
+  return [...typedOperationApprovalPatterns, ...plainTextWriteClaimPatterns].some(
+    (pattern) => pattern.test(content),
+  );
+}
+
+function readRecentChatHistory(
+  chatHistory: Array<{ role: 'user' | 'assistant'; content: string }> | undefined,
+): OpenRouterChatMessage[] {
+  return (chatHistory ?? [])
+    .map(({ role, content }) => ({ role, content: content.trim() }))
+    .filter(({ content }) => content.length > 0)
+    .slice(-MAX_CHAT_HISTORY_MESSAGES);
+}
+
+function parseArguments(
+  rawArguments: string,
+): { ok: true; value: unknown } | { ok: false } {
+  try {
+    return { ok: true, value: JSON.parse(rawArguments) };
+  } catch {
+    return { ok: false };
+  }
+}
+
+function invalidArguments(toolName: string): AiAgentResult {
+  return {
+    ok: false,
+    failure: {
+      kind: 'invalid-tool-arguments',
+      message: 'The model supplied invalid tool arguments.',
+      toolName,
+    },
+  };
+}
+
+function toolError(
+  toolCallId: string,
+  content: Record<string, unknown>,
+): OpenRouterChatMessage {
+  return {
+    role: 'tool',
+    tool_call_id: toolCallId,
+    content: JSON.stringify(content),
+  };
+}
+
+function invalidProposal(errors: string[], proposal: unknown): AiAgentResult {
+  const validationWarnings = [...new Set(errors)];
+  return {
+    ok: false,
+    failure: {
+      kind: 'invalid-proposal',
+      message: 'The proposed library operation is invalid.',
+      errors: validationWarnings,
+    },
+    blockedPreview: {
+      ...readPreviewText(proposal),
+      validationWarnings,
+    },
+  };
+}
+
+function readPreviewText(proposal: unknown): Pick<BlockedAiPreview, 'title' | 'summary'> {
+  if (typeof proposal !== 'object' || proposal === null) {
+    return {};
+  }
+  const candidate = proposal as Record<string, unknown>;
+  const title = readNonEmptyText(candidate.title);
+  const summary = readNonEmptyText(candidate.summary);
+  return {
+    ...(title ? { title } : {}),
+    ...(summary ? { summary } : {}),
+  };
+}
+
+function readNonEmptyText(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed || undefined;
+}
+
+function proposalToolParameters(): Record<string, unknown> {
+  const languageMap = () => ({
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      en: { type: 'string', minLength: 1 },
+      es: { type: 'string', minLength: 1 },
+      ru: { type: 'string', minLength: 1 },
+    },
+  });
+  const example = {
+    type: 'object',
+    additionalProperties: false,
+    required: ['answer', 'sentence'],
+    properties: {
+      answer: { type: 'string', minLength: 1 },
+      sentence: { type: 'string', minLength: 1 },
+    },
+  };
+  const examples = {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      en: { type: 'array', minItems: 1, items: example },
+      es: { type: 'array', minItems: 1, items: example },
+      ru: { type: 'array', minItems: 1, items: example },
+    },
+  };
+  const card = {
+    type: 'object',
+    additionalProperties: false,
+    required: ['clientRef', 'translations'],
+    properties: {
+      clientRef: { type: 'string', minLength: 1 },
+      translations: languageMap(),
+      definitions: languageMap(),
+      examples,
+      tags: {
+        type: 'array',
+        uniqueItems: true,
+        items: { type: 'string', minLength: 1 },
+      },
+      difficulty: { type: 'string', enum: ['easy', 'medium', 'hard'] },
+    },
+  };
+  const createSet = {
+    type: 'object',
+    additionalProperties: false,
+    required: ['type', 'clientRef', 'names', 'cardRefs'],
+    properties: {
+      type: { const: 'create' },
+      clientRef: { type: 'string', minLength: 1 },
+      names: languageMap(),
+      cardRefs: {
+        type: 'array',
+        uniqueItems: true,
+        items: { type: 'string', minLength: 1 },
+      },
+    },
+  };
+  const updateSet = {
+    type: 'object',
+    additionalProperties: false,
+    required: ['type', 'cardSetId'],
+    properties: {
+      type: { const: 'update' },
+      cardSetId: { type: 'string', minLength: 1 },
+      names: languageMap(),
+      addCardRefs: {
+        type: 'array',
+        uniqueItems: true,
+        items: { type: 'string', minLength: 1 },
+      },
+      archive: { const: true },
+      removeCardIds: {
+        type: 'array',
+        uniqueItems: true,
+        items: { type: 'string', minLength: 1 },
+      },
+    },
+  };
+
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required: ['title', 'summary'],
+    properties: {
+      title: { type: 'string', minLength: 1 },
+      summary: { type: 'string', minLength: 1 },
+      cards: { type: 'array', items: card },
+      cardSetChanges: {
+        type: 'array',
+        items: { oneOf: [createSet, updateSet] },
+      },
+    },
+  };
+}

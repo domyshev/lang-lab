@@ -1,0 +1,80 @@
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+  overscroll-behavior-y: none;
+}
+
+body {
+  background: #fffaf0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.coachPortrait {
+  animation: coach-breath 5.5s ease-in-out infinite;
+}
+
+.coachWink {
+  position: absolute;
+  top: 31px;
+  right: 31px;
+  width: 16px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(32, 48, 21, 0.8);
+  opacity: 0;
+  transform: rotate(-5deg);
+  animation: coach-wink 7s ease-in-out infinite;
+}
+
+@keyframes coach-breath {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes coach-wink {
+  0%,
+  90%,
+  100% {
+    opacity: 0;
+  }
+
+  92%,
+  95% {
+    opacity: 1;
+  }
+}
+
+.missingInputWarning {
+  animation: missing-warning-flash 1.05s ease-in-out 1;
+}
+
+@keyframes missing-warning-flash {
+  0%,
+  33%,
+  68%,
+  100% {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+
+  8%,
+  24%,
+  43%,
+  59%,
+  78%,
+  94% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
