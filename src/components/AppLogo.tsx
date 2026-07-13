@@ -71,56 +71,6 @@ export function AppLogo({
       <Box
         component="svg"
         aria-hidden="true"
-        data-test="app_logo__football_flag_svg"
-        viewBox="0 0 72 32"
-        sx={{
-          display: 'block',
-          height: 18,
-          position: 'absolute',
-          right: -5,
-          top: 0,
-          width: 44,
-          zIndex: 0,
-        }}
-      >
-        <path
-          data-test="app_logo__football_flag_shadow"
-          d="M4 5h55c6 0 10 5 10 11s-4 11-10 11H4Z"
-          fill="rgba(124, 21, 24, 0.12)"
-        />
-        <clipPath id="app-logo-spain-flag">
-          <path d="M4 4h56c6 0 10 5 10 12s-4 12-10 12H4Z" />
-        </clipPath>
-        <g clipPath="url(#app-logo-spain-flag)">
-          <rect data-test="app_logo__flag_red_top" width="72" height="9" fill="#c60b1e" />
-          <rect data-test="app_logo__flag_yellow" y="9" width="72" height="14" fill="#ffc400" />
-          <rect data-test="app_logo__flag_red_bottom" y="23" width="72" height="9" fill="#c60b1e" />
-        </g>
-        <path
-          d="M4 4h56c6 0 10 5 10 12s-4 12-10 12H4Z"
-          fill="none"
-          stroke="rgba(124, 21, 24, 0.28)"
-          strokeWidth="1.4"
-        />
-        <circle
-          data-test="app_logo__football_ball"
-          cx="18"
-          cy="16"
-          r="7"
-          fill="#fffdf4"
-          stroke="#203015"
-          strokeWidth="1.5"
-        />
-        <path
-          d="M18 9v14M11 16h14M13 11l10 10M23 11 13 21"
-          stroke="#203015"
-          strokeWidth="0.9"
-          opacity="0.48"
-        />
-      </Box>
-      <Box
-        component="svg"
-        aria-hidden="true"
         data-test="app_logo__football_crest_svg"
         viewBox="0 0 44 50"
         sx={{
