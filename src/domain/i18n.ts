@@ -571,7 +571,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     coachThought: 'Character thought',
     noAttempts: 'You have not played yet, so statistics are empty.',
     crosswordNeedsIntersections:
-      'Cannot build a crossword from this card set.',
+      'This card set does not have enough words to build a crossword.',
     missingLettersNeedsWords:
       'Missing letters needs single-word cards, but this set does not have any.',
     missingWordNeedsPhrases:
@@ -894,7 +894,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     coachThought: 'Мысль персонажа',
     noAttempts: 'вы еще не играли, поэтому статистика пустая',
     crosswordNeedsIntersections:
-      'невозможно построить кроссворд из данных этого набора',
+      'В этом наборе недостаточно слов чтобы построить кроссворд',
     missingLettersNeedsWords:
       'Для игры с пропущенными буквами в наборе должны быть карточки со словами',
     missingWordNeedsPhrases:
@@ -1217,7 +1217,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     coachThought: 'Pensamiento del personaje',
     noAttempts: 'Todavia no has jugado, asi que las estadisticas estan vacias.',
     crosswordNeedsIntersections:
-      'No se puede crear un crucigrama con los datos de este conjunto.',
+      'Este conjunto no tiene suficientes palabras para crear un crucigrama.',
     missingLettersNeedsWords:
       'Letras que faltan necesita tarjetas de una sola palabra, pero este conjunto no tiene ninguna.',
     missingWordNeedsPhrases:

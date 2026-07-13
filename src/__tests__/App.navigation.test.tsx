@@ -636,7 +636,7 @@ describe('App navigation', () => {
     await user.hover(screen.getByTestId('exercise_picker__option_tooltip_anchor__crossword'));
 
     expect(await screen.findByText(
-      'невозможно построить кроссворд из данных этого набора',
+      'В этом наборе недостаточно слов чтобы построить кроссворд',
     )).toBeInTheDocument();
     expect(
       await screen.findByTestId('exercise_picker__disabled_tooltip_icon__crossword'),
