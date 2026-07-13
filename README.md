@@ -1,92 +1,88 @@
-# Language Crossword Lab
+# Language Lab
 
-Language Crossword Lab is a local browser app for building a personal language-learning practice set from JSON language cards. The learner imports cards, groups them into card sets, chooses a target language, and practices with generated drills.
+Language Lab is a local-first browser game for building and practicing a personal multilingual vocabulary library. The learner owns the content: they import or generate language cards, organize them into card sets, choose a target language, and play short games that produce per-card and per-game learning statistics.
+
+Current release: `0.1.0-alpha.0`
 
 
 
-## Current MVP
+## What The App Does
 
-The implemented frontend uses:
+Language Lab is built around three ideas:
 
-- React, TypeScript, Vite, and MUI;
-- Redux Toolkit for application state;
-- Redux Persist and `localStorage` for browser persistence;
-- Vitest for domain-level tests.
+- the learner is both the player and the teacher;
+- card sets are lightweight learning collections that can be created, edited, archived, and reused;
+- every game result feeds future practice ordering and statistics.
 
-The current app supports:
+The app currently supports Russian, English, and Spanish. The interface language and target language are separate settings, so a learner can practice English while keeping the UI in Russian, or switch the UI into the target language for extra exposure.
 
-- separate interface language and target language selectors;
-- Russian, English, and Spanish language cards;
-- paste-based JSON import;
-- duplicate detection by any matching translation value;
-- safe merging of missing duplicate data;
-- pending duplicate records for conflicts;
-- learner-created card sets that persist locally;
-- a frontend-only OpenRouter AI Assistant for controlled card-library changes;
-- target-language scoped practice history;
-- per-card target-language statistics;
-- weighted exercise results;
-- a strict sports-coach assistant panel.
+All application data is stored in the browser through Redux Persist and `localStorage`. There is no backend requirement for the current alpha.
 
-## Learning Flow
+## Core Features
 
-1. Import language cards as JSON.
-2. Create one or more card sets.
-3. Add imported cards to a card set.
-4. Choose a target language.
-5. Start a generated exercise from the selected card set.
-6. Review the saved attempt in target-language history.
+- Card library with the permanent **All cards** set and user-created card sets.
+- Built-in default vocabulary seed with words and phrases grouped into starter sets.
+- Manual JSON import for language cards using the documented card format.
+- Duplicate detection by matching translation values, safe merging of missing data, pending duplicate records, and duplicate processing history.
+- Active and archived card-set browsing. Archived sets stay available for history and can be used as sources for new active sets.
+- Large-library performance support through indexed lookups and virtualized card lists.
+- Per-card **I know this** marker that excludes mastered cards from games until the marker is removed.
+- Separate target-language statistics and game history.
+- Playful assistant characters, tooltips, onboarding help, player greeting, and responsive game UI.
 
-Card sets are intentionally lightweight and learner-owned. A learner can create many card sets and keep them for later, but each exercise is generated from exactly one selected card set.
+## Games
 
-A later version may let a card set carry an optional topic label. That label should be metadata, not the required identity of the set.
+The alpha includes four playable game modes:
 
-## AI Assistant
+- **Crossword**: generated from a selected card set, with real horizontal and vertical intersections.
+- **Question with 3 variants**: one prompt and three answer choices.
+- **Missing letters**: single-word cards rendered as one-letter cells.
+- **Missing word**: phrase cards where the missing word is filled inside the sentence-like card view.
 
-The AI Assistant runs entirely in the frontend and sends chat requests directly from the browser to OpenRouter. It always uses the fixed model id `deepseek/deepseek-v4-flash`; the app does not bundle a shared or trial key.
+Games are generated from one selected card set. Results are saved by target language and include answered cards, correctness, user answers, crossword layouts, and recent answer history. A game can be finished early; completed work is still counted according to the game rules.
 
-The learner supplies an OpenRouter API key. The key is stored in this browser's `localStorage` without encryption, outside Redux state. Use a restricted key, do not use a high-value account key, and do not share the browser profile. The key is sent only in the OpenRouter `Authorization` header.
+## Statistics And Practice Ordering
 
-The assistant has four bounded read tools for listing card sets, reading one set, searching cards, and reading cards by id. It cannot mutate the library through those tools. A write request can only produce one validated, staged operation with a purple preview. Nothing changes until the learner explicitly selects **Apply changes**.
+Statistics are tracked per card and per target language. The app keeps both aggregate counters and recent answer history so it can show:
 
-Apply records cards, card sets, duplicate metadata, and operation history atomically. Operation history supports rollback only while every affected entity still matches the operation's recorded result; later conflicting edits block rollback instead of overwriting newer work. AI operations cannot globally delete cards or archive or delete card sets.
+- total games completed;
+- total cards answered;
+- correct and incorrect answer counts;
+- recent answer chips and tooltips;
+- full crossword replay in the statistics page;
+- per-card accuracy signals across games.
 
-Manual JSON file import remains available below the assistant as a non-AI fallback. See the [AI Card Library Assistant design](docs/superpowers/specs/2026-07-11-ai-card-library-assistant-design.md) for the full authority and data-flow contract, and [LANGUAGE_CARD_FORMAT.md](docs/LANGUAGE_CARD_FORMAT.md) for the accepted card format.
+Practice ordering prioritizes cards with recent mistakes, then new cards, then stable cards. Cooldown settings can delay cards that have been answered correctly several times in a row. This is intentionally data-driven so later analytics can become more sophisticated without throwing away existing attempts.
 
-## Exercise Modes
+## AI Chat Assistant
 
-The MVP includes four exercise modes:
+Language Lab includes an AI chat assistant for controlled card-library work. The chat lives in its own app tab and is also reachable from magic-wand buttons near the game and card-library sections.
 
-- crossword;
-- question with three answer variants;
-- missing letters in a word or phrase;
-- missing word or phrase in a sentence.
+The assistant uses OpenRouter from the browser. The app includes a limited built-in trial key and also lets the learner save a personal OpenRouter key in local browser storage. Keys are stored unencrypted in this browser profile, so use a restricted key and avoid high-value account credentials.
 
-Crosswords are generated from a single card set. If a phrase is selected for a crossword, the crossword uses only that phrase. If the crossword uses single words, it includes up to six card set cards.
+The default model is `deepseek/deepseek-v4-flash`. The model menu also includes `openai/gpt-5.5`, which is disabled while the built-in trial key is selected and becomes available when the learner saves their own key.
 
-## Practice Ordering
+The assistant can:
 
-The cards page sorts cards for the current target language by total practice volume. Cards with the largest number of correct plus incorrect answers appear first. Cards with no recorded attempts appear after practiced cards.
+- answer questions about the current card library, card sets, recent games, and learning statistics;
+- use recent chat history to resolve references such as "these cards";
+- search cards and read paginated card-set contents;
+- create multilingual cards from a word or phrase list;
+- create, update, rename, and archive card sets;
+- propose membership changes for card sets;
+- render markdown responses, including headings, lists, emphasis, and tables.
 
-Missing-letters practice uses a separate review order:
+The assistant cannot apply writes directly. Any write request must produce a staged operation preview inside the chat. The learner then chooses **Apply changes** or cancels the preview. Applied operations are recorded in operation history and can be rolled back when no later conflicting edits changed the same entities.
 
-1. Cards with recent mistakes are shown first. The app looks at the last five target-language attempts for each card and groups cards by the number of incorrect answers in that recent window. Cards with more recent incorrect answers are prioritized. Cards inside the same mistake group are shuffled by the current generation seed.
-2. Cards with no target-language attempts are shown next, shuffled by the current generation seed.
-3. Practiced cards with no recent mistakes are shown after new cards, also shuffled.
-4. Cards with a fresh correct streak can be cooled down. The default settings are:
-   - last 5 or more answers correct: show again after 2 months;
-   - last 4 answers correct: show again after 1 month;
-   - last 3 answers correct: show again after 0.5 months.
+Manual JSON import remains available as a non-AI fallback. The assistant uses the same card-quality rules described in [docs/LANGUAGE_CARD_FORMAT.md](docs/LANGUAGE_CARD_FORMAT.md).
 
-The cooldown values are stored in the persisted app settings and can be changed from the settings menu in the top-right header. The order is reconstructed from saved exercise attempts, not only from aggregate card counters, so future analytics can change the weighting without losing the answer sequence.
+## Data Format
 
-## Language Card JSON
-
-Language cards are documented in [docs/LANGUAGE_CARD_FORMAT.md](docs/LANGUAGE_CARD_FORMAT.md).
+Language cards are documented in [docs/LANGUAGE_CARD_FORMAT.md](docs/LANGUAGE_CARD_FORMAT.md). That file is intended for both external LLM agents and the in-app AI assistant skill context.
 
 The app creates internal card ids. Imported JSON should not provide ids.
 
-Minimal example:
+Minimal card example:
 
 ```json
 [
@@ -118,6 +114,15 @@ Minimal planned capture shape:
 }
 ```
 
+## Tech Stack
+
+- React 18, TypeScript, Vite, and MUI.
+- Redux Toolkit and Redux Persist for local application state.
+- OpenRouter chat completions for the optional AI assistant.
+- Zod for AI operation and tool schemas.
+- TanStack Virtual for large card lists.
+- Vitest, Testing Library, and Playwright for verification.
+
 ## Setup
 
 Install dependencies:
@@ -132,22 +137,30 @@ Start local development:
 npm run dev
 ```
 
-Run tests:
-
-```bash
-npm test
-```
-
 Build production assets:
 
 ```bash
 npm run build
 ```
 
+## Testing
+
+The short commands are:
+
+```bash
+npm test
+npm run lint
+npm run test:e2e
+```
+
+The full testing strategy, test layers, snapshot workflow, and recommended commands are documented in [docs/TESTING.md](docs/TESTING.md).
+
 ## Documentation
 
-- [SPEC.md](SPEC.md) describes the product behavior.
+- [SPEC.md](SPEC.md) describes product behavior and future direction.
 - [ARCHITECTURE.md](ARCHITECTURE.md) describes the implementation structure.
-- [docs/APP_REQUIREMENTS.md](docs/APP_REQUIREMENTS.md) captures detailed requirements.
-- [docs/LANGUAGE_CARD_FORMAT.md](docs/LANGUAGE_CARD_FORMAT.md) is the LLM-facing card authoring guide.
-- [RETROSPECTIVE.md](RETROSPECTIVE.md) records the AI-native development process.
+- [docs/APP_REQUIREMENTS.md](docs/APP_REQUIREMENTS.md) captures detailed app requirements.
+- [docs/LANGUAGE_CARD_FORMAT.md](docs/LANGUAGE_CARD_FORMAT.md) is the card authoring guide for humans and LLM agents.
+- [docs/TESTING.md](docs/TESTING.md) explains the test suite and verification workflow.
+- [docs/superpowers/specs/2026-07-11-ai-card-library-assistant-design.md](docs/superpowers/specs/2026-07-11-ai-card-library-assistant-design.md) records the AI assistant design contract.
+- [docs/superpowers/specs/2026-07-11-exercise-feedback-and-crossword-history-design.md](docs/superpowers/specs/2026-07-11-exercise-feedback-and-crossword-history-design.md) records the exercise feedback and crossword replay design.
