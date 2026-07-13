@@ -80,6 +80,7 @@ type I18nKey =
   | 'aiChangesAppliedMessage'
   | 'aiCancelPreview'
   | 'aiOperationBlocked'
+  | 'aiCardSetNameInputLabel'
   | 'aiBlockedPreviewTitle'
   | 'aiBlockedPreviewSummary'
   | 'aiBlockedPreviewWarnings'
@@ -131,6 +132,8 @@ type I18nKey =
   | 'saveCardsInSet'
   | 'searchCards'
   | 'searchCardSets'
+  | 'clearCardSearch'
+  | 'clearCardSetSearch'
   | 'showArchivedCardSets'
   | 'createActiveCopy'
   | 'archived'
@@ -218,6 +221,8 @@ type I18nKey =
   | 'correctResult'
   | 'memorizeResult'
   | 'markCardKnown'
+  | 'markCardKnownTooltipTitle'
+  | 'markCardKnownTooltip'
   | 'correct'
   | 'incorrect'
   | 'metricAnsweredSuffix'
@@ -363,6 +368,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiChangesAppliedMessage: 'Changes have been recorded.',
     aiCancelPreview: 'Cancel preview',
     aiOperationBlocked: 'The operation cannot be applied because the library changed.',
+    aiCardSetNameInputLabel: 'Card set name',
     aiBlockedPreviewTitle: 'Review required',
     aiBlockedPreviewSummary:
       'This proposal cannot be applied until its validation warnings are resolved.',
@@ -421,6 +427,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     saveCardsInSet: 'Save cards',
     searchCards: 'Search cards',
     searchCardSets: 'Search card sets',
+    clearCardSearch: 'Clear card search',
+    clearCardSetSearch: 'Clear card set search',
     showArchivedCardSets: 'Archived',
     createActiveCopy: 'Create active copy',
     archived: 'Archived',
@@ -527,6 +535,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctResult: 'Correct!',
     memorizeResult: 'Remember!',
     markCardKnown: 'I know',
+    markCardKnownTooltipTitle: '“I know this” marker',
+    markCardKnownTooltip:
+      'Cards marked this way will not appear in games. You can remove this marker in Cards.',
     correct: 'Correct',
     incorrect: 'Incorrect',
     metricAnsweredSuffix: 'answered',
@@ -676,6 +687,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiChangesAppliedMessage: 'Изменения записаны.',
     aiCancelPreview: 'Отменить предпросмотр',
     aiOperationBlocked: 'Операцию нельзя применить, потому что библиотека изменилась.',
+    aiCardSetNameInputLabel: 'Название набора',
     aiBlockedPreviewTitle: 'Требуется проверка',
     aiBlockedPreviewSummary:
       'Это предложение нельзя применить, пока не устранены замечания проверки.',
@@ -735,6 +747,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     saveCardsInSet: 'Сохранить карточки',
     searchCards: 'Поиск карточек',
     searchCardSets: 'Поиск наборов',
+    clearCardSearch: 'Очистить поиск карточек',
+    clearCardSetSearch: 'Очистить поиск наборов',
     showArchivedCardSets: 'Заархивированные',
     createActiveCopy: 'Создать активную копию',
     archived: 'Заархивировано',
@@ -842,6 +856,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctResult: 'Правильно!',
     memorizeResult: 'Запомнить!',
     markCardKnown: 'Я знаю',
+    markCardKnownTooltipTitle: 'Признак "Я знаю это"',
+    markCardKnownTooltip:
+      'Такие карточки не будут участвовать в играх. Снять признак можно в разделе Карточки.',
     correct: 'Верно',
     incorrect: 'Неверно',
     metricAnsweredSuffix: 'отвечено',
@@ -992,6 +1009,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     aiChangesAppliedMessage: 'Cambios registrados.',
     aiCancelPreview: 'Cancelar vista previa',
     aiOperationBlocked: 'La operacion no se puede aplicar porque la biblioteca cambio.',
+    aiCardSetNameInputLabel: 'Nombre del conjunto',
     aiBlockedPreviewTitle: 'Revision necesaria',
     aiBlockedPreviewSummary:
       'Esta propuesta no se puede aplicar hasta resolver las advertencias de validacion.',
@@ -1051,6 +1069,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     saveCardsInSet: 'Guardar tarjetas',
     searchCards: 'Buscar tarjetas',
     searchCardSets: 'Buscar conjuntos',
+    clearCardSearch: 'Borrar busqueda de tarjetas',
+    clearCardSetSearch: 'Borrar busqueda de conjuntos',
     showArchivedCardSets: 'Archivados',
     createActiveCopy: 'Crear copia activa',
     archived: 'Archivado',
@@ -1157,6 +1177,9 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctResult: 'Correcto!',
     memorizeResult: 'Memorizar!',
     markCardKnown: 'Lo se',
+    markCardKnownTooltipTitle: 'Marca "Ya lo se"',
+    markCardKnownTooltip:
+      'Las tarjetas marcadas asi no participaran en los juegos. Puedes quitar esta marca en Tarjetas.',
     correct: 'Correctas',
     incorrect: 'Incorrectas',
     metricAnsweredSuffix: 'respondidas',

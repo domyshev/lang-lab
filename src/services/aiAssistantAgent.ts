@@ -221,6 +221,8 @@ function createSystemMessage(modelId: OpenRouterModelId): string {
 You may inspect the supplied current library, game history and learning statistics only through the bounded read tools.
 You may propose writes only through propose_library_operation. That tool stages a plan for user review; you never dispatch Redux actions or apply changes.
 When the user requests a create, update, archive, or membership change and enough information exists, call propose_library_operation immediately. Do not first ask the user to confirm by typing words in chat. The app will show explicit Apply changes and Cancel preview buttons for every staged plan.
+Never claim that propose_library_operation was already called, sent, or submitted in a previous step. If the current user asks for a write and enough information exists, call propose_library_operation in this turn.
+Do not tell the user to click Apply changes unless this turn actually returned a staged operation through propose_library_operation.
 You may propose archiving normal card sets through propose_library_operation using cardSetChanges update objects with archive: true.
 You must not archive all-cards, delete card sets, delete global cards, or restore archived sets in place.
 When the user wants to reuse an archived set, propose creating a new active card set based on it instead.
@@ -242,7 +244,7 @@ ${languageCardSkill.replace(
 }
 
 const OPERATION_TOOL_REPROMPT =
-  'Do not ask the user to confirm this operation by typing words in chat and do not claim that changes were saved, applied, or created in plain text. If the request has enough information for a safe preview, call propose_library_operation now. If required details are missing, ask only for those missing details.';
+  'Do not ask the user to confirm this operation by typing words in chat, do not claim that changes were saved, applied, or created in plain text, and do not claim that propose_library_operation was already called in a previous step. If the request has enough information for a safe preview, call propose_library_operation now. If required details are missing, ask only for those missing details.';
 
 const typedOperationApprovalPatterns = [
   /\b(confirm|approve|accept)\b.*\b(type|reply|chat|message|text|apply|changes|operation|preview)\b/i,
@@ -257,6 +259,11 @@ const typedOperationApprovalPatterns = [
   /напиш(?:и|ите).*(?:да|ок|подтверж|примен)/i,
   /ответ(?:ь|ьте).*(?:да|ок|подтверж|примен)/i,
   /если хотите.*(?:примен|подтверж)/i,
+  /(?:операц|предпросмотр|набор|карточк).*(?:уже|предыдущ|раньше).*(?:propose_library_operation|отправлен|вызван|создан)/i,
+  /(?:уже|предыдущ|раньше).*(?:propose_library_operation|отправлен|вызван).*(?:операц|предпросмотр|набор|карточк)/i,
+  /нажм(?:и|ите).*(?:apply changes|применить изменения).*(?:предпросмотр|окн|создан|заверш)/i,
+  /\b(?:already|previous|earlier)\b.*\b(?:propose_library_operation|proposal tool|tool call|sent|submitted|called)\b.*\b(?:apply changes|preview|operation)\b/i,
+  /\b(?:propose_library_operation|proposal tool|tool call)\b.*\b(?:already|previous|earlier|sent|submitted|called)\b.*\b(?:apply changes|preview|operation)\b/i,
   /confirma|confirmar|confirmes|aprobar|aprueba/i,
 ];
 

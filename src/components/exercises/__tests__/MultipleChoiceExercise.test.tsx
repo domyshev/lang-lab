@@ -53,12 +53,14 @@ describe('MultipleChoiceExercise', () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();
     const onNext = vi.fn();
+    const onKnownChange = vi.fn();
 
     render(
       <MultipleChoiceExercise
         interfaceLanguage="ru"
         prompt={prompt}
         onAnswer={onAnswer}
+        onKnownChange={onKnownChange}
         onNext={onNext}
       />,
     );
@@ -82,6 +84,23 @@ describe('MultipleChoiceExercise', () => {
       backgroundColor: 'rgb(235, 247, 225)',
     });
     expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
+    expect(screen.queryByText('Я знаю')).not.toBeInTheDocument();
+    const knownButton = screen.getByTestId(
+      'multiple_choice_exercise__known_button__airport',
+    );
+    expect(knownButton).toHaveAttribute('aria-pressed', 'false');
+
+    await user.hover(knownButton);
+    expect(
+      await screen.findByText('Признак "Я знаю это"'),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        'Такие карточки не будут участвовать в играх. Снять признак можно в разделе Карточки.',
+      ),
+    ).toBeInTheDocument();
+    await user.click(knownButton);
+    expect(onKnownChange).toHaveBeenCalledWith(true);
 
     await user.click(screen.getByRole('button', { name: 'Неверно' }));
     expect(onNext).toHaveBeenCalledOnce();

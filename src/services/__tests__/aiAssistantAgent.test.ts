@@ -506,6 +506,62 @@ describe('runAiAssistant', () => {
     ]);
   });
 
+  it('reprompts when the model claims a proposal tool call was already sent earlier', async () => {
+    const proposalCall = toolCall('proposal-after-previous-step-claim', 'propose_library_operation', {
+      title: 'Spanish football',
+      summary: 'Create a five-card set about Spanish football.',
+      cards: [
+        {
+          clientRef: 'la-liga',
+          translations: {
+            en: 'La Liga',
+            ru: 'Ла Лига',
+            es: 'La Liga',
+          },
+        },
+      ],
+      cardSetChanges: [
+        {
+          type: 'create',
+          clientRef: 'spanish-football-set',
+          names: {
+            en: 'Spanish football',
+            ru: 'Испанский футбол',
+            es: 'Futbol espanol',
+          },
+          cardRefs: ['la-liga'],
+        },
+      ],
+    });
+    const falsePreviousStepClaim =
+      'Понял, спасибо за напоминание! Операция уже отправлена через `propose_library_operation` в предыдущем шаге. Все 5 карточек для набора **«Испанский футбол»** готовы к применению — нажмите **Apply changes** в окне предпросмотра, чтобы завершить создание.';
+    sendChatMock
+      .mockResolvedValueOnce(success(falsePreviousStepClaim))
+      .mockResolvedValueOnce(success(null, [proposalCall]))
+      .mockResolvedValueOnce(success('I staged the Spanish football preview.'));
+
+    const result = await runAiAssistant({
+      apiKey: 'key',
+      userMessage: 'создай набор на тему испанский футбол 5 карточек',
+      snapshot,
+      now: () => now,
+      idFactory: (prefix) => `${prefix}-fixed`,
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.content).toBe('I staged the Spanish football preview.');
+    expect(result.stagedOperation?.title).toBe('Spanish football');
+    expect(sendChatMock).toHaveBeenCalledTimes(3);
+    expect(sendChatMock.mock.calls[1][0].messages.slice(-2)).toEqual([
+      { role: 'assistant', content: falsePreviousStepClaim },
+      {
+        role: 'user',
+        content: expect.stringContaining('call propose_library_operation'),
+      },
+    ]);
+  });
+
   it('reprompts when the model claims changes were saved without a staged operation', async () => {
     const proposalCall = toolCall('proposal-after-fake-save', 'propose_library_operation', {
       title: 'The Catcher in the Rye',

@@ -3,8 +3,6 @@ import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import {
   Box,
   Button,
-  Checkbox,
-  FormControlLabel,
   Paper,
   Stack,
   Typography,
@@ -24,14 +22,15 @@ import { shouldStrikeAnswerCharacter } from '../../domain/answerCharacters';
 import { MISSING_ANSWER_CHARACTER } from '../../domain/answerPlaceholders';
 import { MissingWordPrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
+import { SupportedLanguage } from '../../domain/languages';
 import { RootState } from '../../store/store';
+import { KnownCardToggleButton } from '../KnownCardToggleButton';
 import {
   ExerciseProgressChip,
   ExerciseRepeatChip,
   ExerciseCardSetChip,
 } from './ExerciseCardSetChip';
 import { TranslationHintRow } from './TranslationHintRow';
-import { SupportedLanguage } from '../../domain/languages';
 
 type SubmissionOutcome = 'correct' | 'incorrect' | 'memorize';
 
@@ -393,9 +392,9 @@ export function MissingWordExercise({
                   : t(interfaceLanguage, 'incorrect')}
           </Button>
           {isSubmitted && onKnownChange && (
-            <KnownCardCheckbox
+            <KnownCardToggleButton
               checked={isKnown}
-              dataTest={`missing_word_exercise__known_checkbox__${prompt.cardId}`}
+              dataTest={`missing_word_exercise__known_button__${prompt.cardId}`}
               interfaceLanguage={interfaceLanguage}
               onChange={onKnownChange}
             />
@@ -403,46 +402,6 @@ export function MissingWordExercise({
         </Stack>
       </Stack>
     </Paper>
-  );
-}
-
-function KnownCardCheckbox({
-  checked,
-  dataTest,
-  interfaceLanguage,
-  onChange,
-}: {
-  checked: boolean;
-  dataTest: string;
-  interfaceLanguage: SupportedLanguage;
-  onChange: (isKnown: boolean) => void;
-}) {
-  return (
-    <FormControlLabel
-      control={
-        <Checkbox
-          checked={checked}
-          onChange={(event) => onChange(event.target.checked)}
-          slotProps={{
-            input: {
-              'data-test': dataTest,
-            } as Record<string, string>,
-          }}
-          sx={{
-            color: '#6f4bd8',
-            p: 0.5,
-            '&.Mui-checked': { color: '#6f4bd8' },
-          }}
-        />
-      }
-      label={t(interfaceLanguage, 'markCardKnown')}
-      sx={{
-        color: '#4b368d',
-        fontWeight: 850,
-        m: 0,
-        '& .MuiFormControlLabel-label': { fontWeight: 850 },
-      }}
-    />
   );
 }
 

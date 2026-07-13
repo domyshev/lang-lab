@@ -36,11 +36,14 @@ const puzzle: CrosswordPuzzle = {
 };
 
 describe('crosswordResults', () => {
-  it('gives incorrect results precedence at an intersection', () => {
+  it('keeps a crossing cell correct when it belongs to a correct word', () => {
     const crossingCell = puzzle.cells[2];
 
     expect(
       getCrosswordCellTone(crossingCell, { cat: true, tea: false }),
+    ).toBe('correct');
+    expect(
+      getCrosswordCellTone(crossingCell, { cat: false, tea: false }),
     ).toBe('incorrect');
     expect(getCrosswordCellTone(crossingCell, { cat: true })).toBe('correct');
     expect(getCrosswordCellTone(crossingCell, {})).toBeUndefined();

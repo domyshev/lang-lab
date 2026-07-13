@@ -148,7 +148,7 @@ export function CrosswordExercise({
       return;
     }
 
-    const answers = getFilledCrosswordAnswers(draftState);
+    const answers = draftState.answers;
     const snapshot: CrosswordAttemptSnapshot = {
       puzzle,
       cellValues: { ...cellValues },
@@ -327,8 +327,21 @@ export function CrosswordExercise({
                 cell,
                 submittedCorrectness,
               );
+              const isInIncompleteSubmittedEntry = submittedAnswers
+                ? cell.entryIds.some((entryId) => {
+                    const entry = entryMap.get(entryId);
+                    return entry
+                      ? !isSubmittedEntryComplete(
+                          entry,
+                          submittedAnswers[entryId] ?? '',
+                        )
+                      : false;
+                  })
+                : false;
               const ghostValue =
-                hasSubmittedAnswers && !rawCellValue.trim() && !cellTone
+                hasSubmittedAnswers &&
+                !rawCellValue.trim() &&
+                (!cellTone || isInIncompleteSubmittedEntry)
                   ? cell.solution
                   : '';
               const displayCellValue = rawCellValue || ghostValue;
@@ -424,7 +437,9 @@ export function CrosswordExercise({
                             startEntryNumber.entry.cardId;
                           inputRefs.current[key]?.focus();
                         }}
-                        sx={clueNumberStyles}
+                        sx={getClueNumberStyles(
+                          startEntryNumber.entry.direction,
+                        )}
                         type="button"
                       >
                         {startEntryNumber.number}
@@ -542,7 +557,10 @@ function CorrectionTooltip({
       arrowDataTest={`${dataTestPrefix}__tooltip_arrow`}
       closeOnOtherOpen
       leaveDelay={0}
+      popperDataTest={`${dataTestPrefix}__popper`}
+      preventOverflow
       transitionTimeout={0}
+      tooltipStyle={recentAnswersTooltipViewportStyle}
       tooltipSx={recentAnswersTooltipStyles}
       title={
         <Stack data-test={`${dataTestPrefix}__tooltip`} spacing={1.25}>
@@ -711,17 +729,6 @@ function getCrosswordDraftState(
   };
 }
 
-function getFilledCrosswordAnswers(
-  draftState: CrosswordDraftState,
-): Record<string, string> {
-  return Object.fromEntries(
-    draftState.answeredCardIds.map((cardId) => [
-      cardId,
-      draftState.answers[cardId] ?? '',
-    ]),
-  );
-}
-
 function getCrosswordAnswers(
   puzzle: CrosswordPuzzle,
   cellValues: Record<string, string>,
@@ -761,6 +768,16 @@ function isEntryFilled(
     const row = entry.direction === 'down' ? entry.row + index : entry.row;
     const col = entry.direction === 'across' ? entry.col + index : entry.col;
     return Boolean(cellValues[toCellKey(row, col)]?.trim());
+  });
+}
+
+function isSubmittedEntryComplete(entry: CrosswordEntry, answer: string): boolean {
+  return entry.answer.split('').every((character, index) => {
+    if (/\s/.test(character)) {
+      return true;
+    }
+
+    return Boolean(answer[index]?.trim());
   });
 }
 
@@ -870,7 +887,24 @@ const letterCellStyles = {
   width: '100%',
 };
 
-const clueNumberStyles = {
+function getClueNumberStyles(direction: CrosswordEntry['direction']) {
+  return {
+    ...clueNumberBaseStyles,
+    ...(direction === 'across'
+      ? {
+          left: -20,
+          top: '50%',
+          transform: 'translateY(-50%)',
+        }
+      : {
+          left: '50%',
+          top: -20,
+          transform: 'translateX(-50%)',
+        }),
+  };
+}
+
+const clueNumberBaseStyles = {
   alignItems: 'center',
   appearance: 'none',
   bgcolor: '#f5d66b',
@@ -883,12 +917,10 @@ const clueNumberStyles = {
   fontWeight: 950,
   height: 15,
   justifyContent: 'center',
-  left: -18,
   lineHeight: 1,
   m: 0,
   p: 0,
   position: 'absolute',
-  top: -18,
   width: 15,
   zIndex: 1,
 };
@@ -975,3 +1007,8 @@ const recentAnswersTooltipStyles = {
   maxWidth: 'min(520px, calc(100vw - 32px))',
   p: 1.25,
 };
+
+const recentAnswersTooltipViewportStyle = {
+  maxHeight: 'calc(100vh - 32px)',
+  overflowY: 'auto',
+} as const;

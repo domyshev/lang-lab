@@ -20,6 +20,7 @@ import { SupportedLanguage } from '../../domain/languages';
 import { AiAssistantMessage } from '../../store/aiAssistantSlice';
 import { PlannedAiOperation } from '../../domain/aiOperations';
 import { AiBlockedOperationPreview } from './AiBlockedOperationPreview';
+import { AiMarkdownMessage } from './AiMarkdownMessage';
 import { AiOperationPreview } from './AiOperationPreview';
 
 interface AiChatPanelProps {
@@ -188,9 +189,10 @@ export function AiChatPanel({
               }}
             >
               {message.content && (
-                <Typography data-test={`ai_chat__message_text__${message.id}`} whiteSpace="pre-wrap">
-                  {message.content}
-                </Typography>
+                <AiMarkdownMessage
+                  content={message.content}
+                  dataTest={`ai_chat__message_text__${message.id}`}
+                />
               )}
               {message.operationPreview && (
                 <Box sx={{ mt: message.content ? 1 : 0 }}>
@@ -199,7 +201,7 @@ export function AiChatPanel({
                       message.previewStatus === 'pending' ? operationError : undefined
                     }
                     language={language}
-                    onApply={() => onApplyOperation(message.operationPreview!)}
+                    onApply={onApplyOperation}
                     onCancel={onCancelPreview}
                     operation={message.operationPreview}
                     status={message.previewStatus ?? 'pending'}

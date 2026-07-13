@@ -76,8 +76,9 @@ export function CrosswordHistoryReplay({
 
           const startEntry = startEntryByKey.get(key);
           const value = snapshot.cellValues[key] ?? '';
-          const tone = getCrosswordCellTone(cell, correctness);
-          const ghostValue = !value.trim() && !tone ? cell.solution : '';
+          const resultTone = getCrosswordCellTone(cell, correctness);
+          const ghostValue = !value.trim() ? cell.solution : '';
+          const tone = ghostValue ? undefined : resultTone;
           const displayValue = value || ghostValue;
           const incorrectEntries = getIncorrectCrosswordEntries(
             cell,
@@ -151,7 +152,7 @@ export function CrosswordHistoryReplay({
                     aria-label={`${t(interfaceLanguage, 'question')} ${startEntry.number}`}
                     component="button"
                     data-test={`${dataTestPrefix}__clue_number__${startEntry.entry.cardId}`}
-                    sx={clueNumberStyles}
+                    sx={getClueNumberStyles(startEntry.entry.direction)}
                     type="button"
                   >
                     {startEntry.number}
@@ -296,7 +297,24 @@ const letterCellStyles = {
   width: '100%',
 };
 
-const clueNumberStyles = {
+function getClueNumberStyles(direction: 'across' | 'down') {
+  return {
+    ...clueNumberBaseStyles,
+    ...(direction === 'across'
+      ? {
+          left: -20,
+          top: '50%',
+          transform: 'translateY(-50%)',
+        }
+      : {
+          left: '50%',
+          top: -20,
+          transform: 'translateX(-50%)',
+        }),
+  };
+}
+
+const clueNumberBaseStyles = {
   alignItems: 'center',
   bgcolor: '#f5d66b',
   border: '1px solid rgba(119, 86, 0, 0.24)',
@@ -308,11 +326,9 @@ const clueNumberStyles = {
   fontWeight: 950,
   height: 15,
   justifyContent: 'center',
-  left: -18,
   lineHeight: 1,
   p: 0,
   position: 'absolute',
-  top: -18,
   width: 15,
   zIndex: 1,
 };

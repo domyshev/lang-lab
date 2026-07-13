@@ -1,7 +1,9 @@
-import { Alert, Box, Button, Stack, Typography } from '@mui/material';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material';
 import { PlannedAiOperation } from '../../domain/aiOperations';
+import { CardSet } from '../../domain/cardSets';
 import { t } from '../../domain/i18n';
-import { SupportedLanguage } from '../../domain/languages';
+import { SupportedLanguage, supportedLanguages } from '../../domain/languages';
 
 const countItems = [
   ['createdCards', 'aiCreatedCards'],
@@ -17,11 +19,15 @@ const countItems = [
 interface AiOperationPreviewProps {
   blockingError?: string;
   language: SupportedLanguage;
-  onApply: () => void;
+  onApply: (operation: PlannedAiOperation) => void;
   onCancel: () => void;
   operation: PlannedAiOperation;
   status?: 'pending' | 'applied' | 'rejected';
 }
+
+type EditableCardSetNameTarget =
+  | { kind: 'created'; cardSetId: string; currentName: string }
+  | { kind: 'updated'; cardSetId: string; currentName: string };
 
 export function AiOperationPreview({
   blockingError,
@@ -32,6 +38,27 @@ export function AiOperationPreview({
   status = 'pending',
 }: AiOperationPreviewProps) {
   const isPending = status === 'pending';
+  const editableNameTarget = useMemo(
+    () => getEditableCardSetNameTarget(operation, language),
+    [language, operation],
+  );
+  const [cardSetName, setCardSetName] = useState(editableNameTarget?.currentName ?? '');
+  const normalizedCardSetName = cardSetName.trim();
+  const operationToApply = useMemo(
+    () =>
+      editableNameTarget && normalizedCardSetName
+        ? renameOperationCardSet({
+            nextName: normalizedCardSetName,
+            operation,
+            target: editableNameTarget,
+          })
+        : operation,
+    [editableNameTarget, language, normalizedCardSetName, operation],
+  );
+
+  useEffect(() => {
+    setCardSetName(editableNameTarget?.currentName ?? '');
+  }, [editableNameTarget?.cardSetId, editableNameTarget?.currentName]);
 
   return (
     <Box
@@ -77,11 +104,27 @@ export function AiOperationPreview({
           </Alert>
         )}
 
+        {editableNameTarget && (
+          <TextField
+            data-test="ai_operation_preview__card_set_name_input"
+            disabled={!isPending}
+            fullWidth
+            label={t(language, 'aiCardSetNameInputLabel')}
+            onChange={(event) => setCardSetName(event.target.value)}
+            size="small"
+            value={cardSetName}
+          />
+        )}
+
         <Stack data-test="ai_operation_preview__actions" direction="row" spacing={1}>
           <Button
             data-test="ai_operation_preview__apply_button"
-            disabled={!isPending || Boolean(blockingError)}
-            onClick={onApply}
+            disabled={
+              !isPending ||
+              Boolean(blockingError) ||
+              Boolean(editableNameTarget && !normalizedCardSetName)
+            }
+            onClick={() => onApply(operationToApply)}
             variant="contained"
           >
             {t(language, 'aiApplyChanges')}
@@ -98,4 +141,84 @@ export function AiOperationPreview({
       </Stack>
     </Box>
   );
+}
+
+function getEditableCardSetNameTarget(
+  operation: PlannedAiOperation,
+  language: SupportedLanguage,
+): EditableCardSetNameTarget | undefined {
+  if (operation.createdCardSets.length === 1) {
+    const createdCardSet = operation.createdCardSets[0];
+    return {
+      kind: 'created',
+      cardSetId: createdCardSet.id,
+      currentName: getEditableCardSetName(createdCardSet, language),
+    };
+  }
+
+  const renamedUpdates = operation.updatedCardSets.filter(({ before, after }) =>
+    hasCardSetNameChange(before, after),
+  );
+  if (renamedUpdates.length !== 1) {
+    return undefined;
+  }
+
+  const renamedCardSet = renamedUpdates[0].after;
+  return {
+    kind: 'updated',
+    cardSetId: renamedCardSet.id,
+    currentName: getEditableCardSetName(renamedCardSet, language),
+  };
+}
+
+function getEditableCardSetName(cardSet: CardSet, language: SupportedLanguage): string {
+  return cardSet.names?.[language]?.trim() || cardSet.name;
+}
+
+function hasCardSetNameChange(before: CardSet, after: CardSet): boolean {
+  if (before.name !== after.name) {
+    return true;
+  }
+
+  const languages = new Set([
+    ...Object.keys(before.names ?? {}),
+    ...Object.keys(after.names ?? {}),
+  ]);
+  return [...languages].some(
+    (language) =>
+      before.names?.[language as SupportedLanguage] !==
+      after.names?.[language as SupportedLanguage],
+  );
+}
+
+function renameOperationCardSet(input: {
+  nextName: string;
+  operation: PlannedAiOperation;
+  target: EditableCardSetNameTarget;
+}): PlannedAiOperation {
+  const renameCardSet = (cardSet: CardSet): CardSet => ({
+    ...cardSet,
+    name: input.nextName,
+    names: Object.fromEntries(
+      supportedLanguages.map((language) => [language, input.nextName]),
+    ),
+  });
+
+  if (input.target.kind === 'created') {
+    return {
+      ...input.operation,
+      createdCardSets: input.operation.createdCardSets.map((cardSet) =>
+        cardSet.id === input.target.cardSetId ? renameCardSet(cardSet) : cardSet,
+      ),
+    };
+  }
+
+  return {
+    ...input.operation,
+    updatedCardSets: input.operation.updatedCardSets.map((update) =>
+      update.after.id === input.target.cardSetId
+        ? { ...update, after: renameCardSet(update.after) }
+        : update,
+    ),
+  };
 }

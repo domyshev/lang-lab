@@ -69,6 +69,16 @@ describe('CrosswordHistoryReplay', () => {
     expect(
       screen.getByTestId('crossword_history__clue_number__tea'),
     ).toHaveTextContent('2');
+    expect(screen.getByTestId('crossword_history__clue_number__cat')).toHaveStyle({
+      left: '-20px',
+      top: '50%',
+      transform: 'translateY(-50%)',
+    });
+    expect(screen.getByTestId('crossword_history__clue_number__tea')).toHaveStyle({
+      left: '50%',
+      top: '-20px',
+      transform: 'translateX(-50%)',
+    });
     expect(screen.getByTestId('crossword_history__cell__1_1')).toHaveTextContent(
       'c',
     );
@@ -115,6 +125,33 @@ describe('CrosswordHistoryReplay', () => {
             },
           ],
         }}
+        snapshot={snapshot}
+      />,
+    );
+
+    expect(screen.getByTestId('crossword_history__cell__3_3')).toHaveTextContent(
+      'a',
+    );
+    expect(screen.getByTestId('crossword_history__cell__3_3')).toHaveStyle({
+      color: 'rgba(32, 48, 21, 0.38)',
+    });
+    expect(screen.getByTestId('crossword_history__cell__3_3')).not.toHaveStyle({
+      backgroundColor: 'rgb(253, 235, 238)',
+    });
+
+    rerender(
+      <CrosswordHistoryReplay
+        correctness={{ cat: true, tea: false }}
+        dataTestPrefix="crossword_history"
+        interfaceLanguage="ru"
+        recentResultsByCardId={{
+          tea: [
+            {
+              isCorrect: false,
+              occurredAt: '2026-07-04T10:00:00.000Z',
+            },
+          ],
+        }}
         snapshot={{
           ...snapshot,
           cellValues: { ...snapshot.cellValues, '2:2': 'x' },
@@ -127,7 +164,7 @@ describe('CrosswordHistoryReplay', () => {
       textDecorationLine: 'line-through',
     });
     expect(screen.getByTestId('crossword_history__cell__1_3')).toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(235, 247, 225)',
       textDecorationLine: 'none',
     });
     expect(

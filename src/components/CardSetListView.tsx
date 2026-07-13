@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import ArchiveIcon from '@mui/icons-material/Archive';
+import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
   Box,
@@ -9,6 +10,7 @@ import {
   Chip,
   FormControlLabel,
   IconButton,
+  InputAdornment,
   Paper,
   Stack,
   TextField,
@@ -190,6 +192,24 @@ export function CardSetListView({
             size="small"
             value={cardSetSearchQuery}
             onChange={(event) => setCardSetSearchQuery(event.target.value)}
+            slotProps={{
+              input: {
+                endAdornment: cardSetSearchQuery ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label={t(interfaceLanguage, 'clearCardSetSearch')}
+                      data-test="card_set_list__search_clear_button"
+                      edge="end"
+                      onClick={() => setCardSetSearchQuery('')}
+                      onMouseDown={(event) => event.preventDefault()}
+                      size="small"
+                    >
+                      <ClearRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ) : undefined,
+              },
+            }}
           />
           <FormControlLabel
             control={

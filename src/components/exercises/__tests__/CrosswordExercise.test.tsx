@@ -74,8 +74,14 @@ describe('CrosswordExercise', () => {
     expect(screen.getByTestId('crossword_exercise__clue_number__cat')).toHaveTextContent('1');
     expect(screen.getByTestId('crossword_exercise__clue_number__tea')).toHaveTextContent('2');
     expect(screen.getByTestId('crossword_exercise__clue_number__cat')).toHaveStyle({
-      left: '-18px',
-      top: '-18px',
+      left: '-20px',
+      top: '50%',
+      transform: 'translateY(-50%)',
+    });
+    expect(screen.getByTestId('crossword_exercise__clue_number__tea')).toHaveStyle({
+      left: '50%',
+      top: '-20px',
+      transform: 'translateX(-50%)',
     });
     expect(screen.getByRole('button', { name: 'Отправить кроссворд' })).toHaveStyle({
       alignSelf: 'flex-start',
@@ -195,7 +201,7 @@ describe('CrosswordExercise', () => {
     });
   });
 
-  it('submits and colors only fully filled crossword words', async () => {
+  it('submits all crossword words and colors the checked grid', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
 
@@ -242,7 +248,7 @@ describe('CrosswordExercise', () => {
     await user.click(screen.getByRole('button', { name: 'Отправить кроссворд' }));
 
     expect(onSubmit).toHaveBeenCalledWith(
-      { cat: 'cat' },
+      { cat: 'cat', tea: 't' },
       expect.objectContaining({
         cellValues: {
           '0:0': 'c',
@@ -335,7 +341,7 @@ describe('CrosswordExercise', () => {
       backgroundColor: 'rgb(235, 247, 225)',
     });
     expect(screen.getByLabelText('Crossword cell 1 3')).toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(235, 247, 225)',
     });
     expect(screen.getByLabelText('Crossword cell 2 3')).toHaveStyle({
       backgroundColor: 'rgb(253, 235, 238)',
@@ -355,6 +361,13 @@ describe('CrosswordExercise', () => {
     const correctionTooltip = await screen.findByTestId(
       'crossword_exercise__correction__2_3__tooltip',
     );
+    expect(
+      screen.getByTestId('crossword_exercise__correction__2_3__popper'),
+    ).toHaveAttribute('data-prevent-overflow', 'true');
+    expect(screen.getByRole('tooltip').firstElementChild).toHaveStyle({
+      maxHeight: 'calc(100vh - 32px)',
+      overflowY: 'auto',
+    });
     expect(
       within(correctionTooltip).getByTestId(
         'crossword_exercise__correction__2_3__entry__tea__answer',

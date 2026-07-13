@@ -12,11 +12,11 @@ export function getCrosswordCellTone(
     )
     .map((entryId) => correctness[entryId]);
 
-  if (results.some((isCorrect) => !isCorrect)) {
-    return 'incorrect';
+  if (results.some((isCorrect) => isCorrect)) {
+    return 'correct';
   }
 
-  return results.length > 0 ? 'correct' : undefined;
+  return results.length > 0 ? 'incorrect' : undefined;
 }
 
 export function getIncorrectCrosswordEntries(

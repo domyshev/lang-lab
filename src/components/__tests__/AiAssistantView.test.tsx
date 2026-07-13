@@ -19,6 +19,8 @@ import {
   appendAiMessage,
   stageAiOperation,
 } from '../../store/aiAssistantSlice';
+import { saveAttempt } from '../../store/attemptsSlice';
+import { recordAttemptStats } from '../../store/statsSlice';
 import { rootReducer } from '../../store/store';
 import { AiAssistantView } from '../AiAssistantView';
 
@@ -72,6 +74,29 @@ function createAppliedOperation(
     ...createOperation(id),
     appliedAt,
     status: 'applied',
+  };
+}
+
+function createCardSetOperation(id = 'operation-1'): PlannedAiOperation {
+  const operation = createOperation(id);
+  return {
+    ...operation,
+    title: 'Создать набор «Для повторения»',
+    summary: 'Creates a review card set from weak cards.',
+    createdCardSets: [
+      {
+        id: `${id}-set`,
+        name: 'Для повторения',
+        names: { ru: 'Для повторения', en: 'For review', es: 'Para repasar' },
+        cardIds: [`${id}-card`],
+        createdAt: now,
+        updatedAt: now,
+      },
+    ],
+    previewCounts: {
+      ...operation.previewCounts,
+      createdCardSets: 1,
+    },
   };
 }
 
@@ -632,6 +657,53 @@ describe('AiAssistantView chat', () => {
     });
   });
 
+  it('uses attempts and stats saved after the chat view mounted', async () => {
+    const user = userEvent.setup();
+    saveOpenRouterKey('sk-test');
+    mockedRunAiAssistant.mockResolvedValue({
+      ok: true,
+      content: 'I can see the latest crossword.',
+    });
+    const store = renderView();
+    const latestAttempt = {
+      id: 'attempt-latest-crossword',
+      exerciseSessionId: 'session-latest-crossword',
+      exerciseType: 'crossword' as const,
+      cardSetId: 'hunting',
+      targetLanguage: 'en' as const,
+      createdAt: '2026-07-13T10:01:00.000Z',
+      completedAt: '2026-07-13T10:02:00.000Z',
+      cardSnapshots: [],
+      prompts: [],
+      answers: { card1: 'wrnog' },
+      correctness: { card1: false },
+      hintsUsed: {},
+    };
+
+    act(() => {
+      store.dispatch(saveAttempt(latestAttempt));
+      store.dispatch(recordAttemptStats(latestAttempt));
+    });
+
+    await user.type(
+      screen.getByLabelText('Message the AI assistant'),
+      'Look at my latest crossword.',
+    );
+    await user.click(screen.getByRole('button', { name: 'Send message' }));
+
+    expect(mockedRunAiAssistant.mock.calls[0][0].snapshot.attempts).toEqual([
+      latestAttempt,
+    ]);
+    expect(mockedRunAiAssistant.mock.calls[0][0].snapshot.cardStats).toMatchObject([
+      {
+        attempts: 1,
+        cardId: 'card1',
+        incorrect: 1,
+        targetLanguage: 'en',
+      },
+    ]);
+  });
+
   it('appends the response and stages a returned operation', async () => {
     const user = userEvent.setup();
     const operation = createOperation();
@@ -656,6 +728,51 @@ describe('AiAssistantView chat', () => {
       'assistant',
     ]);
     expect(store.getState().aiAssistant.stagedOperation?.id).toBe(operation.id);
+  });
+
+  it('renders assistant markdown headings, lists, emphasis, and tables', async () => {
+    const user = userEvent.setup();
+    saveOpenRouterKey('sk-test');
+    mockedRunAiAssistant.mockResolvedValue({
+      ok: true,
+      content: [
+        'Вот что я выяснил! 🕵️‍♂️',
+        '',
+        '---',
+        '',
+        '## 📋 Ваши последние кроссворды',
+        '',
+        '| Игра | Результат | Сет |',
+        '|-----|-----------|-----|',
+        '| 🥇 **Последняя** (сегодня) | ✅ **3/3 — без ошибок!** | «Охота» |',
+        '| ❌ **Предпоследняя** | ❌ **1 ошибка** | «Любовь» |',
+        '',
+        '## 🚫 В каком слове ошибка?',
+        '',
+        '**soulmate** — *родственная душа / alma gemela* ❤️',
+        '',
+        '- ⚠️ 3 ошибки из 5 попыток',
+      ].join('\n'),
+    });
+
+    renderView({ language: 'ru' });
+
+    await user.type(screen.getByLabelText('Сообщение AI-ассистенту'), 'Что с кроссвордами?');
+    await user.click(screen.getByRole('button', { name: 'Отправить сообщение' }));
+
+    expect(
+      await screen.findByRole('heading', { name: '📋 Ваши последние кроссворды' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: '🚫 В каком слове ошибка?' }),
+    ).toBeInTheDocument();
+    const table = screen.getByRole('table');
+    expect(within(table).getByRole('columnheader', { name: 'Игра' })).toBeInTheDocument();
+    expect(
+      within(table).getByRole('cell', { name: '🥇 Последняя (сегодня)' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('listitem')).toHaveTextContent('3 ошибки из 5 попыток');
+    expect(screen.queryByText('| Игра | Результат | Сет |')).not.toBeInTheDocument();
   });
 
   it('hides verbal confirmation requests when preview actions already confirm the operation', async () => {
@@ -1053,6 +1170,52 @@ describe('AiAssistantView operation preview and history', () => {
     expect(messages[messages.length - 1]).toMatchObject({
       role: 'assistant',
       content: 'Изменения записаны.',
+    });
+  });
+
+  it('lets the user edit a created card set name before applying the preview', async () => {
+    const user = userEvent.setup();
+    const operation = createCardSetOperation();
+    const store = renderView({
+      language: 'ru',
+      stagedOperation: operation,
+      messages: [
+        {
+          id: 'operation-preview-message',
+          role: 'assistant',
+          content: 'Review this operation.',
+          createdAt: now,
+          operationPreview: operation,
+          previewStatus: 'pending',
+        },
+      ],
+    });
+    const preview = screen.getByTestId('ai_operation_preview__panel');
+    const nameInput = within(preview).getByRole('textbox', { name: 'Название набора' });
+
+    expect(nameInput).toHaveValue('Для повторения');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Повторить любовь');
+    await user.click(within(preview).getByRole('button', { name: 'Применить изменения' }));
+
+    const savedSet = store
+      .getState()
+      .cardSets.cardSets.find((cardSet) => cardSet.id === 'operation-1-set');
+    expect(savedSet).toMatchObject({
+      name: 'Повторить любовь',
+      names: {
+        ru: 'Повторить любовь',
+        en: 'Повторить любовь',
+        es: 'Повторить любовь',
+      },
+    });
+    expect(store.getState().aiAssistant.operations[0].createdCardSets[0]).toMatchObject({
+      name: 'Повторить любовь',
+      names: {
+        ru: 'Повторить любовь',
+        en: 'Повторить любовь',
+        es: 'Повторить любовь',
+      },
     });
   });
 

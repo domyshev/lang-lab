@@ -2,6 +2,7 @@ import { Box, Tooltip } from '@mui/material';
 import type { SxProps, Theme as MuiTheme } from '@mui/material/styles';
 import {
   cloneElement,
+  type CSSProperties,
   type FocusEvent as ReactFocusEvent,
   type MouseEvent as ReactMouseEvent,
   type ReactElement,
@@ -58,9 +59,11 @@ export function CursorAnchoredTooltip({
   hideArrow = false,
   leaveDelay = 0,
   placement = 'top',
+  popperDataTest,
   preventOverflow = false,
   title,
   transitionTimeout,
+  tooltipStyle,
   tooltipSx,
 }: {
   anchorOrigin?: TooltipAnchorOrigin;
@@ -70,9 +73,11 @@ export function CursorAnchoredTooltip({
   hideArrow?: boolean;
   leaveDelay?: number;
   placement?: TooltipPlacement;
+  popperDataTest?: string;
   preventOverflow?: boolean;
   title: ReactNode;
   transitionTimeout?: number;
+  tooltipStyle?: CSSProperties;
   tooltipSx: SxProps<MuiTheme>;
 }) {
   const instanceId = useId();
@@ -137,6 +142,10 @@ export function CursorAnchoredTooltip({
         },
       },
       popper: {
+        ...(popperDataTest
+          ? ({ 'data-test': popperDataTest } as Record<string, string>)
+          : {}),
+        'data-prevent-overflow': preventOverflow ? 'true' : undefined,
         ...(virtualAnchor ? { anchorEl: virtualAnchor } : {}),
         popperOptions: {
           modifiers: [
@@ -183,6 +192,7 @@ export function CursorAnchoredTooltip({
           tooltipHoveredRef.current = false;
           closeTooltip();
         },
+        style: tooltipStyle,
         sx: tooltipSx,
       },
     }),
@@ -191,7 +201,9 @@ export function CursorAnchoredTooltip({
       closeTooltip,
       hideArrow,
       isImmediateClose,
+      popperDataTest,
       preventOverflow,
+      tooltipStyle,
       tooltipSx,
       transitionTimeout,
       virtualAnchor,

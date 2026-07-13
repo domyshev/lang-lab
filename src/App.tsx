@@ -769,11 +769,12 @@ export function App() {
     answers: Record<string, string>,
     crosswordSnapshot: CrosswordAttemptSnapshot,
   ) {
-    const answeredEntries = getCompletedCrosswordEntries(puzzle, answers);
-    const filteredAnswers = Object.fromEntries(
-      answeredEntries.map((entry) => [entry.cardId, answers[entry.cardId] ?? '']),
+    const completedEntries = getCompletedCrosswordEntries(puzzle, answers);
+    const submittedEntries = puzzle.entries;
+    const submittedAnswers = Object.fromEntries(
+      submittedEntries.map((entry) => [entry.cardId, answers[entry.cardId] ?? '']),
     );
-    const prompts: ExercisePrompt[] = answeredEntries.map((entry) => ({
+    const prompts: ExercisePrompt[] = submittedEntries.map((entry) => ({
       cardId: entry.cardId,
       prompt: entry.clue,
       expectedAnswer: entry.answer,
@@ -786,25 +787,25 @@ export function App() {
           : [],
     }));
     const correctness = Object.fromEntries(
-      answeredEntries.map((entry) => [
+      submittedEntries.map((entry) => [
         entry.cardId,
         normalizeAnswer(answers[entry.cardId] ?? '') ===
           normalizeAnswer(entry.answer),
       ]),
     );
     const hintsUsed = Object.fromEntries(
-      answeredEntries.map((entry) => [entry.cardId, 0]),
+      submittedEntries.map((entry) => [entry.cardId, 0]),
     );
 
     persistAttempt({
       exerciseType: 'crossword',
       prompts,
-      answers: filteredAnswers,
+      answers: submittedAnswers,
       correctness,
       hintsUsed,
-      cardIds: answeredEntries.map((entry) => entry.cardId),
+      cardIds: submittedEntries.map((entry) => entry.cardId),
       advance: false,
-      isExerciseCompleted: answeredEntries.length === puzzle.entries.length,
+      isExerciseCompleted: completedEntries.length === puzzle.entries.length,
       crosswordSnapshot,
     });
   }
@@ -1736,10 +1737,17 @@ export function App() {
           border: '1px solid rgba(32, 48, 21, 0.14)',
           borderRadius: 2,
           boxShadow: '0 12px 28px rgba(32, 48, 21, 0.08)',
+          overflow: 'hidden',
           p: 2,
+          position: 'relative',
         }}
       >
-        <Stack data-test="target_stats__content" spacing={1.5}>
+        <TargetStatsFootballBackground />
+        <Stack
+          data-test="target_stats__content"
+          spacing={1.5}
+          sx={{ position: 'relative', zIndex: 1 }}
+        >
           <Box
             data-test="target_stats__metrics"
             sx={{
@@ -1874,6 +1882,122 @@ export function App() {
         open={isFinishDialogOpen}
       />
     </AppShell>
+  );
+}
+
+function TargetStatsFootballBackground() {
+  return (
+    <Box
+      aria-hidden="true"
+      data-test="target_stats__football_background"
+      sx={{
+        inset: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        position: 'absolute',
+        zIndex: 0,
+      }}
+    >
+      <Box
+        component="svg"
+        data-test="target_stats__football_ball"
+        viewBox="0 0 120 120"
+        sx={{
+          height: 150,
+          opacity: 0.16,
+          position: 'absolute',
+          right: { xs: -26, sm: 30 },
+          top: -44,
+          width: 150,
+        }}
+      >
+        <circle cx="60" cy="60" fill="#ffffff" r="54" stroke="#203015" strokeWidth="6" />
+        <polygon
+          fill="#203015"
+          points="60,30 80,45 72,70 48,70 40,45"
+        />
+        <path
+          d="M40 45 L20 38 M80 45 L100 38 M48 70 L36 96 M72 70 L84 96 M60 30 L60 9"
+          fill="none"
+          stroke="#203015"
+          strokeLinecap="round"
+          strokeWidth="6"
+        />
+        <path
+          d="M23 83 C33 105 51 113 73 110 C94 107 108 88 111 67"
+          fill="none"
+          stroke="#203015"
+          strokeLinecap="round"
+          strokeWidth="5"
+        />
+      </Box>
+      <Box
+        component="svg"
+        data-test="target_stats__football_trophy"
+        viewBox="0 0 128 128"
+        sx={{
+          bottom: -36,
+          height: 156,
+          left: '48%',
+          opacity: 0.13,
+          position: 'absolute',
+          transform: 'translateX(-50%) rotate(-5deg)',
+          width: 156,
+        }}
+      >
+        <path
+          d="M42 18 H86 V47 C86 65 75 77 64 77 C53 77 42 65 42 47 Z"
+          fill="#f5c84c"
+          stroke="#8b5d00"
+          strokeWidth="5"
+        />
+        <path
+          d="M42 27 H21 C21 49 30 63 48 65 M86 27 H107 C107 49 98 63 80 65"
+          fill="none"
+          stroke="#8b5d00"
+          strokeLinecap="round"
+          strokeWidth="8"
+        />
+        <path
+          d="M58 78 H70 V94 H58 Z M42 97 H86 L96 114 H32 Z"
+          fill="#f5c84c"
+          stroke="#8b5d00"
+          strokeLinejoin="round"
+          strokeWidth="5"
+        />
+        <path
+          d="M54 32 C61 27 70 27 77 32"
+          fill="none"
+          stroke="#fff4b8"
+          strokeLinecap="round"
+          strokeWidth="6"
+        />
+      </Box>
+      <Box
+        component="svg"
+        data-test="target_stats__football_spain_ribbon"
+        viewBox="0 0 260 62"
+        sx={{
+          bottom: 20,
+          height: 68,
+          left: -34,
+          opacity: 0.18,
+          position: 'absolute',
+          transform: 'rotate(-13deg)',
+          width: 260,
+        }}
+      >
+        <rect fill="#c60b1e" height="62" rx="18" width="260" />
+        <rect fill="#ffc400" height="30" rx="13" width="260" y="16" />
+        <circle cx="48" cy="31" fill="rgba(255,255,255,0.55)" r="16" />
+        <path
+          d="M88 31 H226"
+          stroke="#7c2d12"
+          strokeLinecap="round"
+          strokeWidth="8"
+        />
+      </Box>
+    </Box>
   );
 }
 

@@ -1864,6 +1864,9 @@ describe('App navigation', () => {
       background:
         'linear-gradient(135deg, rgba(255, 251, 226, 0.76) 0%, rgba(237, 244, 255, 0.64) 52%, rgba(245, 238, 255, 0.7) 100%)',
     });
+    expect(screen.getByTestId('target_stats__football_background')).toBeInTheDocument();
+    expect(screen.getByTestId('target_stats__football_ball')).toBeInTheDocument();
+    expect(screen.getByTestId('target_stats__football_spain_ribbon')).toBeInTheDocument();
     expect(screen.getByTestId('target_stats__total_exercises__label')).toHaveTextContent(
       'Всего пройдено игр',
     );
@@ -2044,7 +2047,7 @@ describe('App navigation', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('counts only fully answered crossword words after submitting a partial crossword', async () => {
+  it('counts unanswered crossword words as mistakes after submitting a partial crossword', async () => {
     const user = userEvent.setup();
     const store = renderApp();
 
@@ -2053,16 +2056,14 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Отправить кроссворд' }));
     await user.click(screen.getByRole('button', { name: 'Закончить игру' }));
 
-    expect(screen.getByText('Отвечено слов: 1')).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
-
     const crosswordAttempt = store
       .getState()
       .attempts.attempts.find((attempt) => attempt.exerciseType === 'crossword');
-    expect(Object.keys(crosswordAttempt?.correctness ?? {})).toHaveLength(1);
+    const entryCount = crosswordAttempt?.crosswordSnapshot?.puzzle.entries.length ?? 0;
+    expect(Object.keys(crosswordAttempt?.correctness ?? {})).toHaveLength(entryCount);
+    expect(Object.values(crosswordAttempt?.correctness ?? {})).toContain(false);
     expect(
-      crosswordAttempt?.crosswordSnapshot?.puzzle.entries.length,
+      entryCount,
     ).toBeGreaterThan(1);
     expect(
       Object.values(crosswordAttempt?.crosswordSnapshot?.cellValues ?? {}).some(
@@ -2070,6 +2071,9 @@ describe('App navigation', () => {
       ),
     ).toBe(true);
     expect(crosswordAttempt?.isExerciseCompleted).not.toBe(true);
+    expect(store.getState().stats.cardStats.filter(
+      (stat) => stat.targetLanguage === crosswordAttempt?.targetLanguage,
+    )).toHaveLength(entryCount);
   });
 
   it('saves completed crossword words when finishing the exercise manually', async () => {

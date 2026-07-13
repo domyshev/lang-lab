@@ -2,6 +2,7 @@ import { type ReactElement, useMemo, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import AddIcon from '@mui/icons-material/Add';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import {
   Alert,
   Box,
@@ -9,7 +10,8 @@ import {
   Checkbox,
   Chip,
   Divider,
-  FormControlLabel,
+  IconButton,
+  InputAdornment,
   Paper,
   Stack,
   TextField,
@@ -53,6 +55,7 @@ import {
 import { setCardKnown } from '../store/cardsSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
+import { KnownCardToggleButton } from './KnownCardToggleButton';
 import { SplitWordStatsChip } from './SplitWordStatsChip';
 
 export function CardSetDetailView() {
@@ -363,41 +366,13 @@ export function CardSetDetailView() {
                   height: 30,
                 }}
               />
-              <FormControlLabel
-                data-test={`card_set_detail__known_control__${card.id}`}
-                control={
-                  <Checkbox
-                    checked={isKnown}
-                    onChange={(event) =>
-                      handleKnownToggle(card.id, event.target.checked)
-                    }
-                    slotProps={{
-                      input: {
-                        'data-test': `card_set_detail__known_checkbox__${card.id}`,
-                      } as Record<string, string>,
-                    }}
-                    sx={{
-                      color: '#6f4bd8',
-                      p: 0.35,
-                      '&.Mui-checked': { color: '#6f4bd8' },
-                    }}
-                  />
+              <KnownCardToggleButton
+                checked={isKnown}
+                dataTest={`card_set_detail__known_button__${card.id}`}
+                interfaceLanguage={interfaceLanguage}
+                onChange={(nextIsKnown) =>
+                  handleKnownToggle(card.id, nextIsKnown)
                 }
-                label={t(interfaceLanguage, 'markCardKnown')}
-                sx={{
-                  border: '1px solid rgba(111, 75, 216, 0.46)',
-                  borderRadius: 999,
-                  color: '#4f36a4',
-                  height: 30,
-                  ml: 0,
-                  mr: 0,
-                  px: 0.65,
-                  '.MuiFormControlLabel-label': {
-                    fontSize: 13,
-                    fontWeight: 850,
-                    lineHeight: 1,
-                  },
-                }}
               />
               <RecentCardStatsTooltip
                 dataTestPrefix={`card_set_detail__card_stats__${card.id}`}
@@ -546,6 +521,24 @@ export function CardSetDetailView() {
             label={t(interfaceLanguage, 'searchCards')}
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
+            slotProps={{
+              input: {
+                endAdornment: searchQuery ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label={t(interfaceLanguage, 'clearCardSearch')}
+                      data-test={`card_set_detail__search_clear_button__${selectedCardSet.id}`}
+                      edge="end"
+                      onClick={() => setSearchQuery('')}
+                      onMouseDown={(event) => event.preventDefault()}
+                      size="small"
+                    >
+                      <ClearRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ) : undefined,
+              },
+            }}
           />
         )}
 

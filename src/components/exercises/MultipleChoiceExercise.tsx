@@ -2,8 +2,6 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import {
   Button,
-  Checkbox,
-  FormControlLabel,
   Paper,
   Stack,
   Typography,
@@ -13,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { MultipleChoicePrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
+import { KnownCardToggleButton } from '../KnownCardToggleButton';
 import { ExerciseProgressChip, ExerciseCardSetChip } from './ExerciseCardSetChip';
 import { TranslationHintRow } from './TranslationHintRow';
 
@@ -187,9 +186,9 @@ export function MultipleChoiceExercise({
                 : t(interfaceLanguage, 'incorrect')}
             </Button>
             {onKnownChange && (
-              <KnownCardCheckbox
+              <KnownCardToggleButton
                 checked={isKnown}
-                dataTest={`multiple_choice_exercise__known_checkbox__${prompt.cardId}`}
+                dataTest={`multiple_choice_exercise__known_button__${prompt.cardId}`}
                 interfaceLanguage={interfaceLanguage}
                 onChange={onKnownChange}
               />
@@ -198,46 +197,6 @@ export function MultipleChoiceExercise({
         )}
       </Stack>
     </Paper>
-  );
-}
-
-function KnownCardCheckbox({
-  checked,
-  dataTest,
-  interfaceLanguage,
-  onChange,
-}: {
-  checked: boolean;
-  dataTest: string;
-  interfaceLanguage: SupportedLanguage;
-  onChange: (isKnown: boolean) => void;
-}) {
-  return (
-    <FormControlLabel
-      control={
-        <Checkbox
-          checked={checked}
-          onChange={(event) => onChange(event.target.checked)}
-          slotProps={{
-            input: {
-              'data-test': dataTest,
-            } as Record<string, string>,
-          }}
-          sx={{
-            color: '#6f4bd8',
-            p: 0.5,
-            '&.Mui-checked': { color: '#6f4bd8' },
-          }}
-        />
-      }
-      label={t(interfaceLanguage, 'markCardKnown')}
-      sx={{
-        color: '#4b368d',
-        fontWeight: 850,
-        m: 0,
-        '& .MuiFormControlLabel-label': { fontWeight: 850 },
-      }}
-    />
   );
 }
 

@@ -85,7 +85,12 @@ describe('CardSetListView archive browsing', () => {
     expect(screen.queryByTestId('card_set_list__tile__set-love')).not.toBeInTheDocument();
     expect(screen.getByTestId('card_set_list__tile__set-family')).toBeInTheDocument();
 
-    await user.clear(screen.getByRole('textbox', { name: 'Search card sets' }));
+    await user.click(screen.getByRole('button', { name: 'Clear card set search' }));
+    expect(screen.getByRole('textbox', { name: 'Search card sets' })).toHaveValue('');
+    expect(screen.getByTestId('card_set_list__tile__all-cards')).toBeInTheDocument();
+    expect(screen.getByTestId('card_set_list__tile__set-love')).toBeInTheDocument();
+    expect(screen.getByTestId('card_set_list__tile__set-family')).toBeInTheDocument();
+
     await user.click(screen.getByRole('checkbox', { name: 'Archived' }));
 
     expect(screen.queryByTestId('card_set_list__tile__all-cards')).not.toBeInTheDocument();

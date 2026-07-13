@@ -192,7 +192,11 @@ describe('CardSetDetailView', () => {
     expect(screen.queryByText('airport')).not.toBeInTheDocument();
     expect(screen.getByText('worth it')).toBeInTheDocument();
 
-    await user.clear(screen.getByRole('textbox', { name: 'Поиск карточек' }));
+    await user.click(screen.getByRole('button', { name: 'Очистить поиск карточек' }));
+    expect(screen.getByRole('textbox', { name: 'Поиск карточек' })).toHaveValue('');
+    expect(screen.getByText('airport')).toBeInTheDocument();
+    expect(screen.getByText('worth it')).toBeInTheDocument();
+
     await user.click(screen.getByRole('button', { name: 'Редактировать карточки' }));
 
     expect(screen.getByText('impede')).toBeInTheDocument();
@@ -235,13 +239,20 @@ describe('CardSetDetailView', () => {
       </Provider>,
     );
 
-    const airportKnownCheckbox = screen.getByTestId(
-      'card_set_detail__known_checkbox__card-airport',
+    const airportKnownButton = screen.getByTestId(
+      'card_set_detail__known_button__card-airport',
     );
 
-    expect(airportKnownCheckbox).not.toBeChecked();
+    expect(airportKnownButton).toHaveAttribute('aria-pressed', 'false');
 
-    await user.click(airportKnownCheckbox);
+    await user.hover(airportKnownButton);
+    expect(
+      await screen.findByText(
+        'Такие карточки не будут участвовать в играх. Снять признак можно в разделе Карточки.',
+      ),
+    ).toBeInTheDocument();
+
+    await user.click(airportKnownButton);
 
     expect(
       store
@@ -249,9 +260,9 @@ describe('CardSetDetailView', () => {
         .cards.cards.find((card) => card.id === 'card-airport')
         ?.knownTargetLanguages,
     ).toEqual(['en']);
-    expect(airportKnownCheckbox).toBeChecked();
+    expect(airportKnownButton).toHaveAttribute('aria-pressed', 'true');
 
-    await user.click(airportKnownCheckbox);
+    await user.click(airportKnownButton);
 
     expect(
       store
@@ -259,7 +270,7 @@ describe('CardSetDetailView', () => {
         .cards.cards.find((card) => card.id === 'card-airport')
         ?.knownTargetLanguages,
     ).toEqual([]);
-    expect(airportKnownCheckbox).not.toBeChecked();
+    expect(airportKnownButton).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('offers to add cards for an empty custom card set and wraps long phrase cards', () => {

@@ -232,7 +232,9 @@ export function AiAssistantView({
     },
     [
       apiKey,
+      attempts,
       cardSets,
+      cardStats,
       cards,
       dispatch,
       interfaceLanguage,
