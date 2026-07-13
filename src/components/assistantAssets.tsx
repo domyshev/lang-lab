@@ -6,8 +6,16 @@ import forestElf from '../assets/characters/forest-elf.svg';
 import greenPower from '../assets/characters/green-power.svg';
 import greenPowerForest from '../assets/characters/green-power-forest.svg';
 import ladybug from '../assets/characters/ladybug.svg';
+import mkFlameNinja from '../assets/characters/mk-flame-ninja.svg';
+import mkIceGuardian from '../assets/characters/mk-ice-guardian.svg';
+import mkShadowQueen from '../assets/characters/mk-shadow-queen.svg';
+import mkThunderMonk from '../assets/characters/mk-thunder-monk.svg';
 import studyTroll from '../assets/characters/study-troll.svg';
 import studyTrollForest from '../assets/characters/study-troll-forest.svg';
+import trekChiefEngineer from '../assets/characters/trek-chief-engineer.svg';
+import trekHelmPilot from '../assets/characters/trek-helm-pilot.svg';
+import trekScienceOfficer from '../assets/characters/trek-science-officer.svg';
+import trekStarCaptain from '../assets/characters/trek-star-captain.svg';
 import trollMama from '../assets/characters/troll-mama.svg';
 import trollMamaForest from '../assets/characters/troll-mama-forest.svg';
 import unicorn from '../assets/characters/unicorn.svg';
@@ -36,6 +44,26 @@ const assistantImages: Record<WorldId, Record<AssistantId, string>> = {
     trollMama: trollMamaForest,
     unicorn,
     webRunner: webRunnerForest,
+  },
+  mortalKombat: {
+    capeChampion: mkThunderMonk,
+    forestElf: mkShadowQueen,
+    greenPower: mkIceGuardian,
+    ladybug: mkShadowQueen,
+    studyTroll: mkFlameNinja,
+    trollMama: mkThunderMonk,
+    unicorn: mkIceGuardian,
+    webRunner: mkShadowQueen,
+  },
+  starTrek: {
+    capeChampion: trekHelmPilot,
+    forestElf: trekScienceOfficer,
+    greenPower: trekScienceOfficer,
+    ladybug: trekHelmPilot,
+    studyTroll: trekStarCaptain,
+    trollMama: trekStarCaptain,
+    unicorn: trekChiefEngineer,
+    webRunner: trekChiefEngineer,
   },
 };
 

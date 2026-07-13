@@ -47,6 +47,7 @@ import {
   getDefaultAssistantIdForWorld,
   getWorldAccent,
   resolveWorldId,
+  worldDefinitions,
   worldIds,
 } from '../domain/worlds';
 import {
@@ -1252,53 +1253,30 @@ function PlayerOnboardingDialog({
               overflow: 'visible',
             }}
           >
-            <Button
-              aria-pressed={selectedWorldId === 'forest'}
-              data-test="player_onboarding__world_button__forest"
-              fullWidth
-              onClick={() => {
-                setSelectedWorldId('forest');
-                setSelectedAssistantId('');
-              }}
-              sx={getWorldChoiceButtonSx('forest', selectedWorldId === 'forest')}
-            >
-              <PlayerPixelAvatar
-                country="forest"
-                dataTest="player_onboarding__world_icon__forest"
-                seed="onboarding-world-forest"
-                size={32}
-              />
-              <Typography
-                component="span"
-                sx={{ fontSize: 17, fontWeight: 950, lineHeight: 1.1 }}
+            {worldIds.map((world) => (
+              <Button
+                aria-pressed={selectedWorldId === world}
+                data-test={`player_onboarding__world_button__${world}`}
+                fullWidth
+                key={world}
+                onClick={() => {
+                  setSelectedWorldId(world);
+                  setSelectedAssistantId('');
+                }}
+                sx={getWorldChoiceButtonSx(world, selectedWorldId === world)}
               >
-                {t(copyLanguage, 'forestWorldChoice')}
-              </Typography>
-            </Button>
-            <Button
-              aria-pressed={selectedWorldId === 'football'}
-              data-test="player_onboarding__world_button__football"
-              fullWidth
-              onClick={() => {
-                setSelectedWorldId('football');
-                setSelectedAssistantId('');
-              }}
-              sx={getWorldChoiceButtonSx(
-                'football',
-                selectedWorldId === 'football',
-              )}
-            >
-              <FootballWorldIcon
-                dataTest="player_onboarding__world_icon__football"
-                size={32}
-              />
-              <Typography
-                component="span"
-                sx={{ fontSize: 17, fontWeight: 950, lineHeight: 1.1 }}
-              >
-                {t(copyLanguage, 'footballWorldChoice')}
-              </Typography>
-            </Button>
+                <WorldChoiceIcon
+                  dataTest={`player_onboarding__world_icon__${world}`}
+                  world={world}
+                />
+                <Typography
+                  component="span"
+                  sx={{ fontSize: 17, fontWeight: 950, lineHeight: 1.1 }}
+                >
+                  {worldDefinitions[world].label[copyLanguage]}
+                </Typography>
+              </Button>
+            ))}
           </Stack>
           <Stack
             data-test="player_onboarding__assistant_figures"
@@ -1467,6 +1445,49 @@ function PlayerOnboardingDialog({
   );
 }
 
+function WorldChoiceIcon({
+  dataTest,
+  world,
+}: {
+  dataTest: string;
+  world: WorldId;
+}) {
+  if (world === 'football') {
+    return <FootballWorldIcon dataTest={dataTest} size={32} />;
+  }
+
+  if (world === 'mortalKombat') {
+    return (
+      <PlayerPixelAvatar
+        country="mortal-kombat"
+        dataTest={dataTest}
+        seed="onboarding-world-mortal-kombat"
+        size={32}
+      />
+    );
+  }
+
+  if (world === 'starTrek') {
+    return (
+      <PlayerPixelAvatar
+        country="starfleet"
+        dataTest={dataTest}
+        seed="onboarding-world-star-trek"
+        size={32}
+      />
+    );
+  }
+
+  return (
+    <PlayerPixelAvatar
+      country="forest"
+      dataTest={dataTest}
+      seed="onboarding-world-forest"
+      size={32}
+    />
+  );
+}
+
 function FootballWorldIcon({
   dataTest,
   size,
@@ -1543,25 +1564,7 @@ function FootballWorldIcon({
 }
 
 function getWorldChoiceButtonSx(world: WorldId, isSelected: boolean) {
-  const forestSx = {
-    background:
-      'linear-gradient(135deg, #f4ffd8 0%, #b8ec9d 46%, #7fd4b0 100%)',
-    color: '#1f3c1c',
-    glow: 'rgba(95, 155, 62, 0.36)',
-    line: '#4f8e5b',
-    lineSoft: '#7bae63',
-    stripeDark: 'rgba(32, 48, 21, 0.58)',
-  };
-  const footballSx = {
-    background:
-      'linear-gradient(135deg, #fff1a8 0%, #ffc400 36%, #c60b1e 100%)',
-    color: '#331710',
-    glow: 'rgba(198, 11, 30, 0.35)',
-    line: '#8b1b16',
-    lineSoft: '#b24b2a',
-    stripeDark: 'rgba(51, 23, 16, 0.62)',
-  };
-  const palette = world === 'forest' ? forestSx : footballSx;
+  const palette = getWorldChoicePalette(world);
   const stripedSelectionBackground =
     `${palette.background} padding-box, ` +
     `repeating-linear-gradient(135deg, ${palette.stripeDark} 0 3px, rgba(255, 253, 244, 0.94) 3px 7px) border-box`;
@@ -1594,6 +1597,52 @@ function getWorldChoiceButtonSx(world: WorldId, isSelected: boolean) {
   };
 }
 
+function getWorldChoicePalette(world: WorldId) {
+  switch (world) {
+    case 'mortalKombat':
+      return {
+        background:
+          'linear-gradient(135deg, #260909 0%, #d43f24 48%, #ffb03a 100%)',
+        color: '#fff1d6',
+        glow: 'rgba(212, 63, 36, 0.36)',
+        line: '#ffb03a',
+        lineSoft: '#d96b24',
+        stripeDark: 'rgba(38, 9, 9, 0.66)',
+      };
+    case 'starTrek':
+      return {
+        background:
+          'linear-gradient(135deg, #101b4d 0%, #3f88ff 48%, #f3b833 100%)',
+        color: '#f7fbff',
+        glow: 'rgba(63, 136, 255, 0.34)',
+        line: '#f3b833',
+        lineSoft: '#78baff',
+        stripeDark: 'rgba(16, 27, 77, 0.64)',
+      };
+    case 'football':
+      return {
+        background:
+          'linear-gradient(135deg, #fff1a8 0%, #ffc400 36%, #c60b1e 100%)',
+        color: '#331710',
+        glow: 'rgba(198, 11, 30, 0.35)',
+        line: '#8b1b16',
+        lineSoft: '#b24b2a',
+        stripeDark: 'rgba(51, 23, 16, 0.62)',
+      };
+    case 'forest':
+    default:
+      return {
+        background:
+          'linear-gradient(135deg, #f4ffd8 0%, #b8ec9d 46%, #7fd4b0 100%)',
+        color: '#1f3c1c',
+        glow: 'rgba(95, 155, 62, 0.36)',
+        line: '#4f8e5b',
+        lineSoft: '#7bae63',
+        stripeDark: 'rgba(32, 48, 21, 0.58)',
+      };
+  }
+}
+
 function getAssistantSupporterCountry(
   assistantId: AssistantId | string | undefined,
 ): SupporterCountry {
@@ -1615,6 +1664,14 @@ function getPlayerSupporterCountry(
   worldId: WorldId,
   assistantId: AssistantId | string | undefined,
 ): SupporterCountry {
+  if (worldId === 'mortalKombat') {
+    return 'mortal-kombat';
+  }
+
+  if (worldId === 'starTrek') {
+    return 'starfleet';
+  }
+
   if (worldId !== 'forest') {
     return getAssistantSupporterCountry(assistantId);
   }
@@ -1643,6 +1700,26 @@ function getAppBarWorldSx(worldId: WorldId) {
     };
   }
 
+  if (worldId === 'mortalKombat') {
+    return {
+      background:
+        'linear-gradient(90deg, #fff1d6 0%, #ffb03a 42%, #d43f24 100%)',
+      bgcolor: '#ffb03a',
+      borderBottom: '2px solid rgba(38, 9, 9, 0.26)',
+      boxShadow: '0 8px 22px rgba(95, 15, 10, 0.10)',
+    };
+  }
+
+  if (worldId === 'starTrek') {
+    return {
+      background:
+        'linear-gradient(90deg, #ecf6ff 0%, #93d6ff 42%, #f3b833 100%)',
+      bgcolor: '#93d6ff',
+      borderBottom: '2px solid rgba(16, 27, 77, 0.24)',
+      boxShadow: '0 8px 22px rgba(16, 27, 77, 0.10)',
+    };
+  }
+
   return {
     background:
       'linear-gradient(90deg, #fff0a8 0%, #ffd24d 46%, #fff3bd 100%)',
@@ -1654,17 +1731,31 @@ function getAppBarWorldSx(worldId: WorldId) {
 
 function getGameTabSx(worldId: WorldId) {
   const isForest = worldId === 'forest';
+  const isMortalKombat = worldId === 'mortalKombat';
+  const isStarTrek = worldId === 'starTrek';
+  const baseBackground = isForest
+    ? 'linear-gradient(180deg, #fbfff4 0%, #a9d957 50%, #6ea33f 100%)'
+    : isMortalKombat
+      ? 'linear-gradient(180deg, #fff1d6 0%, #ffb03a 50%, #d43f24 100%)'
+      : isStarTrek
+        ? 'linear-gradient(180deg, #f7fbff 0%, #93d6ff 50%, #3f88ff 100%)'
+        : 'linear-gradient(180deg, #fff9d6 0%, #ffd24a 50%, #ee9825 100%)';
+  const selectedBackground = isForest
+    ? 'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)'
+    : isMortalKombat
+      ? 'linear-gradient(180deg, #ffe7b5 0%, #ff9f2a 50%, #b82e1d 100%)'
+      : isStarTrek
+        ? 'linear-gradient(180deg, #ffffff 0%, #73c8ff 50%, #226de8 100%)'
+        : 'linear-gradient(180deg, #fff6b5 0%, #ffc52b 50%, #e98312 100%)';
   return {
-    background: isForest
-      ? 'linear-gradient(180deg, #fbfff4 0%, #a9d957 50%, #6ea33f 100%)'
-      : 'linear-gradient(180deg, #fff9d6 0%, #ffd24a 50%, #ee9825 100%)',
+    background: baseBackground,
     border: '0 !important',
     borderRadius: '999px',
     boxSizing: 'border-box',
     boxShadow: isForest
       ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.14), inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(36, 74, 28, 0.14)'
       : 'inset 0 0 0 1px rgba(116, 63, 8, 0.13), inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(121, 68, 8, 0.12)',
-    color: isForest ? '#213f17' : '#203015',
+    color: isMortalKombat ? '#fff7e8' : isStarTrek ? '#101b4d' : isForest ? '#213f17' : '#203015',
     fontWeight: '950 !important',
     height: '36px !important',
     lineHeight: '1 !important',
@@ -1681,13 +1772,11 @@ function getGameTabSx(worldId: WorldId) {
       transform: 'none',
     },
     '&.Mui-selected': {
-      background: isForest
-        ? 'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)'
-        : 'linear-gradient(180deg, #fff6b5 0%, #ffc52b 50%, #e98312 100%)',
+      background: selectedBackground,
       boxShadow: isForest
         ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.16), inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -3px 0 rgba(36, 74, 28, 0.18)'
         : 'inset 0 0 0 1px rgba(116, 63, 8, 0.15), inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -3px 0 rgba(121, 68, 8, 0.15)',
-      color: isForest ? '#183813' : '#203015',
+      color: isMortalKombat ? '#fff7e8' : isStarTrek ? '#101b4d' : isForest ? '#183813' : '#203015',
       '&:hover': {
         boxShadow: isForest
           ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.14), inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -3px 0 rgba(36, 74, 28, 0.16)'

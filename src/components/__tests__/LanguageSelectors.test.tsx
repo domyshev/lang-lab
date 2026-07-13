@@ -147,6 +147,8 @@ describe('LanguageSelectors', () => {
     const worldOptions = screen.getAllByRole('option');
     expect(worldOptions[0]).toHaveTextContent('Лесные эльфы');
     expect(worldOptions[1]).toHaveTextContent('Футбол');
+    expect(worldOptions[2]).toHaveTextContent('Mortal Kombat');
+    expect(worldOptions[3]).toHaveTextContent('Star Trek');
     await user.click(screen.getByRole('option', { name: /Лесные эльфы/ }));
 
     expect(store.getState().app.worldId).toBe('forest');

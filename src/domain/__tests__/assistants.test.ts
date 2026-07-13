@@ -76,6 +76,48 @@ describe('assistantCharacters', () => {
     });
   });
 
+  it('exposes four Mortal Kombat arena assistants', () => {
+    const assistants = getVisibleAssistantCharacters('mortalKombat');
+
+    expect(assistants.map((assistant) => assistant.id)).toEqual([
+      'studyTroll',
+      'greenPower',
+      'webRunner',
+      'capeChampion',
+    ]);
+    expect(
+      Object.fromEntries(
+        assistants.map((assistant) => [assistant.id, assistant.name.ru]),
+      ),
+    ).toEqual({
+      capeChampion: 'Громовой монах',
+      greenPower: 'Ледяной страж',
+      studyTroll: 'Огненный ниндзя',
+      webRunner: 'Теневая королева',
+    });
+  });
+
+  it('exposes four Star Trek bridge assistants', () => {
+    const assistants = getVisibleAssistantCharacters('starTrek');
+
+    expect(assistants.map((assistant) => assistant.id)).toEqual([
+      'studyTroll',
+      'greenPower',
+      'webRunner',
+      'capeChampion',
+    ]);
+    expect(
+      Object.fromEntries(
+        assistants.map((assistant) => [assistant.id, assistant.name.ru]),
+      ),
+    ).toEqual({
+      capeChampion: 'Штурман',
+      greenPower: 'Научный офицер',
+      studyTroll: 'Капитан звездолета',
+      webRunner: 'Главный инженер',
+    });
+  });
+
   it('maps hidden legacy assistant ids to the default visible assistant', () => {
     expect(resolveAssistantId('trollMama')).toBe(defaultAssistantId);
     expect(resolveAssistantId('trollMama', 'forest')).toBe(defaultAssistantId);

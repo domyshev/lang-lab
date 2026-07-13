@@ -687,11 +687,419 @@ const forestAssistantCharacters: RawAssistantCharacter[] = [
   },
 ];
 
+const mortalKombatAssistantCharacters: RawAssistantCharacter[] = [
+  {
+    id: 'studyTroll',
+    label: 'Flame Ninja',
+    motto: {
+      en: 'Strike fast, remember faster.',
+      ru: 'Бей быстро, запоминай еще быстрее.',
+      es: 'Golpea rapido, recuerda mas rapido.',
+      uk: 'Бий швидко, запамʼятовуй ще швидше.',
+    },
+    name: {
+      en: 'Flame Ninja',
+      ru: 'Огненный ниндзя',
+      es: 'Ninja de Fuego',
+      uk: 'Вогняний ніндзя',
+    },
+    description: {
+      en: 'A fiery arena mentor for sharp rounds and fearless retries. He brings weak cards back into combat, keeps the tempo hot, and turns a miss into a clean counterattack.',
+      ru: 'Огненный наставник арены для резких раундов и смелых повторов. Он возвращает слабые карточки в бой, держит горячий темп и превращает промах в чистую контратаку.',
+      es: 'Un mentor ardiente de arena para rondas rapidas y reintentos valientes. Devuelve tarjetas debiles al combate, mantiene el ritmo caliente y convierte un fallo en contraataque limpio.',
+      uk: 'Вогняний наставник арени для різких раундів і сміливих повторів. Він повертає слабкі картки в бій, тримає гарячий темп і перетворює промах на чисту контратаку.',
+    },
+    abilities: {
+      en: [
+        'Flame combo: returns recent mistakes before they cool down.',
+        'Arena focus: keeps the next card direct after a hard miss.',
+        'Finish spark: celebrates streaks like a clean round victory.',
+      ],
+      ru: [
+        'Огненное комбо: возвращает свежие ошибки до того, как они остынут.',
+        'Фокус арены: после тяжелого промаха делает следующую карточку прямой.',
+        'Искра финиша: празднует серии как чистую победу в раунде.',
+      ],
+      es: [
+        'Combo de fuego: devuelve errores recientes antes de que se enfrien.',
+        'Foco de arena: tras un fallo duro deja la siguiente tarjeta directa.',
+        'Chispa final: celebra rachas como una ronda perfecta.',
+      ],
+      uk: [
+        'Вогняне комбо: повертає свіжі помилки до того, як вони охолонуть.',
+        'Фокус арени: після важкого промаху робить наступну картку прямою.',
+        'Іскра фінішу: святкує серії як чисту перемогу в раунді.',
+      ],
+    },
+    superpower: {
+      en: 'Turns fresh mistakes into a fast combo before memory cools down.',
+      ru: 'Превращает свежие ошибки в быстрое комбо, пока память не остыла.',
+      es: 'Convierte errores recientes en combo rapido antes de que la memoria se enfrie.',
+      uk: 'Перетворює свіжі помилки на швидке комбо, поки памʼять не охолола.',
+    },
+  },
+  {
+    id: 'greenPower',
+    label: 'Ice Guardian',
+    motto: {
+      en: 'Freeze panic, finish the round.',
+      ru: 'Заморозь панику, заверши раунд.',
+      es: 'Congela el panico, termina la ronda.',
+      uk: 'Заморозь паніку, заверши раунд.',
+    },
+    name: {
+      en: 'Ice Guardian',
+      ru: 'Ледяной страж',
+      es: 'Guardian de Hielo',
+      uk: 'Крижаний страж',
+    },
+    description: {
+      en: 'A calm defender for tricky spelling and pressure moments. He freezes the noise, breaks long answers into clean pieces, and gives difficult cards a stable fighting stance.',
+      ru: 'Спокойный защитник для сложного написания и моментов давления. Он замораживает шум, делит длинные ответы на чистые части и дает трудным карточкам устойчивую стойку.',
+      es: 'Un defensor sereno para ortografia dificil y momentos de presion. Congela el ruido, divide respuestas largas en piezas claras y da postura estable a tarjetas duras.',
+      uk: 'Спокійний захисник для складного написання та моментів тиску. Він заморожує шум, ділить довгі відповіді на чисті частини й дає важким карткам стійку бойову позицію.',
+    },
+    abilities: {
+      en: [
+        'Ice guard: slows down a noisy mistake without killing momentum.',
+        'Shard split: breaks long answers into visible chunks.',
+        'Cold read: spots the exact letter lane after repeated pressure.',
+      ],
+      ru: [
+        'Ледяная защита: замедляет шумную ошибку, не убивая темп.',
+        'Раскол льда: делит длинные ответы на видимые куски.',
+        'Холодное чтение: находит точную линию букв после повторного давления.',
+      ],
+      es: [
+        'Guardia de hielo: frena un error ruidoso sin matar el impulso.',
+        'Division de escarcha: rompe respuestas largas en bloques visibles.',
+        'Lectura fria: encuentra la linea exacta de letras tras presion repetida.',
+      ],
+      uk: [
+        'Крижаний захист: сповільнює шумну помилку, не вбиваючи темп.',
+        'Розкол льоду: ділить довгі відповіді на видимі шматки.',
+        'Холодне читання: знаходить точну лінію літер після повторного тиску.',
+      ],
+    },
+    superpower: {
+      en: 'Freezes panic and splits hard words into calm, winnable chunks.',
+      ru: 'Замораживает панику и делит трудные слова на спокойные победные куски.',
+      es: 'Congela el panico y divide palabras duras en bloques ganables.',
+      uk: 'Заморожує паніку й ділить важкі слова на спокійні переможні шматки.',
+    },
+  },
+  {
+    id: 'webRunner',
+    label: 'Shadow Queen',
+    motto: {
+      en: 'Read the shadow before the strike.',
+      ru: 'Прочитай тень до удара.',
+      es: 'Lee la sombra antes del golpe.',
+      uk: 'Прочитай тінь до удару.',
+    },
+    name: {
+      en: 'Shadow Queen',
+      ru: 'Теневая королева',
+      es: 'Reina de Sombras',
+      uk: 'Тіньова королева',
+    },
+    description: {
+      en: 'A precise tactician for false friends, hidden patterns, and words that look safer than they are. She links similar cards and exposes the trap before it lands.',
+      ru: 'Точный тактик для ложных друзей, скрытых паттернов и слов, которые выглядят безопаснее, чем есть. Она связывает похожие карточки и раскрывает ловушку до удара.',
+      es: 'Una tactica precisa para falsos amigos, patrones ocultos y palabras que parecen mas seguras de lo que son. Conecta tarjetas parecidas y revela la trampa antes del golpe.',
+      uk: 'Точна тактикиня для хибних друзів, прихованих патернів і слів, що здаються безпечнішими, ніж є. Вона повʼязує схожі картки й відкриває пастку до удару.',
+    },
+    abilities: {
+      en: [
+        'Shadow link: connects cards with similar roots or spelling.',
+        'Trap reveal: flags a familiar-looking answer before it tricks you.',
+        'Silent feint: makes the next prompt easier to read after confusion.',
+      ],
+      ru: [
+        'Теневая связь: соединяет карточки с похожими корнями или написанием.',
+        'Раскрытие ловушки: отмечает знакомый на вид ответ до того, как он обманет.',
+        'Тихий финт: после путаницы делает следующий вопрос легче для чтения.',
+      ],
+      es: [
+        'Enlace de sombra: conecta tarjetas con raices o escritura similares.',
+        'Trampa revelada: marca una respuesta familiar antes de que engane.',
+        'Finta silenciosa: tras confusion hace mas legible la siguiente pregunta.',
+      ],
+      uk: [
+        'Тіньовий звʼязок: поєднує картки зі схожими коренями або написанням.',
+        'Розкриття пастки: позначає знайому на вигляд відповідь до того, як вона обдурить.',
+        'Тихий фінт: після плутанини робить наступне запитання легшим для читання.',
+      ],
+    },
+    superpower: {
+      en: 'Reveals hidden traps between similar cards before they steal the round.',
+      ru: 'Раскрывает скрытые ловушки между похожими карточками до потери раунда.',
+      es: 'Revela trampas ocultas entre tarjetas parecidas antes de perder la ronda.',
+      uk: 'Розкриває приховані пастки між схожими картками до втрати раунду.',
+    },
+  },
+  {
+    id: 'capeChampion',
+    label: 'Thunder Monk',
+    motto: {
+      en: 'Breathe once, strike true.',
+      ru: 'Один вдох, точный удар.',
+      es: 'Respira una vez, golpea certero.',
+      uk: 'Один вдих, точний удар.',
+    },
+    name: {
+      en: 'Thunder Monk',
+      ru: 'Громовой монах',
+      es: 'Monje del Trueno',
+      uk: 'Громовий монах',
+    },
+    description: {
+      en: 'A storm-bright mentor for streaks, rhythm, and comeback rounds. He watches stable recall, rewards clean answers, and keeps courage alive after a red result.',
+      ru: 'Грозовой наставник для серий, ритма и раундов возвращения. Он следит за устойчивым вспоминанием, награждает чистые ответы и держит смелость после красного результата.',
+      es: 'Un mentor de tormenta para rachas, ritmo y rondas de regreso. Vigila recuerdo estable, premia respuestas limpias y conserva el valor tras un resultado rojo.',
+      uk: 'Грозовий наставник для серій, ритму та раундів повернення. Він стежить за стабільним згадуванням, винагороджує чисті відповіді й тримає сміливість після червоного результату.',
+    },
+    abilities: {
+      en: [
+        'Thunder pulse: notices when a hard card becomes stable.',
+        'Round reset: softens a wrong answer into a useful next attempt.',
+        'Storm rhythm: spaces repeats so the arena stays intense, not stale.',
+      ],
+      ru: [
+        'Громовой импульс: замечает, когда трудная карточка становится устойчивой.',
+        'Сброс раунда: смягчает неверный ответ в полезную следующую попытку.',
+        'Ритм шторма: расставляет повторы так, чтобы арена была напряженной, а не душной.',
+      ],
+      es: [
+        'Pulso de trueno: nota cuando una tarjeta dura se vuelve estable.',
+        'Reinicio de ronda: convierte un error en siguiente intento util.',
+        'Ritmo de tormenta: espacia repeticiones para mantener intensidad sin cansancio.',
+      ],
+      uk: [
+        'Громовий імпульс: помічає, коли важка картка стає стабільною.',
+        'Скид раунду: помʼякшує неправильну відповідь у корисну наступну спробу.',
+        'Ритм бурі: розставляє повтори так, щоб арена була напруженою, а не задушливою.',
+      ],
+    },
+    superpower: {
+      en: 'Keeps comeback energy high and turns streaks into thunder.',
+      ru: 'Держит энергию возвращения и превращает серии в гром.',
+      es: 'Mantiene energia de remontada y convierte rachas en trueno.',
+      uk: 'Тримає енергію повернення й перетворює серії на грім.',
+    },
+  },
+];
+
+const starTrekAssistantCharacters: RawAssistantCharacter[] = [
+  {
+    id: 'studyTroll',
+    label: 'Star Captain',
+    motto: {
+      en: 'Set course, engage memory.',
+      ru: 'Курс задан, память на варп.',
+      es: 'Rumbo fijado, memoria en marcha.',
+      uk: 'Курс задано, памʼять на варп.',
+    },
+    name: {
+      en: 'Star Captain',
+      ru: 'Капитан звездолета',
+      es: 'Capitan Estelar',
+      uk: 'Капітан зорельота',
+    },
+    description: {
+      en: 'A bridge commander for confident sessions and clear decisions. The captain keeps the mission moving, chooses the next card with purpose, and turns weak vocabulary into a navigable sector.',
+      ru: 'Командир мостика для уверенных сессий и ясных решений. Капитан двигает миссию вперед, осмысленно выбирает следующую карточку и превращает слабый словарь в сектор с маршрутом.',
+      es: 'Un comandante de puente para sesiones seguras y decisiones claras. El capitan mueve la mision, elige la siguiente tarjeta con proposito y convierte vocabulario debil en sector navegable.',
+      uk: 'Командир містка для впевнених сесій і ясних рішень. Капітан рухає місію вперед, осмислено обирає наступну картку й перетворює слабкий словник на сектор із маршрутом.',
+    },
+    abilities: {
+      en: [
+        'Course plot: keeps the next card purposeful after each result.',
+        'Bridge morale: gives short mission-style encouragement for streaks.',
+        'Sector return: brings recent mistakes back before they drift away.',
+      ],
+      ru: [
+        'Прокладка курса: после каждого результата выбирает следующую карточку осмысленно.',
+        'Мораль мостика: коротко поддерживает серии в стиле миссии.',
+        'Возврат сектора: возвращает свежие ошибки до того, как они улетят.',
+      ],
+      es: [
+        'Trazado de curso: mantiene proposito en la siguiente tarjeta.',
+        'Moral del puente: anima rachas con estilo de mision.',
+        'Retorno de sector: trae errores recientes antes de que se alejen.',
+      ],
+      uk: [
+        'Прокладання курсу: після кожного результату осмислено обирає наступну картку.',
+        'Мораль містка: коротко підтримує серії у стилі місії.',
+        'Повернення сектору: повертає свіжі помилки до того, як вони відлетять.',
+      ],
+    },
+    superpower: {
+      en: 'Plots a clean course through weak cards without losing mission tempo.',
+      ru: 'Прокладывает чистый курс через слабые карточки без потери темпа миссии.',
+      es: 'Traza un rumbo limpio por tarjetas debiles sin perder ritmo de mision.',
+      uk: 'Прокладає чистий курс через слабкі картки без втрати темпу місії.',
+    },
+  },
+  {
+    id: 'greenPower',
+    label: 'Science Officer',
+    motto: {
+      en: 'Observe, compare, remember.',
+      ru: 'Наблюдай, сравнивай, запоминай.',
+      es: 'Observa, compara, recuerda.',
+      uk: 'Спостерігай, порівнюй, запамʼятовуй.',
+    },
+    name: {
+      en: 'Science Officer',
+      ru: 'Научный офицер',
+      es: 'Oficial Cientifico',
+      uk: 'Науковий офіцер',
+    },
+    description: {
+      en: 'A logic-first officer for patterns, roots, and tricky similarities. Science scans nearby cards, separates false matches, and turns each clue into evidence.',
+      ru: 'Офицер логики для паттернов, корней и сложных сходств. Наука сканирует соседние карточки, отделяет ложные совпадения и превращает каждую подсказку в доказательство.',
+      es: 'Un oficial de logica para patrones, raices y similitudes dificiles. Ciencia escanea tarjetas cercanas, separa coincidencias falsas y convierte cada pista en evidencia.',
+      uk: 'Офіцер логіки для патернів, коренів і складних подібностей. Наука сканує сусідні картки, відділяє хибні збіги й перетворює кожну підказку на доказ.',
+    },
+    abilities: {
+      en: [
+        'Sensor scan: links words by root, spelling, or meaning.',
+        'False signal filter: marks deceptive similarities before they mislead.',
+        'Evidence cue: highlights the clue that best explains the answer.',
+      ],
+      ru: [
+        'Скан сенсоров: связывает слова по корню, написанию или смыслу.',
+        'Фильтр ложного сигнала: отмечает обманчивое сходство до ошибки.',
+        'Доказательная подсказка: подсвечивает ключ, который лучше объясняет ответ.',
+      ],
+      es: [
+        'Escaneo de sensores: conecta palabras por raiz, escritura o sentido.',
+        'Filtro de senal falsa: marca parecidos enganosos antes de fallar.',
+        'Pista de evidencia: destaca la clave que mejor explica la respuesta.',
+      ],
+      uk: [
+        'Скан сенсорів: повʼязує слова за коренем, написанням або змістом.',
+        'Фільтр хибного сигналу: позначає оманливу подібність до помилки.',
+        'Доказова підказка: підсвічує ключ, який найкраще пояснює відповідь.',
+      ],
+    },
+    superpower: {
+      en: 'Scans patterns and filters false signals before they cause mistakes.',
+      ru: 'Сканирует паттерны и фильтрует ложные сигналы до ошибок.',
+      es: 'Escanea patrones y filtra senales falsas antes de errores.',
+      uk: 'Сканує патерни й фільтрує хибні сигнали до помилок.',
+    },
+  },
+  {
+    id: 'webRunner',
+    label: 'Chief Engineer',
+    motto: {
+      en: 'Patch the warp core, then the word.',
+      ru: 'Сначала варп-ядро, потом слово.',
+      es: 'Repara el nucleo warp, luego la palabra.',
+      uk: 'Спершу варп-ядро, потім слово.',
+    },
+    name: {
+      en: 'Chief Engineer',
+      ru: 'Главный инженер',
+      es: 'Ingeniero Jefe',
+      uk: 'Головний інженер',
+    },
+    description: {
+      en: 'A hands-on engineer for long answers and stubborn spelling systems. She opens the panel, finds the broken circuit, and rebuilds memory one component at a time.',
+      ru: 'Практичный инженер для длинных ответов и упрямых систем написания. Она открывает панель, находит сломанный контур и собирает память по одному компоненту.',
+      es: 'Una ingeniera practica para respuestas largas y sistemas ortograficos tercos. Abre el panel, encuentra el circuito roto y reconstruye memoria componente por componente.',
+      uk: 'Практична інженерка для довгих відповідей і впертих систем написання. Вона відкриває панель, знаходить зламаний контур і збирає памʼять по одному компоненту.',
+    },
+    abilities: {
+      en: [
+        'Warp patch: splits long answers into stable components.',
+        'Circuit trace: finds the letter position that keeps failing.',
+        'Power reroute: mixes fresh cards in when repetition overloads.',
+      ],
+      ru: [
+        'Варп-заплатка: делит длинные ответы на устойчивые компоненты.',
+        'Трассировка контура: находит позицию буквы, которая постоянно ломается.',
+        'Перенаправление энергии: подмешивает новые карточки при перегрузе повторами.',
+      ],
+      es: [
+        'Parche warp: divide respuestas largas en componentes estables.',
+        'Rastreo de circuito: encuentra la posicion de letra que falla.',
+        'Redireccion de energia: mezcla tarjetas frescas cuando repetir sobrecarga.',
+      ],
+      uk: [
+        'Варп-латка: ділить довгі відповіді на стійкі компоненти.',
+        'Трасування контуру: знаходить позицію літери, що постійно ламається.',
+        'Перенаправлення енергії: домішує нові картки, коли повтори перевантажують.',
+      ],
+    },
+    superpower: {
+      en: 'Repairs difficult spelling by finding the broken memory circuit.',
+      ru: 'Ремонтирует сложное написание, находя сломанный контур памяти.',
+      es: 'Repara ortografia dificil encontrando el circuito de memoria roto.',
+      uk: 'Ремонтує складне написання, знаходячи зламаний контур памʼяті.',
+    },
+  },
+  {
+    id: 'capeChampion',
+    label: 'Helm Pilot',
+    motto: {
+      en: 'Small correction, perfect orbit.',
+      ru: 'Малая поправка, идеальная орбита.',
+      es: 'Pequena correccion, orbita perfecta.',
+      uk: 'Мала поправка, ідеальна орбіта.',
+    },
+    name: {
+      en: 'Helm Pilot',
+      ru: 'Штурман',
+      es: 'Piloto de Timon',
+      uk: 'Штурман',
+    },
+    description: {
+      en: 'A nimble pilot for navigation, jumps, and clean transitions between cards. The helm keeps answered cards behind you and makes the next destination feel obvious.',
+      ru: 'Ловкий пилот для навигации, прыжков и чистых переходов между карточками. Штурвал оставляет отвеченные карточки позади и делает следующую точку понятной.',
+      es: 'Una piloto agil para navegacion, saltos y transiciones limpias entre tarjetas. El timon deja atras tarjetas respondidas y hace obvio el siguiente destino.',
+      uk: 'Спритний пілот для навігації, стрибків і чистих переходів між картками. Штурвал лишає пройдені картки позаду й робить наступну точку зрозумілою.',
+    },
+    abilities: {
+      en: [
+        'Orbit jump: moves between cards without losing completed progress.',
+        'Course correction: keeps the next prompt after a chosen jump predictable.',
+        'Docking calm: makes end-of-game exits feel controlled.',
+      ],
+      ru: [
+        'Орбитальный прыжок: перемещает между карточками без потери прогресса.',
+        'Поправка курса: после выбранного прыжка делает следующий вопрос предсказуемым.',
+        'Спокойная стыковка: завершение игры остается контролируемым.',
+      ],
+      es: [
+        'Salto orbital: mueve entre tarjetas sin perder progreso.',
+        'Correccion de curso: tras un salto elegido deja predecible la siguiente pregunta.',
+        'Acoplamiento tranquilo: hace que terminar la partida sea controlado.',
+      ],
+      uk: [
+        'Орбітальний стрибок: переміщує між картками без втрати прогресу.',
+        'Поправка курсу: після вибраного стрибка робить наступне запитання передбачуваним.',
+        'Спокійне стикування: завершення гри лишається контрольованим.',
+      ],
+    },
+    superpower: {
+      en: 'Navigates cleanly between cards while preserving every completed result.',
+      ru: 'Чисто ведет между карточками и сохраняет каждый достигнутый результат.',
+      es: 'Navega limpiamente entre tarjetas preservando cada resultado logrado.',
+      uk: 'Чисто веде між картками й зберігає кожен досягнутий результат.',
+    },
+  },
+];
+
 export const assistantCharacters: AssistantCharacter[] = footballAssistantCharacters;
 
 export const assistantCharactersByWorld: Record<WorldId, AssistantCharacter[]> = {
   football: footballAssistantCharacters,
   forest: forestAssistantCharacters,
+  mortalKombat: mortalKombatAssistantCharacters,
+  starTrek: starTrekAssistantCharacters,
 };
 
 export const defaultAssistantId: AssistantId = 'studyTroll';
@@ -706,6 +1114,8 @@ export const visibleAssistantIds: AssistantId[] = [
 const visibleAssistantIdsByWorld: Record<WorldId, AssistantId[]> = {
   football: visibleAssistantIds,
   forest: ['studyTroll', 'forestElf', 'unicorn', 'ladybug'],
+  mortalKombat: visibleAssistantIds,
+  starTrek: visibleAssistantIds,
 };
 
 export const visibleAssistantCharacters = getVisibleAssistantCharacters('football');

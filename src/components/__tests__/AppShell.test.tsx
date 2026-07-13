@@ -84,6 +84,18 @@ describe('AppShell', () => {
     expect(within(dialog).getByTestId('player_onboarding__world_icon__football')).toBeInTheDocument();
     expect(within(dialog).getByTestId('player_onboarding__world_icon__forest')).toBeInTheDocument();
     expect(
+      within(dialog).getByTestId('player_onboarding__world_icon__mortalKombat'),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByTestId('player_onboarding__world_icon__starTrek'),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: /Mortal Kombat/ }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: /Star Trek/ }),
+    ).toBeInTheDocument();
+    expect(
       within(dialog).getByTestId('player_onboarding__assistant_figure__forestElf'),
     ).toBeInTheDocument();
     expect(

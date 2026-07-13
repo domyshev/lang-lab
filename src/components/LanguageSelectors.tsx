@@ -735,29 +735,52 @@ function SettingsInfoIcon({
 }
 
 function getInfoButtonSx(worldId: WorldId) {
-  if (worldId === 'forest') {
-    return {
-      bgcolor: 'rgba(246, 255, 230, 0.76)',
-      border: '1px solid rgba(91, 150, 54, 0.34)',
-      color: '#386f2d',
-      height: 24,
-      width: 24,
-      '&:hover': {
-        bgcolor: 'rgba(246, 255, 230, 0.96)',
-      },
-    };
-  }
+  const palette = getInfoButtonPalette(worldId);
 
   return {
-    bgcolor: 'rgba(255, 246, 181, 0.68)',
-    border: '1px solid rgba(198, 11, 30, 0.22)',
-    color: '#a45112',
+    bgcolor: palette.bgcolor,
+    border: palette.border,
+    color: palette.color,
     height: 24,
     width: 24,
     '&:hover': {
-      bgcolor: 'rgba(255, 246, 181, 0.92)',
+      bgcolor: palette.hoverBgcolor,
     },
   };
+}
+
+function getInfoButtonPalette(worldId: WorldId) {
+  switch (worldId) {
+    case 'mortalKombat':
+      return {
+        bgcolor: 'rgba(255, 241, 214, 0.78)',
+        border: '1px solid rgba(212, 63, 36, 0.28)',
+        color: '#9e2b18',
+        hoverBgcolor: 'rgba(255, 241, 214, 0.96)',
+      };
+    case 'starTrek':
+      return {
+        bgcolor: 'rgba(236, 246, 255, 0.82)',
+        border: '1px solid rgba(63, 136, 255, 0.30)',
+        color: '#255cc8',
+        hoverBgcolor: 'rgba(236, 246, 255, 0.98)',
+      };
+    case 'football':
+      return {
+        bgcolor: 'rgba(255, 246, 181, 0.68)',
+        border: '1px solid rgba(198, 11, 30, 0.22)',
+        color: '#a45112',
+        hoverBgcolor: 'rgba(255, 246, 181, 0.92)',
+      };
+    case 'forest':
+    default:
+      return {
+        bgcolor: 'rgba(246, 255, 230, 0.76)',
+        border: '1px solid rgba(91, 150, 54, 0.34)',
+        color: '#386f2d',
+        hoverBgcolor: 'rgba(246, 255, 230, 0.96)',
+      };
+  }
 }
 
 const selectorInfoDataKey: Record<SelectorInfoKind, string> = {
@@ -1022,6 +1045,68 @@ function WorldIcon({
       >
         🍃
       </Box>
+    );
+  }
+
+  if (world === 'mortalKombat') {
+    return (
+      <Box
+        component="span"
+        aria-hidden="true"
+        data-test={dataTest}
+        sx={{
+          background:
+            'radial-gradient(circle at 42% 40%, #ffb03a 0 24%, transparent 25%), linear-gradient(135deg, #260909 0%, #d43f24 100%)',
+          border: '1px solid rgba(38, 9, 9, 0.56)',
+          borderRadius: '50%',
+          boxShadow:
+            'inset -3px -3px 0 rgba(38, 9, 9, 0.28), inset 2px 2px 0 rgba(255, 255, 255, 0.34), 0 1px 3px rgba(95, 28, 22, 0.22)',
+          display: 'inline-flex',
+          flex: '0 0 auto',
+          height: 20,
+          overflow: 'hidden',
+          position: 'relative',
+          width: 20,
+          '&::before': {
+            background:
+              'linear-gradient(140deg, transparent 0 30%, #fff1d6 31% 37%, transparent 38%), linear-gradient(35deg, transparent 0 48%, rgba(255,176,58,0.90) 49% 56%, transparent 57%)',
+            content: '""',
+            inset: 3,
+            position: 'absolute',
+          },
+        }}
+      />
+    );
+  }
+
+  if (world === 'starTrek') {
+    return (
+      <Box
+        component="span"
+        aria-hidden="true"
+        data-test={dataTest}
+        sx={{
+          background:
+            'radial-gradient(circle at 50% 30%, #f3b833 0 18%, transparent 19%), linear-gradient(135deg, #101b4d 0%, #3f88ff 100%)',
+          border: '1px solid rgba(16, 27, 77, 0.46)',
+          borderRadius: '50%',
+          boxShadow:
+            'inset -3px -3px 0 rgba(16, 27, 77, 0.24), inset 2px 2px 0 rgba(255, 255, 255, 0.44), 0 1px 3px rgba(16, 27, 77, 0.20)',
+          display: 'inline-flex',
+          flex: '0 0 auto',
+          height: 20,
+          overflow: 'hidden',
+          position: 'relative',
+          width: 20,
+          '&::before': {
+            background:
+              'linear-gradient(80deg, transparent 0 40%, #f7fbff 41% 49%, transparent 50%), linear-gradient(-80deg, transparent 0 40%, #f7fbff 41% 49%, transparent 50%)',
+            content: '""',
+            inset: 4,
+            position: 'absolute',
+          },
+        }}
+      />
     );
   }
 
