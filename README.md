@@ -6,6 +6,8 @@ Current release: `0.1.0-alpha.0`
 
 
 
+Playable  Pages build: _TODO: add the published  Pages URL after the first successful Pages deployment._
+
 ## What The App Does
 
 Language Lab is built around three ideas:
