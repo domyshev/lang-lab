@@ -49,7 +49,7 @@ export const worldDefinitions: Record<WorldId, WorldDefinition> = {
   },
 };
 
-export const worldIds: WorldId[] = ['football', 'forest'];
+export const worldIds: WorldId[] = ['forest', 'football'];
 
 export const forestAccent: WorldAccent = {
   border: '#b6d38a',

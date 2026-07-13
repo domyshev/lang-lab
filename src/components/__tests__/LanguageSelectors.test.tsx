@@ -137,6 +137,9 @@ describe('LanguageSelectors', () => {
     expect(worldSelect).toHaveTextContent('Футбол');
 
     await user.click(worldSelect);
+    const worldOptions = screen.getAllByRole('option');
+    expect(worldOptions[0]).toHaveTextContent('Лесные эльфы');
+    expect(worldOptions[1]).toHaveTextContent('Футбол');
     await user.click(screen.getByRole('option', { name: /Лесные эльфы/ }));
 
     expect(store.getState().app.worldId).toBe('forest');

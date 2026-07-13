@@ -224,6 +224,7 @@ export function AppShell({
               },
               '& .MuiTabs-indicator': {
                 bgcolor: worldAccent.dark,
+                display: tabValue === 'game' ? 'none' : 'block',
                 height: 3,
               },
             }}
@@ -233,33 +234,7 @@ export function AppShell({
               value="game"
               label={t(interfaceLanguage, 'gamesTab')}
               onClick={() => onNavigate?.('game')}
-              sx={{
-                background:
-                  'linear-gradient(180deg, #fff6a7 0%, #ffd447 47%, #f28b18 100%)',
-                border: '1px solid rgba(116, 63, 8, 0.28)',
-                borderRadius: '999px',
-                boxShadow:
-                  'inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -4px 0 rgba(121, 68, 8, 0.18), 0 5px 0 rgba(127, 70, 8, 0.28), 0 10px 18px rgba(178, 83, 12, 0.20)',
-                color: '#203015',
-                fontWeight: '950 !important',
-                minHeight: '34px !important',
-                minWidth: '0 !important',
-                px: { xs: 1.25, sm: 2.25 },
-                textShadow: '0 1px 0 rgba(255,255,255,0.62)',
-                transition:
-                  'transform 150ms ease, box-shadow 150ms ease, filter 150ms ease',
-                '&:hover': {
-                  filter: 'saturate(1.08) brightness(1.03)',
-                  transform: 'translateY(-1px)',
-                },
-                '&.Mui-selected': {
-                  background:
-                    'linear-gradient(180deg, #fff16d 0%, #ffc31f 43%, #e85f00 100%)',
-                  boxShadow:
-                    'inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -4px 0 rgba(121, 68, 8, 0.22), 0 5px 0 rgba(127, 70, 8, 0.34), 0 12px 22px rgba(198, 78, 0, 0.26), 0 0 0 4px rgba(255, 221, 76, 0.28)',
-                  color: '#203015',
-                },
-              }}
+              sx={getGameTabSx(worldId)}
             />
             <Tab
               data-test="app_shell__tab__chat"
@@ -1567,6 +1542,42 @@ function getAppBarWorldSx(worldId: WorldId) {
     bgcolor: '#ffd24d',
     borderBottom: '2px solid rgba(198, 11, 30, 0.28)',
     boxShadow: '0 8px 22px rgba(124, 21, 24, 0.08)',
+  };
+}
+
+function getGameTabSx(worldId: WorldId) {
+  const isForest = worldId === 'forest';
+  return {
+    background: isForest
+      ? 'linear-gradient(180deg, #f7ffe8 0%, #a9d957 48%, #6ea33f 100%)'
+      : 'linear-gradient(180deg, #fff7bd 0%, #ffd24a 48%, #ee9825 100%)',
+    border: isForest
+      ? '1px solid rgba(47, 77, 36, 0.26)'
+      : '1px solid rgba(116, 63, 8, 0.22)',
+    borderRadius: '999px',
+    boxShadow: isForest
+      ? 'inset 0 2px 0 rgba(255,255,255,0.82), inset 0 -3px 0 rgba(36, 74, 28, 0.16), 0 3px 0 rgba(54, 92, 36, 0.22), 0 8px 14px rgba(63, 91, 38, 0.14)'
+      : 'inset 0 2px 0 rgba(255,255,255,0.84), inset 0 -3px 0 rgba(121, 68, 8, 0.14), 0 3px 0 rgba(127, 70, 8, 0.22), 0 8px 14px rgba(178, 83, 12, 0.15)',
+    color: isForest ? '#213f17' : '#203015',
+    fontWeight: '950 !important',
+    minHeight: '34px !important',
+    minWidth: '0 !important',
+    px: { xs: 1.25, sm: 2.25 },
+    textShadow: '0 1px 0 rgba(255,255,255,0.62)',
+    transition: 'transform 150ms ease, box-shadow 150ms ease, filter 150ms ease',
+    '&:hover': {
+      filter: 'saturate(1.06) brightness(1.025)',
+      transform: 'translateY(-1px)',
+    },
+    '&.Mui-selected': {
+      background: isForest
+        ? 'linear-gradient(180deg, #f2ffcf 0%, #93cc46 45%, #4f8730 100%)'
+        : 'linear-gradient(180deg, #fff27a 0%, #ffc52b 44%, #e98312 100%)',
+      boxShadow: isForest
+        ? 'inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(36, 74, 28, 0.18), 0 3px 0 rgba(54, 92, 36, 0.28), 0 10px 18px rgba(63, 91, 38, 0.20), 0 0 0 4px rgba(157, 203, 86, 0.22)'
+        : 'inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(121, 68, 8, 0.18), 0 3px 0 rgba(127, 70, 8, 0.28), 0 10px 18px rgba(198, 78, 0, 0.20), 0 0 0 4px rgba(255, 221, 76, 0.22)',
+      color: isForest ? '#183813' : '#203015',
+    },
   };
 }
 

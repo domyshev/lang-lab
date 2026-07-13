@@ -464,12 +464,49 @@ describe('AppShell', () => {
     });
     expect(gameTab).toHaveStyle({
       background:
-        'linear-gradient(180deg, #fff16d 0%, #ffc31f 43%, #e85f00 100%)',
+        'linear-gradient(180deg, #fff27a 0%, #ffc52b 44%, #e98312 100%)',
     });
     expect(gameTab).toHaveStyle({ fontWeight: '950' });
+    expect(
+      screen.getByTestId('app_shell__main_tabs').querySelector('.MuiTabs-indicator'),
+    ).toHaveStyle({ display: 'none' });
     expect(gameTab).not.toHaveStyle({
       boxShadow:
         'inset 0 1px 0 rgba(255,255,255,0.9), 0 5px 12px rgba(92, 78, 22, 0.14)',
+    });
+  });
+
+  it('uses an organic forest palette for the play tab in the forest world', () => {
+    const store = configureStore({
+      reducer: {
+        app: appReducer,
+      },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          interfaceLanguage: 'ru' as const,
+          worldId: 'forest' as const,
+          playerProfile: {
+            avatarSeed: 'test-player',
+            displayName: 'Илья',
+            isAnonymous: false,
+          },
+        },
+      },
+    });
+
+    render(
+      <Provider store={store}>
+        <AppShell activeSection="game">
+          <div>Content</div>
+        </AppShell>
+      </Provider>,
+    );
+
+    expect(screen.getByRole('tab', { name: 'Играть' })).toHaveStyle({
+      background:
+        'linear-gradient(180deg, #f2ffcf 0%, #93cc46 45%, #4f8730 100%)',
+      color: '#183813',
     });
   });
 
