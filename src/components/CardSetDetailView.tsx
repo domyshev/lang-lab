@@ -29,6 +29,7 @@ import {
   getCardSetName,
   isArchivedCardSet,
 } from '../domain/cardSets';
+import { footballResultColors } from '../domain/footballTheme';
 import {
   createCardById,
   createCardStatsByTarget,
@@ -698,10 +699,12 @@ function RecentCardStatsTooltip({
                   size="small"
                   sx={{
                     bgcolor: result.isCorrect
-                      ? 'rgb(235, 247, 225)'
-                      : 'rgb(253, 235, 238)',
+                      ? footballResultColors.correct.soft
+                      : footballResultColors.incorrect.soft,
                     border: '1px solid',
-                    borderColor: result.isCorrect ? '#8fc773' : '#f2a7b4',
+                    borderColor: result.isCorrect
+                      ? footballResultColors.correct.border
+                      : footballResultColors.incorrect.border,
                     color: '#111111',
                     fontSize: 12,
                     fontWeight: 800,

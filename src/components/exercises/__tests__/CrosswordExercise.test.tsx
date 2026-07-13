@@ -258,20 +258,20 @@ describe('CrosswordExercise', () => {
       }),
     );
     expect(screen.getByLabelText('Crossword cell 1 3')).toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
+      backgroundColor: 'rgb(232, 247, 223)',
     });
     expect(screen.getByLabelText('Crossword cell 2 3')).not.toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(253, 232, 223)',
     });
     expect(screen.getByLabelText('Crossword cell 2 3')).toHaveValue('e');
     expect(screen.getByLabelText('Crossword cell 2 3')).toHaveStyle({
       color: 'rgba(32, 48, 21, 0.38)',
     });
     expect(screen.getByLabelText('Crossword cell 2 3')).not.toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
+      backgroundColor: 'rgb(232, 247, 223)',
     });
     expect(screen.getByLabelText('Crossword cell 2 3')).not.toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(253, 232, 223)',
     });
     expect(screen.getByLabelText('Crossword cell 3 3')).toHaveValue('a');
   });
@@ -338,13 +338,13 @@ describe('CrosswordExercise', () => {
     await user.click(screen.getByRole('button', { name: 'Отправить кроссворд' }));
 
     expect(screen.getByLabelText('Crossword cell 1 1')).toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
+      backgroundColor: 'rgb(232, 247, 223)',
     });
     expect(screen.getByLabelText('Crossword cell 1 3')).toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
+      backgroundColor: 'rgb(232, 247, 223)',
     });
     expect(screen.getByLabelText('Crossword cell 2 3')).toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(253, 232, 223)',
     });
     expect(screen.getByLabelText('Crossword cell 1 3')).toHaveStyle({
       textDecorationLine: 'none',
@@ -378,8 +378,8 @@ describe('CrosswordExercise', () => {
         'crossword_exercise__correction__2_3__entry__tea__answer__cell__0',
       ),
     ).toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
-      borderColor: '#8fc773',
+      backgroundColor: 'rgb(232, 247, 223)',
+      borderColor: '#7fc77a',
     });
     expect(
       within(correctionTooltip).getByTestId(

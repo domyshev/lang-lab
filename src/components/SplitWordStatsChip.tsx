@@ -1,9 +1,10 @@
 import { Box } from '@mui/material';
+import { footballResultColors } from '../domain/footballTheme';
 import { t } from '../domain/i18n';
 import { SupportedLanguage } from '../domain/languages';
 
-const correctBackground = 'rgb(235, 247, 225)';
-const incorrectBackground = 'rgb(253, 235, 238)';
+const correctBackground = footballResultColors.correct.soft;
+const incorrectBackground = footballResultColors.incorrect.soft;
 
 export function SplitWordStatsChip({
   correct,
@@ -62,7 +63,7 @@ export function SplitWordStatsChip({
           alignItems: 'center',
           bgcolor: incorrectBackground,
           clipPath: 'polygon(12px 0, 100% 0, 100% 100%, 0 100%)',
-          color: '#4a111b',
+          color: footballResultColors.incorrect.text,
           display: 'inline-flex',
           fontSize: 17,
           fontWeight: 900,

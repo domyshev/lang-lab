@@ -78,10 +78,10 @@ describe('MultipleChoiceExercise', () => {
     expect(onAnswer).toHaveBeenCalledWith('train');
     expect(screen.queryByText('Правильный ответ')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'train' })).toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(253, 232, 223)',
     });
     expect(screen.getByRole('button', { name: 'airport' })).toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
+      backgroundColor: 'rgb(232, 247, 223)',
     });
     expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
     expect(screen.queryByText('Я знаю')).not.toBeInTheDocument();
@@ -124,10 +124,10 @@ describe('MultipleChoiceExercise', () => {
     expect(onAnswer).toHaveBeenCalledWith('airport');
     expect(screen.queryByText('Правильный ответ')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'airport' })).toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
+      backgroundColor: 'rgb(232, 247, 223)',
     });
     expect(screen.getByRole('button', { name: 'train' })).not.toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(253, 232, 223)',
     });
     expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
   });

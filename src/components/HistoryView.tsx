@@ -17,6 +17,7 @@ import {
   ExerciseHistorySummary,
   summarizeExerciseHistory,
 } from '../domain/exerciseHistory';
+import { footballResultColors } from '../domain/footballTheme';
 import { t } from '../domain/i18n';
 import { RootState } from '../store/store';
 import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
@@ -310,16 +311,16 @@ function HistoryAnswer({
               border: '1px solid',
               borderColor:
                 option === expectedAnswer
-                  ? '#8fc773'
+                  ? footballResultColors.correct.border
                   : option === answer
-                    ? '#f2a7b4'
+                    ? footballResultColors.incorrect.border
                     : 'divider',
               borderRadius: 1,
               bgcolor:
                 option === expectedAnswer
-                  ? 'rgb(235, 247, 225)'
+                  ? footballResultColors.correct.soft
                   : option === answer
-                    ? 'rgb(253, 235, 238)'
+                    ? footballResultColors.incorrect.soft
                     : '#ffffff',
               color: '#203015',
               fontSize: 18,
@@ -443,10 +444,13 @@ function AnswerCells({
               alignItems: 'center',
               bgcolor:
                 tone === 'correct'
-                  ? 'rgb(235, 247, 225)'
-                  : 'rgb(253, 235, 238)',
+                  ? footballResultColors.correct.soft
+                  : footballResultColors.incorrect.soft,
               border: '1px solid',
-              borderColor: tone === 'correct' ? '#8fc773' : '#f2a7b4',
+              borderColor:
+                tone === 'correct'
+                  ? footballResultColors.correct.border
+                  : footballResultColors.incorrect.border,
               borderRadius: 1,
               color: '#203015',
               display: 'inline-flex',

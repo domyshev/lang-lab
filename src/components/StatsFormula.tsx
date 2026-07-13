@@ -2,6 +2,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DragHandleRoundedIcon from '@mui/icons-material/DragHandleRounded';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
+import { footballResultColors } from '../domain/footballTheme';
 import { t } from '../domain/i18n';
 import { SupportedLanguage } from '../domain/languages';
 import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
@@ -398,15 +399,15 @@ const totalChipStyles = {
 
 const correctChipStyles = {
   ...formulaChipBaseStyles,
-  bgcolor: 'rgb(235, 247, 225)',
-  borderColor: '#8fc773',
+  bgcolor: footballResultColors.correct.soft,
+  borderColor: footballResultColors.correct.border,
   color: '#111111',
 };
 
 const incorrectChipStyles = {
   ...formulaChipBaseStyles,
-  bgcolor: 'rgb(253, 235, 238)',
-  borderColor: '#f2a7b4',
+  bgcolor: footballResultColors.incorrect.soft,
+  borderColor: footballResultColors.incorrect.border,
   color: '#111111',
 };
 

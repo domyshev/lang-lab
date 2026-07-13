@@ -5,6 +5,7 @@ import {
   getIncorrectCrosswordEntries,
 } from '../../domain/crosswordResults';
 import type { CrosswordAttemptSnapshot } from '../../domain/exercises';
+import { footballResultColors } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
 import type { SupportedLanguage } from '../../domain/languages';
 import { CursorAnchoredTooltip } from '../CursorAnchoredTooltip';
@@ -102,15 +103,15 @@ export function CrosswordHistoryReplay({
               style={{
                 backgroundColor:
                   tone === 'correct'
-                    ? 'rgb(235, 247, 225)'
+                    ? footballResultColors.correct.soft
                     : tone === 'incorrect'
-                      ? 'rgb(253, 235, 238)'
+                      ? footballResultColors.incorrect.soft
                       : undefined,
                 borderColor:
                   tone === 'correct'
-                    ? '#8fc773'
+                    ? footballResultColors.correct.border
                     : tone === 'incorrect'
-                      ? '#f2a7b4'
+                      ? footballResultColors.incorrect.border
                       : undefined,
                 textDecorationLine: shouldStrike ? 'line-through' : 'none',
                 textDecorationThickness: '2px',
@@ -399,9 +400,13 @@ function RecentResultsBlock({
 
 function recentResultChipStyles(isCorrect: boolean) {
   return {
-    bgcolor: isCorrect ? 'rgb(235, 247, 225)' : 'rgb(253, 235, 238)',
+    bgcolor: isCorrect
+      ? footballResultColors.correct.soft
+      : footballResultColors.incorrect.soft,
     border: '1px solid',
-    borderColor: isCorrect ? '#8fc773' : '#f2a7b4',
+    borderColor: isCorrect
+      ? footballResultColors.correct.border
+      : footballResultColors.incorrect.border,
     color: '#111111',
     fontSize: 12,
     fontWeight: 800,
@@ -472,8 +477,8 @@ const correctionNumberStyles = {
 
 const correctionAnswerCellStyles = {
   alignItems: 'center',
-  bgcolor: 'rgb(235, 247, 225)',
-  border: '1px solid #8fc773',
+  bgcolor: footballResultColors.correct.soft,
+  border: `1px solid ${footballResultColors.correct.border}`,
   borderRadius: 1,
   color: '#203015',
   display: 'inline-flex',

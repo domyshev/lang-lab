@@ -9,6 +9,7 @@ import {
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { MultipleChoicePrompt } from '../../domain/exercises';
+import { footballResultColors } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
 import { KnownCardToggleButton } from '../KnownCardToggleButton';
@@ -170,14 +171,20 @@ export function MultipleChoiceExercise({
                 minWidth: 148,
                 ...(isCorrect
                   ? {
-                      bgcolor: '#2f7d32',
-                      '&:hover': { bgcolor: '#276b2a', boxShadow: 'none' },
+                      bgcolor: footballResultColors.correct.main,
+                      '&:hover': {
+                        bgcolor: footballResultColors.correct.main,
+                        boxShadow: 'none',
+                      },
                     }
                   : {
-                      bgcolor: '#fdebee',
-                      border: '1px solid #f2a7b4',
-                      color: '#9f1239',
-                      '&:hover': { bgcolor: '#fbdde3', boxShadow: 'none' },
+                      bgcolor: footballResultColors.incorrect.soft,
+                      border: `1px solid ${footballResultColors.incorrect.border}`,
+                      color: footballResultColors.incorrect.text,
+                      '&:hover': {
+                        bgcolor: footballResultColors.incorrect.soft,
+                        boxShadow: 'none',
+                      },
                     }),
               }}
             >
@@ -223,8 +230,8 @@ function getOptionStyles({
 
   if (isCorrectOption) {
     return {
-      bgcolor: 'rgb(235, 247, 225)',
-      borderColor: '#8fc773',
+      bgcolor: footballResultColors.correct.soft,
+      borderColor: footballResultColors.correct.border,
       color: '#203015',
       opacity: 1,
       WebkitTextFillColor: '#203015',
@@ -233,11 +240,11 @@ function getOptionStyles({
 
   if (isSelected) {
     return {
-      bgcolor: 'rgb(253, 235, 238)',
-      borderColor: '#f2a7b4',
-      color: '#4a111b',
+      bgcolor: footballResultColors.incorrect.soft,
+      borderColor: footballResultColors.incorrect.border,
+      color: footballResultColors.incorrect.text,
       opacity: 1,
-      WebkitTextFillColor: '#4a111b',
+      WebkitTextFillColor: footballResultColors.incorrect.text,
     };
   }
 

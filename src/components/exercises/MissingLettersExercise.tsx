@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from 'react';
 import { shouldStrikeAnswerCharacter } from '../../domain/answerCharacters';
 import { MISSING_ANSWER_CHARACTER } from '../../domain/answerPlaceholders';
 import { MissingLettersPrompt } from '../../domain/exercises';
+import { footballResultColors } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
 import { KnownCardToggleButton } from '../KnownCardToggleButton';
@@ -368,16 +369,22 @@ export function MissingLettersExercise({
               minWidth: 148,
               ...(isSubmitted && isCorrect
                 ? {
-                    bgcolor: '#2f7d32',
-                    '&:hover': { bgcolor: '#276b2a', boxShadow: 'none' },
+                    bgcolor: footballResultColors.correct.main,
+                    '&:hover': {
+                      bgcolor: footballResultColors.correct.main,
+                      boxShadow: 'none',
+                    },
                   }
                 : {}),
               ...(submissionOutcome === 'incorrect'
                 ? {
-                    bgcolor: '#fdebee',
-                    border: '1px solid #f2a7b4',
-                    color: '#9f1239',
-                    '&:hover': { bgcolor: '#fbdde3', boxShadow: 'none' },
+                    bgcolor: footballResultColors.incorrect.soft,
+                    border: `1px solid ${footballResultColors.incorrect.border}`,
+                    color: footballResultColors.incorrect.text,
+                    '&:hover': {
+                      bgcolor: footballResultColors.incorrect.soft,
+                      boxShadow: 'none',
+                    },
                   }
                 : {}),
               ...(submissionOutcome === 'memorize'
@@ -463,16 +470,16 @@ function getLetterCellInlineStyle(
   return {
     backgroundColor:
       resultTone === 'correct'
-        ? 'rgb(235, 247, 225)'
+        ? footballResultColors.correct.soft
         : resultTone === 'memorize'
           ? 'rgb(255, 243, 205)'
-          : 'rgb(253, 235, 238)',
+          : footballResultColors.incorrect.soft,
     borderColor:
       resultTone === 'correct'
-        ? '#8fc773'
+        ? footballResultColors.correct.border
         : resultTone === 'memorize'
           ? '#f2cf66'
-          : '#f2a7b4',
+          : footballResultColors.incorrect.border,
     color: textTone === 'strong' ? '#203015' : 'rgb(117, 117, 117)',
     WebkitTextFillColor:
       textTone === 'strong' ? '#203015' : 'rgb(117, 117, 117)',

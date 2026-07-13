@@ -194,11 +194,11 @@ describe('HistoryView', () => {
     expect(options).toHaveLength(3);
     expect(within(options[0]).getByText('airport')).toBeInTheDocument();
     expect(options[0]).toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(253, 232, 223)',
     });
     expect(within(options[1]).getByText('vehicle')).toBeInTheDocument();
     expect(options[1]).toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
+      backgroundColor: 'rgb(232, 247, 223)',
     });
     expect(
       within(multipleChoiceCard!).queryByTestId(

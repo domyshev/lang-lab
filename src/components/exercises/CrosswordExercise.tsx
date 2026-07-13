@@ -22,6 +22,7 @@ import {
   CrosswordEntry,
   CrosswordPuzzle,
 } from '../../domain/crossword';
+import { footballResultColors } from '../../domain/footballTheme';
 import { shouldStrikeAnswerCharacter } from '../../domain/answerCharacters';
 import {
   getCrosswordCellTone,
@@ -789,11 +790,17 @@ function getSubmittedCellStyle(
   tone: 'correct' | 'incorrect' | undefined,
 ): { backgroundColor?: string; borderColor?: string } {
   if (tone === 'correct') {
-    return { backgroundColor: 'rgb(235, 247, 225)', borderColor: '#8fc773' };
+    return {
+      backgroundColor: footballResultColors.correct.soft,
+      borderColor: footballResultColors.correct.border,
+    };
   }
 
   if (tone === 'incorrect') {
-    return { backgroundColor: 'rgb(253, 235, 238)', borderColor: '#f2a7b4' };
+    return {
+      backgroundColor: footballResultColors.incorrect.soft,
+      borderColor: footballResultColors.incorrect.border,
+    };
   }
 
   return {};
@@ -938,8 +945,8 @@ const ghostCellStyle = {
 
 const correctionAnswerCellStyles = {
   alignItems: 'center',
-  bgcolor: 'rgb(235, 247, 225)',
-  border: '1px solid #8fc773',
+  bgcolor: footballResultColors.correct.soft,
+  border: `1px solid ${footballResultColors.correct.border}`,
   borderRadius: 1,
   color: '#203015',
   display: 'inline-flex',
@@ -960,9 +967,13 @@ const correctionAnswerSpaceStyles = {
 
 function recentResultChipStyles(isCorrect: boolean) {
   return {
-    bgcolor: isCorrect ? 'rgb(235, 247, 225)' : 'rgb(253, 235, 238)',
+    bgcolor: isCorrect
+      ? footballResultColors.correct.soft
+      : footballResultColors.incorrect.soft,
     border: '1px solid',
-    borderColor: isCorrect ? '#8fc773' : '#f2a7b4',
+    borderColor: isCorrect
+      ? footballResultColors.correct.border
+      : footballResultColors.incorrect.border,
     color: '#111111',
     fontSize: 12,
     fontWeight: 800,
