@@ -53,13 +53,22 @@ describe('AppShell', () => {
     expect(
       screen.getByRole('dialog', { name: 'Как тебя зовут?' }),
     ).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog', { name: 'Как тебя зовут?' });
 
-    await user.click(screen.getByRole('button', { name: 'Продолжить анонимно' }));
+    expect(within(dialog).getByRole('combobox', { name: 'Персонаж' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('combobox', { name: 'Интерфейс' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('combobox', { name: 'Цель' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Продолжить анонимно' })).toBeDisabled();
+
+    await selectOnboardingOption(user, dialog, 'Персонаж', 'Португальский бомбардир');
+    await selectOnboardingOption(user, dialog, 'Интерфейс', 'English');
+    await selectOnboardingOption(user, dialog, 'Target', 'Español');
+    await user.click(within(dialog).getByRole('button', { name: 'Continue anonymously' }));
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: 'Как тебя зовут?' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'What should we call you?' })).not.toBeInTheDocument();
     });
-    expect(screen.getByTestId('player_greeting__label').textContent).toBe('странник');
+    expect(screen.getByTestId('player_greeting__label').textContent).toBe('wanderer');
     expect(screen.getByTestId('player_greeting__avatar')).toBeInTheDocument();
     expect(screen.getByTestId('player_greeting__avatar').tagName.toLowerCase()).toBe(
       'svg',
@@ -73,6 +82,9 @@ describe('AppShell', () => {
     expect(store.getState().app.playerProfile).toMatchObject({
       isAnonymous: true,
     });
+    expect(store.getState().app.assistantId).toBe('greenPower');
+    expect(store.getState().app.interfaceLanguage).toBe('en');
+    expect(store.getState().app.targetLanguage).toBe('es');
     expect(store.getState().app.playerProfile?.avatarSeed).toEqual(
       expect.stringContaining('supporter:spain'),
     );
@@ -94,8 +106,12 @@ describe('AppShell', () => {
       </Provider>,
     );
 
-    await user.type(screen.getByLabelText('Имя игрока'), 'Илья');
-    await user.click(screen.getByRole('button', { name: 'Сохранить' }));
+    const dialog = screen.getByRole('dialog', { name: 'Как тебя зовут?' });
+    await selectOnboardingOption(user, dialog, 'Персонаж', 'Испанский вингер');
+    await selectOnboardingOption(user, dialog, 'Интерфейс', 'Русский');
+    await selectOnboardingOption(user, dialog, 'Цель', 'English');
+    await user.type(within(dialog).getByLabelText('Имя игрока'), 'Илья');
+    await user.click(within(dialog).getByRole('button', { name: 'Сохранить' }));
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Как тебя зовут?' })).not.toBeInTheDocument();
@@ -106,6 +122,56 @@ describe('AppShell', () => {
       displayName: 'Илья',
       isAnonymous: false,
     });
+  });
+
+  it('edits the player name from the player tooltip', async () => {
+    const user = userEvent.setup();
+    const store = configureStore({
+      reducer: {
+        app: appReducer,
+        attempts: attemptsReducer,
+      },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          playerProfile: {
+            avatarSeed: 'supporter:spain:test',
+            displayName: 'Илья',
+            isAnonymous: false,
+          },
+        },
+        attempts: {
+          attempts: createAttempts(7),
+        },
+      },
+    });
+
+    render(
+      <Provider store={store}>
+        <AppShell>
+          <div>Content</div>
+        </AppShell>
+      </Provider>,
+    );
+
+    await user.hover(screen.getByTestId('player_greeting__root'));
+    const tooltip = await screen.findByTestId('player_greeting__tooltip');
+    const nameInput = within(tooltip).getByLabelText('Изменить имя');
+
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Педро');
+    await user.click(within(tooltip).getByRole('button', { name: 'Сохранить имя' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('player_greeting__label')).toHaveTextContent('Педро');
+    });
+    expect(store.getState().app.playerProfile).toMatchObject({
+      displayName: 'Педро',
+      isAnonymous: false,
+    });
+    expect(store.getState().app.playerProfile?.avatarSeed).toEqual(
+      expect.stringContaining('supporter:spain'),
+    );
   });
 
   it('keeps the player greeting compact, centered, and shows the player level tooltip', async () => {
@@ -410,6 +476,16 @@ function createAttempts(count: number): ExerciseAttempt[] {
     correctness: {},
     hintsUsed: {},
   }));
+}
+
+async function selectOnboardingOption(
+  user: ReturnType<typeof userEvent.setup>,
+  dialog: HTMLElement,
+  label: string,
+  option: string,
+) {
+  await user.click(within(dialog).getByRole('combobox', { name: label }));
+  await user.click(await screen.findByRole('option', { name: option }));
 }
 
 function findMediaStyleRule({

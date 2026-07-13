@@ -17,6 +17,8 @@ type I18nKey =
   | 'playerOnboardingBody'
   | 'playerNameLabel'
   | 'savePlayerName'
+  | 'editPlayerName'
+  | 'savePlayerNameChange'
   | 'continueAnonymously'
   | 'playerGreetingPrefix'
   | 'playerAnonymousName'
@@ -292,6 +294,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
       'Your Spain supporter flag will travel with you through the football language lab.',
     playerNameLabel: 'Player name',
     savePlayerName: 'Save',
+    editPlayerName: 'Edit name',
+    savePlayerNameChange: 'Save name',
     continueAnonymously: 'Continue anonymously',
     playerGreetingPrefix: 'Hello',
     playerAnonymousName: 'wanderer',
@@ -613,6 +617,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
       'Флаг болельщика Испании будет путешествовать с тобой по футбольной языковой лаборатории.',
     playerNameLabel: 'Имя игрока',
     savePlayerName: 'Сохранить',
+    editPlayerName: 'Изменить имя',
+    savePlayerNameChange: 'Сохранить имя',
     continueAnonymously: 'Продолжить анонимно',
     playerGreetingPrefix: 'Привет',
     playerAnonymousName: 'странник',
@@ -936,6 +942,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
       'Tu bandera de hincha de Espana viajara contigo por el laboratorio futbolero.',
     playerNameLabel: 'Nombre de jugador',
     savePlayerName: 'Guardar',
+    editPlayerName: 'Cambiar nombre',
+    savePlayerNameChange: 'Guardar nombre',
     continueAnonymously: 'Continuar anonimo',
     playerGreetingPrefix: 'Hola',
     playerAnonymousName: 'viajero',

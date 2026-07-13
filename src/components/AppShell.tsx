@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined';
@@ -17,6 +17,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   Tab,
   Tabs,
@@ -25,14 +29,30 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material/Select';
 import { useDispatch, useSelector } from 'react-redux';
+import {
+  AssistantId,
+  visibleAssistantCharacters,
+} from '../domain/assistants';
 import { stadiumAccent } from '../domain/footballTheme';
 import { t } from '../domain/i18n';
-import { setPlayerProfile } from '../store/appSlice';
+import {
+  setAssistantId,
+  setInterfaceLanguage,
+  setPlayerProfile,
+  setTargetLanguage,
+} from '../store/appSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { AppLogo } from './AppLogo';
 import { LanguageSelectors } from './LanguageSelectors';
 import { createPlayerAvatarSeed, PlayerPixelAvatar } from './PlayerPixelAvatar';
+import {
+  languageFlags,
+  languageLabels,
+  SupportedLanguage,
+  supportedLanguages,
+} from '../domain/languages';
 
 export type AppShellSection =
   | 'game'
@@ -60,6 +80,10 @@ export function AppShell({
   );
   const playerProfile = useSelector(
     (state: RootState) => state.app.playerProfile,
+  );
+  const assistantId = useSelector((state: RootState) => state.app.assistantId);
+  const targetLanguage = useSelector(
+    (state: RootState) => state.app.targetLanguage,
   );
   const completedGameCount = useSelector(
     (state: RootState & { attempts?: RootState['attempts'] }) =>
@@ -267,6 +291,16 @@ export function AppShell({
                     ? t(interfaceLanguage, 'playerAnonymousName')
                     : (playerProfile.displayName ?? t(interfaceLanguage, 'playerAnonymousName'))
                 }
+                onNameChange={(name) => {
+                  const trimmedName = name.trim();
+                  dispatch(
+                    setPlayerProfile({
+                      avatarSeed: createPlayerAvatarSeed(trimmedName),
+                      displayName: trimmedName || undefined,
+                      isAnonymous: !trimmedName,
+                    }),
+                  );
+                }}
               />
             )}
           </Box>
@@ -295,25 +329,23 @@ export function AppShell({
       </Container>
 
       <PlayerOnboardingDialog
+        assistantId={assistantId}
         interfaceLanguage={interfaceLanguage}
         open={!playerProfile}
-        onAnonymous={() =>
+        targetLanguage={targetLanguage}
+        onComplete={({ assistantId, interfaceLanguage, name, targetLanguage }) => {
+          const trimmedName = name.trim();
+          dispatch(setAssistantId(assistantId));
+          dispatch(setInterfaceLanguage(interfaceLanguage));
+          dispatch(setTargetLanguage(targetLanguage));
           dispatch(
             setPlayerProfile({
-              avatarSeed: createPlayerAvatarSeed(''),
-              isAnonymous: true,
+              avatarSeed: createPlayerAvatarSeed(trimmedName),
+              displayName: trimmedName || undefined,
+              isAnonymous: !trimmedName,
             }),
-          )
-        }
-        onSave={(name) =>
-          dispatch(
-            setPlayerProfile({
-              avatarSeed: createPlayerAvatarSeed(name),
-              displayName: name,
-              isAnonymous: false,
-            }),
-          )
-        }
+          );
+        }}
       />
     </Box>
   );
@@ -365,13 +397,20 @@ function PlayerGreeting({
   completedGameCount,
   interfaceLanguage,
   name,
+  onNameChange,
 }: {
   avatarSeed: string;
   completedGameCount: number;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   name: string;
+  onNameChange: (name: string) => void;
 }) {
   const playerLevel = getPlayerLevel(completedGameCount, interfaceLanguage);
+  const [draftName, setDraftName] = useState(name);
+
+  useEffect(() => {
+    setDraftName(name);
+  }, [name]);
 
   return (
     <Tooltip
@@ -478,6 +517,47 @@ function PlayerGreeting({
             >
               {playerLevel.description}
             </Typography>
+            <Stack
+              data-test="player_greeting__edit_name_form"
+              spacing={0.75}
+              sx={{
+                bgcolor: (theme) =>
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(255, 255, 255, 0.06)'
+                    : 'rgba(245, 249, 235, 0.86)',
+                border: '1px solid rgba(118, 146, 79, 0.24)',
+                borderRadius: 2,
+                p: 1,
+              }}
+            >
+              <TextField
+                data-test="player_greeting__edit_name_input"
+                label={t(interfaceLanguage, 'editPlayerName')}
+                size="small"
+                value={draftName}
+                onChange={(event) => setDraftName(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    onNameChange(draftName);
+                  }
+                }}
+              />
+              <Button
+                data-test="player_greeting__save_name_button"
+                size="small"
+                variant="outlined"
+                onClick={() => onNameChange(draftName)}
+                sx={{
+                  alignSelf: 'flex-end',
+                  borderColor: 'rgba(198, 11, 30, 0.34)',
+                  color: '#7c1518',
+                  fontWeight: 900,
+                  textTransform: 'none',
+                }}
+              >
+                {t(interfaceLanguage, 'savePlayerNameChange')}
+              </Button>
+            </Stack>
           </Stack>
         </Box>
       }
@@ -770,22 +850,55 @@ function PlayerLevelIcon({ index }: { index: number }) {
 }
 
 function PlayerOnboardingDialog({
+  assistantId,
   interfaceLanguage,
-  onAnonymous,
-  onSave,
+  onComplete,
   open,
+  targetLanguage,
 }: {
+  assistantId: AssistantId;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
-  onAnonymous: () => void;
-  onSave: (name: string) => void;
+  onComplete: (value: {
+    assistantId: AssistantId;
+    interfaceLanguage: SupportedLanguage;
+    name: string;
+    targetLanguage: SupportedLanguage;
+  }) => void;
   open: boolean;
+  targetLanguage: SupportedLanguage;
 }) {
   const titleId = useId();
+  const assistantLabelId = useId();
+  const interfaceLabelId = useId();
+  const targetLabelId = useId();
   const [name, setName] = useState('');
+  const [selectedAssistantId, setSelectedAssistantId] =
+    useState<AssistantId | ''>('');
+  const [selectedInterfaceLanguage, setSelectedInterfaceLanguage] = useState<
+    SupportedLanguage | ''
+  >('');
+  const [selectedTargetLanguage, setSelectedTargetLanguage] = useState<
+    SupportedLanguage | ''
+  >('');
   const trimmedName = name.trim();
   const previewSeed = trimmedName
     ? createPlayerAvatarSeed(trimmedName)
     : 'player:anonymous-preview';
+  const copyLanguage = selectedInterfaceLanguage || interfaceLanguage;
+  const isReady = Boolean(
+    selectedAssistantId && selectedInterfaceLanguage && selectedTargetLanguage,
+  );
+  const complete = (nextName: string) => {
+    if (!isReady) {
+      return;
+    }
+    onComplete({
+      assistantId: selectedAssistantId || assistantId,
+      interfaceLanguage: selectedInterfaceLanguage || interfaceLanguage,
+      name: nextName,
+      targetLanguage: selectedTargetLanguage || targetLanguage,
+    });
+  };
 
   return (
     <Dialog
@@ -800,13 +913,13 @@ function PlayerOnboardingDialog({
         id={titleId}
         sx={{ fontWeight: 950, pb: 1 }}
       >
-        {t(interfaceLanguage, 'playerOnboardingTitle')}
+        {t(copyLanguage, 'playerOnboardingTitle')}
       </DialogTitle>
       <DialogContent data-test="player_onboarding__content">
         <Stack spacing={2} sx={{ pt: 0.5 }}>
           <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
             <PlayerPixelAvatar
-              ariaLabel={trimmedName || t(interfaceLanguage, 'playerAnonymousName')}
+              ariaLabel={trimmedName || t(copyLanguage, 'playerAnonymousName')}
               dataTest="player_onboarding__avatar_preview"
               seed={previewSeed}
               size={54}
@@ -815,19 +928,97 @@ function PlayerOnboardingDialog({
               data-test="player_onboarding__body"
               sx={{ color: 'text.secondary', lineHeight: 1.35 }}
             >
-              {t(interfaceLanguage, 'playerOnboardingBody')}
+              {t(copyLanguage, 'playerOnboardingBody')}
             </Typography>
           </Stack>
+          <FormControl
+            data-test="player_onboarding__assistant_control"
+            fullWidth
+          >
+            <InputLabel id={assistantLabelId}>
+              {t(copyLanguage, 'assistant')}
+            </InputLabel>
+            <Select
+              data-test="player_onboarding__assistant_select"
+              label={t(copyLanguage, 'assistant')}
+              labelId={assistantLabelId}
+              value={selectedAssistantId}
+              onChange={(event: SelectChangeEvent<AssistantId | ''>) =>
+                setSelectedAssistantId(event.target.value as AssistantId)
+              }
+            >
+              {visibleAssistantCharacters.map((assistant) => (
+                <MenuItem key={assistant.id} value={assistant.id}>
+                  {assistant.name[copyLanguage]}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl
+            data-test="player_onboarding__interface_language_control"
+            fullWidth
+          >
+            <InputLabel id={interfaceLabelId}>
+              {t(copyLanguage, 'interfaceLanguage')}
+            </InputLabel>
+            <Select
+              data-test="player_onboarding__interface_language_select"
+              label={t(copyLanguage, 'interfaceLanguage')}
+              labelId={interfaceLabelId}
+              value={selectedInterfaceLanguage}
+              onChange={(event: SelectChangeEvent<SupportedLanguage | ''>) =>
+                setSelectedInterfaceLanguage(
+                  event.target.value as SupportedLanguage,
+                )
+              }
+            >
+              {supportedLanguages.map((language) => (
+                <MenuItem
+                  aria-label={languageLabels[language]}
+                  key={language}
+                  value={language}
+                >
+                  {languageFlags[language]} {languageLabels[language]}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl
+            data-test="player_onboarding__target_language_control"
+            fullWidth
+          >
+            <InputLabel id={targetLabelId}>
+              {t(copyLanguage, 'targetLanguage')}
+            </InputLabel>
+            <Select
+              data-test="player_onboarding__target_language_select"
+              label={t(copyLanguage, 'targetLanguage')}
+              labelId={targetLabelId}
+              value={selectedTargetLanguage}
+              onChange={(event: SelectChangeEvent<SupportedLanguage | ''>) =>
+                setSelectedTargetLanguage(event.target.value as SupportedLanguage)
+              }
+            >
+              {supportedLanguages.map((language) => (
+                <MenuItem
+                  aria-label={languageLabels[language]}
+                  key={language}
+                  value={language}
+                >
+                  {languageFlags[language]} {languageLabels[language]}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
-            autoFocus
             data-test="player_onboarding__name_input"
             fullWidth
-            label={t(interfaceLanguage, 'playerNameLabel')}
+            label={t(copyLanguage, 'playerNameLabel')}
             value={name}
             onChange={(event) => setName(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === 'Enter' && trimmedName) {
-                onSave(trimmedName);
+              if (event.key === 'Enter' && trimmedName && isReady) {
+                complete(trimmedName);
               }
             }}
           />
@@ -839,8 +1030,9 @@ function PlayerOnboardingDialog({
       >
         <Button
           data-test="player_onboarding__anonymous_button"
+          disabled={!isReady}
           variant="outlined"
-          onClick={onAnonymous}
+          onClick={() => complete('')}
           sx={{
             borderColor: 'rgba(32, 48, 21, 0.24)',
             color: '#516143',
@@ -848,13 +1040,13 @@ function PlayerOnboardingDialog({
             textTransform: 'none',
           }}
         >
-          {t(interfaceLanguage, 'continueAnonymously')}
+          {t(copyLanguage, 'continueAnonymously')}
         </Button>
         <Button
           data-test="player_onboarding__save_button"
-          disabled={!trimmedName}
+          disabled={!trimmedName || !isReady}
           variant="contained"
-          onClick={() => onSave(trimmedName)}
+          onClick={() => complete(trimmedName)}
           sx={{
             background:
               'linear-gradient(135deg, #f9f871 0%, #9be667 46%, #61d4ff 100%)',
@@ -869,7 +1061,7 @@ function PlayerOnboardingDialog({
             },
           }}
         >
-          {t(interfaceLanguage, 'savePlayerName')}
+          {t(copyLanguage, 'savePlayerName')}
         </Button>
       </DialogActions>
     </Dialog>
