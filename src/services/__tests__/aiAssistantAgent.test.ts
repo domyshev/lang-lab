@@ -28,6 +28,36 @@ const snapshot: AiLibrarySnapshot = {
     },
   ],
   cardSets: [],
+  attempts: [
+    {
+      id: 'attempt-1',
+      exerciseSessionId: 'session-1',
+      exerciseType: 'missingLetters',
+      cardSetId: 'all-cards',
+      targetLanguage: 'en',
+      createdAt: now,
+      completedAt: now,
+      cardSnapshots: [],
+      prompts: [],
+      answers: { 'existing-airport': 'wrong' },
+      correctness: { 'existing-airport': false },
+      hintsUsed: {},
+    },
+  ],
+  cardStats: [
+    {
+      cardId: 'existing-airport',
+      targetLanguage: 'en',
+      attempts: 1,
+      correct: 0,
+      incorrect: 1,
+      hintsUsed: 0,
+      accuracy: 0,
+      recentMistakes: 1,
+      lastPracticedAt: now,
+      stability: 'weak',
+    },
+  ],
 };
 
 beforeEach(() => {
@@ -91,6 +121,10 @@ describe('runAiAssistant', () => {
       'get_card_set',
       'search_cards',
       'get_cards',
+      'get_learning_overview',
+      'list_recent_games',
+      'get_card_learning_stats',
+      'get_card_set_learning_stats',
       'propose_library_operation',
     ]);
     expect(first.messages).toHaveLength(2);
@@ -109,6 +143,9 @@ describe('runAiAssistant', () => {
     expect(first.messages[0].content).toContain(
       'You may answer questions about the supplied recent chat history',
     );
+    expect(first.messages[0].content).toContain('game history and learning statistics');
+    expect(first.messages[0].content).toContain('Do not claim that game history');
+    expect(first.messages[0].content).not.toContain('four bounded read tools');
 
     const second = sendChatMock.mock.calls[1][0];
     expect(second.tools).toBe(aiAssistantToolDefinitions);
@@ -240,6 +277,60 @@ describe('runAiAssistant', () => {
           limit: 20,
           nextCursor: null,
           total: 1,
+        }),
+      },
+    ]);
+  });
+
+  it('executes learning-stat read tools before answering study questions', async () => {
+    const statsCall = toolCall('stats-1', 'get_learning_overview', {
+      targetLanguage: 'en',
+    });
+    sendChatMock
+      .mockResolvedValueOnce(success(null, [statsCall]))
+      .mockResolvedValueOnce(success('You should repeat airport first.'));
+
+    const result = await runAiAssistant({
+      apiKey: 'key',
+      userMessage: 'What should I repeat?',
+      snapshot,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      content: 'You should repeat airport first.',
+    });
+    expect(sendChatMock).toHaveBeenCalledTimes(2);
+    expect(sendChatMock.mock.calls[1][0].messages.slice(-2)).toEqual([
+      { role: 'assistant', content: null, tool_calls: [statsCall] },
+      {
+        role: 'tool',
+        tool_call_id: 'stats-1',
+        content: JSON.stringify({
+          targetLanguage: 'en',
+          totals: {
+            answeredCards: 1,
+            completedGames: 0,
+            correct: 0,
+            games: 1,
+            incorrect: 1,
+            weakCards: 1,
+          },
+          recentGames: [
+            {
+              cardSetId: 'all-cards',
+              completedAt: now,
+              correct: 0,
+              createdAt: now,
+              exerciseCompletedAt: undefined,
+              exerciseType: 'missingLetters',
+              id: 'session-1',
+              incorrect: 1,
+              isExerciseCompleted: false,
+              targetLanguage: 'en',
+              total: 1,
+            },
+          ],
         }),
       },
     ]);

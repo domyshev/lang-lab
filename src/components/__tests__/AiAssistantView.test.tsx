@@ -81,6 +81,8 @@ function renderView({
   showManualImport = true,
   messages = [],
   operations = [],
+  attempts,
+  cardStats,
   cards,
   blockedPreview,
   stagedOperation,
@@ -91,6 +93,8 @@ function renderView({
   showManualImport?: boolean;
   messages?: ReturnType<typeof rootReducer>['aiAssistant']['messages'];
   operations?: AppliedAiOperation[];
+  attempts?: ReturnType<typeof rootReducer>['attempts']['attempts'];
+  cardStats?: ReturnType<typeof rootReducer>['stats']['cardStats'];
   cards?: ReturnType<typeof rootReducer>['cards']['cards'];
   blockedPreview?: BlockedAiPreview;
   stagedOperation?: PlannedAiOperation;
@@ -105,6 +109,14 @@ function renderView({
       cards: {
         ...initial.cards,
         ...(cards ? { cards } : {}),
+      },
+      attempts: {
+        ...initial.attempts,
+        ...(attempts ? { attempts } : {}),
+      },
+      stats: {
+        ...initial.stats,
+        ...(cardStats ? { cardStats } : {}),
       },
       aiAssistant: {
         messages,
@@ -560,6 +572,64 @@ describe('AiAssistantView chat', () => {
     expect(request.signal?.aborted).toBe(true);
     expect(screen.queryByText('Thinking...')).not.toBeInTheDocument();
     resolveRequest({ ok: false, failure: { kind: 'cancelled', message: 'cancelled' } });
+  });
+
+  it('passes game attempts and card stats to the assistant service', async () => {
+    const user = userEvent.setup();
+    saveOpenRouterKey('sk-test');
+    mockedRunAiAssistant.mockResolvedValue({ ok: true, content: 'I can see progress.' });
+    renderView({
+      attempts: [
+        {
+          id: 'attempt-1',
+          exerciseSessionId: 'session-1',
+          exerciseType: 'missingLetters',
+          cardSetId: 'travel',
+          targetLanguage: 'en',
+          createdAt: now,
+          completedAt: now,
+          cardSnapshots: [],
+          prompts: [],
+          answers: { card1: 'wrong' },
+          correctness: { card1: false },
+          hintsUsed: {},
+        },
+      ],
+      cardStats: [
+        {
+          cardId: 'card1',
+          targetLanguage: 'en',
+          attempts: 1,
+          correct: 0,
+          incorrect: 1,
+          hintsUsed: 0,
+          accuracy: 0,
+          recentMistakes: 1,
+          lastPracticedAt: now,
+          stability: 'weak',
+        },
+      ],
+    });
+
+    await user.type(screen.getByLabelText('Message the AI assistant'), 'What should I repeat?');
+    await user.click(screen.getByRole('button', { name: 'Send message' }));
+
+    expect(mockedRunAiAssistant.mock.calls[0][0].snapshot).toMatchObject({
+      attempts: [
+        {
+          id: 'attempt-1',
+          exerciseSessionId: 'session-1',
+          correctness: { card1: false },
+        },
+      ],
+      cardStats: [
+        {
+          cardId: 'card1',
+          targetLanguage: 'en',
+          stability: 'weak',
+        },
+      ],
+    });
   });
 
   it('appends the response and stages a returned operation', async () => {

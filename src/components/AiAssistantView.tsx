@@ -74,6 +74,8 @@ export function AiAssistantView({
   const keyStorageRef = useRef<Storage>(getOpenRouterStorage());
   const cards = useSelector((state: RootState) => state.cards.cards);
   const cardSets = useSelector((state: RootState) => state.cardSets.cardSets);
+  const attempts = useSelector((state: RootState) => state.attempts.attempts);
+  const cardStats = useSelector((state: RootState) => state.stats.cardStats);
   const interfaceLanguage = useSelector((state: RootState) => state.app.interfaceLanguage);
   const { blockedPreview, messages, operationError, operations, stagedOperation } = useSelector(
     (state: RootState) => state.aiAssistant,
@@ -155,7 +157,7 @@ export function AiAssistantView({
           modelId,
           userMessage: prompt,
           chatHistory: messages.map(({ role, content }) => ({ role, content })),
-          snapshot: { cards, cardSets, interfaceLanguage },
+          snapshot: { attempts, cards, cardSets, cardStats, interfaceLanguage },
           signal: controller.signal,
         });
         if (controller.signal.aborted) {

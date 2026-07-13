@@ -29,7 +29,7 @@ describe('large local datasets', () => {
     const result = executeAiReadTool(
       'search_cards',
       { cursor: 200, limit: 1_000, query: 'benchmark word' },
-      { cards, cardSets: [], interfaceLanguage: 'en' },
+      { attempts: [], cards, cardSets: [], cardStats: [], interfaceLanguage: 'en' },
     );
     const elapsedMs = performance.now() - startedAt;
 

@@ -26,7 +26,7 @@ Do not include explanatory text before or after the JSON.
 
 Use this mode only inside the Language Lab AI Assistant.
 
-Follow the same supported-language, card-quality, one-meaning-per-card, and duplicate rules in this guide. Use the four bounded read tools to inspect the current library. Never invent an id for an existing card or card set; obtain existing ids from read-tool results.
+Follow the same supported-language, card-quality, one-meaning-per-card, and duplicate rules in this guide. Use the bounded read tools to inspect the current library, game history, and learning statistics. Never invent an id for an existing card or card set; obtain existing ids from read-tool results.
 
 Only propose writes through `propose_library_operation`. That tool stages a plan for user review and does not apply changes. Do not claim that a proposed operation has already changed the library, and do not attempt direct writes, global card deletion, or card-set archive or deletion.
 

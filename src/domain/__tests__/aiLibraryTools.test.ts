@@ -76,6 +76,89 @@ const snapshot: AiLibrarySnapshot = {
   cards,
   cardSets,
   interfaceLanguage: 'es',
+  attempts: [
+    {
+      id: 'attempt-1',
+      exerciseSessionId: 'session-1',
+      exerciseType: 'missingLetters',
+      cardSetId: 'travel',
+      targetLanguage: 'en',
+      createdAt: '2026-07-11T10:00:00.000Z',
+      completedAt: '2026-07-11T10:05:00.000Z',
+      cardSnapshots: [],
+      prompts: [],
+      answers: { known: 'wrong', 'translation-match': 'Airport' },
+      correctness: { known: false, 'translation-match': true },
+      hintsUsed: { known: 1 },
+    },
+    {
+      id: 'attempt-2',
+      exerciseSessionId: 'session-2',
+      exerciseType: 'multipleChoice',
+      cardSetId: 'travel',
+      targetLanguage: 'en',
+      createdAt: '2026-07-12T10:00:00.000Z',
+      completedAt: '2026-07-12T10:04:00.000Z',
+      cardSnapshots: [],
+      prompts: [],
+      answers: { known: 'bad again' },
+      correctness: { known: false },
+      hintsUsed: {},
+      isExerciseCompleted: true,
+    },
+    {
+      id: 'attempt-3',
+      exerciseSessionId: 'session-3',
+      exerciseType: 'missingWord',
+      cardSetId: 'archive',
+      targetLanguage: 'es',
+      createdAt: '2026-07-12T11:00:00.000Z',
+      completedAt: '2026-07-12T11:06:00.000Z',
+      cardSnapshots: [],
+      prompts: [],
+      answers: { 'tag-match': 'Maleta' },
+      correctness: { 'tag-match': true },
+      hintsUsed: {},
+    },
+  ],
+  cardStats: [
+    {
+      cardId: 'known',
+      targetLanguage: 'en',
+      attempts: 2,
+      correct: 0,
+      incorrect: 2,
+      hintsUsed: 1,
+      accuracy: 0,
+      recentMistakes: 2,
+      lastPracticedAt: '2026-07-12T10:04:00.000Z',
+      stability: 'weak',
+    },
+    {
+      cardId: 'translation-match',
+      targetLanguage: 'en',
+      attempts: 1,
+      correct: 1,
+      incorrect: 0,
+      hintsUsed: 0,
+      accuracy: 1,
+      recentMistakes: 0,
+      lastPracticedAt: '2026-07-11T10:05:00.000Z',
+      stability: 'new',
+    },
+    {
+      cardId: 'tag-match',
+      targetLanguage: 'es',
+      attempts: 1,
+      correct: 1,
+      incorrect: 0,
+      hintsUsed: 0,
+      accuracy: 1,
+      recentMistakes: 0,
+      lastPracticedAt: '2026-07-12T11:06:00.000Z',
+      stability: 'new',
+    },
+  ],
 };
 
 function createBoundarySnapshot(): AiLibrarySnapshot {
@@ -88,6 +171,8 @@ function createBoundarySnapshot(): AiLibrarySnapshot {
     })),
     cardSets: [],
     interfaceLanguage: 'en',
+    attempts: [],
+    cardStats: [],
   };
 }
 
@@ -248,6 +333,136 @@ describe('executeAiReadTool', () => {
     expect(result.cards[result.cards.length - 1]?.id).toBe('boundary-99');
     expect(result.unknownCardIds).toEqual([]);
   });
+
+  it('returns a target-language learning overview with recent games', () => {
+    expect(
+      executeAiReadTool('get_learning_overview', { targetLanguage: 'en' }, snapshot),
+    ).toMatchObject({
+      targetLanguage: 'en',
+      totals: {
+        games: 2,
+        completedGames: 1,
+        answeredCards: 3,
+        correct: 1,
+        incorrect: 2,
+        weakCards: 1,
+      },
+      recentGames: [
+        {
+          id: 'session-2',
+          cardSetId: 'travel',
+          exerciseType: 'multipleChoice',
+          total: 1,
+          correct: 0,
+          incorrect: 1,
+          isExerciseCompleted: true,
+        },
+        {
+          id: 'session-1',
+          cardSetId: 'travel',
+          exerciseType: 'missingLetters',
+          total: 2,
+          correct: 1,
+          incorrect: 1,
+          isExerciseCompleted: false,
+        },
+      ],
+    });
+  });
+
+  it('lists recent games with filters and pagination', () => {
+    expect(
+      executeAiReadTool(
+        'list_recent_games',
+        { targetLanguage: 'en', exerciseType: 'missingLetters', limit: 1 },
+        snapshot,
+      ),
+    ).toMatchObject({
+      cursor: 0,
+      limit: 1,
+      nextCursor: null,
+      total: 1,
+      items: [
+        {
+          id: 'session-1',
+          cardSetId: 'travel',
+          targetLanguage: 'en',
+          exerciseType: 'missingLetters',
+          answeredCards: [
+            { cardId: 'known', isCorrect: false },
+            { cardId: 'translation-match', isCorrect: true },
+          ],
+        },
+      ],
+    });
+  });
+
+  it('returns card learning stats with recent answers and unknown ids', () => {
+    expect(
+      executeAiReadTool(
+        'get_card_learning_stats',
+        { cardIds: ['known', 'missing-card'], targetLanguage: 'en', recentLimit: 2 },
+        snapshot,
+      ),
+    ).toMatchObject({
+      cards: [
+        {
+          cardId: 'known',
+          targetLanguage: 'en',
+          answer: 'Known word',
+          attempts: 2,
+          correct: 0,
+          incorrect: 2,
+          accuracy: 0,
+          stability: 'weak',
+          recentAnswers: [
+            { isCorrect: false, occurredAt: '2026-07-12T10:04:00.000Z' },
+            { isCorrect: false, occurredAt: '2026-07-11T10:05:00.000Z' },
+          ],
+        },
+      ],
+      unknownCardIds: ['missing-card'],
+    });
+  });
+
+  it('summarizes card-set learning stats and ranks weak cards first', () => {
+    expect(
+      executeAiReadTool(
+        'get_card_set_learning_stats',
+        { cardSetId: 'travel', targetLanguage: 'en', limit: 10 },
+        snapshot,
+      ),
+    ).toMatchObject({
+      cardSet: {
+        id: 'travel',
+        name: 'Viajes',
+        cardCount: 2,
+      },
+      targetLanguage: 'en',
+      totals: {
+        cardsInSet: 2,
+        practicedCards: 2,
+        attempts: 3,
+        correct: 1,
+        incorrect: 2,
+        weakCards: 1,
+      },
+      cards: [
+        {
+          cardId: 'known',
+          answer: 'Known word',
+          stability: 'weak',
+          incorrect: 2,
+        },
+        {
+          cardId: 'translation-match',
+          answer: 'Airport',
+          stability: 'new',
+          correct: 1,
+        },
+      ],
+    });
+  });
 });
 
 describe('aiReadToolDefinitions', () => {
@@ -257,6 +472,10 @@ describe('aiReadToolDefinitions', () => {
       'get_card_set',
       'search_cards',
       'get_cards',
+      'get_learning_overview',
+      'list_recent_games',
+      'get_card_learning_stats',
+      'get_card_set_learning_stats',
     ]);
     expect(
       aiReadToolDefinitions.every(
