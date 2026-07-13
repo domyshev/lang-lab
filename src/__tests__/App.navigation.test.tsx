@@ -2,9 +2,12 @@ import { configureStore } from '@reduxjs/toolkit';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import type { ExerciseAttempt } from '../domain/exercises';
+import type { AiAgentResult } from '../services/aiAssistantAgent';
+import { runAiAssistant } from '../services/aiAssistantAgent';
+import { saveOpenRouterKey } from '../services/openRouterKeyStorage';
 import { appReducer } from '../store/appSlice';
 import { attemptsReducer } from '../store/attemptsSlice';
 import { cardsReducer } from '../store/cardsSlice';
@@ -12,7 +15,27 @@ import { statsReducer } from '../store/statsSlice';
 import { cardSetsReducer, selectCardSet } from '../store/cardSetsSlice';
 import { aiAssistantReducer } from '../store/aiAssistantSlice';
 
+vi.mock('../services/aiAssistantAgent', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/aiAssistantAgent')>();
+  return { ...actual, runAiAssistant: vi.fn() };
+});
+
+const mockedRunAiAssistant = vi.mocked(runAiAssistant);
 const now = '2026-07-03T12:00:00.000Z';
+
+function createMemoryStorage(): Storage {
+  const values = new Map<string, string>();
+  return {
+    clear: () => values.clear(),
+    getItem: (key) => values.get(key) ?? null,
+    key: (index) => [...values.keys()][index] ?? null,
+    get length() {
+      return values.size;
+    },
+    removeItem: (key) => values.delete(key),
+    setItem: (key, value) => values.set(key, value),
+  };
+}
 
 function renderApp({
   app = {},
@@ -149,6 +172,50 @@ function renderApp({
 }
 
 describe('App navigation', () => {
+  it('keeps an in-flight AI chat request running after navigating away from Chat', async () => {
+    const user = userEvent.setup();
+    const storage = createMemoryStorage();
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: storage,
+    });
+    saveOpenRouterKey('sk-test', storage);
+    mockedRunAiAssistant.mockReset();
+    let resolveAssistant!: (value: AiAgentResult) => void;
+    mockedRunAiAssistant.mockImplementation(
+      () =>
+        new Promise<AiAgentResult>((resolve) => {
+          resolveAssistant = resolve;
+        }),
+    );
+    renderApp();
+
+    await user.click(screen.getByRole('tab', { name: 'Чат' }));
+    await user.type(
+      screen.getByLabelText('Сообщение AI-ассистенту'),
+      'Продолжай работать после перехода',
+    );
+    await user.click(screen.getByRole('button', { name: 'Отправить сообщение' }));
+
+    await waitFor(() => expect(mockedRunAiAssistant).toHaveBeenCalledOnce());
+    const requestSignal = mockedRunAiAssistant.mock.calls[0][0].signal;
+
+    await user.click(screen.getByRole('tab', { name: 'Карточки' }));
+
+    expect(requestSignal?.aborted).toBe(false);
+
+    resolveAssistant({
+      ok: true,
+      content: 'Я продолжил работу после перехода.',
+    });
+
+    await user.click(screen.getByRole('tab', { name: 'Чат' }));
+
+    expect(
+      await screen.findByText('Я продолжил работу после перехода.'),
+    ).toBeInTheDocument();
+  });
+
   it('loads bundled vocabulary cards into an empty browser store', async () => {
     const store = configureStore({
       reducer: {

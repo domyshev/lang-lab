@@ -9,6 +9,7 @@ describe('AppLogo', () => {
     const logo = screen.getByRole('button', { name: 'Language Lab' });
     const legacyLeaf = screen.getByTestId('app_logo__legacy_leaf_hidden');
     const footballFlag = screen.getByTestId('app_logo__football_flag_svg');
+    const footballCrest = screen.getByTestId('app_logo__football_crest_svg');
 
     expect(logo).toHaveStyle({
       alignSelf: 'center',
@@ -31,5 +32,10 @@ describe('AppLogo', () => {
     });
     expect(screen.getByTestId('app_logo__flag_yellow')).toBeInTheDocument();
     expect(screen.getByTestId('app_logo__football_ball')).toBeInTheDocument();
+    expect(screen.queryByTestId('app_logo__letter_tile_grid')).not.toBeInTheDocument();
+    expect(footballCrest.tagName.toLowerCase()).toBe('svg');
+    expect(footballCrest).toHaveAttribute('viewBox', '0 0 44 50');
+    expect(screen.getByTestId('app_logo__crest_shield')).toBeInTheDocument();
+    expect(screen.getByTestId('app_logo__crest_ball')).toBeInTheDocument();
   });
 });

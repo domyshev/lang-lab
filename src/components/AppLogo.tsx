@@ -119,43 +119,76 @@ export function AppLogo({
         />
       </Box>
       <Box
+        component="svg"
         aria-hidden="true"
-        data-test="app_logo__letter_tile_grid"
+        data-test="app_logo__football_crest_svg"
+        viewBox="0 0 44 50"
         sx={{
-          alignItems: 'center',
-          bgcolor: '#ffffff',
-          border: '1px solid rgba(32, 48, 21, 0.18)',
-          borderRadius: 1.5,
-          display: 'grid',
-          gap: 0.25,
-          gridTemplateColumns: 'repeat(2, 18px)',
-          p: 0.4,
+          display: 'block',
+          flexShrink: 0,
+          filter: 'drop-shadow(0 4px 7px rgba(124, 21, 24, 0.18))',
+          height: 40,
           position: 'relative',
-          transform: 'rotate(-3deg)',
+          transform: 'rotate(-2deg)',
+          width: 42,
           zIndex: 1,
         }}
       >
-        {logoLetters.map((item) => (
-          <Box
-            key={item.value}
-            component="span"
-            data-test={`app_logo__letter_tile__${item.testKey}`}
-            sx={{
-              alignItems: 'center',
-              bgcolor: item.value === 'Я' ? '#dcefb1' : '#f0f7d7',
-              borderRadius: 0.75,
-              color: '#203015',
-              display: 'inline-flex',
-              fontSize: 12,
-              fontWeight: 900,
-              height: 18,
-              justifyContent: 'center',
-              width: 18,
-            }}
-          >
-            {item.value}
-          </Box>
-        ))}
+        <defs>
+          <clipPath id="app-logo-football-crest-clip">
+            <path d="M22 2 39 7v16c0 11.5-7.3 19.2-17 24C12.3 42.2 5 34.5 5 23V7Z" />
+          </clipPath>
+        </defs>
+        <path
+          data-test="app_logo__crest_shield"
+          d="M22 2 39 7v16c0 11.5-7.3 19.2-17 24C12.3 42.2 5 34.5 5 23V7Z"
+          fill="#fffdf4"
+          stroke="#7c1518"
+          strokeWidth="2.4"
+        />
+        <g clipPath="url(#app-logo-football-crest-clip)">
+          <rect width="44" height="13" fill="#c60b1e" />
+          <rect y="13" width="44" height="19" fill="#ffc400" />
+          <rect y="32" width="44" height="18" fill="#c60b1e" />
+          <path
+            d="M7 7h30M7 32h30M22 2v45"
+            stroke="rgba(255, 255, 255, 0.55)"
+            strokeWidth="1.1"
+          />
+          <path
+            d="M10 9c6 3 18 3 24 0"
+            fill="none"
+            stroke="rgba(32, 48, 21, 0.35)"
+            strokeWidth="1.2"
+          />
+        </g>
+        <circle
+          data-test="app_logo__crest_ball"
+          cx="22"
+          cy="27"
+          r="8"
+          fill="#fffdf4"
+          stroke="#203015"
+          strokeWidth="1.5"
+        />
+        <path
+          d="M22 19v16M14 27h16M16 21l12 12M28 21 16 33"
+          stroke="#203015"
+          strokeWidth="0.85"
+          opacity="0.58"
+        />
+        <text
+          x="22"
+          y="15"
+          fill="#203015"
+          fontFamily="Arial, sans-serif"
+          fontSize="8"
+          fontWeight="900"
+          letterSpacing="0"
+          textAnchor="middle"
+        >
+          LL
+        </text>
       </Box>
       <Typography
         component="span"
@@ -174,10 +207,3 @@ export function AppLogo({
     </Box>
   );
 }
-
-const logoLetters = [
-  { testKey: 'a', value: 'A' },
-  { testKey: 'n_tilde', value: 'Ñ' },
-  { testKey: 'ya', value: 'Я' },
-  { testKey: 'b', value: 'B' },
-];

@@ -999,22 +999,6 @@ export function App() {
       );
     }
 
-    if (activeSection === 'chat') {
-      return (
-        <Box
-          data-test="app__chat_section"
-          sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}
-        >
-          <AiAssistantView
-            collapsible={false}
-            dataTest="app_chat__assistant"
-            embedded
-            showManualImport={false}
-          />
-        </Box>
-      );
-    }
-
     if (activeSection === 'help') {
       return (
         <Box data-test="app__help_section">
@@ -1875,7 +1859,26 @@ export function App() {
       onLogoClick={handleLogoClick}
       onNavigate={handleNavigate}
     >
-      {renderMainContent()}
+      <Box
+        aria-hidden={activeSection === 'chat' ? undefined : 'true'}
+        data-test={
+          activeSection === 'chat' ? 'app__chat_section' : 'app__chat_section_hidden'
+        }
+        sx={{
+          display: activeSection === 'chat' ? 'block' : 'none',
+          maxWidth: 760,
+          mx: 'auto',
+          width: '100%',
+        }}
+      >
+        <AiAssistantView
+          collapsible={false}
+          dataTest="app_chat__assistant"
+          embedded
+          showManualImport={false}
+        />
+      </Box>
+      {activeSection === 'chat' ? null : renderMainContent()}
       <FinishExerciseDialog
         hasCrosswordDraftLetters={
           selectedExerciseType === 'crossword' &&
