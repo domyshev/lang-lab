@@ -154,10 +154,12 @@ describe('MissingLettersExercise', () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();
     const onNext = vi.fn();
+    const onKnownChange = vi.fn();
 
     render(
       <MissingLettersExercise
         interfaceLanguage="ru"
+        onKnownChange={onKnownChange}
         prompt={{
           cardId: 'vehicle',
           prompt: 'ru: транспортное средство',
@@ -188,6 +190,12 @@ describe('MissingLettersExercise', () => {
     expect(screen.getByRole('button', { name: 'Запомнить!' })).toHaveStyle({
       backgroundColor: 'rgb(255, 243, 205)',
     });
+    const knownButton = screen.getByTestId(
+      'missing_letters_exercise__known_button__vehicle',
+    );
+    expect(knownButton).toHaveAttribute('aria-pressed', 'false');
+    await user.click(knownButton);
+    expect(onKnownChange).toHaveBeenCalledWith(true);
 
     await user.click(screen.getByRole('button', { name: 'Запомнить!' }));
     expect(onNext).toHaveBeenCalledOnce();

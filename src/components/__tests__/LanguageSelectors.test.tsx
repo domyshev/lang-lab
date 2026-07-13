@@ -34,6 +34,9 @@ describe('LanguageSelectors', () => {
       height: '34px',
     });
     expect(
+      screen.getByRole('combobox', { name: 'Язык - цель изучения' }),
+    ).toBeInTheDocument();
+    expect(
       screen.getByTestId('language_selectors__companion_languages_select'),
     ).toHaveStyle({
       height: '34px',
@@ -133,7 +136,7 @@ describe('LanguageSelectors', () => {
     expect(worldSelect).toHaveTextContent('Футбол');
 
     await user.click(worldSelect);
-    await user.click(screen.getByRole('option', { name: 'Лес' }));
+    await user.click(screen.getByRole('option', { name: 'Лесные эльфы' }));
 
     expect(store.getState().app.worldId).toBe('forest');
     expect(store.getState().app.assistantId).toBe('studyTroll');
@@ -170,7 +173,7 @@ describe('LanguageSelectors', () => {
     ).toBe(35);
   });
 
-  it('configures up to two companion languages in the header without interface or target languages', async () => {
+  it('configures ordered companion languages in the header independently from the interface language', async () => {
     const user = userEvent.setup();
     const store = createStore();
 
@@ -185,17 +188,32 @@ describe('LanguageSelectors', () => {
     });
     expect(companionSelect).toHaveTextContent('Español');
     expect(companionSelect).toHaveTextContent('Українська');
+    expect(companionSelect).toHaveTextContent('Русский');
+    expect(screen.getByTestId('language_selectors__target_language_control')).toHaveStyle({
+      width: '224px',
+    });
+    expect(screen.getByTestId('language_selectors__companion_languages_control')).toHaveStyle({
+      maxWidth: '224px',
+      width: '224px',
+    });
 
     await user.click(companionSelect);
 
     expect(screen.queryByRole('option', { name: /English/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: /Русский/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Русский/ })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: /Español/ })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: /Українська/ })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('option', { name: /Español/ }));
+    await user.click(screen.getByRole('button', { name: 'Выше: Українська' }));
+    expect(store.getState().app.complementaryLanguages.en).toEqual([
+      'uk',
+      'es',
+      'ru',
+    ]);
 
-    expect(store.getState().app.complementaryLanguages.en).toEqual(['uk']);
+    await user.click(screen.getByRole('option', { name: /Русский/ }));
+
+    expect(store.getState().app.complementaryLanguages.en).toEqual(['uk', 'es']);
   });
 
 });
@@ -213,10 +231,10 @@ function createStore() {
       app: {
         ...appReducer(undefined, { type: 'test/init' }),
         complementaryLanguages: {
-          en: ['es', 'uk'],
-          ru: ['en', 'es'],
-          es: ['ru', 'en'],
-          uk: ['ru', 'en'],
+          en: ['es', 'uk', 'ru'],
+          ru: ['en', 'es', 'uk'],
+          es: ['ru', 'en', 'uk'],
+          uk: ['ru', 'en', 'es'],
         } satisfies ComplementaryLanguages,
         interfaceLanguage: 'ru' as const,
         targetLanguage: 'en' as const,

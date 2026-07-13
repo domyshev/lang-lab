@@ -6,7 +6,9 @@ export type AssistantId =
   | 'trollMama'
   | 'capeChampion'
   | 'greenPower'
-  | 'webRunner';
+  | 'webRunner'
+  | 'forestElf'
+  | 'unicorn';
 
 export interface AssistantCharacter {
   abilities: Record<SupportedLanguage, string[]>;
@@ -532,6 +534,106 @@ const forestAssistantCharacters: RawAssistantCharacter[] = [
       uk: 'Швидко помічає звʼязки між схожими словами, не кваплячи відповідь.',
     },
   },
+  {
+    id: 'forestElf',
+    label: 'Forest Elf',
+    motto: {
+      en: 'Quiet steps, bright clues.',
+      ru: 'Тихие шаги, светлые подсказки.',
+      es: 'Pasos suaves, pistas claras.',
+      uk: 'Тихі кроки, світлі підказки.',
+    },
+    name: {
+      en: 'Forest Elf',
+      ru: 'Лесной эльф',
+      es: 'Elfo del bosque',
+      uk: 'Лісовий ельф',
+    },
+    description: {
+      en: 'A nimble forest guide who moves lightly through difficult cards. The elf keeps the route playful, notices small hints, and helps the next answer feel discoverable instead of forced.',
+      ru: 'Ловкий лесной проводник, который легко проходит через сложные карточки. Эльф оставляет маршрут игровым, замечает маленькие намеки и помогает следующему ответу находиться без нажима.',
+      es: 'Un guia agil del bosque que avanza ligero por tarjetas dificiles. El elfo mantiene la ruta juguetona, nota pistas pequenas y ayuda a encontrar la respuesta sin forzarla.',
+      uk: 'Спритний лісовий провідник, що легко проходить крізь складні картки. Ельф зберігає маршрут ігровим, помічає маленькі підказки й допомагає знаходити відповідь без натиску.',
+    },
+    abilities: {
+      en: [
+        'Moonlit hint: makes the most useful clue feel a little brighter.',
+        'Silent shortcut: moves from one tricky card to the next without drama.',
+        'Leaf-step rhythm: keeps repeats light and evenly spaced.',
+      ],
+      ru: [
+        'Лунная подсказка: делает самый полезный намек чуть светлее.',
+        'Тихая тропинка: переводит от одной сложной карточки к другой без драмы.',
+        'Ритм листового шага: держит повторы легкими и ровными.',
+      ],
+      es: [
+        'Pista lunar: hace que la pista mas util brille un poco mas.',
+        'Atajo silencioso: pasa de una tarjeta dificil a otra sin drama.',
+        'Ritmo de hoja: mantiene repeticiones ligeras y espaciadas.',
+      ],
+      uk: [
+        'Місячна підказка: робить найкорисніший натяк трохи світлішим.',
+        'Тиха стежка: переводить від однієї складної картки до іншої без драми.',
+        'Ритм листяного кроку: тримає повтори легкими й рівними.',
+      ],
+    },
+    superpower: {
+      en: 'Finds quiet shortcuts between clue and answer without rushing you.',
+      ru: 'Находит тихие тропинки от подсказки к ответу, не подгоняя тебя.',
+      es: 'Encuentra atajos tranquilos entre pista y respuesta sin apurarte.',
+      uk: 'Знаходить тихі стежки від підказки до відповіді, не підганяючи тебе.',
+    },
+  },
+  {
+    id: 'unicorn',
+    label: 'Silver Unicorn',
+    motto: {
+      en: 'Sparkle is practice wearing a crown.',
+      ru: 'Блеск - это практика в короне.',
+      es: 'El brillo es practica con corona.',
+      uk: 'Блиск - це практика в короні.',
+    },
+    name: {
+      en: 'Silver Unicorn',
+      ru: 'Серебряный единорог',
+      es: 'Unicornio plateado',
+      uk: 'Срібний єдиноріг',
+    },
+    description: {
+      en: 'A bright mythical friend for cards that need a little wonder. The unicorn turns a dry repeat into a small celebration and helps confidence come back after misses.',
+      ru: 'Светлый сказочный друг для карточек, которым нужно немного чуда. Единорог превращает сухой повтор в маленький праздник и помогает уверенности вернуться после промахов.',
+      es: 'Un amigo mitico y luminoso para tarjetas que necesitan maravilla. El unicornio convierte un repaso seco en una pequena fiesta y devuelve confianza tras fallos.',
+      uk: 'Світлий казковий друг для карток, яким потрібно трохи дива. Єдиноріг перетворює сухий повтор на маленьке свято й повертає впевненість після промахів.',
+    },
+    abilities: {
+      en: [
+        'Rainbow reset: softens a miss so the next card starts clean.',
+        'Sparkle streak: notices when a once-hard card begins to shine.',
+        'Wonder mix: brings fresh cards into repeats before the forest gets sleepy.',
+      ],
+      ru: [
+        'Радужный сброс: смягчает промах, чтобы следующая карточка началась чисто.',
+        'Искристая серия: замечает, когда трудная карточка начинает сиять.',
+        'Чудо-подмешивание: добавляет свежие карточки в повторы до того, как лес заскучает.',
+      ],
+      es: [
+        'Reinicio arcoiris: suaviza un fallo para empezar limpia la siguiente tarjeta.',
+        'Racha brillante: nota cuando una tarjeta dificil empieza a brillar.',
+        'Mezcla maravillosa: trae tarjetas frescas antes de que el bosque se duerma.',
+      ],
+      uk: [
+        'Райдужний скид: помʼякшує промах, щоб наступна картка почалася чисто.',
+        'Іскриста серія: помічає, коли складна картка починає сяяти.',
+        'Диво-домішування: додає свіжі картки до повторів, перш ніж ліс засумує.',
+      ],
+    },
+    superpower: {
+      en: 'Turns shaky repeats into a bright reset and keeps courage alive.',
+      ru: 'Превращает шаткие повторы в светлый перезапуск и поддерживает смелость.',
+      es: 'Convierte repeticiones inseguras en reinicio brillante y mantiene el animo.',
+      uk: 'Перетворює хиткі повтори на світлий перезапуск і підтримує сміливість.',
+    },
+  },
 ];
 
 export const assistantCharacters: AssistantCharacter[] = footballAssistantCharacters;
@@ -552,7 +654,7 @@ export const visibleAssistantIds: AssistantId[] = [
 
 const visibleAssistantIdsByWorld: Record<WorldId, AssistantId[]> = {
   football: visibleAssistantIds,
-  forest: ['studyTroll', 'trollMama', 'capeChampion', 'greenPower', 'webRunner'],
+  forest: ['studyTroll', 'greenPower', 'webRunner', 'forestElf', 'unicorn'],
 };
 
 export const visibleAssistantCharacters = getVisibleAssistantCharacters('football');
@@ -562,7 +664,7 @@ export function resolveAssistantId(
   worldId: WorldId = 'football',
 ): AssistantId {
   if (value === 'trollMama') {
-    return worldId === 'forest' ? 'trollMama' : defaultAssistantId;
+    return defaultAssistantId;
   }
   const visibleIds = visibleAssistantIdsByWorld[worldId] ?? visibleAssistantIds;
   return visibleIds.some((assistantId) => assistantId === value)

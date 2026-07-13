@@ -56,6 +56,7 @@ export function CursorAnchoredTooltip({
   arrowDataTest,
   children,
   closeOnOtherOpen = false,
+  describeChild = false,
   hideArrow = false,
   leaveDelay = 0,
   placement = 'top',
@@ -70,6 +71,7 @@ export function CursorAnchoredTooltip({
   arrowDataTest: string;
   children: ReactElement;
   closeOnOtherOpen?: boolean;
+  describeChild?: boolean;
   hideArrow?: boolean;
   leaveDelay?: number;
   placement?: TooltipPlacement;
@@ -306,6 +308,7 @@ export function CursorAnchoredTooltip({
     <>
       <Tooltip
         arrow
+        describeChild={describeChild}
         leaveDelay={leaveDelay}
         onClose={handleClose}
         open={Boolean(anchorPosition)}

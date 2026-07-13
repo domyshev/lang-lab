@@ -1,10 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
-  <rect width="160" height="160" rx="36" fill="#fff7cc"/>
-  <path d="M0 25h160v34H0z" fill="#c60b1e"/>
-  <path d="M0 59h160v42H0z" fill="#ffc400"/>
-  <path d="M0 101h160v34H0z" fill="#c60b1e"/>
-  <circle cx="80" cy="82" r="44" fill="#fffdf4" stroke="#2b1600" stroke-width="8"/>
-  <path d="M80 38v88M36 82h88M49 51l62 62M111 51 49 113" stroke="#2b1600" stroke-width="5" stroke-linecap="round" opacity=".48"/>
-  <path d="M80 54 96 66l-6 20H70l-6-20 16-12Z" fill="#2b1600"/>
-  <path d="M56 93c14 15 34 15 48 0" stroke="#c60b1e" stroke-width="6" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none" data-favicon-theme="forest">
+  <rect width="160" height="160" rx="36" fill="#ecf8d7"/>
+  <path d="M0 88h160v72H0z" fill="#8cc66f"/>
+  <path d="M0 107c24-20 46-24 68-12 24 13 45 10 92-14v79H0z" fill="#6dad61" opacity=".72"/>
+  <path d="M18 58c37-45 90-48 125-16-28 37-73 56-125 16Z" fill="#4f8e5b" stroke="#203015" stroke-width="8" stroke-linejoin="round"/>
+  <path data-test="favicon__forest_leaf" d="M30 56c28-5 62-14 99-24" stroke="#f7ffe5" stroke-width="7" stroke-linecap="round"/>
+  <path d="M38 72c18-8 38-15 64-23" stroke="#dff2c4" stroke-width="4" stroke-linecap="round" opacity=".82"/>
+  <circle cx="118" cy="34" r="13" fill="#fff7b5" opacity=".78"/>
+  <path d="M34 116c16-12 26-12 42 0M86 122c16-12 28-12 44 0" stroke="#203015" stroke-width="5" stroke-linecap="round" opacity=".36"/>
+  <rect x="5" y="5" width="150" height="150" rx="31" stroke="#f7ffe5" stroke-width="10" opacity=".82"/>
+  <rect x="10" y="10" width="140" height="140" rx="26" stroke="#203015" stroke-width="3" opacity=".28"/>
 </svg>

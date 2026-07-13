@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   defaultAssistantId,
   getAssistantTooltip,
+  getVisibleAssistantCharacters,
   resolveAssistantId,
   visibleAssistantCharacters,
   visibleAssistantIds,
@@ -54,7 +55,32 @@ describe('assistantCharacters', () => {
     });
   });
 
-  it('maps the hidden legacy assistant id to the default visible assistant', () => {
+  it('exposes forest elves without the cinematic and round legacy assistants', () => {
+    const forestAssistants = getVisibleAssistantCharacters('forest');
+
+    expect(forestAssistants.map((assistant) => assistant.id)).toEqual([
+      'studyTroll',
+      'greenPower',
+      'webRunner',
+      'forestElf',
+      'unicorn',
+    ]);
+    expect(
+      Object.fromEntries(
+        forestAssistants.map((assistant) => [assistant.id, assistant.name.ru]),
+      ),
+    ).toEqual({
+      forestElf: 'Лесной эльф',
+      greenPower: 'Халк запоминания',
+      studyTroll: 'Веселый листочек',
+      unicorn: 'Серебряный единорог',
+      webRunner: 'Мудрый паучок',
+    });
+  });
+
+  it('maps hidden legacy assistant ids to the default visible assistant', () => {
     expect(resolveAssistantId('trollMama')).toBe(defaultAssistantId);
+    expect(resolveAssistantId('trollMama', 'forest')).toBe(defaultAssistantId);
+    expect(resolveAssistantId('capeChampion', 'forest')).toBe(defaultAssistantId);
   });
 });

@@ -34,7 +34,7 @@ describe('AppShell', () => {
     });
   });
 
-  it('asks for a first player name and shows an anonymous stranger name with an avatar', async () => {
+  it('sets up the game world and requires a player name', async () => {
     const user = userEvent.setup();
     const store = configureStore({
       reducer: {
@@ -51,14 +51,29 @@ describe('AppShell', () => {
     );
 
     expect(
-      screen.getByRole('dialog', { name: 'What should we call you?' }),
+      screen.getByRole('dialog', { name: 'Game world setup' }),
     ).toBeInTheDocument();
     const dialog = screen.getByRole('dialog', {
-      name: 'What should we call you?',
+      name: 'Game world setup',
     });
 
-    expect(within(dialog).getByRole('button', { name: /I love the forest/ })).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: /I adore football/ })).toBeInTheDocument();
+    expect(
+      within(dialog).queryByText(
+        'Your Spain supporter flag will travel with you through the football language lab.',
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      within(dialog).queryByTestId('player_onboarding__avatar_preview'),
+    ).not.toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: /Forest Elves/ }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      within(dialog).getByRole('button', { name: /^Football$/ }),
+    ).not.toHaveTextContent('FIFA WK 2026');
+    expect(
+      within(dialog).getByTestId('player_onboarding__world_choice'),
+    ).toHaveStyle({ gap: '8px', overflow: 'visible' });
     expect(within(dialog).getByTestId('player_onboarding__world_icon__football')).toBeInTheDocument();
     expect(within(dialog).getByTestId('player_onboarding__world_icon__forest')).toBeInTheDocument();
     expect(
@@ -66,20 +81,23 @@ describe('AppShell', () => {
     ).toBeInTheDocument();
     expect(within(dialog).getByRole('combobox', { name: 'Interface language' })).toBeInTheDocument();
     expect(within(dialog).getByRole('combobox', { name: 'Target learning language' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Continue anonymously' })).toBeDisabled();
+    expect(
+      within(dialog).queryByRole('button', { name: 'I forgot who I am' }),
+    ).not.toBeInTheDocument();
 
-    await user.click(within(dialog).getByRole('button', { name: /I adore football/ }));
+    await user.click(within(dialog).getByRole('button', { name: /^Football$/ }));
     await user.click(
       within(dialog).getByTestId('player_onboarding__assistant_figure__greenPower'),
     );
     await selectOnboardingOption(user, dialog, 'Interface language', 'English');
     await selectOnboardingOption(user, dialog, 'Target learning language', 'Español');
-    await user.click(within(dialog).getByRole('button', { name: 'Continue anonymously' }));
+    await user.type(within(dialog).getByLabelText('Player name'), 'Alex');
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }));
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: 'What should we call you?' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Game world setup' })).not.toBeInTheDocument();
     });
-    expect(screen.getByTestId('player_greeting__label').textContent).toBe('wanderer');
+    expect(screen.getByTestId('player_greeting__label').textContent).toBe('Alex');
     expect(screen.getByTestId('player_greeting__avatar')).toBeInTheDocument();
     expect(screen.getByTestId('player_greeting__avatar').tagName.toLowerCase()).toBe(
       'svg',
@@ -91,7 +109,8 @@ describe('AppShell', () => {
       screen.getByTestId('player_greeting__avatar__supporter_crest'),
     ).toBeInTheDocument();
     expect(store.getState().app.playerProfile).toMatchObject({
-      isAnonymous: true,
+      displayName: 'Alex',
+      isAnonymous: false,
     });
     expect(store.getState().app.assistantId).toBe('greenPower');
     expect(store.getState().app.interfaceLanguage).toBe('en');
@@ -119,10 +138,15 @@ describe('AppShell', () => {
     );
 
     const dialog = screen.getByRole('dialog', {
-      name: 'What should we call you?',
+      name: 'Game world setup',
     });
-    await user.click(within(dialog).getByRole('button', { name: /I love the forest/ }));
     await selectOnboardingOption(user, dialog, 'Interface language', 'Русский');
+    expect(
+      within(dialog).getByRole('button', { name: /Лесные эльфы/ }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      within(dialog).getByRole('button', { name: /^Футбол$/ }),
+    ).not.toHaveTextContent('FIFA WK 2026');
     await user.click(
       within(dialog).getByTestId('player_onboarding__assistant_figure__studyTroll'),
     );
@@ -131,7 +155,7 @@ describe('AppShell', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Сохранить' }));
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: 'Как тебя зовут?' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Настройка игрового мира' })).not.toBeInTheDocument();
     });
     expect(screen.getByTestId('player_greeting__label').textContent).toBe('Илья');
     expect(store.getState().app.playerProfile).toMatchObject({
@@ -208,7 +232,13 @@ describe('AppShell', () => {
 
     await user.hover(screen.getByTestId('player_greeting__root'));
     const tooltip = await screen.findByTestId('player_greeting__tooltip');
-    const nameInput = within(tooltip).getByLabelText('Edit name');
+    expect(
+      within(tooltip).queryByRole('textbox', { name: 'Edit name' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(within(tooltip).getByRole('button', { name: 'Edit name' }));
+
+    const nameInput = within(tooltip).getByRole('textbox', { name: 'Edit name' });
 
     await user.clear(nameInput);
     await user.type(nameInput, 'Педро');
@@ -265,11 +295,20 @@ describe('AppShell', () => {
     expect(screen.getByTestId('player_greeting__root')).toHaveStyle({
       alignSelf: 'center',
       justifyContent: 'center',
-      maxWidth: '230px',
+      maxWidth: '345px',
       minHeight: '36px',
       position: 'relative',
       width: 'fit-content',
     });
+    expect(
+      within(screen.getByTestId('player_greeting__root')).queryByTestId(
+        'player_greeting__assistant_slot',
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId('player_greeting__assistant_slot')).toHaveStyle({
+      marginLeft: '10px',
+    });
+    expect(screen.getByTestId('player_greeting__assistant_select')).toBeInTheDocument();
     expect(screen.getByTestId('player_greeting__avatar_slot')).toHaveStyle({
       left: '6px',
       position: 'absolute',
@@ -289,6 +328,9 @@ describe('AppShell', () => {
     await user.hover(screen.getByTestId('player_greeting__root'));
 
     const tooltip = await screen.findByTestId('player_greeting__tooltip');
+    expect(
+      within(tooltip).queryByTestId('player_greeting__assistant_slot'),
+    ).not.toBeInTheDocument();
     expect(tooltip).toHaveTextContent(
       'Илья-Супер-Длинное-Имя-Для-Проверки-Эллипсиса',
     );

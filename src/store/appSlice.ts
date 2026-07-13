@@ -40,10 +40,10 @@ export type ComplementaryLanguages = Record<
 >;
 
 export const defaultComplementaryLanguages: ComplementaryLanguages = {
-  en: ['ru', 'es'],
-  es: ['ru', 'en'],
-  ru: ['en', 'es'],
-  uk: ['ru', 'en'],
+  en: ['ru', 'es', 'uk'],
+  es: ['ru', 'en', 'uk'],
+  ru: ['en', 'es', 'uk'],
+  uk: ['ru', 'en', 'es'],
 };
 
 const initialState: AppState = {
@@ -115,13 +115,11 @@ const appSlice = createSlice({
       const { complementaryLanguages, targetLanguage } = action.payload;
       state.complementaryLanguages = {
         ...getComplementaryLanguages(state.complementaryLanguages, {
-          interfaceLanguage: state.interfaceLanguage,
           targetLanguage: state.targetLanguage,
         }),
         [targetLanguage]: sanitizeComplementaryLanguages(
           complementaryLanguages,
           {
-            interfaceLanguage: state.interfaceLanguage,
             targetLanguage,
           },
         ),
@@ -132,7 +130,6 @@ const appSlice = createSlice({
       state.complementaryLanguages = getComplementaryLanguages(
         state.complementaryLanguages,
         {
-          interfaceLanguage: state.interfaceLanguage,
           targetLanguage: state.targetLanguage,
         },
       );
@@ -142,7 +139,6 @@ const appSlice = createSlice({
       state.complementaryLanguages = getComplementaryLanguages(
         state.complementaryLanguages,
         {
-          interfaceLanguage: state.interfaceLanguage,
           targetLanguage: state.targetLanguage,
         },
       );
@@ -219,10 +215,6 @@ export function getComplementaryLanguages(
     resolved[targetLanguage] = sanitizeComplementaryLanguages(
       value?.[targetLanguage] ?? resolved[targetLanguage],
       {
-        interfaceLanguage:
-          exclusions?.targetLanguage === targetLanguage
-            ? exclusions.interfaceLanguage
-            : undefined,
         targetLanguage,
       },
     );
@@ -245,10 +237,9 @@ export function getComplementaryLanguagesForTarget(
     | Partial<Record<SupportedLanguage, SupportedLanguage | SupportedLanguage[]>>
     | undefined,
   targetLanguage: SupportedLanguage,
-  interfaceLanguage?: SupportedLanguage,
+  _interfaceLanguage?: SupportedLanguage,
 ): SupportedLanguage[] {
   return getComplementaryLanguages(value, {
-    interfaceLanguage,
     targetLanguage,
   })[targetLanguage];
 }
@@ -256,7 +247,6 @@ export function getComplementaryLanguagesForTarget(
 function sanitizeComplementaryLanguages(
   value: SupportedLanguage | SupportedLanguage[] | undefined,
   exclusions: {
-    interfaceLanguage?: SupportedLanguage;
     targetLanguage: SupportedLanguage;
   },
 ): SupportedLanguage[] {
@@ -268,15 +258,13 @@ function sanitizeComplementaryLanguages(
       typeof language === 'string' && isSupportedLanguage(language),
     )
     .filter((language) => language !== exclusions.targetLanguage)
-    .filter((language) => language !== exclusions.interfaceLanguage)
     .filter((language) => {
       if (seen.has(language)) {
         return false;
       }
       seen.add(language);
       return true;
-    })
-    .slice(0, 2);
+    });
 }
 
 function sanitizeMonths(value: number): number {

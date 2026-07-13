@@ -1,4 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material';
+import type { ReactNode } from 'react';
 import { orderTranslationHints, TranslationHint } from '../../domain/cards';
 import { SupportedLanguage } from '../../domain/languages';
 
@@ -8,12 +9,14 @@ export function TranslationHintRow({
   dataTest,
   fallbackPrompt,
   hints,
+  trailingAction,
 }: {
   complementaryLanguage?: SupportedLanguage;
   complementaryLanguages?: SupportedLanguage[];
   dataTest: string;
   fallbackPrompt: string;
   hints: TranslationHint[];
+  trailingAction?: ReactNode;
 }) {
   if (hints.length === 0) {
     return (
@@ -37,19 +40,28 @@ export function TranslationHintRow({
       sx={{ alignItems: 'flex-start' }}
     >
       {primaryHint && (
-        <Box
-          data-test={`${hintPartDataTest}__primary`}
-          sx={primaryTranslationHintStyles}
+        <Stack
+          data-test={`${hintPartDataTest}__primary_row`}
+          direction="row"
+          spacing={0.75}
+          sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+          useFlexGap
         >
           <Box
-            component="span"
-            data-test={`${hintPartDataTest}__primary_language_code`}
-            sx={languageCodeStyles}
+            data-test={`${hintPartDataTest}__primary`}
+            sx={primaryTranslationHintStyles}
           >
-            {primaryHint.language}:
-          </Box>{' '}
-          {primaryHint.value}
-        </Box>
+            <Box
+              component="span"
+              data-test={`${hintPartDataTest}__primary_language_code`}
+              sx={languageCodeStyles}
+            >
+              {primaryHint.language}:
+            </Box>{' '}
+            {primaryHint.value}
+          </Box>
+          {trailingAction}
+        </Stack>
       )}
       {secondaryHints.length > 0 && (
         <Stack

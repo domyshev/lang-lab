@@ -37,7 +37,8 @@ describe('CardSetDetailView', () => {
       'card_set_detail__card_kind_chip__card-worth-it',
     );
     expect(phraseChip.parentElement).toHaveStyle({ alignItems: 'center' });
-    expect(phraseChip).toHaveStyle({ height: '30px' });
+    expect(phraseChip).toHaveTextContent('Тип: Фраза');
+    expect(phraseChip).toHaveStyle({ height: '24px' });
     expect(screen.getByTestId('card_set_detail__cards_list__all-cards')).toHaveStyle({
       overflowY: 'auto',
     });
@@ -45,6 +46,7 @@ describe('CardSetDetailView', () => {
     const statsChip = within(items[0]).getByTestId(
       'card_set_detail__card_stats__card-impede__root',
     );
+    expect(statsChip).toHaveStyle({ height: '30px' });
 
     fireEvent.mouseOver(statsChip, { clientX: 220, clientY: 120 });
 
