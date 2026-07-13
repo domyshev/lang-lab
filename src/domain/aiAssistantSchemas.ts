@@ -6,6 +6,7 @@ const supportedLanguageMapSchema = z
     en: nonEmptyStringSchema.optional(),
     es: nonEmptyStringSchema.optional(),
     ru: nonEmptyStringSchema.optional(),
+    uk: nonEmptyStringSchema.optional(),
   })
   .strict();
 
@@ -43,6 +44,7 @@ const examplesSchema = z
     en: z.array(exampleSchema).min(1).optional(),
     es: z.array(exampleSchema).min(1).optional(),
     ru: z.array(exampleSchema).min(1).optional(),
+    uk: z.array(exampleSchema).min(1).optional(),
   })
   .strict();
 

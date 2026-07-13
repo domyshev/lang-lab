@@ -3,7 +3,8 @@
     "translations": {
       "en": "to have just done something",
       "ru": "только что сделать что-то",
-      "es": "acabar de + infinitivo"
+      "es": "acabar de + infinitivo",
+      "uk": "только что сделать что-то"
     },
     "examples": {
       "es": [
@@ -19,1282 +20,1781 @@
         }
       ]
     },
-    "tags": ["spanish", "grammar", "phrases"],
+    "tags": [
+      "spanish",
+      "grammar",
+      "phrases"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "worth it",
       "ru": "оно того стоит",
-      "es": "vale la pena"
+      "es": "vale la pena",
+      "uk": "оно того стоит"
     },
-    "tags": ["phrases", "value"],
+    "tags": [
+      "phrases",
+      "value"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "provisional",
       "ru": "предварительный",
-      "es": "provisional"
+      "es": "provisional",
+      "uk": "предварительный"
     },
-    "tags": ["general"],
+    "tags": [
+      "general"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "temporary",
       "ru": "временный",
-      "es": "temporal"
+      "es": "temporal",
+      "uk": "временный"
     },
-    "tags": ["general"],
+    "tags": [
+      "general"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "hand-me-downs",
       "ru": "вещи, переданные от других",
-      "es": "ropa usada heredada"
+      "es": "ropa usada heredada",
+      "uk": "вещи, переданные от других"
     },
     "definitions": {
       "en": "Clothes or things passed from one person to another after use."
     },
-    "tags": ["daily-life", "clothes"],
+    "tags": [
+      "daily-life",
+      "clothes"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "stranded",
       "ru": "застрявший",
-      "es": "varado"
+      "es": "varado",
+      "uk": "застрявший"
     },
-    "tags": ["travel", "problems"],
+    "tags": [
+      "travel",
+      "problems"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "different people have different handwriting",
       "ru": "у разных людей разный почерк",
-      "es": "personas diferentes tienen letras diferentes"
+      "es": "personas diferentes tienen letras diferentes",
+      "uk": "у разных людей разный почерк"
     },
-    "tags": ["phrases", "people"],
+    "tags": [
+      "phrases",
+      "people"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "circumstances",
       "ru": "обстоятельства",
-      "es": "circunstancias"
+      "es": "circunstancias",
+      "uk": "обстоятельства"
     },
-    "tags": ["general"],
+    "tags": [
+      "general"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "interfere",
       "ru": "мешать",
-      "es": "interferir"
+      "es": "interferir",
+      "uk": "мешать"
     },
-    "tags": ["actions"],
+    "tags": [
+      "actions"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "hinder",
       "ru": "затруднять",
-      "es": "obstaculizar"
+      "es": "obstaculizar",
+      "uk": "затруднять"
     },
-    "tags": ["actions", "formal"],
+    "tags": [
+      "actions",
+      "formal"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "impede",
       "ru": "препятствовать",
-      "es": "impedir"
+      "es": "impedir",
+      "uk": "препятствовать"
     },
-    "tags": ["actions", "formal"],
+    "tags": [
+      "actions",
+      "formal"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "shoulder",
       "ru": "плечо",
-      "es": "hombro"
+      "es": "hombro",
+      "uk": "плечо"
     },
-    "tags": ["body"],
+    "tags": [
+      "body"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "road shoulder",
       "ru": "обочина дороги",
-      "es": "arcen"
+      "es": "arcen",
+      "uk": "обочина дороги"
     },
-    "tags": ["driving", "road"],
+    "tags": [
+      "driving",
+      "road"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "hard shoulder",
       "ru": "аварийная полоса",
-      "es": "arcen de emergencia"
+      "es": "arcen de emergencia",
+      "uk": "аварийная полоса"
     },
-    "tags": ["driving", "road"],
+    "tags": [
+      "driving",
+      "road"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "complementary",
       "ru": "дополняющий",
-      "es": "complementario"
+      "es": "complementario",
+      "uk": "дополняющий"
     },
-    "tags": ["general"],
+    "tags": [
+      "general"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "absent",
       "ru": "отсутствующий",
-      "es": "ausente"
+      "es": "ausente",
+      "uk": "отсутствующий"
     },
-    "tags": ["general"],
+    "tags": [
+      "general"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "therefore",
       "ru": "поэтому",
-      "es": "por lo tanto"
+      "es": "por lo tanto",
+      "uk": "поэтому"
     },
-    "tags": ["connectors"],
+    "tags": [
+      "connectors"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "intend",
       "ru": "намереваться",
-      "es": "tener la intención"
+      "es": "tener la intención",
+      "uk": "намереваться"
     },
-    "tags": ["actions"],
+    "tags": [
+      "actions"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "anticipate",
       "ru": "предполагать заранее",
-      "es": "anticipar"
+      "es": "anticipar",
+      "uk": "предполагать заранее"
     },
-    "tags": ["thinking"],
+    "tags": [
+      "thinking"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "medical treatment",
       "ru": "медицинское лечение",
-      "es": "tratamiento medico"
+      "es": "tratamiento medico",
+      "uk": "медицинское лечение"
     },
-    "tags": ["health"],
+    "tags": [
+      "health"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "treatment of someone",
       "ru": "обращение с кем-либо",
-      "es": "trato a alguien"
+      "es": "trato a alguien",
+      "uk": "обращение с кем-либо"
     },
-    "tags": ["people", "behavior"],
+    "tags": [
+      "people",
+      "behavior"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "reduction",
       "ru": "уменьшение",
-      "es": "reduccion"
+      "es": "reduccion",
+      "uk": "уменьшение"
     },
-    "tags": ["general"],
+    "tags": [
+      "general"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "regardless",
       "ru": "независимо от того",
-      "es": "independientemente"
+      "es": "independientemente",
+      "uk": "независимо от того"
     },
-    "tags": ["connectors"],
+    "tags": [
+      "connectors"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "overtake",
       "ru": "обгонять",
-      "es": "adelantar"
+      "es": "adelantar",
+      "uk": "обгонять"
     },
-    "tags": ["driving"],
+    "tags": [
+      "driving"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "desist",
       "ru": "прекращать",
-      "es": "desistir"
+      "es": "desistir",
+      "uk": "прекращать"
     },
-    "tags": ["actions", "formal"],
+    "tags": [
+      "actions",
+      "formal"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "jeopardize",
       "ru": "ставить под угрозу",
-      "es": "poner en peligro"
+      "es": "poner en peligro",
+      "uk": "ставить под угрозу"
     },
-    "tags": ["risk", "formal"],
+    "tags": [
+      "risk",
+      "formal"
+    ],
     "difficulty": "hard"
   },
   {
     "translations": {
       "en": "pull up",
       "ru": "подъехать и остановиться",
-      "es": "parar el vehiculo"
+      "es": "parar el vehiculo",
+      "uk": "подъехать и остановиться"
     },
     "definitions": {
       "en": "To stop a vehicle after moving toward a place."
     },
-    "tags": ["driving", "phrasal-verbs"],
+    "tags": [
+      "driving",
+      "phrasal-verbs"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "grip",
       "ru": "рукоять",
-      "es": "empunadura"
+      "es": "empunadura",
+      "uk": "рукоять"
     },
-    "tags": ["objects"],
+    "tags": [
+      "objects"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "bestie",
       "ru": "лучший друг",
-      "es": "mejor amigo"
+      "es": "mejor amigo",
+      "uk": "лучший друг"
     },
-    "tags": ["people", "informal"],
+    "tags": [
+      "people",
+      "informal"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "via",
       "ru": "через",
-      "es": "via"
+      "es": "via",
+      "uk": "через"
     },
-    "tags": ["connectors"],
+    "tags": [
+      "connectors"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "quirks",
       "ru": "причуды",
-      "es": "manias"
+      "es": "manias",
+      "uk": "причуды"
     },
-    "tags": ["personality"],
+    "tags": [
+      "personality"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "congested",
       "ru": "перегруженный движением",
-      "es": "congestionado"
+      "es": "congestionado",
+      "uk": "перегруженный движением"
     },
-    "tags": ["driving", "traffic"],
+    "tags": [
+      "driving",
+      "traffic"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "vehicle",
       "ru": "транспортное средство",
-      "es": "vehiculo"
+      "es": "vehiculo",
+      "uk": "транспортное средство"
     },
-    "tags": ["driving"],
+    "tags": [
+      "driving"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "deity",
       "ru": "божество",
-      "es": "deidad"
+      "es": "deidad",
+      "uk": "божество"
     },
-    "tags": ["religion"],
+    "tags": [
+      "religion"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "faith",
       "ru": "религиозная вера",
-      "es": "fe"
+      "es": "fe",
+      "uk": "религиозная вера"
     },
-    "tags": ["religion"],
+    "tags": [
+      "religion"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "belief",
       "ru": "убеждение",
-      "es": "creencia"
+      "es": "creencia",
+      "uk": "убеждение"
     },
-    "tags": ["religion", "thinking"],
+    "tags": [
+      "religion",
+      "thinking"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "sacred",
       "ru": "священный",
-      "es": "sagrado"
+      "es": "sagrado",
+      "uk": "священный"
     },
-    "tags": ["religion"],
+    "tags": [
+      "religion"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "secular",
       "ru": "светский",
-      "es": "secular"
+      "es": "secular",
+      "uk": "светский"
     },
     "definitions": {
       "en": "Not connected with religion."
     },
-    "tags": ["religion", "society"],
+    "tags": [
+      "religion",
+      "society"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "dogma",
       "ru": "догма",
-      "es": "dogma"
+      "es": "dogma",
+      "uk": "догма"
     },
-    "tags": ["religion", "ideas"],
+    "tags": [
+      "religion",
+      "ideas"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "doctrine",
       "ru": "учение",
-      "es": "doctrina"
+      "es": "doctrina",
+      "uk": "учение"
     },
-    "tags": ["religion", "ideas"],
+    "tags": [
+      "religion",
+      "ideas"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "atheist",
       "ru": "атеист",
-      "es": "ateo"
+      "es": "ateo",
+      "uk": "атеист"
     },
-    "tags": ["religion"],
+    "tags": [
+      "religion"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "agnostic",
       "ru": "агностик",
-      "es": "agnostico"
+      "es": "agnostico",
+      "uk": "агностик"
     },
-    "tags": ["religion"],
+    "tags": [
+      "religion"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "monotheism",
       "ru": "монотеизм",
-      "es": "monoteismo"
+      "es": "monoteismo",
+      "uk": "монотеизм"
     },
-    "tags": ["religion"],
+    "tags": [
+      "religion"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "polytheism",
       "ru": "политеизм",
-      "es": "politeismo"
+      "es": "politeismo",
+      "uk": "политеизм"
     },
-    "tags": ["religion"],
+    "tags": [
+      "religion"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "worship",
       "ru": "поклоняться",
-      "es": "adorar"
+      "es": "adorar",
+      "uk": "поклоняться"
     },
-    "tags": ["religion", "actions"],
+    "tags": [
+      "religion",
+      "actions"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "admire",
       "ru": "восхищаться",
-      "es": "admirar"
+      "es": "admirar",
+      "uk": "восхищаться"
     },
-    "tags": ["emotions", "actions"],
+    "tags": [
+      "emotions",
+      "actions"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "pilgrimage",
       "ru": "паломничество",
-      "es": "peregrinacion"
+      "es": "peregrinacion",
+      "uk": "паломничество"
     },
-    "tags": ["religion", "travel"],
+    "tags": [
+      "religion",
+      "travel"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "pilgrim",
       "ru": "паломник",
-      "es": "peregrino"
+      "es": "peregrino",
+      "uk": "паломник"
     },
-    "tags": ["religion", "people"],
+    "tags": [
+      "religion",
+      "people"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "ritual",
       "ru": "ритуал",
-      "es": "ritual"
+      "es": "ritual",
+      "uk": "ритуал"
     },
-    "tags": ["religion"],
+    "tags": [
+      "religion"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "meditation",
       "ru": "медитация",
-      "es": "meditacion"
+      "es": "meditacion",
+      "uk": "медитация"
     },
-    "tags": ["religion", "mind"],
+    "tags": [
+      "religion",
+      "mind"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "clergy",
       "ru": "духовенство",
-      "es": "clero"
+      "es": "clero",
+      "uk": "духовенство"
     },
-    "tags": ["religion", "people"],
+    "tags": [
+      "religion",
+      "people"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "nun",
       "ru": "монахиня",
-      "es": "monja"
+      "es": "monja",
+      "uk": "монахиня"
     },
-    "tags": ["religion", "people"],
+    "tags": [
+      "religion",
+      "people"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "monk",
       "ru": "монах",
-      "es": "monje"
+      "es": "monje",
+      "uk": "монах"
     },
-    "tags": ["religion", "people"],
+    "tags": [
+      "religion",
+      "people"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "altar",
       "ru": "алтарь",
-      "es": "altar"
+      "es": "altar",
+      "uk": "алтарь"
     },
-    "tags": ["religion", "places"],
+    "tags": [
+      "religion",
+      "places"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "Abrahamic religions",
       "ru": "авраамические религии",
-      "es": "religiones abrahamicas"
+      "es": "religiones abrahamicas",
+      "uk": "авраамические религии"
     },
-    "tags": ["religion"],
+    "tags": [
+      "religion"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "Dharmic religions",
       "ru": "дхармические религии",
-      "es": "religiones dharmicas"
+      "es": "religiones dharmicas",
+      "uk": "дхармические религии"
     },
-    "tags": ["religion"],
+    "tags": [
+      "religion"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "paganism",
       "ru": "язычество",
-      "es": "paganismo"
+      "es": "paganismo",
+      "uk": "язычество"
     },
-    "tags": ["religion"],
+    "tags": [
+      "religion"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "Hinduism",
       "ru": "индуизм",
-      "es": "hinduismo"
+      "es": "hinduismo",
+      "uk": "индуизм"
     },
-    "tags": ["religion"],
+    "tags": [
+      "religion"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "Zoroastrianism",
       "ru": "зороастризм",
-      "es": "zoroastrismo"
+      "es": "zoroastrismo",
+      "uk": "зороастризм"
     },
-    "tags": ["religion"],
+    "tags": [
+      "religion"
+    ],
     "difficulty": "hard"
   },
   {
     "translations": {
       "en": "Sufism",
       "ru": "суфизм",
-      "es": "sufismo"
+      "es": "sufismo",
+      "uk": "суфизм"
     },
-    "tags": ["religion", "culture"],
+    "tags": [
+      "religion",
+      "culture"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "Sufi whirling",
       "ru": "суфийское кружение",
-      "es": "danza sufi giratoria"
+      "es": "danza sufi giratoria",
+      "uk": "суфийское кружение"
     },
-    "tags": ["religion", "culture"],
+    "tags": [
+      "religion",
+      "culture"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "judicial system",
       "ru": "судебная система",
-      "es": "sistema judicial"
+      "es": "sistema judicial",
+      "uk": "судебная система"
     },
-    "tags": ["law", "society"],
+    "tags": [
+      "law",
+      "society"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "they encouraged",
       "ru": "они поощряли",
-      "es": "ellos animaron"
+      "es": "ellos animaron",
+      "uk": "они поощряли"
     },
-    "tags": ["phrases", "actions"],
+    "tags": [
+      "phrases",
+      "actions"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "fertilize",
       "ru": "удобрять",
-      "es": "fertilizar"
+      "es": "fertilizar",
+      "uk": "удобрять"
     },
-    "tags": ["gardening"],
+    "tags": [
+      "gardening"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "plant",
       "ru": "сажать",
-      "es": "plantar"
+      "es": "plantar",
+      "uk": "сажать"
     },
     "definitions": {
       "en": "To put seeds or plants into the ground to grow."
     },
-    "tags": ["gardening", "actions"],
+    "tags": [
+      "gardening",
+      "actions"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "sow",
       "ru": "сеять",
-      "es": "sembrar"
+      "es": "sembrar",
+      "uk": "сеять"
     },
-    "tags": ["gardening", "actions"],
+    "tags": [
+      "gardening",
+      "actions"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "rake",
       "ru": "грабли",
-      "es": "rastrillo"
+      "es": "rastrillo",
+      "uk": "грабли"
     },
-    "tags": ["gardening", "tools"],
+    "tags": [
+      "gardening",
+      "tools"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "lawnmower",
       "ru": "газонокосилка",
-      "es": "cortacesped"
+      "es": "cortacesped",
+      "uk": "газонокосилка"
     },
-    "tags": ["gardening", "tools"],
+    "tags": [
+      "gardening",
+      "tools"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "prune",
       "ru": "подрезать растения",
-      "es": "podar"
+      "es": "podar",
+      "uk": "подрезать растения"
     },
-    "tags": ["gardening", "actions"],
+    "tags": [
+      "gardening",
+      "actions"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "weed",
       "ru": "сорняк",
-      "es": "mala hierba"
+      "es": "mala hierba",
+      "uk": "сорняк"
     },
-    "tags": ["gardening", "plants"],
+    "tags": [
+      "gardening",
+      "plants"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "cultivate",
       "ru": "возделывать",
-      "es": "cultivar"
+      "es": "cultivar",
+      "uk": "возделывать"
     },
-    "tags": ["gardening", "actions"],
+    "tags": [
+      "gardening",
+      "actions"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "spade",
       "ru": "лопата для копания",
-      "es": "pala de cavar"
+      "es": "pala de cavar",
+      "uk": "лопата для копания"
     },
-    "tags": ["gardening", "tools"],
+    "tags": [
+      "gardening",
+      "tools"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "shovel",
       "ru": "лопата для сгребания",
-      "es": "pala"
+      "es": "pala",
+      "uk": "лопата для сгребания"
     },
-    "tags": ["gardening", "tools"],
+    "tags": [
+      "gardening",
+      "tools"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "crop rotation",
       "ru": "севооборот",
-      "es": "rotacion de cultivos"
+      "es": "rotacion de cultivos",
+      "uk": "севооборот"
     },
-    "tags": ["gardening", "farming"],
+    "tags": [
+      "gardening",
+      "farming"
+    ],
     "difficulty": "hard"
   },
   {
     "translations": {
       "en": "crop",
       "ru": "урожай",
-      "es": "cosecha"
+      "es": "cosecha",
+      "uk": "урожай"
     },
-    "tags": ["gardening", "farming"],
+    "tags": [
+      "gardening",
+      "farming"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "pesticides",
       "ru": "пестициды",
-      "es": "pesticidas"
+      "es": "pesticidas",
+      "uk": "пестициды"
     },
-    "tags": ["gardening", "farming"],
+    "tags": [
+      "gardening",
+      "farming"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "irrigate",
       "ru": "орошать",
-      "es": "regar"
+      "es": "regar",
+      "uk": "орошать"
     },
-    "tags": ["gardening", "actions"],
+    "tags": [
+      "gardening",
+      "actions"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "irrigation system",
       "ru": "система орошения",
-      "es": "sistema de riego"
+      "es": "sistema de riego",
+      "uk": "система орошения"
     },
-    "tags": ["gardening", "farming"],
+    "tags": [
+      "gardening",
+      "farming"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "erase this",
       "ru": "стереть это",
-      "es": "borra esto"
+      "es": "borra esto",
+      "uk": "стереть это"
     },
-    "tags": ["phrases", "actions"],
+    "tags": [
+      "phrases",
+      "actions"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "livestock farming",
       "ru": "животноводство",
-      "es": "ganaderia"
+      "es": "ganaderia",
+      "uk": "животноводство"
     },
-    "tags": ["farming"],
+    "tags": [
+      "farming"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "crop farming",
       "ru": "растениеводство",
-      "es": "agricultura de cultivos"
+      "es": "agricultura de cultivos",
+      "uk": "растениеводство"
     },
-    "tags": ["farming"],
+    "tags": [
+      "farming"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "greenhouse",
       "ru": "теплица",
-      "es": "invernadero"
+      "es": "invernadero",
+      "uk": "теплица"
     },
-    "tags": ["gardening"],
+    "tags": [
+      "gardening"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "garden bed",
       "ru": "грядка",
-      "es": "parterre"
+      "es": "parterre",
+      "uk": "грядка"
     },
-    "tags": ["gardening"],
+    "tags": [
+      "gardening"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "jar",
       "ru": "банка",
-      "es": "tarro"
+      "es": "tarro",
+      "uk": "банка"
     },
-    "tags": ["objects"],
+    "tags": [
+      "objects"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "boar",
       "ru": "кабан",
-      "es": "jabali"
+      "es": "jabali",
+      "uk": "кабан"
     },
-    "tags": ["animals", "farming"],
+    "tags": [
+      "animals",
+      "farming"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "parasites",
       "ru": "паразиты",
-      "es": "parasitos"
+      "es": "parasitos",
+      "uk": "паразиты"
     },
-    "tags": ["biology", "farming"],
+    "tags": [
+      "biology",
+      "farming"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "hoe",
       "ru": "тяпка",
-      "es": "azada"
+      "es": "azada",
+      "uk": "тяпка"
     },
-    "tags": ["gardening", "tools"],
+    "tags": [
+      "gardening",
+      "tools"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "garden fork",
       "ru": "садовые вилы",
-      "es": "horca de jardin"
+      "es": "horca de jardin",
+      "uk": "садовые вилы"
     },
-    "tags": ["gardening", "tools"],
+    "tags": [
+      "gardening",
+      "tools"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "pitchfork",
       "ru": "вилы для сена",
-      "es": "horca"
+      "es": "horca",
+      "uk": "вилы для сена"
     },
-    "tags": ["gardening", "tools"],
+    "tags": [
+      "gardening",
+      "tools"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "hedge shears",
       "ru": "садовые ножницы для живой изгороди",
-      "es": "tijeras de setos"
+      "es": "tijeras de setos",
+      "uk": "садовые ножницы для живой изгороди"
     },
-    "tags": ["gardening", "tools"],
+    "tags": [
+      "gardening",
+      "tools"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "moose",
       "ru": "лось",
-      "es": "alce"
+      "es": "alce",
+      "uk": "лось"
     },
-    "tags": ["animals"],
+    "tags": [
+      "animals"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "deer antlers",
       "ru": "рога оленя",
-      "es": "astas de ciervo"
+      "es": "astas de ciervo",
+      "uk": "рога оленя"
     },
-    "tags": ["animals"],
+    "tags": [
+      "animals"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "aloe vera",
       "ru": "алоэ вера",
-      "es": "aloe vera"
+      "es": "aloe vera",
+      "uk": "алоэ вера"
     },
-    "tags": ["plants"],
+    "tags": [
+      "plants"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "money tree",
       "ru": "денежное дерево",
-      "es": "arbol del dinero"
+      "es": "arbol del dinero",
+      "uk": "денежное дерево"
     },
-    "tags": ["plants"],
+    "tags": [
+      "plants"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "best overall",
       "ru": "лучший в целом",
-      "es": "mejor en general"
+      "es": "mejor en general",
+      "uk": "лучший в целом"
     },
-    "tags": ["shopping", "reviews"],
+    "tags": [
+      "shopping",
+      "reviews"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "heebie-jeebies",
       "ru": "мурашки от странного чувства",
-      "es": "escalofrios de inquietud"
+      "es": "escalofrios de inquietud",
+      "uk": "мурашки от странного чувства"
     },
     "definitions": {
       "en": "A nervous or creepy feeling."
     },
-    "tags": ["feelings", "informal"],
+    "tags": [
+      "feelings",
+      "informal"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "vigilant",
       "ru": "бдительный",
-      "es": "vigilante"
+      "es": "vigilante",
+      "uk": "бдительный"
     },
-    "tags": ["personality", "safety"],
+    "tags": [
+      "personality",
+      "safety"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "stress out",
       "ru": "сильно нервничать",
-      "es": "estresarse"
+      "es": "estresarse",
+      "uk": "сильно нервничать"
     },
-    "tags": ["feelings", "phrasal-verbs"],
+    "tags": [
+      "feelings",
+      "phrasal-verbs"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "beneath",
       "ru": "под",
-      "es": "debajo de"
+      "es": "debajo de",
+      "uk": "под"
     },
-    "tags": ["prepositions"],
+    "tags": [
+      "prepositions"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "underneath",
       "ru": "снизу под",
-      "es": "por debajo de"
+      "es": "por debajo de",
+      "uk": "снизу под"
     },
-    "tags": ["prepositions"],
+    "tags": [
+      "prepositions"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "compatriot",
       "ru": "соотечественник",
-      "es": "compatriota"
+      "es": "compatriota",
+      "uk": "соотечественник"
     },
-    "tags": ["people", "society"],
+    "tags": [
+      "people",
+      "society"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "infer",
       "ru": "делать вывод",
-      "es": "inferir"
+      "es": "inferir",
+      "uk": "делать вывод"
     },
-    "tags": ["thinking"],
+    "tags": [
+      "thinking"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "discretion",
       "ru": "здравое усмотрение",
-      "es": "discrecion"
+      "es": "discrecion",
+      "uk": "здравое усмотрение"
     },
-    "tags": ["judgment", "formal"],
+    "tags": [
+      "judgment",
+      "formal"
+    ],
     "difficulty": "hard"
   },
   {
     "translations": {
       "en": "contribute",
       "ru": "вносить вклад",
-      "es": "contribuir"
+      "es": "contribuir",
+      "uk": "вносить вклад"
     },
-    "tags": ["actions"],
+    "tags": [
+      "actions"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "hostile",
       "ru": "враждебный",
-      "es": "hostil"
+      "es": "hostil",
+      "uk": "враждебный"
     },
-    "tags": ["people", "conflict"],
+    "tags": [
+      "people",
+      "conflict"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "intermittent",
       "ru": "прерывистый",
-      "es": "intermitente"
+      "es": "intermitente",
+      "uk": "прерывистый"
     },
-    "tags": ["general"],
+    "tags": [
+      "general"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "visual acuity",
       "ru": "острота зрения",
-      "es": "agudeza visual"
+      "es": "agudeza visual",
+      "uk": "острота зрения"
     },
-    "tags": ["health"],
+    "tags": [
+      "health"
+    ],
     "difficulty": "hard"
   },
   {
     "translations": {
       "en": "overcoming drowsiness",
       "ru": "борьба с сонливостью",
-      "es": "superar la somnolencia"
+      "es": "superar la somnolencia",
+      "uk": "борьба с сонливостью"
     },
-    "tags": ["health", "phrases"],
+    "tags": [
+      "health",
+      "phrases"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "short term",
       "ru": "короткий период времени",
-      "es": "corto plazo"
+      "es": "corto plazo",
+      "uk": "короткий период времени"
     },
-    "tags": ["time"],
+    "tags": [
+      "time"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "long term",
       "ru": "долгосрочная перспектива",
-      "es": "largo plazo"
+      "es": "largo plazo",
+      "uk": "долгосрочная перспектива"
     },
-    "tags": ["time"],
+    "tags": [
+      "time"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "is it advisable?",
       "ru": "рекомендуется ли?",
-      "es": "es aconsejable?"
+      "es": "es aconsejable?",
+      "uk": "рекомендуется ли?"
     },
-    "tags": ["phrases", "formal"],
+    "tags": [
+      "phrases",
+      "formal"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "lengthen",
       "ru": "удлинять",
-      "es": "alargar"
+      "es": "alargar",
+      "uk": "удлинять"
     },
-    "tags": ["actions"],
+    "tags": [
+      "actions"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "tiredness",
       "ru": "усталость",
-      "es": "cansancio"
+      "es": "cansancio",
+      "uk": "усталость"
     },
-    "tags": ["feelings", "health"],
+    "tags": [
+      "feelings",
+      "health"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "whether",
       "ru": "ли",
-      "es": "si"
+      "es": "si",
+      "uk": "ли"
     },
-    "tags": ["connectors"],
+    "tags": [
+      "connectors"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "leftover",
       "ru": "остаток",
-      "es": "sobrante"
+      "es": "sobrante",
+      "uk": "остаток"
     },
-    "tags": ["daily-life"],
+    "tags": [
+      "daily-life"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "lorry",
       "ru": "грузовик",
-      "es": "camion"
+      "es": "camion",
+      "uk": "грузовик"
     },
-    "tags": ["transport", "british-english"],
+    "tags": [
+      "transport",
+      "british-english"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "muddy puddles",
       "ru": "грязные лужи",
-      "es": "charcos embarrados"
+      "es": "charcos embarrados",
+      "uk": "грязные лужи"
     },
-    "tags": ["weather", "road"],
+    "tags": [
+      "weather",
+      "road"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "likelihood",
       "ru": "вероятность",
-      "es": "probabilidad"
+      "es": "probabilidad",
+      "uk": "вероятность"
     },
-    "tags": ["thinking"],
+    "tags": [
+      "thinking"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "dazzled",
       "ru": "ослепленный светом",
-      "es": "deslumbrado"
+      "es": "deslumbrado",
+      "uk": "ослепленный светом"
     },
-    "tags": ["driving", "vision"],
+    "tags": [
+      "driving",
+      "vision"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "anxiety",
       "ru": "тревога",
-      "es": "ansiedad"
+      "es": "ansiedad",
+      "uk": "тревога"
     },
-    "tags": ["feelings", "health"],
+    "tags": [
+      "feelings",
+      "health"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "distortion",
       "ru": "искажение",
-      "es": "distorsion"
+      "es": "distorsion",
+      "uk": "искажение"
     },
-    "tags": ["perception"],
+    "tags": [
+      "perception"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "hallucinations",
       "ru": "галлюцинации",
-      "es": "alucinaciones"
+      "es": "alucinaciones",
+      "uk": "галлюцинации"
     },
-    "tags": ["health", "perception"],
+    "tags": [
+      "health",
+      "perception"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "develop",
       "ru": "развиваться",
-      "es": "desarrollarse"
+      "es": "desarrollarse",
+      "uk": "развиваться"
     },
-    "tags": ["actions"],
+    "tags": [
+      "actions"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "I'm by myself",
       "ru": "я без компании",
-      "es": "estoy sin compania"
+      "es": "estoy sin compania",
+      "uk": "я без компании"
     },
-    "tags": ["phrases"],
+    "tags": [
+      "phrases"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "I'm on my own",
       "ru": "я сам по себе",
-      "es": "estoy por mi cuenta"
+      "es": "estoy por mi cuenta",
+      "uk": "я сам по себе"
     },
-    "tags": ["phrases"],
+    "tags": [
+      "phrases"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "I'm alone",
       "ru": "я один",
-      "es": "estoy solo"
+      "es": "estoy solo",
+      "uk": "я один"
     },
-    "tags": ["phrases"],
+    "tags": [
+      "phrases"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "flock",
       "ru": "стая птиц",
-      "es": "bandada"
+      "es": "bandada",
+      "uk": "стая птиц"
     },
-    "tags": ["animals"],
+    "tags": [
+      "animals"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "herd",
       "ru": "стадо животных",
-      "es": "manada"
+      "es": "manada",
+      "uk": "стадо животных"
     },
-    "tags": ["animals"],
+    "tags": [
+      "animals"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "hazard warning lights",
       "ru": "аварийная сигнализация",
-      "es": "luces de emergencia"
+      "es": "luces de emergencia",
+      "uk": "аварийная сигнализация"
     },
-    "tags": ["driving", "safety"],
+    "tags": [
+      "driving",
+      "safety"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "revolving",
       "ru": "вращающийся",
-      "es": "giratorio"
+      "es": "giratorio",
+      "uk": "вращающийся"
     },
-    "tags": ["movement"],
+    "tags": [
+      "movement"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "revolve",
       "ru": "вращаться",
-      "es": "girar"
+      "es": "girar",
+      "uk": "вращаться"
     },
-    "tags": ["movement", "actions"],
+    "tags": [
+      "movement",
+      "actions"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "sparingly",
       "ru": "умеренно",
-      "es": "con moderacion"
+      "es": "con moderacion",
+      "uk": "умеренно"
     },
-    "tags": ["adverbs"],
+    "tags": [
+      "adverbs"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "certain",
       "ru": "определенный",
-      "es": "determinado"
+      "es": "determinado",
+      "uk": "определенный"
     },
-    "tags": ["general"],
+    "tags": [
+      "general"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "seamlessly",
       "ru": "плавно",
-      "es": "sin interrupciones"
+      "es": "sin interrupciones",
+      "uk": "плавно"
     },
-    "tags": ["adverbs"],
+    "tags": [
+      "adverbs"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "oversight",
       "ru": "надзор",
-      "es": "supervision"
+      "es": "supervision",
+      "uk": "надзор"
     },
-    "tags": ["management"],
+    "tags": [
+      "management"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "holistic",
       "ru": "целостный",
-      "es": "holistico"
+      "es": "holistico",
+      "uk": "целостный"
     },
-    "tags": ["general", "formal"],
+    "tags": [
+      "general",
+      "formal"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "look forward to",
       "ru": "с нетерпением ждать",
-      "es": "esperar con ilusion"
+      "es": "esperar con ilusion",
+      "uk": "с нетерпением ждать"
     },
-    "tags": ["phrases", "phrasal-verbs"],
+    "tags": [
+      "phrases",
+      "phrasal-verbs"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "go to bed",
       "ru": "ложиться спать",
-      "es": "irse a la cama"
+      "es": "irse a la cama",
+      "uk": "ложиться спать"
     },
-    "tags": ["daily-life", "phrases"],
+    "tags": [
+      "daily-life",
+      "phrases"
+    ],
     "difficulty": "easy"
   },
   {
     "translations": {
       "en": "I seem to be infatuated by you",
       "ru": "кажется, я увлечен тобой",
-      "es": "parece que estoy encaprichado de ti"
+      "es": "parece que estoy encaprichado de ti",
+      "uk": "кажется, я увлечен тобой"
     },
-    "tags": ["phrases", "romance"],
+    "tags": [
+      "phrases",
+      "romance"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "I seem to be smitten by you",
       "ru": "кажется, я очарован тобой",
-      "es": "parece que estoy prendado de ti"
+      "es": "parece que estoy prendado de ti",
+      "uk": "кажется, я очарован тобой"
     },
-    "tags": ["phrases", "romance"],
+    "tags": [
+      "phrases",
+      "romance"
+    ],
     "difficulty": "medium"
   },
   {
     "translations": {
       "en": "I seem to not get you out of my head",
       "ru": "кажется, я не могу выбросить тебя из головы",
-      "es": "parece que no puedo sacarte de mi cabeza"
+      "es": "parece que no puedo sacarte de mi cabeza",
+      "uk": "кажется, я не могу выбросить тебя из головы"
     },
-    "tags": ["phrases", "romance"],
+    "tags": [
+      "phrases",
+      "romance"
+    ],
     "difficulty": "medium"
   }
 ]

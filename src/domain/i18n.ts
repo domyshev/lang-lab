@@ -1,5 +1,7 @@
 import { SupportedLanguage } from './languages';
 
+type MessageLanguage = Exclude<SupportedLanguage, 'uk'>;
+
 type I18nKey =
   | 'appName'
   | 'game'
@@ -275,7 +277,7 @@ type I18nKey =
   | 'crosswordSubmitNeedsCompletedWord'
   | 'submitCrossword';
 
-const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
+const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
   en: {
     appName: 'Language Lab',
     game: 'Game',
@@ -1251,6 +1253,55 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
   },
 };
 
+const ukrainianMessages: Partial<Record<I18nKey, string>> = {
+  agentsSection: 'AI помічник',
+  agentsTitle: 'AI помічник',
+  aiAssistantTitle: 'AI помічник',
+  aiChatTitle: 'Чат',
+  aiComposerLabel: 'Повідомлення AI-помічнику',
+  aiSendMessage: 'Надіслати повідомлення',
+  allCards: 'Усі картки',
+  appName: 'Language Lab',
+  assistant: 'Персонаж',
+  cardSetLabel: 'Набір карток',
+  cardSetLibrary: 'Бібліотека карток',
+  cards: 'Картки',
+  cardSets: 'Набори',
+  chooseCardSet: 'Виберіть набір карток',
+  chooseCardSetPlaceholder: 'Виберіть набір карток',
+  chooseExercise: 'Виберіть гру',
+  complementaryLanguage: 'Додаткова мова',
+  continueAnonymously: 'Продовжити анонімно',
+  crossword: 'Кросворд',
+  editPlayerName: "Змінити ім'я",
+  finishExercise: 'Закінчити гру',
+  game: 'Гра',
+  gameHelpTitle: 'Допомога',
+  gameLibrary: 'Бібліотека ігор',
+  gamesTab: 'Грати',
+  history: 'Історія',
+  interfaceLanguage: 'Інтерфейс',
+  missingLetters: 'Пропущені літери',
+  missingWord: 'Пропущене слово',
+  multipleChoice: 'Питання з 3 варіантами',
+  next: 'Далі',
+  playerAnonymousName: 'мандрівник',
+  playerNameLabel: "Ім'я гравця",
+  playerOnboardingBody:
+    'Прапор уболівальника Іспанії подорожуватиме з тобою футбольною мовною лабораторією.',
+  playerOnboardingTitle: 'Як тебе називати?',
+  practiceSettings: 'Налаштування практики',
+  resultsTitle: 'Результати',
+  savePlayerName: 'Зберегти',
+  savePlayerNameChange: "Зберегти ім'я",
+  searchCards: 'Пошук карток',
+  searchCardSets: 'Пошук наборів',
+  start: 'Грати',
+  statistics: 'Статистика',
+  submit: 'Надіслати',
+  targetLanguage: 'Ціль',
+};
+
 const languageNames: Record<
   SupportedLanguage,
   Record<SupportedLanguage, string>
@@ -1259,20 +1310,33 @@ const languageNames: Record<
     ru: 'Russian',
     en: 'English',
     es: 'Spanish',
+    uk: 'Ukrainian',
   },
   ru: {
     ru: 'Русский',
     en: 'Английский',
     es: 'Испанский',
+    uk: 'Украинский',
   },
   es: {
     ru: 'ruso',
     en: 'ingles',
     es: 'espanol',
+    uk: 'ucraniano',
+  },
+  uk: {
+    ru: 'російська',
+    en: 'англійська',
+    es: 'іспанська',
+    uk: 'українська',
   },
 };
 
 export function t(language: SupportedLanguage, key: I18nKey): string {
+  if (language === 'uk') {
+    return ukrainianMessages[key] ?? messages.ru[key];
+  }
+
   return messages[language][key];
 }
 
@@ -1291,6 +1355,10 @@ export function formatCardSetCount(
     return formatRussianCount(value, ['набор', 'набора', 'наборов']);
   }
 
+  if (language === 'uk') {
+    return formatRussianCount(value, ['набір', 'набори', 'наборів']);
+  }
+
   if (language === 'es') {
     return `${value} ${value === 1 ? 'conjunto' : 'conjuntos'}`;
   }
@@ -1306,6 +1374,10 @@ export function formatCardCount(
     return formatRussianCount(value, ['карточка', 'карточки', 'карточек']);
   }
 
+  if (language === 'uk') {
+    return formatRussianCount(value, ['картка', 'картки', 'карток']);
+  }
+
   if (language === 'es') {
     return `${value} ${value === 1 ? 'tarjeta' : 'tarjetas'}`;
   }
@@ -1319,6 +1391,10 @@ export function formatStoredCardCount(
 ): string {
   if (language === 'ru') {
     return `Сейчас сохранено: ${formatCardCount(language, value)}`;
+  }
+
+  if (language === 'uk') {
+    return `Зараз збережено: ${formatCardCount(language, value)}`;
   }
 
   if (language === 'es') {

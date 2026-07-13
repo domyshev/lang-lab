@@ -14,7 +14,7 @@ Language Lab is built around three ideas:
 - card sets are lightweight learning collections that can be created, edited, archived, and reused;
 - every game result feeds future practice ordering and statistics.
 
-The app currently supports Russian, English, and Spanish. The interface language and target language are separate settings, so a learner can practice English while keeping the UI in Russian, or switch the UI into the target language for extra exposure.
+The app currently supports Russian, English, Spanish, and Ukrainian. The interface language and target language are separate settings, so a learner can practice English while keeping the UI in Russian, or switch the UI into the target language for extra exposure.
 
 All application data is stored in the browser through Redux Persist and `localStorage`. There is no backend requirement for the current alpha.
 

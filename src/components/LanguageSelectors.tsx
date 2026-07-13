@@ -486,6 +486,10 @@ function getComplementaryLanguageFieldLabel(
     return `Idioma complementario para ${languageLabels[targetLanguage]}`;
   }
 
+  if (interfaceLanguage === 'uk') {
+    return `Додаткова мова для ${languageLabels[targetLanguage]}`;
+  }
+
   return `Complementary language for ${languageLabels[targetLanguage]}`;
 }
 

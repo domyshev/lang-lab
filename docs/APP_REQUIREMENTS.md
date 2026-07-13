@@ -14,7 +14,8 @@ The first version supports:
 
 - Russian (`ru`);
 - English (`en`);
-- Spanish (`es`).
+- Spanish (`es`);
+- Ukrainian (`uk`).
 
 Language support is modeled through language cards rather than fixed source-target pairs.
 
@@ -25,7 +26,7 @@ The app must keep two independent language settings:
 - interface language;
 - target language.
 
-The target language controls exercise answers, history filtering, and statistics. If the target language is English, the learner practices English and sees English-target history. If the target language changes to Spanish or Russian, history and statistics are shown for that target language only.
+The target language controls exercise answers, history filtering, and statistics. If the target language is English, the learner practices English and sees English-target history. If the target language changes to Spanish, Russian, or Ukrainian, history and statistics are shown for that target language only.
 
 The interface language controls UI copy and coach feedback. A learner may study English while keeping the interface in Russian, or may switch the interface to the target language for extra exposure.
 

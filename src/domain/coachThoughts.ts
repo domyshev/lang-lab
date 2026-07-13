@@ -1,12 +1,14 @@
 import { AssistantId, defaultAssistantId, resolveAssistantId } from './assistants';
-import { SupportedLanguage } from './languages';
+import { SupportedLanguage, supportedLanguages } from './languages';
 
 type ThoughtSource = {
   openings: string[];
   endings: string[];
 };
 
-type CharacterThoughtSources = Record<SupportedLanguage, ThoughtSource>;
+type BaseThoughtLanguage = Exclude<SupportedLanguage, 'uk'>;
+type CharacterThoughtSources = Record<BaseThoughtLanguage, ThoughtSource> &
+  Partial<Record<SupportedLanguage, ThoughtSource>>;
 
 const thoughtSources: Record<AssistantId, CharacterThoughtSources> = {
   studyTroll: {
@@ -418,10 +420,13 @@ export const coachThoughts: Record<
   Object.entries(thoughtSources).map(([assistantId, byLanguage]) => [
     assistantId,
     Object.fromEntries(
-      Object.entries(byLanguage).map(([language, source]) => [
+      supportedLanguages.map((language) => {
+        const source = byLanguage[language] ?? byLanguage.ru;
+        return [
         language,
         buildThoughts(source.openings, source.endings),
-      ]),
+        ];
+      }),
     ),
   ]),
 ) as Record<AssistantId, Record<SupportedLanguage, string[]>>;

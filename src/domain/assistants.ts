@@ -7,6 +7,9 @@ export type AssistantId =
   | 'greenPower'
   | 'webRunner';
 
+type BaseLocalized<T> = Record<Exclude<SupportedLanguage, 'uk'>, T> &
+  Partial<Record<SupportedLanguage, T>>;
+
 export interface AssistantCharacter {
   abilities: Record<SupportedLanguage, string[]>;
   description: Record<SupportedLanguage, string>;
@@ -17,7 +20,17 @@ export interface AssistantCharacter {
   superpower: Record<SupportedLanguage, string>;
 }
 
-export const assistantCharacters: AssistantCharacter[] = [
+interface RawAssistantCharacter {
+  abilities: BaseLocalized<string[]>;
+  description: BaseLocalized<string>;
+  id: AssistantId;
+  label: string;
+  motto: BaseLocalized<string>;
+  name: BaseLocalized<string>;
+  superpower: BaseLocalized<string>;
+}
+
+const rawAssistantCharacters: RawAssistantCharacter[] = [
   {
     id: 'studyTroll',
     label: 'Spain Winger',
@@ -224,6 +237,31 @@ export const assistantCharacters: AssistantCharacter[] = [
     },
   },
 ];
+
+export const assistantCharacters: AssistantCharacter[] =
+  rawAssistantCharacters.map(completeAssistantCharacter);
+
+function completeAssistantCharacter(
+  assistant: RawAssistantCharacter,
+): AssistantCharacter {
+  return {
+    ...assistant,
+    abilities: completeLocalizedValue(assistant.abilities),
+    description: completeLocalizedValue(assistant.description),
+    motto: completeLocalizedValue(assistant.motto),
+    name: completeLocalizedValue(assistant.name),
+    superpower: completeLocalizedValue(assistant.superpower),
+  };
+}
+
+function completeLocalizedValue<T>(
+  value: BaseLocalized<T>,
+): Record<SupportedLanguage, T> {
+  return {
+    ...value,
+    uk: value.uk ?? value.ru,
+  };
+}
 
 export const defaultAssistantId: AssistantId = 'studyTroll';
 

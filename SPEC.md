@@ -8,7 +8,7 @@ Detailed application requirements: [docs/APP_REQUIREMENTS.md](docs/APP_REQUIREME
 
 Build a small but complete browser language-learning game where learners create their own practice material from JSON language cards, organize cards into card sets, and practice through generated exercises.
 
-The first implementation focuses on Russian, English, and Spanish. The architecture should remain language-card based rather than hard-coded to one source-target pair.
+The first implementation focuses on Russian, English, Spanish, and Ukrainian. The architecture should remain language-card based rather than hard-coded to one source-target pair.
 
 ## Core Concept
 
@@ -29,7 +29,8 @@ The first version supports:
 
 - Russian;
 - English;
-- Spanish.
+- Spanish;
+- Ukrainian.
 
 The target language can be any supported language. A card is usable for a target language only when it has a target-language answer and enough hint data.
 
@@ -115,13 +116,13 @@ For a target-language exercise:
 - translation hints come from the other available languages;
 - definition hints come only from the current target language.
 
-Example: if the target language is English, hints may include Russian and Spanish translations plus an English definition.
+Example: if the target language is English, hints may include Russian, Spanish, and Ukrainian translations plus an English definition.
 
 ## History And Statistics
 
 Every submitted exercise creates an attempt record.
 
-History is scoped by target language. When the target language is English, the learner sees English practice history. When it is Spanish or Russian, history changes to that target language.
+History is scoped by target language. When the target language is English, the learner sees English practice history. When it is Spanish, Russian, or Ukrainian, history changes to that target language.
 
 The app tracks:
 

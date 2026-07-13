@@ -61,7 +61,8 @@ Supported languages are:
 
 - `ru`;
 - `en`;
-- `es`.
+- `es`;
+- `uk`.
 
 ### Card Sets
 

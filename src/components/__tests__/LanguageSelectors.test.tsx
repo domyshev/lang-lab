@@ -142,6 +142,9 @@ describe('LanguageSelectors', () => {
     expect(
       screen.getByTestId('language_selectors__interface_language_option_label__es__name'),
     ).toHaveTextContent('Español');
+    expect(
+      screen.getByTestId('language_selectors__interface_language_option_label__uk__name'),
+    ).toHaveTextContent('Українська');
 
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
@@ -160,6 +163,9 @@ describe('LanguageSelectors', () => {
     expect(
       screen.getByTestId('language_selectors__target_language_option_label__es__name'),
     ).toHaveTextContent('Español');
+    expect(
+      screen.getByTestId('language_selectors__target_language_option_label__uk__name'),
+    ).toHaveTextContent('Українська');
   });
 
   it('opens practice settings from the top-right menu and updates cooldown months', async () => {

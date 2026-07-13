@@ -784,6 +784,43 @@ const playerLevelCopies: Record<
         'Tu nivel de juego es legendario: ya no es calentamiento, es tu maquina personal de idiomas.',
     },
   ],
+  uk: [
+    {
+      title: 'Новачок',
+      description:
+        'Ігровий рівень починається тут: зіграй ще кілька ігор, і лабораторія побачить твій ритм навчання.',
+    },
+    {
+      title: 'Просунутий новачок',
+      description:
+        'Ігровий рівень уже набирає хід: ти знаєш правила і будуєш стабільний тренувальний маршрут.',
+    },
+    {
+      title: 'Впевнений гравець',
+      description:
+        'Ігровий рівень показує сталу практику: бібліотека стає інструментом, яким ти керуєш.',
+    },
+    {
+      title: 'Збирач карток',
+      description:
+        'Ігровий рівень каже, що словниковий двигун прогрівся: набори, повтори й результати починають працювати разом.',
+    },
+    {
+      title: 'Стратег тренування',
+      description:
+        'Ігровий рівень уже тактичний: історії достатньо, щоб усвідомлено вибирати слабкі картки.',
+    },
+    {
+      title: 'Майстер мов',
+      description:
+        'Ігровий рівень серйозний: лабораторія накопичила достатньо ігор, щоб бачити малюнок прогресу.',
+    },
+    {
+      title: 'Легенда лабораторії',
+      description:
+        'Ігровий рівень легендарний: це вже не розминка, а особиста мовна машина.',
+    },
+  ],
 };
 
 const playerLevelColors = [
@@ -826,6 +863,9 @@ function formatCompletedGames(
   }
   if (interfaceLanguage === 'es') {
     return `${completedGameCount} juegos completados`;
+  }
+  if (interfaceLanguage === 'uk') {
+    return `${completedGameCount} пройдено ігор`;
   }
   return `${completedGameCount} games completed`;
 }

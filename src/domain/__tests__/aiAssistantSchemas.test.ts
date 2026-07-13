@@ -51,6 +51,38 @@ describe('aiLibraryProposalSchema', () => {
     ).toBe(true);
   });
 
+  it('accepts Ukrainian card content and localized set names', () => {
+    expect(
+      aiLibraryProposalSchema.safeParse({
+        title: 'Ukrainian travel',
+        summary: 'Create Ukrainian-ready travel cards.',
+        cards: [
+          {
+            clientRef: 'ticket',
+            translations: { en: 'ticket', uk: 'квиток' },
+            definitions: { uk: 'Документ для поїздки або входу.' },
+            examples: {
+              uk: [
+                {
+                  answer: 'квиток',
+                  sentence: 'Я купив квиток на потяг.',
+                },
+              ],
+            },
+          },
+        ],
+        cardSetChanges: [
+          {
+            type: 'create',
+            clientRef: 'ukrainian-travel-set',
+            names: { uk: 'Подорожі' },
+            cardRefs: ['ticket'],
+          },
+        ],
+      }).success,
+    ).toBe(true);
+  });
+
   it.each([
     {
       name: 'only one translation',

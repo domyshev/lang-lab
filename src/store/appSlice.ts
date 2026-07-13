@@ -41,6 +41,7 @@ export const defaultComplementaryLanguages: ComplementaryLanguages = {
   en: 'ru',
   es: 'ru',
   ru: 'en',
+  uk: 'ru',
 };
 
 const initialState: AppState = {
