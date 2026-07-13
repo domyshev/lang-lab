@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { LanguageCard } from '../cards';
-import { createCrossword } from '../crossword';
+import {
+  canCreateCrossword,
+  createCrossword,
+  hasCrosswordIntersections,
+} from '../crossword';
 
 function card(id: string, answer: string): LanguageCard {
   return {
@@ -100,15 +104,20 @@ describe('createCrossword', () => {
     expect(result.entries[0].clue.startsWith('es:')).toBe(true);
   });
 
-  it('uses only one phrase card for phrase mode', () => {
+  it('does not use a phrase card as a crossword fallback', () => {
     const result = createCrossword({
       cards: [card('1', 'I would like a ticket'), card('2', 'airport')],
       targetLanguage: 'en',
     });
 
-    expect(result.entries).toHaveLength(1);
-    expect(result.mode).toBe('phrase');
-    expect(result.entries[0].answer).toBe('I would like a ticket');
+    expect(result.entries).toHaveLength(0);
+    expect(result.mode).toBe('words');
+    expect(
+      canCreateCrossword({
+        cards: [card('1', 'I would like a ticket'), card('2', 'airport')],
+        targetLanguage: 'en',
+      }),
+    ).toBe(false);
   });
 
   it('prefers a real word crossword when a card set also contains phrases', () => {
@@ -129,14 +138,29 @@ describe('createCrossword', () => {
     expect(result.entries.length).toBeGreaterThan(1);
   });
 
-  it('skips words that cannot connect to the crossword grid', () => {
+  it('does not build a crossword when words cannot intersect', () => {
     const result = createCrossword({
       cards: [card('1', 'abc'), card('2', 'def'), card('3', 'jkl')],
       targetLanguage: 'en',
     });
 
-    expect(result.entries).toHaveLength(1);
-    expect(result.cells.every((cell) => cell.entryIds.length === 1)).toBe(true);
+    expect(result.entries).toHaveLength(0);
+    expect(hasCrosswordIntersections(result)).toBe(false);
+    expect(
+      canCreateCrossword({
+        cards: [card('1', 'abc'), card('2', 'def'), card('3', 'jkl')],
+        targetLanguage: 'en',
+      }),
+    ).toBe(false);
+  });
+
+  it('reports that a real intersecting crossword can be created', () => {
+    expect(
+      canCreateCrossword({
+        cards: [card('1', 'train'), card('2', 'rain'), card('3', 'near')],
+        targetLanguage: 'en',
+      }),
+    ).toBe(true);
   });
 });
 

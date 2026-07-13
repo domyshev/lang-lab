@@ -216,6 +216,7 @@ type I18nKey =
   | 'wordLabel'
   | 'phraseLabel'
   | 'noMoreCardsInExercise'
+  | 'crosswordNeedsIntersections'
   | 'missingLettersNeedsWords'
   | 'missingWordNeedsPhrases'
   | 'correctResult'
@@ -569,6 +570,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     selectedAssistant: 'Selected character',
     coachThought: 'Character thought',
     noAttempts: 'You have not played yet, so statistics are empty.',
+    crosswordNeedsIntersections:
+      'Cannot build a crossword from this card set.',
     missingLettersNeedsWords:
       'Missing letters needs single-word cards, but this set does not have any.',
     missingWordNeedsPhrases:
@@ -890,6 +893,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     selectedAssistant: 'Выбранный персонаж',
     coachThought: 'Мысль персонажа',
     noAttempts: 'вы еще не играли, поэтому статистика пустая',
+    crosswordNeedsIntersections:
+      'невозможно построить кроссворд из данных этого набора',
     missingLettersNeedsWords:
       'Для игры с пропущенными буквами в наборе должны быть карточки со словами',
     missingWordNeedsPhrases:
@@ -1211,6 +1216,8 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     selectedAssistant: 'Personaje seleccionado',
     coachThought: 'Pensamiento del personaje',
     noAttempts: 'Todavia no has jugado, asi que las estadisticas estan vacias.',
+    crosswordNeedsIntersections:
+      'No se puede crear un crucigrama con los datos de este conjunto.',
     missingLettersNeedsWords:
       'Letras que faltan necesita tarjetas de una sola palabra, pero este conjunto no tiene ninguna.',
     missingWordNeedsPhrases:

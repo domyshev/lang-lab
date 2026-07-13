@@ -591,6 +591,58 @@ describe('App navigation', () => {
     ).toBeInTheDocument();
   });
 
+  it('disables crossword when the selected card set cannot create intersections', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      cards: [
+        {
+          id: 'card-bcd',
+          translations: { en: 'bcd', ru: 'бцд', es: 'bcd' },
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'card-fgh',
+          translations: { en: 'fgh', ru: 'фгх', es: 'fgh' },
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'card-jkl',
+          translations: { en: 'jkl', ru: 'йкл', es: 'jkl' },
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+      cardSets: [
+        {
+          id: 'disconnected-set',
+          name: 'Разрозненные',
+          cardIds: ['card-bcd', 'card-fgh', 'card-jkl'],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    });
+
+    await selectCardSetByName(user, /Разрозненные/);
+
+    const crosswordTile = screen.getByRole('button', { name: 'Кроссворд' });
+    expect(crosswordTile).toBeDisabled();
+    expect(screen.getByTestId('exercise_picker__option__crossword')).toHaveStyle({
+      filter: 'grayscale(1)',
+    });
+
+    await user.hover(screen.getByTestId('exercise_picker__option_tooltip_anchor__crossword'));
+
+    expect(await screen.findByText(
+      'невозможно построить кроссворд из данных этого набора',
+    )).toBeInTheDocument();
+    expect(
+      await screen.findByTestId('exercise_picker__disabled_tooltip_icon__crossword'),
+    ).toBeInTheDocument();
+  });
+
   it('reactively disables missing letters when the card set selector changes to phrase-only cards', async () => {
     const user = userEvent.setup();
     renderApp({

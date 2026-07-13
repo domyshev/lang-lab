@@ -37,57 +37,77 @@ export interface CrosswordPuzzle {
   bounds: CrosswordBounds;
 }
 
+export function canCreateCrossword(input: {
+  cards: LanguageCard[];
+  complementaryLanguage?: SupportedLanguage;
+  targetLanguage: SupportedLanguage;
+}): boolean {
+  const wordItems = getCrosswordWordItems(input.cards, input.targetLanguage);
+
+  if (wordItems.length < 2) {
+    return false;
+  }
+
+  return wordItems.some((item, index) =>
+    wordItems
+      .slice(index + 1)
+      .some((other) => answersCanIntersect(item.answer, other.answer)),
+  );
+}
+
+export function hasCrosswordIntersections(puzzle: CrosswordPuzzle): boolean {
+  return puzzle.cells.some((cell) => cell.entryIds.length > 1);
+}
+
 export function createCrossword(input: {
   cards: LanguageCard[];
   complementaryLanguage?: SupportedLanguage;
   targetLanguage: SupportedLanguage;
 }): CrosswordPuzzle {
-  const eligible = input.cards
-    .map((card) => ({ card, answer: getCardAnswer(card, input.targetLanguage) }))
-    .filter((item): item is { card: LanguageCard; answer: string } =>
-      Boolean(item.answer),
-    );
-  const wordItems = eligible
-    .filter((item) => !isPhraseValue(item.answer))
-    .sort(
-      (left, right) =>
-        getConnectivityScore(right, eligible) -
-        getConnectivityScore(left, eligible),
-    );
+  const wordItems = getCrosswordWordItems(input.cards, input.targetLanguage);
+  const sortedWordItems = [...wordItems].sort(
+    (left, right) =>
+      getConnectivityScore(right, wordItems) -
+      getConnectivityScore(left, wordItems),
+  );
 
-  if (wordItems.length >= 2) {
-    return buildPuzzle(
-      'words',
-      placeWordEntries(
-        wordItems,
-        input.targetLanguage,
-        input.complementaryLanguage,
-      ),
-    );
+  if (sortedWordItems.length < 2) {
+    return buildPuzzle('words', []);
   }
 
-  const phrase = eligible.find((item) => isPhraseValue(item.answer));
-  if (phrase) {
-    return buildPuzzle('phrase', [
-      createEntry({
-        card: phrase.card,
-        answer: phrase.answer,
-        complementaryLanguage: input.complementaryLanguage,
-        targetLanguage: input.targetLanguage,
-        row: 0,
-        col: 0,
-        direction: 'across',
-      }),
-    ]);
-  }
-
-  return buildPuzzle(
+  const puzzle = buildPuzzle(
     'words',
     placeWordEntries(
-      wordItems,
+      sortedWordItems,
       input.targetLanguage,
       input.complementaryLanguage,
     ),
+  );
+
+  return hasCrosswordIntersections(puzzle) ? puzzle : buildPuzzle('words', []);
+}
+
+function getCrosswordWordItems(
+  cards: LanguageCard[],
+  targetLanguage: SupportedLanguage,
+): Array<{ card: LanguageCard; answer: string }> {
+  return cards
+    .map((card) => ({ card, answer: getCardAnswer(card, targetLanguage) }))
+    .filter((item): item is { card: LanguageCard; answer: string } =>
+      Boolean(item.answer),
+    )
+    .filter((item) => !isPhraseValue(item.answer));
+}
+
+function answersCanIntersect(left: string, right: string): boolean {
+  return left.split('').some((leftLetter, leftIndex) =>
+    right.split('').some((rightLetter, rightIndex) => {
+      if (!lettersMatch(leftLetter, rightLetter)) {
+        return false;
+      }
+
+      return leftIndex !== 0 || rightIndex !== 0;
+    }),
   );
 }
 

@@ -55,6 +55,7 @@ import {
   isPhraseValue,
 } from './domain/cards';
 import {
+  canCreateCrossword,
   CrosswordEntry,
   CrosswordPuzzle,
   createCrossword,
@@ -1143,10 +1144,18 @@ export function App() {
       isCardSetSelected && setupMissingLettersEligibleCards.length === 0;
     const isMissingWordUnavailable =
       isCardSetSelected && setupMissingWordEligibleCards.length === 0;
+    const isCrosswordUnavailable =
+      isCardSetSelected &&
+      !canCreateCrossword({
+        cards: setupEligibleCards,
+        complementaryLanguage,
+        targetLanguage,
+      });
     const canStart =
       isCardSetSelected &&
       Boolean(selectedExerciseType) &&
       setupEligibleCards.length > 0 &&
+      (selectedExerciseType !== 'crossword' || !isCrosswordUnavailable) &&
       (selectedExerciseType !== 'missingLetters' || !isMissingLettersUnavailable) &&
       (selectedExerciseType !== 'missingWord' || !isMissingWordUnavailable) &&
       (selectedExerciseType !== 'multipleChoice' || setupEligibleCards.length >= 3);
@@ -1165,6 +1174,7 @@ export function App() {
       resetExerciseState();
     };
     const pickerExerciseType =
+      (selectedExerciseType === 'crossword' && isCrosswordUnavailable) ||
       (selectedExerciseType === 'missingLetters' && isMissingLettersUnavailable) ||
       (selectedExerciseType === 'missingWord' && isMissingWordUnavailable)
         ? null
@@ -1232,10 +1242,14 @@ export function App() {
 
             <ExercisePicker
               disabledExerciseTypes={{
+                crossword: isCrosswordUnavailable,
                 missingLetters: isMissingLettersUnavailable,
                 missingWord: isMissingWordUnavailable,
               }}
               disabledExerciseTooltips={{
+                crossword: isCrosswordUnavailable
+                  ? t(interfaceLanguage, 'crosswordNeedsIntersections')
+                  : undefined,
                 missingLetters: isMissingLettersUnavailable
                   ? t(interfaceLanguage, 'missingLettersNeedsWords')
                   : undefined,

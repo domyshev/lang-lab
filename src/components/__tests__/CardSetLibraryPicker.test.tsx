@@ -183,6 +183,37 @@ describe('CardSetLibraryPicker', () => {
     ).toHaveTextContent('All cards');
   });
 
+  it('excludes cards marked as known for the target language from visible card counts', () => {
+    render(
+      <CardSetLibraryPicker
+        cards={[
+          makeCard('card-love', 'love', { knownTargetLanguages: ['ru'] }),
+          makeCard('card-family', 'family'),
+          makeCard('card-work', 'work'),
+        ]}
+        cardSets={[
+          makeCardSet('known-set', 'Знаю', ['card-love']),
+          makeCardSet('mixed-set', 'Смешанный', ['card-love', 'card-family']),
+        ]}
+        interfaceLanguage="ru"
+        targetLanguage="ru"
+        selectedCardSetId="all-cards"
+        onOpenAiAssistant={vi.fn()}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByTestId('card_set_library__chip_select_count__all-cards'),
+    ).toHaveTextContent('2 карточки');
+    expect(
+      screen.getByTestId('card_set_library__chip_select_count__known-set'),
+    ).toHaveTextContent('0 карточек');
+    expect(
+      screen.getByTestId('card_set_library__chip_select_count__mixed-set'),
+    ).toHaveTextContent('1 карточка');
+  });
+
   it('renders a purple AI Assistant wand beside the title with an exact 10px gap', async () => {
     const user = userEvent.setup();
     const onOpenAiAssistant = vi.fn();
@@ -240,7 +271,11 @@ describe('CardSetLibraryPicker', () => {
   });
 });
 
-function makeCard(id: string, en: string): LanguageCard {
+function makeCard(
+  id: string,
+  en: string,
+  overrides: Partial<LanguageCard> = {},
+): LanguageCard {
   return {
     id,
     translations: {
@@ -250,6 +285,7 @@ function makeCard(id: string, en: string): LanguageCard {
     },
     createdAt: now,
     updatedAt: now,
+    ...overrides,
   };
 }
 

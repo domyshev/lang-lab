@@ -19,7 +19,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { LanguageCard } from '../domain/cards';
+import { LanguageCard, isCardKnownForTarget } from '../domain/cards';
 import {
   ALL_CARDS_CARD_SET_ID,
   CardSet,
@@ -58,24 +58,33 @@ export function CardSetLibraryPicker({
   targetLanguage: SupportedLanguage;
 }) {
   const wheelDeltaAccumulator = useRef(0);
-  const items = useMemo<CardSetLibraryItem[]>(
-    () => [
+  const items = useMemo<CardSetLibraryItem[]>(() => {
+    const cardById = new Map(cards.map((card) => [card.id, card]));
+    const countPlayableCards = (cardIds: string[]) =>
+      cardIds.reduce((count, cardId) => {
+        const card = cardById.get(cardId);
+        return card && !isCardKnownForTarget(card, targetLanguage)
+          ? count + 1
+          : count;
+      }, 0);
+    const allCardIds = cards.map((card) => card.id);
+
+    return [
       {
-        cardCount: cards.length,
-        cardIds: cards.map((card) => card.id),
+        cardCount: countPlayableCards(allCardIds),
+        cardIds: allCardIds,
         id: ALL_CARDS_CARD_SET_ID,
         isAllCards: true,
         name: t(targetLanguage, 'allCards'),
       },
       ...cardSets.map((cardSet) => ({
-        cardCount: cardSet.cardIds.length,
+        cardCount: countPlayableCards(cardSet.cardIds),
         cardIds: cardSet.cardIds,
         id: cardSet.id,
         name: getCardSetName(cardSet, targetLanguage),
       })),
-    ],
-    [cards, cardSets, targetLanguage],
-  );
+    ];
+  }, [cards, cardSets, targetLanguage]);
   const selectedIndex = items.findIndex((item) => item.id === selectedCardSetId);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

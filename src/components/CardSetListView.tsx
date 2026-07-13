@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
@@ -25,6 +25,7 @@ import {
   isArchivedCardSet,
   normalizeCardSetName,
 } from '../domain/cardSets';
+import { isCardKnownForTarget } from '../domain/cards';
 import { formatCardCount, formatCardSetCount, t } from '../domain/i18n';
 import {
   addCardSet,
@@ -51,6 +52,17 @@ export function CardSetListView({
   const targetLanguage = useSelector(
     (state: RootState) => state.app.targetLanguage,
   );
+  const cardById = useMemo(
+    () => new Map(cards.map((card) => [card.id, card])),
+    [cards],
+  );
+  const countPlayableCards = (cardIds: string[]) =>
+    cardIds.reduce((count, cardId) => {
+      const card = cardById.get(cardId);
+      return card && !isCardKnownForTarget(card, targetLanguage)
+        ? count + 1
+        : count;
+    }, 0);
   const [name, setName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [cardSetSearchQuery, setCardSetSearchQuery] = useState('');
@@ -237,7 +249,7 @@ export function CardSetListView({
             <CardSetTile
               id={ALL_CARDS_CARD_SET_ID}
               name={allCardsName}
-              cardCount={cards.length}
+              cardCount={countPlayableCards(cards.map((card) => card.id))}
               interfaceLanguage={interfaceLanguage}
               selected={
                 selectedCardSetId === ALL_CARDS_CARD_SET_ID || !selectedCardSetId
@@ -251,7 +263,7 @@ export function CardSetListView({
               id={cardSet.id}
               key={cardSet.id}
               name={getCardSetName(cardSet, targetLanguage)}
-              cardCount={cardSet.cardIds.length}
+              cardCount={countPlayableCards(cardSet.cardIds)}
               interfaceLanguage={interfaceLanguage}
               selected={cardSet.id === selectedCardSetId}
               onArchive={

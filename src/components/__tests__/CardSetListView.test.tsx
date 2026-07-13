@@ -26,6 +26,13 @@ function renderList() {
       cards: {
         cards: [
           { id: 'card-a', translations: { en: 'love', ru: 'любовь' }, createdAt: now, updatedAt: now },
+          {
+            id: 'card-known',
+            translations: { en: 'cherish', ru: 'лелеять' },
+            knownTargetLanguages: ['en' as const],
+            createdAt: now,
+            updatedAt: now,
+          },
         ],
         pendingDuplicates: [],
         duplicateProcessingHistory: [],
@@ -37,7 +44,7 @@ function renderList() {
             id: 'set-love',
             name: 'Love',
             names: { en: 'Love', ru: 'Любовь' },
-            cardIds: ['card-a'],
+            cardIds: ['card-a', 'card-known'],
             createdAt: now,
             updatedAt: now,
           },
@@ -45,7 +52,7 @@ function renderList() {
             id: 'set-old-love',
             name: 'Old Love',
             names: { en: 'Love archive', ru: 'Старая любовь' },
-            cardIds: ['card-a'],
+            cardIds: ['card-a', 'card-known'],
             createdAt: now,
             updatedAt: now,
             archivedAt: '2026-07-12T11:00:00.000Z',
@@ -101,6 +108,20 @@ describe('CardSetListView archive browsing', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('excludes cards marked as known for the target language from card set tile counts', () => {
+    renderList();
+
+    expect(
+      screen.getByTestId('card_set_list__tile_card_count__all-cards'),
+    ).toHaveTextContent('1 card');
+    expect(
+      screen.getByTestId('card_set_list__tile_card_count__set-love'),
+    ).toHaveTextContent('1 card');
+    expect(
+      screen.getByTestId('card_set_list__tile_card_count__set-family'),
+    ).toHaveTextContent('0 cards');
+  });
+
   it('creates an active copy from an archived card set', async () => {
     const user = userEvent.setup();
     const store = renderList();
@@ -116,7 +137,7 @@ describe('CardSetListView archive browsing', () => {
     expect(copied?.id).not.toBe('set-love');
     expect(copied).toMatchObject({
       name: 'Old Love',
-      cardIds: ['card-a'],
+      cardIds: ['card-a', 'card-known'],
     });
     expect(copied).not.toHaveProperty('archivedAt');
   });
