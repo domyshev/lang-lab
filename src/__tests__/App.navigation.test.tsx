@@ -1256,9 +1256,9 @@ describe('App navigation', () => {
     expect(getVisibleMissingLettersPrompt().answer).toBe(prompt.answer);
   });
 
-  it('advances missing letters after a memorize result without saving an answer', async () => {
+  it('saves a missing letters memorize result as an incorrect partial answer', async () => {
     const user = userEvent.setup();
-    renderApp();
+    const store = renderApp();
 
     await startExercise(user, 'Пропущенные буквы');
 
@@ -1267,10 +1267,59 @@ describe('App navigation', () => {
 
     expect(screen.getByRole('button', { name: 'Запомнить!' })).toBeInTheDocument();
     expect(getVisibleMissingLettersPrompt().answer).toBe(firstPrompt.answer);
+    expect(store.getState().attempts.attempts).toHaveLength(1);
+    expect(
+      store.getState().attempts.attempts[0].correctness[firstPrompt.cardId],
+    ).toBe(false);
+    expect(
+      store.getState().attempts.attempts[0].answers[firstPrompt.cardId],
+    ).toContain('_');
+    expect(
+      store
+        .getState()
+        .stats.cardStats.find((stat) => stat.cardId === firstPrompt.cardId)
+        ?.incorrect,
+    ).toBe(1);
+    expect(
+      screen.getByLabelText('Статистика по слову: Верно 0, Неверно 1'),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Запомнить!' }));
 
     expect(getVisibleMissingLettersPrompt().answer).not.toBe(firstPrompt.answer);
+  });
+
+  it('excludes cards marked as known from missing letters games', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      cards: [
+        {
+          id: 'card-airport',
+          translations: {
+            en: 'airport',
+            ru: 'аэропорт',
+            es: 'aeropuerto',
+          },
+          knownTargetLanguages: ['en'],
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'card-vehicle',
+          translations: {
+            en: 'vehicle',
+            ru: 'транспортное средство',
+            es: 'vehiculo',
+          },
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    });
+
+    await startExercise(user, 'Пропущенные буквы');
+
+    expect(getVisibleMissingLettersPrompt().cardId).toBe('card-vehicle');
   });
 
   it('keeps a correct missing letters result visible when submitted with Enter from the last cell', async () => {
@@ -1655,7 +1704,7 @@ describe('App navigation', () => {
     );
 
     expect(screen.getByRole('dialog', { name: 'Закончить игру' })).toBeInTheDocument();
-    expect(screen.getByText('Отвечено слов: 0')).toBeInTheDocument();
+    expect(screen.getByText('Отвечено слов: 1')).toBeInTheDocument();
   });
 
   it('confirms finish after a missing word memorize result', async () => {
@@ -1673,7 +1722,7 @@ describe('App navigation', () => {
     );
 
     expect(screen.getByRole('dialog', { name: 'Закончить игру' })).toBeInTheDocument();
-    expect(screen.getByText('Отвечено слов: 0')).toBeInTheDocument();
+    expect(screen.getByText('Отвечено слов: 1')).toBeInTheDocument();
   });
 
   it('returns to the game setup through the Game tab and confirms answered exercises', async () => {
@@ -2236,15 +2285,22 @@ describe('App navigation', () => {
     ).toBeInTheDocument();
   });
 
-  it('advances missing word after memorize and correct results', async () => {
+  it('saves a missing word memorize result as an incorrect partial answer', async () => {
     const user = userEvent.setup();
-    renderApp();
+    const store = renderApp();
 
     await startExercise(user, 'Пропущенное слово');
 
     const firstPromptText = getVisibleMissingWordSentence();
+    const firstCardId = getVisibleMissingWordCardId();
     await user.click(screen.getByRole('button', { name: 'Отправить' }));
     expect(screen.getByRole('button', { name: 'Запомнить!' })).toBeInTheDocument();
+    expect(store.getState().attempts.attempts).toHaveLength(1);
+    expect(store.getState().attempts.attempts[0].correctness[firstCardId]).toBe(false);
+    expect(store.getState().attempts.attempts[0].answers[firstCardId]).toContain('_');
+    expect(
+      screen.getByLabelText('Статистика по фразе: Верно 0, Неверно 1'),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Запомнить!' }));
     expect(getVisibleMissingWordSentence()).not.toBe(firstPromptText);
 
@@ -2348,6 +2404,7 @@ describe('App navigation', () => {
 
 function getVisibleMissingLettersPrompt(): {
   answer: string;
+  cardId: string;
   es: string;
   prompt: RegExp;
   ru: string;

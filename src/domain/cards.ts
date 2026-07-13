@@ -12,6 +12,7 @@ export interface LanguageCard {
   examples?: Partial<Record<SupportedLanguage, LanguageExample[]>>;
   tags?: string[];
   difficulty?: 'easy' | 'medium' | 'hard';
+  knownTargetLanguages?: SupportedLanguage[];
   createdAt: string;
   updatedAt: string;
 }
@@ -82,6 +83,13 @@ export function isCardEligibleForTarget(
     getTranslationHints(card, targetLanguage).length > 0 ||
     Boolean(getDefinitionHint(card, targetLanguage))
   );
+}
+
+export function isCardKnownForTarget(
+  card: Pick<LanguageCard, 'knownTargetLanguages'>,
+  targetLanguage: SupportedLanguage,
+): boolean {
+  return card.knownTargetLanguages?.includes(targetLanguage) ?? false;
 }
 
 export function createCardSnapshot(card: LanguageCard): CardSnapshot {

@@ -225,6 +225,43 @@ describe('CardSetDetailView', () => {
     expect(screen.getByText('impede')).toBeInTheDocument();
   });
 
+  it('toggles the known marker for the current target language', async () => {
+    const user = userEvent.setup();
+    const store = createStore();
+
+    render(
+      <Provider store={store}>
+        <CardSetDetailView />
+      </Provider>,
+    );
+
+    const airportKnownCheckbox = screen.getByTestId(
+      'card_set_detail__known_checkbox__card-airport',
+    );
+
+    expect(airportKnownCheckbox).not.toBeChecked();
+
+    await user.click(airportKnownCheckbox);
+
+    expect(
+      store
+        .getState()
+        .cards.cards.find((card) => card.id === 'card-airport')
+        ?.knownTargetLanguages,
+    ).toEqual(['en']);
+    expect(airportKnownCheckbox).toBeChecked();
+
+    await user.click(airportKnownCheckbox);
+
+    expect(
+      store
+        .getState()
+        .cards.cards.find((card) => card.id === 'card-airport')
+        ?.knownTargetLanguages,
+    ).toEqual([]);
+    expect(airportKnownCheckbox).not.toBeChecked();
+  });
+
   it('offers to add cards for an empty custom card set and wraps long phrase cards', () => {
     const { unmount } = render(
       <Provider

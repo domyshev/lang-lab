@@ -51,6 +51,7 @@ import {
   createCardSnapshot,
   getCardAnswer,
   getTranslationHints,
+  isCardKnownForTarget,
   isPhraseValue,
 } from './domain/cards';
 import {
@@ -94,7 +95,7 @@ import {
   markFinishExerciseLampShown,
   markHypersonicJumpLampShown,
 } from './store/appSlice';
-import { seedDefaultCards } from './store/cardsSlice';
+import { seedDefaultCards, setCardKnown } from './store/cardsSlice';
 import { rebuildStatsFromAttempts, recordAttemptStats } from './store/statsSlice';
 import {
   mergeCardSetMetadata,
@@ -206,6 +207,9 @@ export function App() {
   const [currentExerciseSessionId, setCurrentExerciseSessionId] = useState(() =>
     createId('exercise-session'),
   );
+  const [activeExerciseCardIds, setActiveExerciseCardIds] = useState<string[]>(
+    [],
+  );
   const [crosswordDraftState, setCrosswordDraftState] =
     useState<CrosswordDraftState>(emptyCrosswordDraftState);
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
@@ -290,10 +294,23 @@ export function App() {
       ? cards
       : getCardsByIds(cardById, selectedCardSet.cardIds);
   }, [cardById, cards, selectedCardSet]);
-  const eligibleCards = useMemo(
-    () => getEligibleCardsForTarget(cardSetCards, targetLanguage),
-    [targetLanguage, cardSetCards],
-  );
+  const eligibleCards = useMemo(() => {
+    const cardsForExercise =
+      isExerciseStarted && activeExerciseCardIds.length > 0
+        ? getCardsByIds(cardById, activeExerciseCardIds)
+        : cardSetCards;
+
+    return getEligibleCardsForTarget(cardsForExercise, targetLanguage).filter(
+      (card) =>
+        isExerciseStarted || !isCardKnownForTarget(card, targetLanguage),
+    );
+  }, [
+    activeExerciseCardIds,
+    cardById,
+    cardSetCards,
+    isExerciseStarted,
+    targetLanguage,
+  ]);
   const randomizedEligibleCards = useMemo(
     () => shuffleCards(eligibleCards, generationSeed),
     [eligibleCards, generationSeed],
@@ -531,6 +548,7 @@ export function App() {
     setResultPromptHold(null);
     setCompletedExerciseSummary(null);
     setCrosswordDraftState(emptyCrosswordDraftState);
+    setActiveExerciseCardIds([]);
     setCurrentExerciseAnsweredCount(0);
     setHasCurrentExerciseResult(false);
     setCurrentExerciseSessionId(createId('exercise-session'));
@@ -679,6 +697,17 @@ export function App() {
         nextScrollRoot.scrollTop = 0;
       }
     });
+  }
+
+  function setKnownForCurrentTarget(cardId: string, isKnown: boolean) {
+    dispatch(
+      setCardKnown({
+        cardId,
+        isKnown,
+        now: new Date().toISOString(),
+        targetLanguage,
+      }),
+    );
   }
 
   function savePromptAttempt(
@@ -1096,7 +1125,7 @@ export function App() {
     const setupEligibleCards = getEligibleCardsForTarget(
       setupCardSetCards,
       targetLanguage,
-    );
+    ).filter((card) => !isCardKnownForTarget(card, targetLanguage));
     const setupMissingLettersEligibleCards = setupEligibleCards.filter((card) => {
       const answer = getCardAnswer(card, targetLanguage);
       return Boolean(answer && !isPhraseValue(answer));
@@ -1243,6 +1272,7 @@ export function App() {
               size="large"
               onClick={() => {
                 setIsExerciseStarted(true);
+                setActiveExerciseCardIds(setupEligibleCards.map((card) => card.id));
                 setAnsweredMissingLettersPromptKeys([]);
                 setAnsweredMissingWordPromptKeys([]);
                 setAnsweredMultipleChoiceCardIds([]);
@@ -1495,6 +1525,12 @@ export function App() {
           progressCompletedCount={completedMultipleChoiceCardIds.length}
           progressTotalCount={eligibleCards.length}
           prompt={exercisePreview.prompt}
+          isKnown={isCardKnownForTarget(
+            cardById.get(exercisePreview.prompt.cardId) ?? {
+              knownTargetLanguages: [],
+            },
+            targetLanguage,
+          )}
           cardSetName={selectedCardSet.name}
           finishAction={renderFinishExerciseAction(
             buildMultipleChoiceJumpSelector(exercisePreview.prompt),
@@ -1503,6 +1539,9 @@ export function App() {
             savePromptAttempt('multipleChoice', exercisePreview.prompt, answer, {
               advance: false,
             })
+          }
+          onKnownChange={(isKnown) =>
+            setKnownForCurrentTarget(exercisePreview.prompt.cardId, isKnown)
           }
           onNext={() => {
             const nextCompletedCardIds = uniqueValues([
@@ -1556,6 +1595,12 @@ export function App() {
           progressCompletedCount={completedMissingLettersCardIds.length}
           progressTotalCount={missingLettersPracticeCardIds.length}
           prompt={missingLettersPrompt}
+          isKnown={isCardKnownForTarget(
+            cardById.get(missingLettersPrompt.cardId) ?? {
+              knownTargetLanguages: [],
+            },
+            targetLanguage,
+          )}
           cardSetName={selectedCardSet.name}
           finishAction={renderFinishExerciseAction(
             buildMissingLettersJumpSelector(missingLettersPrompt),
@@ -1566,6 +1611,9 @@ export function App() {
             })
           }
           onMemorizeResult={() => setHasCurrentExerciseResult(true)}
+          onKnownChange={(isKnown) =>
+            setKnownForCurrentTarget(missingLettersPrompt.cardId, isKnown)
+          }
           onNext={() => {
             const nextCompletedCardIds = uniqueValues([
               ...completedMissingLettersCardIds,
@@ -1618,6 +1666,12 @@ export function App() {
           missingWordPracticePrompts,
         )}
         prompt={missingWordPrompt}
+        isKnown={isCardKnownForTarget(
+          cardById.get(missingWordPrompt.cardId) ?? {
+            knownTargetLanguages: [],
+          },
+          targetLanguage,
+        )}
         progressCompletedCount={completedMissingWordCardIds.length}
         progressTotalCount={missingWordPracticeCardIds.length}
         cardSetName={selectedCardSet.name}
@@ -1627,6 +1681,9 @@ export function App() {
           })
         }
         onMemorizeResult={() => setHasCurrentExerciseResult(true)}
+        onKnownChange={(isKnown) =>
+          setKnownForCurrentTarget(missingWordPrompt.cardId, isKnown)
+        }
         onNext={() => {
           const nextCompletedCardIds = uniqueValues([
             ...completedMissingWordCardIds,

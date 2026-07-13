@@ -552,6 +552,52 @@ describe('HistoryView', () => {
       ).not.toBeInTheDocument(),
     );
   });
+
+  it('renders unanswered letters from memorize results as muted placeholders', async () => {
+    const user = userEvent.setup();
+    const { container } = renderHistoryView([
+      {
+        id: 'attempt-missing-partial',
+        exerciseSessionId: 'session-missing-partial',
+        exerciseType: 'missingLetters',
+        cardSetId: 'all-cards',
+        targetLanguage: 'en',
+        createdAt: '2026-07-05T10:00:00.000Z',
+        completedAt: '2026-07-05T10:00:00.000Z',
+        cardSnapshots: [],
+        prompts: [
+          {
+            cardId: 'card-airport',
+            prompt: 'ru: аэропорт',
+            expectedAnswer: 'airport',
+            translationHints: [{ language: 'ru', value: 'аэропорт' }],
+          },
+        ],
+        answers: { 'card-airport': 'a_r_o_t' },
+        correctness: { 'card-airport': false },
+        hintsUsed: { 'card-airport': 0 },
+      },
+    ]);
+
+    const attemptCard = getByDataTestPrefix(
+      container,
+      'history_view__attempt_card__',
+    )[0];
+    await user.click(
+      within(attemptCard).getByRole('button', { name: /Пропущенные буквы/ }),
+    );
+
+    const skippedCell = screen.getByTestId(
+      'history_view__detail_answer__attempt-missing-partial%3Acard-airport__incorrect_cells__missing_cell__1',
+    );
+
+    expect(skippedCell).toHaveTextContent('');
+    expect(skippedCell).toHaveStyle({
+      backgroundColor: 'rgb(238, 238, 238)',
+      color: 'rgb(117, 117, 117)',
+      textDecorationLine: 'none',
+    });
+  });
 });
 
 function renderHistoryView(customAttempts?: ExerciseAttempt[]) {

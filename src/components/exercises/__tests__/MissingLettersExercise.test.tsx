@@ -150,7 +150,7 @@ describe('MissingLettersExercise', () => {
     expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
   });
 
-  it('shows a memorize state without saving stats for an incomplete answer', async () => {
+  it('shows a memorize state and saves a partial answer for an incomplete answer', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();
     const onNext = vi.fn();
@@ -174,7 +174,7 @@ describe('MissingLettersExercise', () => {
     await user.type(missingLetterInputs[0], 'e');
     await user.click(screen.getByRole('button', { name: 'Отправить' }));
 
-    expect(onAnswer).not.toHaveBeenCalled();
+    expect(onAnswer).toHaveBeenCalledWith('veh_c_e');
     expect(
       screen.queryByLabelText('Заполните все пропуски'),
     ).not.toBeInTheDocument();

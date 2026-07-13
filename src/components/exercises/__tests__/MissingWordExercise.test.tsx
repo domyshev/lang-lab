@@ -37,7 +37,7 @@ describe('MissingWordExercise', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows a memorize state without saving stats for an empty answer', async () => {
+  it('shows a memorize state and saves a partial answer for an empty answer', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();
     const onNext = vi.fn();
@@ -60,7 +60,7 @@ describe('MissingWordExercise', () => {
 
     await user.click(screen.getByRole('button', { name: 'Отправить' }));
 
-    expect(onAnswer).not.toHaveBeenCalled();
+    expect(onAnswer).toHaveBeenCalledWith('w_r_h i_');
     expect(
       screen.queryByLabelText('Заполните все пропуски'),
     ).not.toBeInTheDocument();

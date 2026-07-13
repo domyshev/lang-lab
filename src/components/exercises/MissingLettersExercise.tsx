@@ -1,6 +1,14 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
-import { Box, Button, Paper, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Paper,
+  Stack,
+  Typography,
+} from '@mui/material';
 import type {
   CSSProperties,
   KeyboardEvent,
@@ -10,6 +18,7 @@ import type {
 } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { shouldStrikeAnswerCharacter } from '../../domain/answerCharacters';
+import { MISSING_ANSWER_CHARACTER } from '../../domain/answerPlaceholders';
 import { MissingLettersPrompt } from '../../domain/exercises';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
@@ -33,6 +42,8 @@ export function MissingLettersExercise({
   prompt,
   repeatProgress,
   onAnswer,
+  isKnown = false,
+  onKnownChange,
   cardSetName,
   finishAction,
 }: {
@@ -42,6 +53,8 @@ export function MissingLettersExercise({
   prompt: MissingLettersPrompt;
   repeatProgress?: { current: number; total: number };
   onAnswer: (answer: string) => void;
+  isKnown?: boolean;
+  onKnownChange?: (isKnown: boolean) => void;
   onMemorizeResult?: () => void;
   onNext: () => void;
   progressCompletedCount?: number;
@@ -61,6 +74,15 @@ export function MissingLettersExercise({
   const answer = maskedCharacters
     .map((character, index) =>
       character === '_' ? (letters[index] ?? '') : character,
+    )
+    .join('');
+  const submittedAnswerValue = maskedCharacters
+    .map((character, index) =>
+      character === '_'
+        ? letters[index]?.trim()
+          ? letters[index]
+          : MISSING_ANSWER_CHARACTER
+        : character,
     )
     .join('');
   const isAnswerComplete = maskedCharacters.every(
@@ -117,8 +139,9 @@ export function MissingLettersExercise({
     }
 
     if (!isAnswerComplete) {
-      setSubmittedAnswer(answer);
+      setSubmittedAnswer(submittedAnswerValue);
       setSubmissionOutcome('memorize');
+      onAnswer(submittedAnswerValue);
       onMemorizeResult?.();
       return;
     }
@@ -314,72 +337,122 @@ export function MissingLettersExercise({
             </Stack>
           </Stack>
         )}
-        <Button
-          data-test={`missing_letters_exercise__submit_or_next_button__${prompt.cardId}`}
-          variant="contained"
-          startIcon={
-            isSubmitted && !isMemorize ? (
-              isCorrect ? (
-                <EmojiEventsOutlinedIcon />
-              ) : (
-                <ErrorOutlineIcon />
-              )
-            ) : undefined
-          }
-          onClick={(event: MouseEvent<HTMLButtonElement>) =>
-            handleSubmitOrNext(event.detail)
-          }
-          style={
-            submissionOutcome === 'memorize'
-              ? {
-                  backgroundColor: 'rgb(255, 243, 205)',
-                  border: '1px solid #f2cf66',
-                  color: '#5f4400',
-                }
-              : undefined
-          }
-          sx={{
-            alignSelf: 'flex-start',
-            boxShadow: 'none',
-            height: 40,
-            minWidth: 148,
-            ...(isSubmitted && isCorrect
-              ? {
-                  bgcolor: '#2f7d32',
-                  '&:hover': { bgcolor: '#276b2a', boxShadow: 'none' },
-                }
-              : {}),
-            ...(submissionOutcome === 'incorrect'
-              ? {
-                  bgcolor: '#fdebee',
-                  border: '1px solid #f2a7b4',
-                  color: '#9f1239',
-                  '&:hover': { bgcolor: '#fbdde3', boxShadow: 'none' },
-                }
-              : {}),
-            ...(submissionOutcome === 'memorize'
-              ? {
-                  bgcolor: 'rgb(255, 243, 205)',
-                  border: '1px solid #f2cf66',
-                  color: '#5f4400',
-                  '&:hover': {
-                    bgcolor: 'rgb(255, 236, 168)',
-                    boxShadow: 'none',
-                  },
-                }
-              : {}),
-          }}
-        >
-          {!isSubmitted
-            ? t(interfaceLanguage, 'submit')
-            : isCorrect
-              ? t(interfaceLanguage, 'correctResult')
-              : isMemorize
-                ? t(interfaceLanguage, 'memorizeResult')
-              : t(interfaceLanguage, 'incorrect')}
-        </Button>
+        <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+          <Button
+            data-test={`missing_letters_exercise__submit_or_next_button__${prompt.cardId}`}
+            variant="contained"
+            startIcon={
+              isSubmitted && !isMemorize ? (
+                isCorrect ? (
+                  <EmojiEventsOutlinedIcon />
+                ) : (
+                  <ErrorOutlineIcon />
+                )
+              ) : undefined
+            }
+            onClick={(event: MouseEvent<HTMLButtonElement>) =>
+              handleSubmitOrNext(event.detail)
+            }
+            style={
+              submissionOutcome === 'memorize'
+                ? {
+                    backgroundColor: 'rgb(255, 243, 205)',
+                    border: '1px solid #f2cf66',
+                    color: '#5f4400',
+                  }
+                : undefined
+            }
+            sx={{
+              alignSelf: 'flex-start',
+              boxShadow: 'none',
+              height: 40,
+              minWidth: 148,
+              ...(isSubmitted && isCorrect
+                ? {
+                    bgcolor: '#2f7d32',
+                    '&:hover': { bgcolor: '#276b2a', boxShadow: 'none' },
+                  }
+                : {}),
+              ...(submissionOutcome === 'incorrect'
+                ? {
+                    bgcolor: '#fdebee',
+                    border: '1px solid #f2a7b4',
+                    color: '#9f1239',
+                    '&:hover': { bgcolor: '#fbdde3', boxShadow: 'none' },
+                  }
+                : {}),
+              ...(submissionOutcome === 'memorize'
+                ? {
+                    bgcolor: 'rgb(255, 243, 205)',
+                    border: '1px solid #f2cf66',
+                    color: '#5f4400',
+                    '&:hover': {
+                      bgcolor: 'rgb(255, 236, 168)',
+                      boxShadow: 'none',
+                    },
+                  }
+                : {}),
+            }}
+          >
+            {!isSubmitted
+              ? t(interfaceLanguage, 'submit')
+              : isCorrect
+                ? t(interfaceLanguage, 'correctResult')
+                : isMemorize
+                  ? t(interfaceLanguage, 'memorizeResult')
+                  : t(interfaceLanguage, 'incorrect')}
+          </Button>
+          {isSubmitted && onKnownChange && (
+            <KnownCardCheckbox
+              checked={isKnown}
+              dataTest={`missing_letters_exercise__known_checkbox__${prompt.cardId}`}
+              interfaceLanguage={interfaceLanguage}
+              onChange={onKnownChange}
+            />
+          )}
+        </Stack>
       </Stack>
     </Paper>
+  );
+}
+
+function KnownCardCheckbox({
+  checked,
+  dataTest,
+  interfaceLanguage,
+  onChange,
+}: {
+  checked: boolean;
+  dataTest: string;
+  interfaceLanguage: SupportedLanguage;
+  onChange: (isKnown: boolean) => void;
+}) {
+  return (
+    <FormControlLabel
+      control={
+        <Checkbox
+          checked={checked}
+          onChange={(event) => onChange(event.target.checked)}
+          slotProps={{
+            input: {
+              'data-test': dataTest,
+            } as Record<string, string>,
+          }}
+          sx={{
+            color: '#6f4bd8',
+            p: 0.5,
+            '&.Mui-checked': { color: '#6f4bd8' },
+          }}
+        />
+      }
+      label={t(interfaceLanguage, 'markCardKnown')}
+      sx={{
+        color: '#4b368d',
+        fontWeight: 850,
+        m: 0,
+        '& .MuiFormControlLabel-label': { fontWeight: 850 },
+      }}
+    />
   );
 }
 

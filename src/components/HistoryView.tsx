@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { isMissingAnswerCharacter } from '../domain/answerPlaceholders';
 import { ExercisePrompt } from '../domain/exercises';
 import {
   ExerciseHistorySummary,
@@ -402,7 +403,30 @@ function AnswerCells({
       useFlexGap
     >
       {value.split('').map((character, index) =>
-        character.trim() === '' ? (
+        isMissingAnswerCharacter(character) ? (
+          <Box
+            aria-hidden="true"
+            component="span"
+            data-test={`${dataTestPrefix}__missing_cell__${index}`}
+            key={`missing-${index}`}
+            sx={{
+              alignItems: 'center',
+              bgcolor: 'rgb(238, 238, 238)',
+              border: '1px solid',
+              borderColor: 'rgb(216, 216, 216)',
+              borderRadius: 1,
+              color: 'rgb(117, 117, 117)',
+              display: 'inline-flex',
+              fontSize: 20,
+              fontWeight: 800,
+              height: 34,
+              justifyContent: 'center',
+              lineHeight: 1,
+              textDecorationLine: 'none',
+              width: 34,
+            }}
+          />
+        ) : character.trim() === '' ? (
           <Box
             aria-hidden="true"
             component="span"

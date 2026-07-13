@@ -1,6 +1,13 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
-import { Button, Paper, Stack, Typography } from '@mui/material';
+import {
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Paper,
+  Stack,
+  Typography,
+} from '@mui/material';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { MultipleChoicePrompt } from '../../domain/exercises';
@@ -15,7 +22,9 @@ export function MultipleChoiceExercise({
   progressCompletedCount,
   progressTotalCount,
   prompt,
+  isKnown = false,
   onAnswer,
+  onKnownChange,
   onNext,
   cardSetName,
   finishAction,
@@ -23,7 +32,9 @@ export function MultipleChoiceExercise({
   complementaryLanguage?: SupportedLanguage;
   interfaceLanguage: SupportedLanguage;
   prompt: MultipleChoicePrompt;
+  isKnown?: boolean;
   onAnswer: (answer: string) => void;
+  onKnownChange?: (isKnown: boolean) => void;
   onNext: () => void;
   progressCompletedCount?: number;
   progressTotalCount?: number;
@@ -145,38 +156,88 @@ export function MultipleChoiceExercise({
           ))}
         </Stack>
         {isSubmitted && (
-          <Button
-            data-test={`multiple_choice_exercise__next_button__${prompt.cardId}`}
-            variant="contained"
-            startIcon={
-              isCorrect ? <EmojiEventsOutlinedIcon /> : <ErrorOutlineIcon />
-            }
-            onClick={onNext}
-            sx={{
-              alignSelf: 'flex-start',
-              boxShadow: 'none',
-              height: 40,
-              minWidth: 148,
-              ...(isCorrect
-                ? {
-                    bgcolor: '#2f7d32',
-                    '&:hover': { bgcolor: '#276b2a', boxShadow: 'none' },
-                  }
-                : {
-                    bgcolor: '#fdebee',
-                    border: '1px solid #f2a7b4',
-                    color: '#9f1239',
-                    '&:hover': { bgcolor: '#fbdde3', boxShadow: 'none' },
-                  }),
-            }}
-          >
-            {isCorrect
-              ? t(interfaceLanguage, 'correctResult')
-              : t(interfaceLanguage, 'incorrect')}
-          </Button>
+          <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+            <Button
+              data-test={`multiple_choice_exercise__next_button__${prompt.cardId}`}
+              variant="contained"
+              startIcon={
+                isCorrect ? <EmojiEventsOutlinedIcon /> : <ErrorOutlineIcon />
+              }
+              onClick={onNext}
+              sx={{
+                alignSelf: 'flex-start',
+                boxShadow: 'none',
+                height: 40,
+                minWidth: 148,
+                ...(isCorrect
+                  ? {
+                      bgcolor: '#2f7d32',
+                      '&:hover': { bgcolor: '#276b2a', boxShadow: 'none' },
+                    }
+                  : {
+                      bgcolor: '#fdebee',
+                      border: '1px solid #f2a7b4',
+                      color: '#9f1239',
+                      '&:hover': { bgcolor: '#fbdde3', boxShadow: 'none' },
+                    }),
+              }}
+            >
+              {isCorrect
+                ? t(interfaceLanguage, 'correctResult')
+                : t(interfaceLanguage, 'incorrect')}
+            </Button>
+            {onKnownChange && (
+              <KnownCardCheckbox
+                checked={isKnown}
+                dataTest={`multiple_choice_exercise__known_checkbox__${prompt.cardId}`}
+                interfaceLanguage={interfaceLanguage}
+                onChange={onKnownChange}
+              />
+            )}
+          </Stack>
         )}
       </Stack>
     </Paper>
+  );
+}
+
+function KnownCardCheckbox({
+  checked,
+  dataTest,
+  interfaceLanguage,
+  onChange,
+}: {
+  checked: boolean;
+  dataTest: string;
+  interfaceLanguage: SupportedLanguage;
+  onChange: (isKnown: boolean) => void;
+}) {
+  return (
+    <FormControlLabel
+      control={
+        <Checkbox
+          checked={checked}
+          onChange={(event) => onChange(event.target.checked)}
+          slotProps={{
+            input: {
+              'data-test': dataTest,
+            } as Record<string, string>,
+          }}
+          sx={{
+            color: '#6f4bd8',
+            p: 0.5,
+            '&.Mui-checked': { color: '#6f4bd8' },
+          }}
+        />
+      }
+      label={t(interfaceLanguage, 'markCardKnown')}
+      sx={{
+        color: '#4b368d',
+        fontWeight: 850,
+        m: 0,
+        '& .MuiFormControlLabel-label': { fontWeight: 850 },
+      }}
+    />
   );
 }
 

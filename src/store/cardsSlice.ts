@@ -1,5 +1,6 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { LanguageCard } from '../domain/cards';
+import { SupportedLanguage } from '../domain/languages';
 import {
   DuplicateProcessingEntry,
   ImportResult,
@@ -41,6 +42,9 @@ const cardsSlice = createSlice({
             )
           : undefined,
         tags: card.tags ? [...card.tags] : undefined,
+        knownTargetLanguages: card.knownTargetLanguages
+          ? [...card.knownTargetLanguages]
+          : undefined,
       }));
       state.duplicateProcessingHistory = [];
       state.pendingDuplicates = [];
@@ -51,6 +55,30 @@ const cardsSlice = createSlice({
         ...action.payload.duplicateProcessingHistory,
       );
       state.pendingDuplicates.push(...action.payload.pendingDuplicates);
+    },
+    setCardKnown(
+      state,
+      action: PayloadAction<{
+        cardId: string;
+        isKnown: boolean;
+        now: string;
+        targetLanguage: SupportedLanguage;
+      }>,
+    ) {
+      const card = state.cards.find(({ id }) => id === action.payload.cardId);
+      if (!card) {
+        return;
+      }
+
+      const languages = new Set(card.knownTargetLanguages ?? []);
+      if (action.payload.isKnown) {
+        languages.add(action.payload.targetLanguage);
+      } else {
+        languages.delete(action.payload.targetLanguage);
+      }
+
+      card.knownTargetLanguages = [...languages];
+      card.updatedAt = action.payload.now;
     },
   },
   extraReducers: (builder) => {
@@ -94,5 +122,6 @@ const cardsSlice = createSlice({
   },
 });
 
-export const { applyImportResult, seedDefaultCards } = cardsSlice.actions;
+export const { applyImportResult, seedDefaultCards, setCardKnown } =
+  cardsSlice.actions;
 export const cardsReducer = cardsSlice.reducer;

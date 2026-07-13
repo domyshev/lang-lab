@@ -9,13 +9,19 @@ import {
   Checkbox,
   Chip,
   Divider,
+  FormControlLabel,
   Paper,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { getCardAnswer, isPhraseValue, LanguageCard } from '../domain/cards';
+import {
+  getCardAnswer,
+  isCardKnownForTarget,
+  isPhraseValue,
+  LanguageCard,
+} from '../domain/cards';
 import {
   ALL_CARDS_CARD_SET_ID,
   getCardSetName,
@@ -44,6 +50,7 @@ import {
   copyArchivedCardSet,
   setCardSetCards,
 } from '../store/cardSetsSlice';
+import { setCardKnown } from '../store/cardsSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
 import { SplitWordStatsChip } from './SplitWordStatsChip';
@@ -207,6 +214,17 @@ export function CardSetDetailView() {
     );
   };
 
+  const handleKnownToggle = (cardId: string, isKnown: boolean) => {
+    dispatch(
+      setCardKnown({
+        cardId,
+        isKnown,
+        now: new Date().toISOString(),
+        targetLanguage,
+      }),
+    );
+  };
+
   const renderCardRow = (card: LanguageCard) => {
     const answer = getDisplayAnswer(card, targetLanguage, interfaceLanguage);
     const translationNote = getTranslationNote({
@@ -224,6 +242,7 @@ export function CardSetDetailView() {
       interfaceLanguage,
       isPhrase ? 'phraseStats' : 'wordStats',
     );
+    const isKnown = isCardKnownForTarget(card, targetLanguage);
 
     return (
       <Box
@@ -342,6 +361,42 @@ export function CardSetDetailView() {
                   color: '#203015',
                   fontWeight: 800,
                   height: 30,
+                }}
+              />
+              <FormControlLabel
+                data-test={`card_set_detail__known_control__${card.id}`}
+                control={
+                  <Checkbox
+                    checked={isKnown}
+                    onChange={(event) =>
+                      handleKnownToggle(card.id, event.target.checked)
+                    }
+                    slotProps={{
+                      input: {
+                        'data-test': `card_set_detail__known_checkbox__${card.id}`,
+                      } as Record<string, string>,
+                    }}
+                    sx={{
+                      color: '#6f4bd8',
+                      p: 0.35,
+                      '&.Mui-checked': { color: '#6f4bd8' },
+                    }}
+                  />
+                }
+                label={t(interfaceLanguage, 'markCardKnown')}
+                sx={{
+                  border: '1px solid rgba(111, 75, 216, 0.46)',
+                  borderRadius: 999,
+                  color: '#4f36a4',
+                  height: 30,
+                  ml: 0,
+                  mr: 0,
+                  px: 0.65,
+                  '.MuiFormControlLabel-label': {
+                    fontSize: 13,
+                    fontWeight: 850,
+                    lineHeight: 1,
+                  },
                 }}
               />
               <RecentCardStatsTooltip

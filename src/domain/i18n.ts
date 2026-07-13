@@ -217,6 +217,7 @@ type I18nKey =
   | 'missingWordNeedsPhrases'
   | 'correctResult'
   | 'memorizeResult'
+  | 'markCardKnown'
   | 'correct'
   | 'incorrect'
   | 'metricAnsweredSuffix'
@@ -525,6 +526,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     noMoreCardsInExercise: 'No more cards in this game.',
     correctResult: 'Correct!',
     memorizeResult: 'Remember!',
+    markCardKnown: 'I know',
     correct: 'Correct',
     incorrect: 'Incorrect',
     metricAnsweredSuffix: 'answered',
@@ -839,6 +841,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     noMoreCardsInExercise: 'Карточки для этой игры закончились.',
     correctResult: 'Правильно!',
     memorizeResult: 'Запомнить!',
+    markCardKnown: 'Я знаю',
     correct: 'Верно',
     incorrect: 'Неверно',
     metricAnsweredSuffix: 'отвечено',
@@ -1153,6 +1156,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     noMoreCardsInExercise: 'No quedan tarjetas en este juego.',
     correctResult: 'Correcto!',
     memorizeResult: 'Memorizar!',
+    markCardKnown: 'Lo se',
     correct: 'Correctas',
     incorrect: 'Incorrectas',
     metricAnsweredSuffix: 'respondidas',
