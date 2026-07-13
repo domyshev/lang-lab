@@ -33,6 +33,7 @@ import {
   getWorldAccent,
   getWorldResultColors,
   resolveWorldId,
+  type WorldResultColors,
 } from '../domain/worlds';
 import {
   createCardById,
@@ -72,7 +73,7 @@ export function CardSetDetailView() {
     resolveWorldId(state.app.worldId),
   );
   const worldAccent = getWorldAccent(worldId);
-  const worldResultColors = getWorldResultColors(worldId);
+  const cardStatsResultColors = getCardDetailStatsColors(worldId);
   const cardSetAccentBorder = hexToRgba(worldAccent.main, 0.52);
   const cardSetAccentHover = hexToRgba(worldAccent.main, 0.08);
   const cardSetAccentSoft = hexToRgba(worldAccent.main, 0.055);
@@ -366,17 +367,33 @@ export function CardSetDetailView() {
             >
               <Chip
                 data-test={`card_set_detail__card_kind_chip__${card.id}`}
-                label={t(
-                  interfaceLanguage,
-                  isPhrase ? 'phraseLabel' : 'wordLabel',
-                )}
+                label={
+                  <Box
+                    component="span"
+                    data-test={`card_set_detail__card_kind_chip_label__${card.id}`}
+                    sx={{ alignItems: 'baseline', display: 'inline-flex' }}
+                  >
+                    <Box component="span" sx={{ fontWeight: 500 }}>
+                      {t(interfaceLanguage, 'cardTypePrefix')}:{' '}
+                    </Box>
+                    <Box component="span" sx={{ fontWeight: 850 }}>
+                      {t(
+                        interfaceLanguage,
+                        isPhrase ? 'phraseLabel' : 'wordLabel',
+                      )}
+                    </Box>
+                  </Box>
+                }
                 size="small"
                 variant="outlined"
                 sx={{
                   borderColor: 'rgba(32, 48, 21, 0.28)',
                   color: '#203015',
-                  fontWeight: 800,
-                  height: 30,
+                  fontSize: 11,
+                  height: 24,
+                  '& .MuiChip-label': {
+                    px: 0.75,
+                  },
                 }}
               />
               <KnownCardToggleButton
@@ -398,7 +415,8 @@ export function CardSetDetailView() {
                   dataTestPrefix={`card_set_detail__card_stats__${card.id}`}
                   incorrect={stats?.incorrect ?? 0}
                   interfaceLanguage={interfaceLanguage}
-                  resultColors={worldResultColors}
+                  resultColors={cardStatsResultColors}
+                  size="compact"
                   statsLabel={statsLabel}
                 />
               </RecentCardStatsTooltip>
@@ -883,6 +901,42 @@ function hexToRgba(hex: string, alpha: number): string {
   const green = parseInt(normalized.slice(2, 4), 16);
   const blue = parseInt(normalized.slice(4, 6), 16);
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
+function getCardDetailStatsColors(
+  worldId: ReturnType<typeof resolveWorldId>,
+): WorldResultColors {
+  if (worldId === 'football') {
+    return {
+      correct: {
+        border: '#58b947',
+        main: '#279a36',
+        soft: '#e1f6d7',
+        text: '#163f1c',
+      },
+      incorrect: {
+        border: '#e04435',
+        main: '#c60b1e',
+        soft: '#fee5d5',
+        text: '#5a1118',
+      },
+    };
+  }
+
+  return {
+    correct: {
+      border: '#8fbd67',
+      main: '#5d9a48',
+      soft: '#edf8e4',
+      text: '#24451c',
+    },
+    incorrect: {
+      border: '#e28da0',
+      main: '#d86b7c',
+      soft: '#fff0f3',
+      text: '#6a2130',
+    },
+  };
 }
 
 const recentCardStatsTooltipStyles = {

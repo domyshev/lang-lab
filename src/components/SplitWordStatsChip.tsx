@@ -10,6 +10,7 @@ export function SplitWordStatsChip({
   incorrect,
   interfaceLanguage,
   resultColors = footballResultColors,
+  size = 'default',
   statsLabel,
 }: {
   correct: number;
@@ -17,11 +18,13 @@ export function SplitWordStatsChip({
   incorrect: number;
   interfaceLanguage: SupportedLanguage;
   resultColors?: WorldResultColors;
+  size?: 'default' | 'compact';
   statsLabel?: string;
 }) {
   const correctLabel = t(interfaceLanguage, 'correct');
   const incorrectLabel = t(interfaceLanguage, 'incorrect');
   const label = statsLabel ?? t(interfaceLanguage, 'wordStats');
+  const isCompact = size === 'compact';
 
   return (
     <Box
@@ -34,7 +37,7 @@ export function SplitWordStatsChip({
         borderRadius: 1,
         display: 'inline-flex',
         alignSelf: 'flex-start',
-        height: 38,
+        height: isCompact ? 30 : 38,
         maxWidth: '100%',
         overflow: 'hidden',
         width: 'fit-content',
@@ -48,11 +51,11 @@ export function SplitWordStatsChip({
           clipPath: 'polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%)',
           color: '#203015',
           display: 'inline-flex',
-          fontSize: 17,
+          fontSize: isCompact ? 13 : 17,
           fontWeight: 900,
-          minWidth: 92,
-          pl: 1.5,
-          pr: 2.25,
+          minWidth: isCompact ? 70 : 92,
+          pl: isCompact ? 1 : 1.5,
+          pr: isCompact ? 1.75 : 2.25,
         }}
       >
         {correctLabel}: {correct}
@@ -65,12 +68,12 @@ export function SplitWordStatsChip({
           clipPath: 'polygon(12px 0, 100% 0, 100% 100%, 0 100%)',
           color: resultColors.incorrect.text,
           display: 'inline-flex',
-          fontSize: 17,
+          fontSize: isCompact ? 13 : 17,
           fontWeight: 900,
           ml: -1.25,
-          minWidth: 112,
-          pl: 2.25,
-          pr: 1.5,
+          minWidth: isCompact ? 82 : 112,
+          pl: isCompact ? 1.75 : 2.25,
+          pr: isCompact ? 1 : 1.5,
         }}
       >
         {incorrectLabel}: {incorrect}

@@ -1,7 +1,10 @@
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
+import KeyboardArrowUpRoundedIcon from '@mui/icons-material/KeyboardArrowUpRounded';
 import { useId, useState } from 'react';
 import {
   Box,
+  Checkbox,
   FormControl,
   IconButton,
   InputLabel,
@@ -76,9 +79,52 @@ export function LanguageSelectors() {
     interfaceLanguage,
   );
   const companionLanguageOptions = supportedLanguages.filter(
-    (language) => language !== targetLanguage && language !== interfaceLanguage,
+    (language) => language !== targetLanguage,
   );
+  const orderedCompanionLanguageOptions = [
+    ...companionLanguages.filter((language) =>
+      companionLanguageOptions.includes(language),
+    ),
+    ...companionLanguageOptions.filter(
+      (language) => !companionLanguages.includes(language),
+    ),
+  ];
+  const selectedCompanionLanguageSet = new Set(companionLanguages);
   const isSettingsOpen = Boolean(settingsAnchor);
+
+  const updateCompanionLanguages = (
+    complementaryLanguages: SupportedLanguage[],
+  ) => {
+    dispatch(
+      setComplementaryLanguagesForTarget({
+        complementaryLanguages,
+        targetLanguage,
+      }),
+    );
+  };
+
+  const moveCompanionLanguage = (
+    language: SupportedLanguage,
+    direction: -1 | 1,
+  ) => {
+    const currentIndex = companionLanguages.indexOf(language);
+    const nextIndex = currentIndex + direction;
+
+    if (
+      currentIndex < 0 ||
+      nextIndex < 0 ||
+      nextIndex >= companionLanguages.length
+    ) {
+      return;
+    }
+
+    const nextLanguages = [...companionLanguages];
+    [nextLanguages[currentIndex], nextLanguages[nextIndex]] = [
+      nextLanguages[nextIndex],
+      nextLanguages[currentIndex],
+    ];
+    updateCompanionLanguages(nextLanguages);
+  };
 
   const handleInterfaceChange = (
     event: SelectChangeEvent<SupportedLanguage>,
@@ -104,12 +150,7 @@ export function LanguageSelectors() {
       typeof rawValue === 'string'
         ? rawValue.split(',')
         : rawValue;
-    dispatch(
-      setComplementaryLanguagesForTarget({
-        complementaryLanguages: nextLanguages as SupportedLanguage[],
-        targetLanguage,
-      }),
-    );
+    updateCompanionLanguages(nextLanguages as SupportedLanguage[]);
   };
 
   return (
@@ -174,7 +215,7 @@ export function LanguageSelectors() {
         <FormControl
           data-test="language_selectors__target_language_control"
           size="small"
-          sx={{ minWidth: { xs: 118, sm: 138 } }}
+          sx={{ width: 224 }}
         >
           <InputLabel
             data-test="language_selectors__target_language_label"
@@ -214,7 +255,7 @@ export function LanguageSelectors() {
         <FormControl
           data-test="language_selectors__companion_languages_control"
           size="small"
-          sx={{ minWidth: { xs: 168, sm: 196 } }}
+          sx={{ maxWidth: 224, width: 224 }}
         >
           <InputLabel
             data-test="language_selectors__companion_languages_label"
@@ -235,7 +276,12 @@ export function LanguageSelectors() {
                 data-test="language_selectors__companion_languages_selected__root"
                 direction="row"
                 spacing={0.75}
-                sx={{ alignItems: 'center', minWidth: 0 }}
+                sx={{
+                  alignItems: 'center',
+                  maxWidth: '100%',
+                  minWidth: 0,
+                  overflow: 'hidden',
+                }}
               >
                 {(value as SupportedLanguage[]).map((language) => (
                   <LanguageLabel
@@ -248,20 +294,62 @@ export function LanguageSelectors() {
             )}
             sx={compactSelectSx}
           >
-            {companionLanguageOptions.map((language) => {
+            {orderedCompanionLanguageOptions.map((language) => {
               const isSelected = companionLanguages.includes(language);
-              const isDisabled = !isSelected && companionLanguages.length >= 2;
+              const selectedIndex = companionLanguages.indexOf(language);
               return (
                 <MenuItem
                   data-test={`language_selectors__companion_languages_option__${language}`}
-                  disabled={isDisabled}
                   key={language}
                   value={language}
+                  sx={{ gap: 0.75, minWidth: 260 }}
                 >
+                  <Checkbox
+                    checked={selectedCompanionLanguageSet.has(language)}
+                    data-test={`language_selectors__companion_languages_option_checkbox__${language}`}
+                    size="small"
+                    sx={{ p: 0.25 }}
+                  />
                   <LanguageLabel
                     dataTestPrefix={`language_selectors__companion_languages_option_label__${language}`}
                     language={language}
                   />
+                  <Stack
+                    data-test={`language_selectors__companion_languages_order_controls__${language}`}
+                    direction="row"
+                    spacing={0.25}
+                    sx={{ ml: 'auto' }}
+                  >
+                    <IconButton
+                      aria-label={`${t(interfaceLanguage, 'moveCompanionLanguageUp')}: ${languageLabels[language]}`}
+                      data-test={`language_selectors__companion_languages_move_up__${language}`}
+                      disabled={!isSelected || selectedIndex <= 0}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        moveCompanionLanguage(language, -1);
+                      }}
+                      onMouseDown={(event) => event.preventDefault()}
+                      size="small"
+                    >
+                      <KeyboardArrowUpRoundedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      aria-label={`${t(interfaceLanguage, 'moveCompanionLanguageDown')}: ${languageLabels[language]}`}
+                      data-test={`language_selectors__companion_languages_move_down__${language}`}
+                      disabled={
+                        !isSelected ||
+                        selectedIndex === companionLanguages.length - 1
+                      }
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        moveCompanionLanguage(language, 1);
+                      }}
+                      onMouseDown={(event) => event.preventDefault()}
+                      size="small"
+                    >
+                      <KeyboardArrowDownRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
                 </MenuItem>
               );
             })}
@@ -319,6 +407,13 @@ export function LanguageSelectors() {
               labelId={worldLabelId}
               value={worldId}
               onChange={handleWorldChange}
+              renderValue={(value) => (
+                <WorldLabel
+                  dataTestPrefix="language_selectors__world_selected"
+                  interfaceLanguage={interfaceLanguage}
+                  world={resolveWorldId(value)}
+                />
+              )}
             >
               {worldIds.map((world) => (
                 <MenuItem
@@ -326,7 +421,11 @@ export function LanguageSelectors() {
                   key={world}
                   value={world}
                 >
-                  {worldDefinitions[world].label[interfaceLanguage]}
+                  <WorldLabel
+                    dataTestPrefix={`language_selectors__world_option_label__${world}`}
+                    interfaceLanguage={interfaceLanguage}
+                    world={world}
+                  />
                 </MenuItem>
               ))}
             </Select>
@@ -456,4 +555,46 @@ function LanguageLabel({
       </Typography>
     </Stack>
   );
+}
+
+function WorldLabel({
+  dataTestPrefix,
+  interfaceLanguage,
+  world,
+}: {
+  dataTestPrefix: string;
+  interfaceLanguage: SupportedLanguage;
+  world: WorldId;
+}) {
+  return (
+    <Stack
+      data-test={`${dataTestPrefix}__root`}
+      component="span"
+      direction="row"
+      spacing={1}
+      alignItems="center"
+      sx={{ minWidth: 0 }}
+    >
+      <Box
+        component="span"
+        aria-hidden="true"
+        data-test={`${dataTestPrefix}__icon`}
+        sx={{ fontSize: 18, lineHeight: 1 }}
+      >
+        {getWorldIcon(world)}
+      </Box>
+      <Typography
+        component="span"
+        data-test={`${dataTestPrefix}__name`}
+        noWrap
+        sx={{ fontSize: 14 }}
+      >
+        {worldDefinitions[world].label[interfaceLanguage]}
+      </Typography>
+    </Stack>
+  );
+}
+
+function getWorldIcon(world: WorldId): string {
+  return world === 'football' ? '⚽' : '🍃';
 }

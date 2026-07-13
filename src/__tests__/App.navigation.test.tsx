@@ -474,7 +474,8 @@ describe('App navigation', () => {
     expect(screen.getByTestId('exercise_picker__art_ball__multipleChoice')).toBeInTheDocument();
     expect(
       screen.getByTestId('exercise_picker__art_wc2026__missingLetters'),
-    ).toHaveTextContent('FIFA WC 2026');
+    ).toBeInTheDocument();
+    expect(screen.queryByText('FIFA WC 2026')).not.toBeInTheDocument();
     expect(
       screen.getByTestId('exercise_picker__art_goalkeeper__missingWord'),
     ).toBeInTheDocument();
@@ -882,21 +883,23 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Играть' }));
 
     expect(screen.getByRole('heading', { name: 'Игра: Пропущенные буквы' })).toBeInTheDocument();
-    expect(getByDataTestPrefix('missing_letters_exercise__metadata_row__')[0]).toContainElement(
-      getByDataTestPrefix('missing_letters_exercise__card_set_chip__')[0],
-    );
-    expect(getByDataTestPrefix('missing_letters_exercise__metadata_row__')[0]).toContainElement(
-      getByDataTestPrefix('missing_letters_exercise__progress_chip__')[0],
-    );
-    expect(getByDataTestPrefix('missing_letters_exercise__card_set_chip__')[0]).toHaveTextContent(
+    const metadataRow = getByDataTestPrefix('missing_letters_exercise__metadata_row__')[0];
+    const cardSetChip = getByDataTestPrefix('missing_letters_exercise__card_set_chip__')[0];
+    const progressChip = getByDataTestPrefix('missing_letters_exercise__progress_chip__')[0];
+    const thoughtBubble = screen.getByTestId('exercise_finish_action__thought_bubble');
+
+    expect(metadataRow).toContainElement(cardSetChip);
+    expect(metadataRow).not.toContainElement(progressChip);
+    expect(thoughtBubble).toContainElement(progressChip);
+    expect(cardSetChip).toHaveTextContent(
       'Набор карточек: All cards',
     );
+    expect(cardSetChip).toHaveStyle({ backgroundColor: 'rgb(242, 243, 241)' });
+    expect(cardSetChip).not.toHaveClass('MuiChip-clickable');
     expect(
       getByDataTestPrefix('missing_letters_exercise__target_language_chip__')[0],
     ).toHaveTextContent('Целевой язык: 🇬🇧 Английский');
-    expect(
-      getByDataTestPrefix('missing_letters_exercise__progress_chip__')[0],
-    ).toHaveTextContent('0 пройдено / 4 всего');
+    expect(progressChip).toHaveTextContent('0 пройдено / 4 всего');
   });
 
   it.each([
@@ -1123,7 +1126,7 @@ describe('App navigation', () => {
     });
     const thoughtBubble = screen.getByTestId('exercise_finish_action__thought_bubble');
     expect(thoughtBubble).toHaveTextContent(
-      'Можно делать гиперзвуковые прыжки между карточками.',
+      'Можно делать быстрые пасы между карточками.',
     );
     expect(screen.getByTestId('exercise_finish_action__thought_icon')).toBeInTheDocument();
     expect(screen.getByTestId('exercise_finish_action__thought_icon_anchor')).toHaveStyle({
@@ -1132,7 +1135,7 @@ describe('App navigation', () => {
     });
     await user.hover(screen.getByTestId('exercise_finish_action__thought_icon_anchor'));
     expect(
-      await screen.findByText(/Гиперзвуковой прыжок переносит тебя/),
+      await screen.findByText(/Быстрый пас переводит игру/),
     ).toBeInTheDocument();
     expect(
       screen.getByTestId('exercise_finish_action__thought_icon_tooltip_arrow'),
@@ -1195,7 +1198,6 @@ describe('App navigation', () => {
       screen.getByLabelText(`Правильный ответ: ${firstPrompt.answer}`),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
-    expect(screen.getByText('Статистика по слову')).toBeInTheDocument();
     expect(screen.queryByText(/direct/)).not.toBeInTheDocument();
     expect(screen.queryByText(/weighted/)).not.toBeInTheDocument();
     expect(screen.queryByText('missingLetters')).not.toBeInTheDocument();
@@ -1236,7 +1238,7 @@ describe('App navigation', () => {
       `exercise_finish_action__jump_option__${cardIdByAnswer(firstPrompt.answer)}__0`,
     );
     expect(answeredOption).toHaveStyle({ opacity: '0.52' });
-    expect(answeredOption).toHaveTextContent(firstPrompt.es);
+    expect(answeredOption).toHaveTextContent(firstPrompt.ru);
     expect(answeredOption).not.toHaveTextContent(firstPrompt.answer);
 
     await user.click(answeredOption);
@@ -1285,7 +1287,16 @@ describe('App navigation', () => {
 
   it('continues from the latest selected missing letters jump', async () => {
     const user = userEvent.setup();
-    renderApp();
+    renderApp({
+      app: {
+        complementaryLanguages: {
+          en: ['es', 'ru', 'uk'],
+          es: ['ru', 'en', 'uk'],
+          ru: ['en', 'es', 'uk'],
+          uk: ['ru', 'en', 'es'],
+        },
+      },
+    });
 
     await startExercise(user, 'Пропущенные буквы');
 
@@ -1325,7 +1336,16 @@ describe('App navigation', () => {
 
   it('uses the configured complementary language in missing letters jumps', async () => {
     const user = userEvent.setup();
-    renderApp();
+    renderApp({
+      app: {
+        complementaryLanguages: {
+          en: ['es', 'ru', 'uk'],
+          es: ['ru', 'en', 'uk'],
+          ru: ['en', 'es', 'uk'],
+          uk: ['ru', 'en', 'es'],
+        },
+      },
+    });
 
     await startExercise(user, 'Пропущенные буквы');
 
@@ -1404,7 +1424,7 @@ describe('App navigation', () => {
       ),
     ).toHaveLength(1);
     expect(updatedJumpOptions.map((option) => option.textContent)).toEqual(
-      expect.arrayContaining([expect.stringContaining('aeropuerto (2)')]),
+      expect.arrayContaining([expect.stringContaining('аэропорт (2)')]),
     );
   });
 
@@ -1570,7 +1590,7 @@ describe('App navigation', () => {
     expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
     expect(getVisibleMissingLettersPrompt().answer).toBe(prompt.answer);
     expect(screen.getByRole('combobox', { name: 'Прыжки' })).toHaveTextContent(
-      prompt.es,
+      prompt.ru,
     );
   });
 
@@ -1614,10 +1634,16 @@ describe('App navigation', () => {
     });
   });
 
-  it('shows assistant character settings in the header', () => {
+  it('shows assistant character settings next to the player greeting', async () => {
+    const user = userEvent.setup();
     renderApp();
 
     expect(screen.getByLabelText('Персонаж')).toBeInTheDocument();
+
+    await user.hover(screen.getByTestId('player_greeting__root'));
+    const tooltip = await screen.findByTestId('player_greeting__tooltip');
+
+    expect(within(tooltip).queryByLabelText('Персонаж')).not.toBeInTheDocument();
     expect(
       screen.getByLabelText(/Испанский вингер: Взрывает фланг/),
     ).toBeInTheDocument();
@@ -1784,7 +1810,7 @@ describe('App navigation', () => {
     expect(
       within(exerciseHeader).getByTestId('exercise_finish_action__note'),
     ).toHaveTextContent(
-      'Можно делать гиперзвуковые прыжки между карточками.',
+      'Можно делать быстрые пасы между карточками.',
     );
     expect(
       screen.queryByRole('button', { name: 'Выберите игру' }),
@@ -2058,9 +2084,9 @@ describe('App navigation', () => {
     expect(screen.getByTestId('target_stats__answered_formula__total_value')).toHaveStyle({
       fontSize: '42px',
     });
-    expect(screen.getByTestId('target_stats__answered_formula__equals_icon')).toBeInTheDocument();
+    expect(screen.queryByTestId('target_stats__answered_formula__equals_icon')).not.toBeInTheDocument();
     expect(screen.queryByTestId('target_stats__answered_formula__correct_chip')).not.toBeInTheDocument();
-    expect(screen.getByTestId('target_stats__answered_formula__incorrect_chip')).toHaveTextContent(
+    expect(screen.getByTestId('target_stats__answered_formula__incorrect_text')).toHaveTextContent(
       '2 неверно',
     );
     await user.hover(screen.getByTestId('target_stats__answered_formula__total_value'));
@@ -2068,15 +2094,11 @@ describe('App navigation', () => {
       await screen.findByText('всего отвечено карточек во всех играх'),
     ).toBeInTheDocument();
     await user.unhover(screen.getByTestId('target_stats__answered_formula__total_value'));
-    await user.hover(screen.getByTestId('target_stats__answered_formula__incorrect_chip'));
-    expect(
-      await screen.findByText('количество карточек отвеченных неверно'),
-    ).toBeInTheDocument();
     expect(screen.getByTestId('target_stats__metrics')).toHaveStyle({
       display: 'grid',
       gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
     });
-    expect(screen.getByTestId('target_stats__answered_formula__value_group')).toHaveStyle({
+    expect(screen.getByTestId('target_stats__answered_formula__stats_root')).toHaveStyle({
       justifyContent: 'center',
     });
     expect(screen.getByTestId('target_stats__answered_formula__root')).toHaveStyle({
@@ -2199,7 +2221,7 @@ describe('App navigation', () => {
     ).toBeInTheDocument();
     expect(
       within(crosswordHeader).queryByText(
-        'Можно делать гиперзвуковые прыжки между карточками.',
+        'Можно делать быстрые пасы между карточками.',
       ),
     ).not.toBeInTheDocument();
     expect(
@@ -2288,8 +2310,8 @@ describe('App navigation', () => {
     expect(jumpOptions[1]).toHaveStyle({ backgroundColor: 'rgb(250, 246, 255)' });
     expect(jumpOptions.map((option) => option.textContent)).toEqual(
       expect.arrayContaining([
-        expect.stringContaining('vale la pena'),
-        expect.stringContaining('esperar con ganas'),
+        expect.stringContaining('оно того стоит'),
+        expect.stringContaining('с нетерпением ждать'),
       ]),
     );
 
@@ -2435,7 +2457,6 @@ describe('App navigation', () => {
     await expectCurrentPromptStats(user, firstCardId, 'Статистика по фразе', 0, 0);
     await answerMissingWordWrong(user);
 
-    expect(screen.getByText('Статистика по фразе')).toBeInTheDocument();
     await expectCurrentPromptStats(user, firstCardId, 'Статистика по фразе', 0, 1);
     expect(
       getByDataTestPrefix('attempt_summary__incorrect_answer_cells__'),
@@ -3011,8 +3032,10 @@ async function expectCurrentPromptStats(
   correct: number,
   incorrect: number,
 ) {
-  const chip = screen.getByTestId(`current_prompt_stats__chip__${cardId}`);
-  expect(chip).toHaveTextContent(statsLabel);
+  const chip = screen.getByTestId(`current_prompt_stats__icon_button__${cardId}`);
+  expect(chip).toHaveAccessibleName(
+    `${statsLabel}: Верно ${correct}, Неверно ${incorrect}`,
+  );
 
   await user.hover(chip);
 
@@ -3022,7 +3045,11 @@ async function expectCurrentPromptStats(
       `${statsLabel}: Верно ${correct}, Неверно ${incorrect}`,
     ),
   ).toBeInTheDocument();
-  expect(within(tooltip).getByText('10 последних ответов')).toBeInTheDocument();
+  if (correct + incorrect === 0) {
+    expect(within(tooltip).getByText('статистики пока нет')).toBeInTheDocument();
+  } else {
+    expect(within(tooltip).getByText('10 последних ответов')).toBeInTheDocument();
+  }
 }
 
 function getByDataTestPrefix(prefix: string): HTMLElement[] {

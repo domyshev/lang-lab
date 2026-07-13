@@ -278,8 +278,8 @@ function getOptionStyles({
 }
 
 const exerciseCardSetChipStyles = {
-  bgcolor: '#e7eefc',
-  border: '1px solid rgba(68, 94, 150, 0.26)',
+  bgcolor: '#f2f3f1',
+  border: '1px solid rgba(32, 48, 21, 0.18)',
   color: '#203015',
   fontWeight: 850,
   height: 30,

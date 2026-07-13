@@ -18,6 +18,8 @@ describe('RecentAnswersChip', () => {
     );
 
     const chip = screen.getByTestId('recent_answer__recent_stats_chip');
+    expect(chip).toHaveAccessibleName('Статистика последних ответов');
+    expect(chip).not.toHaveTextContent('Статистика последних ответов');
     await user.tab();
 
     expect(chip).toHaveFocus();

@@ -18,6 +18,8 @@ type I18nKey =
   | 'appWorld'
   | 'footballWorld'
   | 'forestWorld'
+  | 'footballWorldChoice'
+  | 'forestWorldChoice'
   | 'assistant'
   | 'assistantProfileLink'
   | 'assistantSuperpowersTitle'
@@ -32,6 +34,8 @@ type I18nKey =
   | 'playerAnonymousName'
   | 'practiceSettings'
   | 'complementaryLanguage'
+  | 'moveCompanionLanguageUp'
+  | 'moveCompanionLanguageDown'
   | 'correctStreakCooldownFivePlus'
   | 'correctStreakCooldownFour'
   | 'correctStreakCooldownThree'
@@ -173,8 +177,12 @@ type I18nKey =
   | 'forgetAndExit'
   | 'forgetExerciseTooltip'
   | 'finishExerciseAnytimeBenefit'
+  | 'finishExerciseJumpBenefitFootball'
+  | 'finishExerciseJumpBenefitForest'
   | 'finishExerciseAnytimeTooltip'
   | 'finishExerciseHypersonicJumpTooltip'
+  | 'finishExerciseJumpTooltipFootball'
+  | 'finishExerciseJumpTooltipForest'
   | 'finishExerciseNotice'
   | 'exerciseJumps'
   | 'exerciseJumpsTooltip'
@@ -195,6 +203,8 @@ type I18nKey =
   | 'gameHelpOwnTrainer'
   | 'gameHelpGotIt'
   | 'gameHelpNext'
+  | 'gameHelpBack'
+  | 'gameHelpPage'
   | 'gameHelpAiChatTitle'
   | 'gameHelpAiChatCards'
   | 'gameHelpAiChatGames'
@@ -223,6 +233,7 @@ type I18nKey =
   | 'resultStats'
   | 'wordStats'
   | 'phraseStats'
+  | 'cardTypePrefix'
   | 'wordLabel'
   | 'phraseLabel'
   | 'noMoreCardsInExercise'
@@ -273,6 +284,7 @@ type I18nKey =
   | 'targetIncorrectCardsTooltip'
   | 'correctInputTooltip'
   | 'recentAnswersTitle'
+  | 'noCardStatsYet'
   | 'recentAnswerStatsChip'
   | 'recent20AnswersTitle'
   | 'crosswordWordsDescription'
@@ -297,24 +309,28 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     targetLearningLanguage: 'Target learning language',
     targetLearningLanguages: 'Target learning languages',
     world: 'World',
-    appWorld: 'App world',
+    appWorld: 'Game world',
     footballWorld: 'Football',
-    forestWorld: 'Forest',
+    forestWorld: 'Forest Elves',
     assistant: 'Character',
     assistantProfileLink: 'Meet them properly',
     assistantSuperpowersTitle: 'Superpowers',
-    playerOnboardingTitle: 'What should we call you?',
+    playerOnboardingTitle: 'Game world setup',
     playerOnboardingBody:
       'Your Spain supporter flag will travel with you through the football language lab.',
+    footballWorldChoice: 'Football',
+    forestWorldChoice: 'Forest Elves',
     playerNameLabel: 'Player name',
     savePlayerName: 'Save',
     editPlayerName: 'Edit name',
     savePlayerNameChange: 'Save name',
-    continueAnonymously: 'Continue anonymously',
+    continueAnonymously: 'I forgot who I am',
     playerGreetingPrefix: 'Hello',
     playerAnonymousName: 'wanderer',
-    practiceSettings: 'Practice settings',
+    practiceSettings: 'Game settings',
     complementaryLanguage: 'Companion languages',
+    moveCompanionLanguageUp: 'Move up',
+    moveCompanionLanguageDown: 'Move down',
     correctStreakCooldownFivePlus: 'Last 5 or more answers correct',
     correctStreakCooldownFour: 'Last 4 answers correct',
     correctStreakCooldownThree: 'Last 3 answers correct',
@@ -481,10 +497,18 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
       'This game will not be included in statistics if you press this button.',
     finishExerciseAnytimeBenefit:
       'You can make hypersonic jumps between cards.',
+    finishExerciseJumpBenefitFootball:
+      'You can play quick passes between cards.',
+    finishExerciseJumpBenefitForest:
+      'You can follow elven trails between cards.',
     finishExerciseAnytimeTooltip:
       'You can finish the game at any moment - completed answers will still count.',
     finishExerciseHypersonicJumpTooltip:
       'A hypersonic jump moves you through space and bends the flow of time: the next card will be the one immediately after the card you choose.',
+    finishExerciseJumpTooltipFootball:
+      'A quick pass sends play to the chosen card: after it, the next card in the lineup gets the ball.',
+    finishExerciseJumpTooltipForest:
+      'An elven trail slips through the forest path: after the chosen card, the next card on the trail appears.',
     finishExerciseNotice:
       'Game results will be counted and the game will end.',
     exerciseJumps: 'Jumps',
@@ -514,6 +538,8 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
       'Unlike most apps, this is not a "dumb" trainer someone built for you. You create your own trainer and play by your own rules!',
     gameHelpGotIt: 'Got it!',
     gameHelpNext: 'Next',
+    gameHelpBack: 'Back',
+    gameHelpPage: 'Page',
     gameHelpAiChatTitle: 'AI helper chat inside the games',
     gameHelpAiChatCards:
       'The chat can create card sets from the words and phrases you bring into the lab.',
@@ -548,6 +574,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     resultStats: 'Statistics',
     wordStats: 'Word statistics',
     phraseStats: 'Phrase statistics',
+    cardTypePrefix: 'Type',
     wordLabel: 'Word',
     phraseLabel: 'Phrase',
     noMoreCardsInExercise: 'No more cards in this game.',
@@ -602,6 +629,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     targetIncorrectCardsTooltip: 'Number of cards answered incorrectly.',
     correctInputTooltip: 'The input was completed correctly.',
     recentAnswersTitle: 'Last 10 answers',
+    noCardStatsYet: 'no statistics yet',
     recentAnswerStatsChip: 'Recent answer statistics',
     recent20AnswersTitle: 'Last 20 answers',
     crosswordWordsDescription: 'Up to 6 words from the selected card set',
@@ -624,26 +652,30 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     interfaceLanguage: 'Язык интерфейса',
     targetLanguage: 'Цель',
     targetLearningLanguage: 'Язык - цель изучения',
-    targetLearningLanguages: 'Языки - цель изучения',
+    targetLearningLanguages: 'Язык - цель изучения',
     world: 'Мир',
-    appWorld: 'Мир приложения',
+    appWorld: 'Игровой мир',
     footballWorld: 'Футбол',
-    forestWorld: 'Лес',
+    forestWorld: 'Лесные эльфы',
     assistant: 'Персонаж',
     assistantProfileLink: 'Познакомиться поближе',
     assistantSuperpowersTitle: 'Супер-способности',
-    playerOnboardingTitle: 'Как тебя зовут?',
+    playerOnboardingTitle: 'Настройка игрового мира',
     playerOnboardingBody:
       'Флаг болельщика Испании будет путешествовать с тобой по футбольной языковой лаборатории.',
+    footballWorldChoice: 'Футбол',
+    forestWorldChoice: 'Лесные эльфы',
     playerNameLabel: 'Имя игрока',
     savePlayerName: 'Сохранить',
     editPlayerName: 'Изменить имя',
     savePlayerNameChange: 'Сохранить имя',
-    continueAnonymously: 'Продолжить анонимно',
+    continueAnonymously: 'я забыл кто я',
     playerGreetingPrefix: 'Привет',
     playerAnonymousName: 'странник',
-    practiceSettings: 'Настройки практики',
+    practiceSettings: 'Настройки игр',
     complementaryLanguage: 'Сопутствующие языки',
+    moveCompanionLanguageUp: 'Выше',
+    moveCompanionLanguageDown: 'Ниже',
     correctStreakCooldownFivePlus: 'Последние 5 и более раз верно',
     correctStreakCooldownFour: 'Последние 4 раза верно',
     correctStreakCooldownThree: 'Последние 3 раза верно',
@@ -811,10 +843,18 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
       'Эта игра не будет включена в статистику, если нажать эту кнопку.',
     finishExerciseAnytimeBenefit:
       'Можно делать гиперзвуковые прыжки между карточками.',
+    finishExerciseJumpBenefitFootball:
+      'Можно делать быстрые пасы между карточками.',
+    finishExerciseJumpBenefitForest:
+      'Можно ходить эльфийскими тропами между карточками.',
     finishExerciseAnytimeTooltip:
       'Можно закончить игру в любой момент - уже достигнутый результат будет зачтен.',
     finishExerciseHypersonicJumpTooltip:
       'Гиперзвуковой прыжок переносит тебя в пространстве и меняет ход времени: следующей карточкой станет та, которая идет сразу после выбранной.',
+    finishExerciseJumpTooltipFootball:
+      'Быстрый пас переводит игру на выбранную карточку: следующей станет та, что идет сразу после нее в составе.',
+    finishExerciseJumpTooltipForest:
+      'Эльфийская тропа мягко ведет к выбранной карточке: следующей станет та, что идет сразу после нее на тропе.',
     finishExerciseNotice:
       'Результаты игры будут зачтены, а игра закончена.',
     exerciseJumps: 'Прыжки',
@@ -845,6 +885,8 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
       'В отличие от большинства приложений это не "мертвый" тренажер, который кто-то сделал за вас. Вы сами создаете свой тренажер и играете по своим правилам!',
     gameHelpGotIt: 'Понятно!',
     gameHelpNext: 'Далее',
+    gameHelpBack: 'Назад',
+    gameHelpPage: 'Страница',
     gameHelpAiChatTitle: 'Чат AI-помощника в играх',
     gameHelpAiChatCards:
       'Чат AI-помощника умеет создавать наборы карточек из слов и фраз, которые ты приносишь в лабораторию.',
@@ -879,6 +921,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     resultStats: 'Статистика',
     wordStats: 'Статистика по слову',
     phraseStats: 'Статистика по фразе',
+    cardTypePrefix: 'Тип',
     wordLabel: 'Слово',
     phraseLabel: 'Фраза',
     noMoreCardsInExercise: 'Карточки для этой игры закончились.',
@@ -933,6 +976,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     targetIncorrectCardsTooltip: 'количество карточек отвеченных неверно',
     correctInputTooltip: 'Ввод был выполнен верно.',
     recentAnswersTitle: '10 последних ответов',
+    noCardStatsYet: 'статистики пока нет',
     recentAnswerStatsChip: 'Статистика последних ответов',
     recent20AnswersTitle: '20 последних ответов',
     crosswordWordsDescription: 'До 6 слов из выбранного набора карточек',
@@ -957,24 +1001,28 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     targetLearningLanguage: 'Idioma objetivo de estudio',
     targetLearningLanguages: 'Idiomas objetivo de estudio',
     world: 'Mundo',
-    appWorld: 'Mundo de la app',
+    appWorld: 'Mundo de juego',
     footballWorld: 'Futbol',
-    forestWorld: 'Bosque',
+    forestWorld: 'Elfos del bosque',
     assistant: 'Personaje',
     assistantProfileLink: 'Conocerlo mejor',
     assistantSuperpowersTitle: 'Superpoderes',
-    playerOnboardingTitle: 'Como te llamamos?',
+    playerOnboardingTitle: 'Configuracion del mundo de juego',
     playerOnboardingBody:
       'Tu bandera de hincha de Espana viajara contigo por el laboratorio futbolero.',
+    footballWorldChoice: 'Futbol',
+    forestWorldChoice: 'Elfos del bosque',
     playerNameLabel: 'Nombre de jugador',
     savePlayerName: 'Guardar',
     editPlayerName: 'Cambiar nombre',
     savePlayerNameChange: 'Guardar nombre',
-    continueAnonymously: 'Continuar anonimo',
+    continueAnonymously: 'olvide quien soy',
     playerGreetingPrefix: 'Hola',
     playerAnonymousName: 'viajero',
-    practiceSettings: 'Ajustes de practica',
+    practiceSettings: 'Ajustes de juegos',
     complementaryLanguage: 'Idiomas acompanantes',
+    moveCompanionLanguageUp: 'Subir',
+    moveCompanionLanguageDown: 'Bajar',
     correctStreakCooldownFivePlus: 'Ultimas 5 o mas respuestas correctas',
     correctStreakCooldownFour: 'Ultimas 4 respuestas correctas',
     correctStreakCooldownThree: 'Ultimas 3 respuestas correctas',
@@ -1143,10 +1191,18 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
       'Este juego no se incluira en las estadisticas si pulsas este boton.',
     finishExerciseAnytimeBenefit:
       'Puedes hacer saltos hipersonicos entre tarjetas.',
+    finishExerciseJumpBenefitFootball:
+      'Puedes dar pases rapidos entre tarjetas.',
+    finishExerciseJumpBenefitForest:
+      'Puedes seguir senderos elficos entre tarjetas.',
     finishExerciseAnytimeTooltip:
       'Puedes terminar el juego en cualquier momento: las respuestas completadas contaran.',
     finishExerciseHypersonicJumpTooltip:
       'Un salto hipersonico te mueve por el espacio y cambia el curso del tiempo: la siguiente tarjeta sera la que va justo despues de la elegida.',
+    finishExerciseJumpTooltipFootball:
+      'Un pase rapido manda la jugada a la tarjeta elegida: despues, la siguiente tarjeta de la alineacion recibe el balon.',
+    finishExerciseJumpTooltipForest:
+      'Un sendero elfico se desliza por el bosque: despues de la tarjeta elegida, aparece la siguiente del camino.',
     finishExerciseNotice:
       'Los resultados del juego se guardaran y el juego terminara.',
     exerciseJumps: 'Saltos',
@@ -1176,6 +1232,8 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
       'A diferencia de la mayoria de apps, esto no es un entrenador "tonto" hecho por otra persona. Tu creas tu propio entrenador y juegas con tus propias reglas!',
     gameHelpGotIt: 'Entendido!',
     gameHelpNext: 'Siguiente',
+    gameHelpBack: 'Atras',
+    gameHelpPage: 'Pagina',
     gameHelpAiChatTitle: 'Chat del asistente AI dentro de los juegos',
     gameHelpAiChatCards:
       'El chat puede crear conjuntos de tarjetas a partir de palabras y frases que traes al laboratorio.',
@@ -1210,6 +1268,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     resultStats: 'Estadisticas',
     wordStats: 'Estadisticas de la palabra',
     phraseStats: 'Estadisticas de la frase',
+    cardTypePrefix: 'Tipo',
     wordLabel: 'Palabra',
     phraseLabel: 'Frase',
     noMoreCardsInExercise: 'No quedan tarjetas en este juego.',
@@ -1264,6 +1323,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     targetIncorrectCardsTooltip: 'Numero de tarjetas respondidas incorrectamente.',
     correctInputTooltip: 'La entrada se completo correctamente.',
     recentAnswersTitle: '10 ultimas respuestas',
+    noCardStatsYet: 'aun no hay estadisticas',
     recentAnswerStatsChip: 'Estadísticas de respuestas recientes',
     recent20AnswersTitle: '20 ultimas respuestas',
     crosswordWordsDescription: 'Hasta 6 palabras del conjunto elegido',
@@ -1285,7 +1345,7 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   aiComposerLabel: 'Повідомлення AI-помічнику',
   aiSendMessage: 'Надіслати повідомлення',
   allCards: 'Усі картки',
-  appWorld: 'Світ застосунку',
+  appWorld: 'Ігровий світ',
   appName: 'Language Lab',
   assistant: 'Персонаж',
   cardSetLabel: 'Набір карток',
@@ -1296,14 +1356,26 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   chooseCardSetPlaceholder: 'Виберіть набір карток',
   chooseExercise: 'Виберіть гру',
   complementaryLanguage: 'Супутні мови',
-  continueAnonymously: 'Продовжити анонімно',
+  continueAnonymously: 'я забув хто я',
   crossword: 'Кросворд',
   editPlayerName: "Змінити ім'я",
   footballWorld: 'Футбол',
-  forestWorld: 'Ліс',
+  footballWorldChoice: 'Футбол',
+  forestWorld: 'Лісові ельфи',
+  forestWorldChoice: 'Лісові ельфи',
   finishExercise: 'Закінчити гру',
+  finishExerciseJumpBenefitFootball:
+    'Можна робити швидкі паси між картками.',
+  finishExerciseJumpBenefitForest:
+    'Можна ходити ельфійськими стежками між картками.',
+  finishExerciseJumpTooltipFootball:
+    'Швидкий пас переводить гру на вибрану картку: наступною стане та, що йде одразу після неї у складі.',
+  finishExerciseJumpTooltipForest:
+    'Ельфійська стежка м’яко веде до вибраної картки: наступною стане та, що йде одразу після неї на стежці.',
   game: 'Гра',
   gameHelpTitle: 'Допомога',
+  gameHelpBack: 'Назад',
+  gameHelpPage: 'Сторінка',
   gameLibrary: 'Бібліотека ігор',
   gamesTab: 'Грати',
   history: 'Історія',
@@ -1317,8 +1389,12 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   playerNameLabel: "Ім'я гравця",
   playerOnboardingBody:
     'Прапор уболівальника Іспанії подорожуватиме з тобою футбольною мовною лабораторією.',
-  playerOnboardingTitle: 'Як тебе називати?',
-  practiceSettings: 'Налаштування практики',
+  playerOnboardingTitle: 'Налаштування ігрового світу',
+  moveCompanionLanguageUp: 'Вище',
+  moveCompanionLanguageDown: 'Нижче',
+  noCardStatsYet: 'статистики поки немає',
+  practiceSettings: 'Налаштування ігор',
+  cardTypePrefix: 'Тип',
   resultsTitle: 'Результати',
   savePlayerName: 'Зберегти',
   savePlayerNameChange: "Зберегти ім'я",

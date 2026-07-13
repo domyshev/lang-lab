@@ -73,7 +73,8 @@ describe('HistoryView', () => {
       'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_stats_chip',
     );
     expect(recentStatsChip).toHaveRole('button');
-    expect(recentStatsChip).toHaveTextContent('Статистика последних ответов');
+    expect(recentStatsChip).toHaveAccessibleName('Статистика последних ответов');
+    expect(recentStatsChip).not.toHaveTextContent('Статистика последних ответов');
     expect(recentStatsChip).toHaveStyle({ cursor: 'pointer' });
     await user.hover(recentStatsChip);
     const airportTooltip = await screen.findByTestId(
@@ -217,7 +218,8 @@ describe('HistoryView', () => {
     const recentStatsChip = within(multipleChoiceRow).getByTestId(
       'history_view__detail_answer__attempt-choice-1%3Acard-vehicle__recent_stats_chip',
     );
-    expect(recentStatsChip).toHaveTextContent('Статистика последних ответов');
+    expect(recentStatsChip).toHaveAccessibleName('Статистика последних ответов');
+    expect(recentStatsChip).not.toHaveTextContent('Статистика последних ответов');
     await user.hover(recentStatsChip);
     expect(
       await screen.findByTestId(

@@ -13,7 +13,6 @@ describe('CrosswordExercise', () => {
       <CrosswordExercise
         interfaceLanguage="ru"
         cardSetName="Все карточки"
-        onCardSetOpen={vi.fn()}
         puzzle={{
           mode: 'words',
           bounds: { minRow: 0, maxRow: 2, minCol: 0, maxCol: 2 },
@@ -495,15 +494,11 @@ describe('CrosswordExercise', () => {
     expect(screen.getByLabelText('Crossword cell 1 3')).toHaveFocus();
   });
 
-  it('opens the selected card set from the crossword card set chip', async () => {
-    const user = userEvent.setup();
-    const onCardSetOpen = vi.fn();
-
+  it('shows the selected card set as a passive gray chip', () => {
     render(
       <CrosswordExercise
         interfaceLanguage="ru"
         cardSetName="Все карточки"
-        onCardSetOpen={onCardSetOpen}
         puzzle={{
           mode: 'words',
           bounds: { minRow: 0, maxRow: 0, minCol: 0, maxCol: 0 },
@@ -523,14 +518,11 @@ describe('CrosswordExercise', () => {
       />,
     );
 
-    await user.hover(screen.getByTestId('crossword_exercise__card_set_chip'));
-
-    expect(
-      await screen.findByText('Кликните чтобы перейти к списку карточек набора.'),
-    ).toBeInTheDocument();
-
-    await user.click(screen.getByTestId('crossword_exercise__card_set_chip'));
-
-    expect(onCardSetOpen).toHaveBeenCalled();
+    const chip = screen.getByTestId('crossword_exercise__card_set_chip');
+    expect(chip).toHaveTextContent('Набор карточек: Все карточки');
+    expect(chip).toHaveStyle({
+      backgroundColor: 'rgb(242, 243, 241)',
+      cursor: 'default',
+    });
   });
 });

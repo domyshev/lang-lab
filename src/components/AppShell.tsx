@@ -1,11 +1,13 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import MilitaryTechOutlinedIcon from '@mui/icons-material/MilitaryTechOutlined';
 import PsychologyOutlinedIcon from '@mui/icons-material/PsychologyOutlined';
 import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
 import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
 import {
@@ -18,6 +20,7 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -44,7 +47,6 @@ import {
   getDefaultAssistantIdForWorld,
   getWorldAccent,
   resolveWorldId,
-  worldDefinitions,
   worldIds,
 } from '../domain/worlds';
 import {
@@ -231,22 +233,30 @@ export function AppShell({
               value="game"
               label={t(interfaceLanguage, 'gamesTab')}
               onClick={() => onNavigate?.('game')}
-              style={{
-                backgroundColor: 'rgb(255, 247, 205)',
-                borderRadius: '999px',
-              }}
               sx={{
-                border: '1px solid rgba(206, 157, 29, 0.34)',
+                background:
+                  'linear-gradient(180deg, #fff6a7 0%, #ffd447 47%, #f28b18 100%)',
+                border: '1px solid rgba(116, 63, 8, 0.28)',
+                borderRadius: '999px',
                 boxShadow:
-                  'inset 0 1px 0 rgba(255,255,255,0.9), 0 0 0 4px rgba(255, 218, 96, 0.18)',
+                  'inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -4px 0 rgba(121, 68, 8, 0.18), 0 5px 0 rgba(127, 70, 8, 0.28), 0 10px 18px rgba(178, 83, 12, 0.20)',
                 color: '#203015',
                 fontWeight: '950 !important',
                 minHeight: '34px !important',
                 minWidth: '0 !important',
                 px: { xs: 1.25, sm: 2.25 },
+                textShadow: '0 1px 0 rgba(255,255,255,0.62)',
+                transition:
+                  'transform 150ms ease, box-shadow 150ms ease, filter 150ms ease',
+                '&:hover': {
+                  filter: 'saturate(1.08) brightness(1.03)',
+                  transform: 'translateY(-1px)',
+                },
                 '&.Mui-selected': {
+                  background:
+                    'linear-gradient(180deg, #fff16d 0%, #ffc31f 43%, #e85f00 100%)',
                   boxShadow:
-                    'inset 0 1px 0 rgba(255,255,255,0.9), 0 0 0 5px rgba(255, 203, 74, 0.24)',
+                    'inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -4px 0 rgba(121, 68, 8, 0.22), 0 5px 0 rgba(127, 70, 8, 0.34), 0 12px 22px rgba(198, 78, 0, 0.26), 0 0 0 4px rgba(255, 221, 76, 0.28)',
                   color: '#203015',
                 },
               }}
@@ -469,15 +479,123 @@ function PlayerGreeting({
   const resolvedAssistantId = resolveAssistantId(assistantId, worldId);
   const visibleAssistants = getVisibleAssistantCharacters(worldId);
   const [draftName, setDraftName] = useState(name);
+  const [isEditingName, setIsEditingName] = useState(false);
 
   useEffect(() => {
     setDraftName(name);
+    setIsEditingName(false);
   }, [name]);
 
+  const saveDraftName = () => {
+    onNameChange(draftName);
+    setIsEditingName(false);
+  };
+
+  const assistantSelect = (
+    <Box
+      data-test="player_greeting__assistant_slot"
+      sx={{
+        alignItems: 'center',
+        bgcolor: (theme) =>
+          theme.palette.mode === 'dark'
+            ? 'rgba(246, 240, 255, 0.08)'
+            : 'rgba(245, 249, 235, 0.88)',
+        border: '1px solid rgba(118, 146, 79, 0.22)',
+        borderRadius: 999,
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.64)',
+        display: 'flex',
+        flexShrink: 0,
+        height: 36,
+        justifyContent: 'center',
+        marginLeft: '10px',
+        width: 56,
+      }}
+    >
+      <Select
+        aria-label={t(interfaceLanguage, 'assistant')}
+        data-test="player_greeting__assistant_select"
+        value={resolvedAssistantId}
+        variant="standard"
+        disableUnderline
+        onChange={(event: SelectChangeEvent<AssistantId>) =>
+          onAssistantChange(event.target.value as AssistantId)
+        }
+        renderValue={(value) => (
+          <AssistantStickerIcon
+            ariaLabel={getAssistantTooltip(value, interfaceLanguage, worldId)}
+            assistantId={value}
+            dataTest={`player_greeting__assistant_selected_sticker__${value}`}
+            size={28}
+            worldId={worldId}
+          />
+        )}
+        sx={{
+          height: 34,
+          minWidth: 48,
+          '& .MuiSelect-select': {
+            alignItems: 'center',
+            display: 'flex',
+            justifyContent: 'center',
+            pl: 0.25,
+            pr: '17px !important',
+            py: 0,
+          },
+          '& .MuiSelect-icon': {
+            fontSize: 18,
+            right: 0,
+          },
+        }}
+      >
+        {visibleAssistants.map((assistant) => {
+          const tooltip = getAssistantTooltip(
+            assistant.id,
+            interfaceLanguage,
+            worldId,
+          );
+          return (
+            <MenuItem
+              aria-label={tooltip}
+              data-test={`player_greeting__assistant_option__${assistant.id}`}
+              key={assistant.id}
+              value={assistant.id}
+              sx={{ justifyContent: 'center' }}
+            >
+              <Tooltip arrow title={tooltip}>
+                <Box
+                  component="span"
+                  data-test={`player_greeting__assistant_option_icon__${assistant.id}`}
+                  sx={{ display: 'inline-flex' }}
+                >
+                  <AssistantStickerIcon
+                    ariaLabel={tooltip}
+                    assistantId={assistant.id}
+                    dataTest={`player_greeting__assistant_option_sticker__${assistant.id}`}
+                    size={36}
+                    worldId={worldId}
+                  />
+                </Box>
+              </Tooltip>
+            </MenuItem>
+          );
+        })}
+      </Select>
+    </Box>
+  );
+
   return (
-    <Tooltip
-      arrow
-      title={
+    <Stack
+      direction="row"
+      sx={{
+        alignItems: 'center',
+        flexShrink: 0,
+        justifyContent: 'center',
+        minWidth: 0,
+      }}
+    >
+      <Tooltip
+        arrow
+        disableInteractive={false}
+        title={
         <Box
           data-test="player_greeting__tooltip"
           sx={{
@@ -556,18 +674,115 @@ function PlayerGreeting({
                 </Typography>
               </Box>
             </Stack>
-            <Typography
-              data-test="player_greeting__tooltip_name"
+            <Stack
+              direction="row"
               sx={{
-                color: (theme) =>
-                  theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
-                fontSize: 14,
-                fontWeight: 900,
-                lineHeight: 1.2,
+                alignItems: 'center',
+                gap: 0.75,
+                justifyContent: 'space-between',
+                minWidth: 0,
               }}
             >
-              {name}
-            </Typography>
+              {isEditingName ? (
+                <TextField
+                  autoFocus
+                  data-test="player_greeting__edit_name_input"
+                  hiddenLabel
+                  inputProps={{
+                    'aria-label': t(interfaceLanguage, 'editPlayerName'),
+                  }}
+                  size="small"
+                  value={draftName}
+                  onChange={(event) => setDraftName(event.target.value)}
+                  onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      saveDraftName();
+                    }
+                  }}
+                  sx={{
+                    minWidth: 0,
+                    width: 170,
+                    '& .MuiInputBase-root': {
+                      bgcolor: (theme) =>
+                        theme.palette.mode === 'dark'
+                          ? 'rgba(255, 255, 255, 0.08)'
+                          : 'rgba(245, 249, 235, 0.92)',
+                      borderRadius: 1.5,
+                      fontSize: 14,
+                      fontWeight: 850,
+                      height: 32,
+                    },
+                    '& .MuiInputBase-input': {
+                      py: 0.3,
+                    },
+                  }}
+                />
+              ) : (
+                <Typography
+                  data-test="player_greeting__tooltip_name"
+                  sx={{
+                    color: (theme) =>
+                      theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
+                    fontSize: 14,
+                    fontWeight: 900,
+                    lineHeight: 1.2,
+                    minWidth: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {name}
+                </Typography>
+              )}
+              <IconButton
+                aria-label={t(
+                  interfaceLanguage,
+                  isEditingName ? 'savePlayerNameChange' : 'editPlayerName',
+                )}
+                data-test={
+                  isEditingName
+                    ? 'player_greeting__save_name_button'
+                    : 'player_greeting__edit_name_button'
+                }
+                size="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (isEditingName) {
+                    saveDraftName();
+                    return;
+                  }
+                  setIsEditingName(true);
+                }}
+                onMouseDown={(event) => event.preventDefault()}
+                sx={{
+                  bgcolor: (theme) =>
+                    theme.palette.mode === 'dark'
+                      ? 'rgba(246, 240, 255, 0.10)'
+                      : 'rgba(24, 119, 201, 0.10)',
+                  border: '1px solid rgba(24, 119, 201, 0.22)',
+                  color: (theme) =>
+                    theme.palette.mode === 'dark' ? '#d8cdf8' : '#1877c9',
+                  flexShrink: 0,
+                  height: 28,
+                  width: 28,
+                  '&:hover': {
+                    bgcolor: (theme) =>
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(246, 240, 255, 0.18)'
+                        : 'rgba(24, 119, 201, 0.18)',
+                  },
+                }}
+              >
+                {isEditingName ? (
+                  <SaveOutlinedIcon fontSize="inherit" />
+                ) : (
+                  <EditOutlinedIcon fontSize="inherit" />
+                )}
+              </IconButton>
+            </Stack>
             <Typography
               data-test="player_greeting__level_explanation"
               sx={{
@@ -579,225 +794,108 @@ function PlayerGreeting({
             >
               {playerLevel.description}
             </Typography>
-            <Stack
-              data-test="player_greeting__edit_name_form"
-              spacing={0.75}
-              sx={{
-                bgcolor: (theme) =>
-                  theme.palette.mode === 'dark'
-                    ? 'rgba(255, 255, 255, 0.06)'
-                    : 'rgba(245, 249, 235, 0.86)',
-                border: '1px solid rgba(118, 146, 79, 0.24)',
-                borderRadius: 2,
-                p: 1,
-              }}
-            >
-              <TextField
-                data-test="player_greeting__edit_name_input"
-                label={t(interfaceLanguage, 'editPlayerName')}
-                size="small"
-                value={draftName}
-                onChange={(event) => setDraftName(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    onNameChange(draftName);
-                  }
-                }}
-              />
-              <Button
-                data-test="player_greeting__save_name_button"
-                size="small"
-                variant="outlined"
-                onClick={() => onNameChange(draftName)}
-                sx={{
-                  alignSelf: 'flex-end',
-                  borderColor: 'rgba(198, 11, 30, 0.34)',
-                  color: '#7c1518',
-                  fontWeight: 900,
-                  textTransform: 'none',
-                }}
-              >
-                {t(interfaceLanguage, 'savePlayerNameChange')}
-              </Button>
-            </Stack>
           </Stack>
         </Box>
-      }
-      slotProps={{
-        arrow: {
-          sx: {
-            color: (theme) =>
-              theme.palette.mode === 'dark'
-                ? 'rgba(29, 26, 43, 0.98)'
-                : 'rgba(255, 255, 255, 0.98)',
+        }
+        slotProps={{
+          arrow: {
+            sx: {
+              color: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? 'rgba(29, 26, 43, 0.98)'
+                  : 'rgba(255, 255, 255, 0.98)',
+            },
           },
-        },
-        tooltip: {
-          sx: {
-            bgcolor: (theme) =>
-              theme.palette.mode === 'dark'
-                ? 'rgba(29, 26, 43, 0.98)'
-                : 'rgba(255, 255, 255, 0.98)',
-            boxShadow: '0 10px 24px rgba(32, 45, 26, 0.16)',
-            color: (theme) =>
-              theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
-            fontSize: 14,
-            fontWeight: 800,
-            px: 1.5,
-            py: 1,
+          tooltip: {
+            sx: {
+              bgcolor: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? 'rgba(29, 26, 43, 0.98)'
+                  : 'rgba(255, 255, 255, 0.98)',
+              boxShadow: '0 10px 24px rgba(32, 45, 26, 0.16)',
+              color: (theme) =>
+                theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
+              fontSize: 14,
+              fontWeight: 800,
+              px: 1.5,
+              py: 1,
+            },
           },
-        },
-      }}
-    >
-      <Stack
-        data-test="player_greeting__root"
-        direction="row"
-        sx={{
-          alignItems: 'center',
-          alignSelf: 'center',
-          bgcolor: 'rgba(255, 251, 226, 0.72)',
-          border: '1px solid rgba(131, 88, 17, 0.18)',
-          borderRadius: 999,
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.74)',
-          boxSizing: 'border-box',
-          cursor: 'default',
-          flexShrink: 0,
-          justifyContent: 'center',
-          maxWidth: 230,
-          minHeight: 36,
-          overflow: 'hidden',
-          position: 'relative',
-          py: 0,
-          userSelect: 'none',
-          width: 'fit-content',
         }}
       >
-        <Box
-          data-test="player_greeting__avatar_slot"
+        <Stack
+          data-test="player_greeting__root"
+          direction="row"
           sx={{
             alignItems: 'center',
-            display: 'flex',
-            justifyContent: 'center',
-            left: 6,
-            position: 'absolute',
-            top: '50%',
-            transform: 'translateY(-50%)',
-          }}
-        >
-          <PlayerPixelAvatar
-            ariaLabel={name}
-            country={avatarCountry}
-            dataTest="player_greeting__avatar"
-            seed={avatarSeed}
-            size={30}
-          />
-        </Box>
-        <Typography
-          data-test="player_greeting__label"
-          noWrap
-          sx={{
-            color: '#203015',
-            alignItems: 'center',
+            alignSelf: 'center',
+            bgcolor: 'rgba(255, 251, 226, 0.72)',
+            border: '1px solid rgba(131, 88, 17, 0.18)',
+            borderRadius: 999,
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.74)',
+            boxSizing: 'border-box',
             cursor: 'default',
-            display: 'flex',
-            fontSize: 14,
-            fontWeight: 950,
+            flexShrink: 1,
             justifyContent: 'center',
-            lineHeight: 1,
+            maxWidth: 345,
+            minHeight: 36,
             minWidth: 0,
             overflow: 'hidden',
-            pl: 5,
-            pr: 5,
-            textAlign: 'center',
-            textOverflow: 'ellipsis',
-            textShadow: '0 1px 0 rgba(255,255,255,0.74)',
-            whiteSpace: 'nowrap',
-            width: '100%',
+            position: 'relative',
+            py: 0,
+            userSelect: 'none',
+            width: 'fit-content',
           }}
         >
-          {name}
-        </Typography>
-        <Box
-          data-test="player_greeting__assistant_slot"
-          sx={{
-            alignItems: 'center',
-            display: 'flex',
-            justifyContent: 'center',
-            position: 'absolute',
-            right: 2,
-            top: '50%',
-            transform: 'translateY(-50%)',
-          }}
-        >
-          <Select
-            aria-label={t(interfaceLanguage, 'assistant')}
-            data-test="player_greeting__assistant_select"
-            value={resolvedAssistantId}
-            variant="standard"
-            disableUnderline
-            onChange={(event: SelectChangeEvent<AssistantId>) =>
-              onAssistantChange(event.target.value as AssistantId)
-            }
-            renderValue={(value) => (
-              <AssistantStickerIcon
-                ariaLabel={getAssistantTooltip(value, interfaceLanguage, worldId)}
-                assistantId={value}
-                dataTest={`player_greeting__assistant_selected_sticker__${value}`}
-                size={26}
-                worldId={worldId}
-              />
-            )}
+          <Box
+            data-test="player_greeting__avatar_slot"
             sx={{
-              height: 30,
-              minWidth: 42,
-              '& .MuiSelect-select': {
-                alignItems: 'center',
-                display: 'flex',
-                justifyContent: 'center',
-                p: 0,
-              },
-              '& .MuiSelect-icon': {
-                fontSize: 18,
-                right: -2,
-              },
+              alignItems: 'center',
+              display: 'flex',
+              justifyContent: 'center',
+              left: 6,
+              position: 'absolute',
+              top: '50%',
+              transform: 'translateY(-50%)',
             }}
           >
-            {visibleAssistants.map((assistant) => {
-              const tooltip = getAssistantTooltip(
-                assistant.id,
-                interfaceLanguage,
-                worldId,
-              );
-              return (
-                <MenuItem
-                  aria-label={tooltip}
-                  data-test={`player_greeting__assistant_option__${assistant.id}`}
-                  key={assistant.id}
-                  value={assistant.id}
-                  sx={{ justifyContent: 'center' }}
-                >
-                  <Tooltip arrow title={tooltip}>
-                    <Box
-                      component="span"
-                      data-test={`player_greeting__assistant_option_icon__${assistant.id}`}
-                      sx={{ display: 'inline-flex' }}
-                    >
-                      <AssistantStickerIcon
-                        ariaLabel={tooltip}
-                        assistantId={assistant.id}
-                        dataTest={`player_greeting__assistant_option_sticker__${assistant.id}`}
-                        size={36}
-                        worldId={worldId}
-                      />
-                    </Box>
-                  </Tooltip>
-                </MenuItem>
-              );
-            })}
-          </Select>
-        </Box>
-      </Stack>
-    </Tooltip>
+            <PlayerPixelAvatar
+              ariaLabel={name}
+              country={avatarCountry}
+              dataTest="player_greeting__avatar"
+              seed={avatarSeed}
+              size={30}
+            />
+          </Box>
+          <Typography
+            data-test="player_greeting__label"
+            noWrap
+            sx={{
+              color: '#203015',
+              alignItems: 'center',
+              cursor: 'default',
+              display: 'flex',
+              fontSize: 14,
+              fontWeight: 950,
+              justifyContent: 'center',
+              lineHeight: 1,
+              minWidth: 0,
+              overflow: 'hidden',
+              pl: 5,
+              pr: 2,
+              textAlign: 'center',
+              textOverflow: 'ellipsis',
+              textShadow: '0 1px 0 rgba(255,255,255,0.74)',
+              whiteSpace: 'nowrap',
+              width: '100%',
+            }}
+          >
+            {name}
+          </Typography>
+        </Stack>
+      </Tooltip>
+      {assistantSelect}
+    </Stack>
   );
 }
 
@@ -1058,7 +1156,7 @@ function PlayerOnboardingDialog({
   const [name, setName] = useState('');
   const [selectedAssistantId, setSelectedAssistantId] =
     useState<AssistantId | ''>('');
-  const [selectedWorldId, setSelectedWorldId] = useState<WorldId | ''>('');
+  const [selectedWorldId, setSelectedWorldId] = useState<WorldId>('forest');
   const [selectedInterfaceLanguage, setSelectedInterfaceLanguage] = useState<
     SupportedLanguage | ''
   >('');
@@ -1066,13 +1164,7 @@ function PlayerOnboardingDialog({
     SupportedLanguage | ''
   >('');
   const trimmedName = name.trim();
-  const previewSeed = trimmedName
-    ? createPlayerAvatarSeed(trimmedName)
-    : 'player:anonymous-preview';
   const resolvedSelectedWorldId = selectedWorldId || worldId;
-  const previewCountry = selectedAssistantId
-    ? getPlayerSupporterCountry(resolvedSelectedWorldId, selectedAssistantId)
-    : getPlayerSupporterCountry(resolvedSelectedWorldId, assistantId);
   const copyLanguage = selectedInterfaceLanguage || 'en';
   const visibleAssistants = getVisibleAssistantCharacters(resolvedSelectedWorldId);
   const isReady = Boolean(
@@ -1111,28 +1203,11 @@ function PlayerOnboardingDialog({
       </DialogTitle>
       <DialogContent data-test="player_onboarding__content">
         <Stack spacing={2} sx={{ pt: 0.5 }}>
-          <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
-            <PlayerPixelAvatar
-              ariaLabel={trimmedName || t(copyLanguage, 'playerAnonymousName')}
-              country={previewCountry}
-              dataTest="player_onboarding__avatar_preview"
-              seed={previewSeed}
-              size={54}
-            />
-            <Typography
-              data-test="player_onboarding__body"
-              sx={{ color: 'text.secondary', lineHeight: 1.35 }}
-            >
-              {t(copyLanguage, 'playerOnboardingBody')}
-            </Typography>
-          </Stack>
           <Stack
             data-test="player_onboarding__world_choice"
             sx={{
-              borderRadius: 3,
-              boxShadow:
-                '0 12px 22px rgba(32, 48, 21, 0.16), inset 0 1px 0 rgba(255,255,255,0.86)',
-              overflow: 'hidden',
+              gap: '8px',
+              overflow: 'visible',
             }}
           >
             <Button
@@ -1146,23 +1221,18 @@ function PlayerOnboardingDialog({
               sx={getWorldChoiceButtonSx('forest', selectedWorldId === 'forest')}
             >
               <PlayerPixelAvatar
-                ariaLabel={worldDefinitions.forest.label[copyLanguage]}
                 country="forest"
                 dataTest="player_onboarding__world_icon__forest"
                 seed="onboarding-world-forest"
                 size={32}
               />
-              I love the forest
+              <Typography
+                component="span"
+                sx={{ fontSize: 17, fontWeight: 950, lineHeight: 1.1 }}
+              >
+                {t(copyLanguage, 'forestWorldChoice')}
+              </Typography>
             </Button>
-            <Box
-              aria-hidden="true"
-              data-test="player_onboarding__world_divider"
-              sx={{
-                bgcolor: 'rgba(32, 48, 21, 0.28)',
-                height: 3,
-                transform: 'skewX(-11deg)',
-              }}
-            />
             <Button
               aria-pressed={selectedWorldId === 'football'}
               data-test="player_onboarding__world_button__football"
@@ -1176,14 +1246,16 @@ function PlayerOnboardingDialog({
                 selectedWorldId === 'football',
               )}
             >
-              <PlayerPixelAvatar
-                ariaLabel={worldDefinitions.football.label[copyLanguage]}
-                country="spain"
+              <FootballWorldIcon
                 dataTest="player_onboarding__world_icon__football"
-                seed="onboarding-world-football"
                 size={32}
               />
-              I adore football
+              <Typography
+                component="span"
+                sx={{ fontSize: 17, fontWeight: 950, lineHeight: 1.1 }}
+              >
+                {t(copyLanguage, 'footballWorldChoice')}
+              </Typography>
             </Button>
           </Stack>
           <Stack
@@ -1303,22 +1375,8 @@ function PlayerOnboardingDialog({
       </DialogContent>
       <DialogActions
         data-test="player_onboarding__actions"
-        sx={{ justifyContent: 'space-between', px: 3, pb: 2.5 }}
+        sx={{ justifyContent: 'flex-end', px: 3, pb: 2.5 }}
       >
-        <Button
-          data-test="player_onboarding__anonymous_button"
-          disabled={!isReady}
-          variant="outlined"
-          onClick={() => complete('')}
-          sx={{
-            borderColor: 'rgba(32, 48, 21, 0.24)',
-            color: '#516143',
-            fontWeight: 850,
-            textTransform: 'none',
-          }}
-        >
-          {t(copyLanguage, 'continueAnonymously')}
-        </Button>
         <Button
           data-test="player_onboarding__save_button"
           disabled={!trimmedName || !isReady}
@@ -1345,34 +1403,123 @@ function PlayerOnboardingDialog({
   );
 }
 
+function FootballWorldIcon({
+  dataTest,
+  size,
+}: {
+  dataTest: string;
+  size: number;
+}) {
+  return (
+    <Box
+      aria-hidden="true"
+      component="svg"
+      data-test={dataTest}
+      focusable="false"
+      viewBox="0 0 64 64"
+      sx={{
+        display: 'block',
+        filter:
+          'drop-shadow(0 4px 0 rgba(60, 24, 14, 0.2)) drop-shadow(0 8px 12px rgba(32, 48, 21, 0.16))',
+        height: size,
+        width: size,
+      }}
+    >
+      <defs>
+        <radialGradient id="football-world-ball-glow" cx="32%" cy="24%" r="72%">
+          <stop offset="0" stopColor="#fffdf4" />
+          <stop offset="0.48" stopColor="#f8f1d7" />
+          <stop offset="1" stopColor="#e4d3ac" />
+        </radialGradient>
+        <linearGradient id="football-world-ball-shine" x1="12" x2="48" y1="8" y2="54">
+          <stop offset="0" stopColor="rgba(255,255,255,0.9)" />
+          <stop offset="0.58" stopColor="rgba(255,255,255,0.16)" />
+          <stop offset="1" stopColor="rgba(51,23,16,0.22)" />
+        </linearGradient>
+      </defs>
+      <circle
+        cx="32"
+        cy="32"
+        r="27"
+        fill="url(#football-world-ball-glow)"
+        stroke="#6f2f1c"
+        strokeWidth="3"
+      />
+      <path
+        d="M32 17 43 25 39 39H25L21 25Z"
+        fill="#203015"
+        opacity="0.9"
+      />
+      <path
+        d="M32 17V7M43 25l10-4M39 39l7 9M25 39l-7 9M21 25l-10-4"
+        fill="none"
+        stroke="#203015"
+        strokeLinecap="round"
+        strokeWidth="3"
+      />
+      <path
+        d="M13 36c9 8 27 10 39 0M19 13c8 9 20 12 31 8"
+        fill="none"
+        stroke="#c60b1e"
+        strokeLinecap="round"
+        strokeWidth="3"
+        opacity="0.75"
+      />
+      <path
+        d="M18 16c8-9 24-12 36 2"
+        fill="none"
+        stroke="#ffc400"
+        strokeLinecap="round"
+        strokeWidth="4"
+        opacity="0.86"
+      />
+      <circle cx="32" cy="32" r="27" fill="url(#football-world-ball-shine)" />
+    </Box>
+  );
+}
+
 function getWorldChoiceButtonSx(world: WorldId, isSelected: boolean) {
   const forestSx = {
     background:
       'linear-gradient(135deg, #f4ffd8 0%, #b8ec9d 46%, #7fd4b0 100%)',
     color: '#1f3c1c',
+    glow: 'rgba(95, 155, 62, 0.36)',
+    line: '#4f8e5b',
+    lineSoft: '#7bae63',
   };
   const footballSx = {
     background:
       'linear-gradient(135deg, #fff1a8 0%, #ffc400 36%, #c60b1e 100%)',
     color: '#331710',
+    glow: 'rgba(198, 11, 30, 0.35)',
+    line: '#8b1b16',
+    lineSoft: '#b24b2a',
   };
+  const palette = world === 'forest' ? forestSx : footballSx;
 
   return {
-    ...(world === 'forest' ? forestSx : footballSx),
-    borderRadius: 0,
+    background: palette.background,
+    color: palette.color,
+    border: '2px solid',
+    borderColor: isSelected ? palette.line : palette.lineSoft,
+    borderRadius: 3,
     boxShadow: isSelected
-      ? 'inset 0 0 0 3px rgba(18, 60, 105, 0.72)'
-      : 'inset 0 1px 0 rgba(255,255,255,0.7)',
+      ? `0 0 0 3px rgba(255, 253, 244, 0.9), 0 0 20px ${palette.glow}, 0 14px 26px rgba(32, 48, 21, 0.22), inset 0 -8px 16px rgba(32, 48, 21, 0.08)`
+      : `0 0 14px ${palette.glow}, 0 7px 15px rgba(32, 48, 21, 0.12), inset 0 1px 0 rgba(255,255,255,0.78)`,
     fontSize: 17,
     fontWeight: 950,
-    gap: 1,
+    gap: 1.15,
     justifyContent: 'flex-start',
-    minHeight: 56,
+    minHeight: 58,
     px: 2,
     textTransform: 'none',
+    transition:
+      'box-shadow 160ms ease, filter 160ms ease, opacity 160ms ease',
     '&:hover': {
-      filter: 'saturate(1.08)',
-      transform: 'translateY(-1px)',
+      filter: 'saturate(1.12) brightness(1.02)',
+      boxShadow: isSelected
+        ? `0 0 0 3px rgba(255, 253, 244, 0.96), 0 0 24px ${palette.glow}, 0 16px 30px rgba(32, 48, 21, 0.25), inset 0 -8px 16px rgba(32, 48, 21, 0.08)`
+        : `0 0 18px ${palette.glow}, 0 11px 22px rgba(32, 48, 21, 0.17), inset 0 1px 0 rgba(255,255,255,0.84)`,
     },
   };
 }

@@ -54,6 +54,27 @@ describe('MultipleChoiceExercise', () => {
     ).toHaveStyle({ marginTop: '8px' });
   });
 
+  it('hides translations for unchecked companion languages', () => {
+    render(
+      <MultipleChoiceExercise
+        complementaryLanguages={['es']}
+        interfaceLanguage="ru"
+        prompt={prompt}
+        onAnswer={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByTestId('multiple_choice_exercise__prompt_hint__airport__primary'),
+    ).toHaveTextContent('es: aeropuerto');
+    expect(
+      screen.queryByTestId(
+        'multiple_choice_exercise__prompt_hint__airport__secondary__ru',
+      ),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows white answer options and marks the selected result before next', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();

@@ -20,7 +20,7 @@ describe('worlds', () => {
 
   it('provides distinct football and forest visual tokens', () => {
     expect(getWorldDefinition('football').label.ru).toBe('Футбол');
-    expect(getWorldDefinition('forest').label.ru).toBe('Лес');
+    expect(getWorldDefinition('forest').label.ru).toBe('Лесные эльфы');
 
     expect(getWorldAccent('football').main).toBe('#1877c9');
     expect(getWorldAccent('forest').main).toBe('#75a843');

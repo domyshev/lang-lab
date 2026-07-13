@@ -15,7 +15,7 @@ describe('appSlice language preferences', () => {
     );
   });
 
-  it('stores up to two companion languages per target language', () => {
+  it('stores ordered companion languages per target language', () => {
     const state = appReducer(
       undefined,
       setComplementaryLanguagesForTarget({
@@ -24,7 +24,7 @@ describe('appSlice language preferences', () => {
       }),
     );
 
-    expect(state.complementaryLanguages.en).toEqual(['es', 'uk']);
+    expect(state.complementaryLanguages.en).toEqual(['es', 'uk', 'ru']);
     expect(getComplementaryLanguageForTarget(state.complementaryLanguages, 'en')).toBe(
       'es',
     );
@@ -34,11 +34,11 @@ describe('appSlice language preferences', () => {
     expect(getComplementaryLanguages({ en: 'es' }).en).toEqual(['es']);
   });
 
-  it('removes companion languages that match the interface or target language', () => {
+  it('keeps interface language independent from companion ordering', () => {
     const withCompanions = appReducer(
       undefined,
       setComplementaryLanguagesForTarget({
-        complementaryLanguages: ['ru', 'es'],
+        complementaryLanguages: ['ru', 'es', 'uk'],
         targetLanguage: 'en',
       }),
     );
@@ -48,8 +48,17 @@ describe('appSlice language preferences', () => {
     );
     const withSpanishTarget = appReducer(withRussianInterface, setTargetLanguage('es'));
 
-    expect(withRussianInterface.complementaryLanguages.en).toEqual(['es']);
-    expect(withSpanishTarget.complementaryLanguages.es).not.toContain('ru');
+    expect(withRussianInterface.complementaryLanguages.en).toEqual([
+      'ru',
+      'es',
+      'uk',
+    ]);
+    expect(withSpanishTarget.complementaryLanguages.es).toContain('ru');
     expect(withSpanishTarget.complementaryLanguages.es).not.toContain('es');
+  });
+
+  it('defaults companion languages to every non-target language', () => {
+    expect(getComplementaryLanguages().en).toEqual(['ru', 'es', 'uk']);
+    expect(getComplementaryLanguages().ru).toEqual(['en', 'es', 'uk']);
   });
 });

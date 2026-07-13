@@ -32,10 +32,7 @@ import { footballResultColors } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
 import type { WorldResultColors } from '../../domain/worlds';
-import {
-  CursorAnchoredTooltip,
-  TooltipContent,
-} from '../CursorAnchoredTooltip';
+import { CursorAnchoredTooltip } from '../CursorAnchoredTooltip';
 import { GameWarningIcon, GameWarningTooltip } from '../GameWarningTooltip';
 import {
   ExerciseProgressChip,
@@ -54,7 +51,6 @@ export type CrosswordDraftState = {
 export function CrosswordExercise({
   interfaceLanguage = 'en',
   onDraftChange,
-  onCardSetOpen,
   puzzle,
   recentResultsByCardId = {},
   resultColors = footballResultColors,
@@ -66,7 +62,6 @@ export function CrosswordExercise({
 }: {
   interfaceLanguage?: SupportedLanguage;
   onDraftChange?: (state: CrosswordDraftState) => void;
-  onCardSetOpen?: () => void;
   puzzle: CrosswordPuzzle;
   recentResultsByCardId?: Record<
     string,
@@ -252,25 +247,12 @@ export function CrosswordExercise({
               sx={{ alignItems: 'center', flexWrap: 'wrap' }}
             >
               {cardSetName && (
-                <CursorAnchoredTooltip
-                  arrowDataTest="crossword_exercise__card_set_chip_tooltip_arrow"
-                  leaveDelay={0}
-                  title={
-                    <TooltipContent sx={crosswordCardSetTooltipContentStyles}>
-                      {t(interfaceLanguage, 'crosswordCardSetCardsTooltip')}
-                    </TooltipContent>
-                  }
-                  tooltipSx={crosswordCardSetTooltipStyles}
-                >
-                  <ExerciseCardSetChip
-                    clickable={Boolean(onCardSetOpen)}
-                    dataTest="crossword_exercise__card_set_chip"
-                    interfaceLanguage={interfaceLanguage}
-                    onClick={onCardSetOpen}
-                    sx={crosswordCardSetChipStyles}
-                    cardSetName={cardSetName}
-                  />
-                </CursorAnchoredTooltip>
+                <ExerciseCardSetChip
+                  dataTest="crossword_exercise__card_set_chip"
+                  interfaceLanguage={interfaceLanguage}
+                  sx={crosswordCardSetChipStyles}
+                  cardSetName={cardSetName}
+                />
               )}
               <ExerciseProgressChip
                 completed={filledEntryCount}
@@ -1011,32 +993,12 @@ function recentResultChipStyles(
 }
 
 const crosswordCardSetChipStyles = {
-  bgcolor: '#e7eefc',
-  border: '1px solid rgba(68, 94, 150, 0.26)',
+  bgcolor: '#f2f3f1',
+  border: '1px solid rgba(32, 48, 21, 0.18)',
   color: '#203015',
-  cursor: 'pointer',
+  cursor: 'default',
   fontWeight: 850,
   height: 30,
-  '&:hover': {
-    bgcolor: '#d9e5fb',
-  },
-};
-
-const crosswordCardSetTooltipStyles = {
-  bgcolor: '#ffffff',
-  border: '1px solid rgba(32, 48, 21, 0.14)',
-  boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
-  color: '#203015',
-  maxWidth: 280,
-  px: 1.25,
-  py: 1,
-};
-
-const crosswordCardSetTooltipContentStyles = {
-  color: '#203015',
-  display: 'inline-block',
-  fontSize: 14,
-  lineHeight: 1.35,
 };
 
 const recentAnswersTooltipStyles = {

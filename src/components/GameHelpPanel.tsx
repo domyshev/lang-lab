@@ -10,11 +10,13 @@ import TuneIcon from '@mui/icons-material/Tune';
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import { t } from '../domain/i18n';
 import { SupportedLanguage } from '../domain/languages';
+import type { WorldId } from '../domain/worlds';
 
 interface GameHelpPanelProps {
   interfaceLanguage: SupportedLanguage;
   isInitiallyCollapsed: boolean;
   onAcknowledge: () => void;
+  worldId: WorldId;
 }
 
 type HelpSlide = 'intro' | 'chat';
@@ -23,6 +25,7 @@ export function GameHelpPanel({
   interfaceLanguage,
   isInitiallyCollapsed,
   onAcknowledge,
+  worldId,
 }: GameHelpPanelProps) {
   const [slide, setSlide] = useState<HelpSlide>(
     isInitiallyCollapsed ? 'chat' : 'intro',
@@ -32,6 +35,7 @@ export function GameHelpPanel({
     setSlide(isInitiallyCollapsed ? 'chat' : 'intro');
   }, [isInitiallyCollapsed]);
 
+  const palette = getHelpPalette(worldId);
   const introRows = [
     {
       color: '#2f7d9b',
@@ -46,8 +50,8 @@ export function GameHelpPanel({
       key: 'gameHelpPlayer' as const,
     },
     {
-      color: '#6f4fa6',
-      bg: '#f3edff',
+      color: palette.secondary,
+      bg: palette.secondaryBg,
       icon: <EditNoteIcon fontSize="small" />,
       key: 'gameHelpVocabulary' as const,
     },
@@ -58,16 +62,16 @@ export function GameHelpPanel({
       key: 'gameHelpTeacher' as const,
     },
     {
-      color: '#9b445c',
-      bg: '#fff0f4',
+      color: '#b0451c',
+      bg: '#fff1dd',
       icon: <AutoAwesomeIcon fontSize="small" />,
       key: 'gameHelpOwnTrainer' as const,
     },
   ];
   const chatRows = [
     {
-      color: '#6845b8',
-      bg: '#f1ecff',
+      color: palette.primary,
+      bg: palette.primaryBg,
       icon: <ChatBubbleOutlineIcon fontSize="small" />,
       key: 'gameHelpAiChatCards' as const,
     },
@@ -84,12 +88,13 @@ export function GameHelpPanel({
       key: 'gameHelpAiChatStats' as const,
     },
     {
-      color: '#8b436a',
-      bg: '#fff0f7',
+      color: '#b0451c',
+      bg: '#fff1dd',
       icon: <TuneIcon fontSize="small" />,
       key: 'gameHelpAiChatControl' as const,
     },
   ];
+  const slideIndex = slide === 'intro' ? 0 : 1;
 
   const showChatSlide = () => {
     setSlide('chat');
@@ -102,9 +107,9 @@ export function GameHelpPanel({
       elevation={0}
       sx={{
         bgcolor: 'rgba(255, 255, 255, 0.94)',
-        border: '1px solid rgba(37, 118, 150, 0.16)',
+        border: `1px solid ${palette.border}`,
         borderRadius: '8px',
-        boxShadow: '0 10px 28px rgba(23, 78, 105, 0.08)',
+        boxShadow: palette.shadow,
         maxWidth: 760,
         mx: 'auto',
         overflow: 'hidden',
@@ -119,10 +124,10 @@ export function GameHelpPanel({
             data-test="game_help__title_icon"
             sx={{
               alignItems: 'center',
-              bgcolor: '#e8f6fb',
-              border: '1px solid rgba(37, 118, 150, 0.20)',
+              bgcolor: palette.primaryBg,
+              border: `1px solid ${palette.border}`,
               borderRadius: '50%',
-              color: '#174e69',
+              color: palette.primary,
               display: 'inline-flex',
               height: 34,
               justifyContent: 'center',
@@ -143,35 +148,13 @@ export function GameHelpPanel({
         {slide === 'intro' ? (
           <Stack data-test="game_help__intro_slide" spacing={2}>
             <HelpRows rows={introRows} interfaceLanguage={interfaceLanguage} />
-            <Button
-              data-test="game_help__next_button"
-              variant="outlined"
-              onClick={showChatSlide}
-              sx={{
-                alignSelf: 'flex-start',
-                bgcolor: '#f5fbff',
-                borderColor: 'rgba(37, 118, 150, 0.38)',
-                borderRadius: 2,
-                boxShadow: '0 8px 18px rgba(23, 78, 105, 0.12)',
-                color: '#174e69',
-                fontWeight: 900,
-                px: 2.5,
-                textTransform: 'none',
-                '&:hover': {
-                  bgcolor: '#e9f6fb',
-                  borderColor: 'rgba(37, 118, 150, 0.52)',
-                },
-              }}
-            >
-              {t(interfaceLanguage, 'gameHelpNext')}
-            </Button>
           </Stack>
         ) : (
           <Stack data-test="game_help__chat_slide" spacing={1.5}>
             <Typography
               data-test="game_help__chat_title"
               sx={{
-                color: '#6845b8',
+                color: palette.primary,
                 fontSize: 18,
                 fontWeight: 950,
                 lineHeight: 1.2,
@@ -182,9 +165,83 @@ export function GameHelpPanel({
             <HelpRows rows={chatRows} interfaceLanguage={interfaceLanguage} />
           </Stack>
         )}
+        <Stack
+          data-test="game_help__pager"
+          direction="row"
+          spacing={1}
+          sx={{ alignItems: 'center', justifyContent: 'space-between' }}
+        >
+          <Button
+            data-test="game_help__back_button"
+            disabled={slideIndex === 0}
+            variant="outlined"
+            onClick={() => setSlide('intro')}
+            sx={getHelpPagerButtonSx(palette)}
+          >
+            {t(interfaceLanguage, 'gameHelpBack')}
+          </Button>
+          <Typography
+            data-test="game_help__page_indicator"
+            sx={{
+              color: '#53604b',
+              fontSize: 13,
+              fontWeight: 850,
+            }}
+          >
+            {t(interfaceLanguage, 'gameHelpPage')} {slideIndex + 1} / 2
+          </Typography>
+          <Button
+            data-test="game_help__next_button"
+            disabled={slideIndex === 1}
+            variant="outlined"
+            onClick={showChatSlide}
+            sx={getHelpPagerButtonSx(palette)}
+          >
+            {t(interfaceLanguage, 'gameHelpNext')}
+          </Button>
+        </Stack>
       </Stack>
     </Paper>
   );
+}
+
+function getHelpPalette(worldId: WorldId) {
+  if (worldId === 'forest') {
+    return {
+      border: 'rgba(64, 116, 48, 0.18)',
+      primary: '#2f6f43',
+      primaryBg: '#eaf6df',
+      secondary: '#287b7a',
+      secondaryBg: '#e4f6f4',
+      shadow: '0 10px 28px rgba(48, 98, 38, 0.08)',
+    };
+  }
+
+  return {
+    border: 'rgba(19, 75, 132, 0.18)',
+    primary: '#145f9e',
+    primaryBg: '#e7f3ff',
+    secondary: '#c06b00',
+    secondaryBg: '#fff3d8',
+    shadow: '0 10px 28px rgba(19, 75, 132, 0.08)',
+  };
+}
+
+function getHelpPagerButtonSx(palette: ReturnType<typeof getHelpPalette>) {
+  return {
+    bgcolor: palette.primaryBg,
+    borderColor: palette.border,
+    borderRadius: 2,
+    boxShadow: '0 8px 18px rgba(23, 78, 105, 0.10)',
+    color: palette.primary,
+    fontWeight: 900,
+    px: 2,
+    textTransform: 'none',
+    '&:hover': {
+      bgcolor: palette.primaryBg,
+      borderColor: palette.primary,
+    },
+  };
 }
 
 function HelpRows({

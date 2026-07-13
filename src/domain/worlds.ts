@@ -41,10 +41,10 @@ export const worldDefinitions: Record<WorldId, WorldDefinition> = {
     defaultAssistantId: 'studyTroll',
     id: 'forest',
     label: {
-      en: 'Forest',
-      ru: 'Лес',
-      es: 'Bosque',
-      uk: 'Ліс',
+      en: 'Forest Elves',
+      ru: 'Лесные эльфы',
+      es: 'Elfos del bosque',
+      uk: 'Лісові ельфи',
     },
   },
 };

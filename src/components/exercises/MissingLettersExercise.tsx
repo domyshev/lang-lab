@@ -42,6 +42,7 @@ export function MissingLettersExercise({
   onMemorizeResult,
   progressCompletedCount,
   progressTotalCount,
+  promptStatsAction,
   prompt,
   repeatProgress,
   resultColors = footballResultColors,
@@ -65,6 +66,7 @@ export function MissingLettersExercise({
   onNext: () => void;
   progressCompletedCount?: number;
   progressTotalCount?: number;
+  promptStatsAction?: ReactNode;
   cardSetName?: string;
   finishAction?: ReactNode;
   resultColors?: WorldResultColors;
@@ -248,6 +250,7 @@ export function MissingLettersExercise({
             dataTest={`missing_letters_exercise__prompt__${prompt.cardId}`}
             fallbackPrompt={prompt.prompt}
             hints={prompt.translationHints}
+            trailingAction={promptStatsAction}
           />
           {isRepeatedPrompt && (
             <ExerciseRepeatChip
@@ -471,8 +474,8 @@ const typedLetterCellStyles = {
 };
 
 const exerciseCardSetChipStyles = {
-  bgcolor: '#e7eefc',
-  border: '1px solid rgba(68, 94, 150, 0.26)',
+  bgcolor: '#f2f3f1',
+  border: '1px solid rgba(32, 48, 21, 0.18)',
   color: '#203015',
   fontWeight: 850,
   height: 30,

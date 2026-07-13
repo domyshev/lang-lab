@@ -540,6 +540,42 @@ const thoughtSources: Record<AssistantId, CharacterThoughtSources> = {
       ],
     },
   },
+  forestElf: {
+    en: {
+      openings: ['The elf found a small glowing clue', 'Step softly and the answer appears'],
+      endings: ['The forest likes quiet precision.', 'A tiny hint can open a whole path.'],
+    },
+    ru: {
+      openings: ['Эльф нашел маленькую светлую подсказку', 'Ступай мягко, и ответ покажется'],
+      endings: ['Лес любит тихую точность.', 'Маленький намек открывает целую тропу.'],
+    },
+    es: {
+      openings: ['El elfo encontro una pista luminosa', 'Pisa suave y la respuesta aparece'],
+      endings: ['El bosque quiere precision tranquila.', 'Una pista pequena abre todo un sendero.'],
+    },
+    uk: {
+      openings: ['Ельф знайшов маленьку світлу підказку', 'Ступай мʼяко, і відповідь зʼявиться'],
+      endings: ['Ліс любить тиху точність.', 'Маленький натяк відкриває цілу стежку.'],
+    },
+  },
+  unicorn: {
+    en: {
+      openings: ['The unicorn polished this card with moonlight', 'A little sparkle can reset the try'],
+      endings: ['Shiny practice still counts.', 'Courage grows better with glitter.'],
+    },
+    ru: {
+      openings: ['Единорог отполировал карточку лунным светом', 'Немного блеска перезапускает попытку'],
+      endings: ['Сияющая практика тоже считается.', 'Смелость лучше растет с искрами.'],
+    },
+    es: {
+      openings: ['El unicornio pulio esta tarjeta con luna', 'Un poco de brillo reinicia el intento'],
+      endings: ['La practica brillante tambien cuenta.', 'El animo crece mejor con chispas.'],
+    },
+    uk: {
+      openings: ['Єдиноріг відполірував картку місячним світлом', 'Трохи блиску перезапускає спробу'],
+      endings: ['Сяйлива практика теж рахується.', 'Сміливість краще росте з іскрами.'],
+    },
+  },
 };
 
 export const coachThoughts: Record<
@@ -604,6 +640,18 @@ const forestCoachThoughts: Record<AssistantId, Record<SupportedLanguage, string[
     ru: ['Каждое слово оставляет серебряную нить', 'Следуй за сетью, а не за паникой'],
     es: ['Cada palabra deja un hilo plateado', 'Sigue la red, no el panico'],
     uk: ['Кожне слово залишає срібну нитку', 'Йди за мережею, а не за панікою'],
+  }),
+  forestElf: makeForestThoughts({
+    en: ['Quiet steps, bright clues', 'The elf knows a tiny shortcut'],
+    ru: ['Тихие шаги, светлые подсказки', 'Эльф знает маленькую тропинку'],
+    es: ['Pasos suaves, pistas claras', 'El elfo sabe un atajo pequeno'],
+    uk: ['Тихі кроки, світлі підказки', 'Ельф знає маленьку стежку'],
+  }),
+  unicorn: makeForestThoughts({
+    en: ['A silver sparkle resets the card', 'The unicorn keeps courage glowing'],
+    ru: ['Серебряная искра перезапускает карточку', 'Единорог держит смелость сияющей'],
+    es: ['Un brillo plateado reinicia la tarjeta', 'El unicornio mantiene el animo brillante'],
+    uk: ['Срібна іскра перезапускає картку', 'Єдиноріг тримає сміливість сяйливою'],
   }),
 };
 
