@@ -12,6 +12,10 @@ type I18nKey =
   | 'history'
   | 'interfaceLanguage'
   | 'targetLanguage'
+  | 'world'
+  | 'appWorld'
+  | 'footballWorld'
+  | 'forestWorld'
   | 'assistant'
   | 'assistantProfileLink'
   | 'assistantSuperpowersTitle'
@@ -288,6 +292,10 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     history: 'History',
     interfaceLanguage: 'Interface',
     targetLanguage: 'Target',
+    world: 'World',
+    appWorld: 'App world',
+    footballWorld: 'Football',
+    forestWorld: 'Forest',
     assistant: 'Character',
     assistantProfileLink: 'Meet them properly',
     assistantSuperpowersTitle: 'Superpowers',
@@ -611,6 +619,10 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     history: 'История',
     interfaceLanguage: 'Интерфейс',
     targetLanguage: 'Цель',
+    world: 'Мир',
+    appWorld: 'Мир приложения',
+    footballWorld: 'Футбол',
+    forestWorld: 'Лес',
     assistant: 'Персонаж',
     assistantProfileLink: 'Познакомиться поближе',
     assistantSuperpowersTitle: 'Супер-способности',
@@ -936,6 +948,10 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     history: 'Historial',
     interfaceLanguage: 'Interfaz',
     targetLanguage: 'Objetivo',
+    world: 'Mundo',
+    appWorld: 'Mundo de la app',
+    footballWorld: 'Futbol',
+    forestWorld: 'Bosque',
     assistant: 'Personaje',
     assistantProfileLink: 'Conocerlo mejor',
     assistantSuperpowersTitle: 'Superpoderes',
@@ -1261,6 +1277,7 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   aiComposerLabel: 'Повідомлення AI-помічнику',
   aiSendMessage: 'Надіслати повідомлення',
   allCards: 'Усі картки',
+  appWorld: 'Світ застосунку',
   appName: 'Language Lab',
   assistant: 'Персонаж',
   cardSetLabel: 'Набір карток',
@@ -1274,6 +1291,8 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   continueAnonymously: 'Продовжити анонімно',
   crossword: 'Кросворд',
   editPlayerName: "Змінити ім'я",
+  footballWorld: 'Футбол',
+  forestWorld: 'Ліс',
   finishExercise: 'Закінчити гру',
   game: 'Гра',
   gameHelpTitle: 'Допомога',
@@ -1302,6 +1321,7 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   submit: 'Надіслати',
   targetLanguage: 'Ціль',
   targetAnswerLabel: 'Цільова мова',
+  world: 'Світ',
 };
 
 const languageNames: Record<

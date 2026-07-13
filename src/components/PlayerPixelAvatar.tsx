@@ -8,7 +8,12 @@ type PlayerPixelAvatarProps = {
   size?: number;
 };
 
-export type SupporterCountry = 'spain' | 'portugal' | 'england' | 'germany';
+export type SupporterCountry =
+  | 'spain'
+  | 'portugal'
+  | 'england'
+  | 'germany'
+  | 'forest';
 
 export function PlayerPixelAvatar({
   ariaLabel,
@@ -95,6 +100,38 @@ function SupporterFlag({
   dataTest: string;
 }) {
   switch (country) {
+    case 'forest':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__forest_sky`}
+            fill="#dff2c4"
+            height="38"
+            width="54"
+          />
+          <rect
+            data-test={`${dataTest}__forest_moss`}
+            fill="#8cc66f"
+            height="17"
+            width="54"
+            y="21"
+          />
+          <path
+            data-test={`${dataTest}__forest_leaf`}
+            d="M11 24c11-16 25-18 36-10-8 11-21 17-36 10Z"
+            fill="#4f8e5b"
+            stroke="#203015"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M15 23c8-2 17-5 28-9"
+            fill="none"
+            stroke="#f7ffe5"
+            strokeLinecap="round"
+            strokeWidth="1.3"
+          />
+        </>
+      );
     case 'portugal':
       return (
         <>
@@ -201,11 +238,14 @@ function SupporterFlag({
   }
 }
 
-export function createPlayerAvatarSeed(value: string): string {
+export function createPlayerAvatarSeed(
+  value: string,
+  country: SupporterCountry = 'spain',
+): string {
   const normalized = value.trim();
   return normalized
-    ? `supporter:spain:${normalized}:${hashSeed(normalized)}`
-    : `supporter:spain:anonymous:${Date.now()}:${Math.random()
+    ? `supporter:${country}:${normalized}:${hashSeed(`${country}:${normalized}`)}`
+    : `supporter:${country}:anonymous:${Date.now()}:${Math.random()
         .toString(36)
         .slice(2)}`;
 }

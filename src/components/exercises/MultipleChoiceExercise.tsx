@@ -12,6 +12,7 @@ import { MultipleChoicePrompt } from '../../domain/exercises';
 import { footballResultColors } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
+import type { WorldResultColors } from '../../domain/worlds';
 import { KnownCardToggleButton } from '../KnownCardToggleButton';
 import {
   ExerciseProgressChip,
@@ -26,6 +27,7 @@ export function MultipleChoiceExercise({
   progressCompletedCount,
   progressTotalCount,
   prompt,
+  resultColors = footballResultColors,
   isKnown = false,
   onAnswer,
   onKnownChange,
@@ -37,6 +39,7 @@ export function MultipleChoiceExercise({
   complementaryLanguage?: SupportedLanguage;
   interfaceLanguage: SupportedLanguage;
   prompt: MultipleChoicePrompt;
+  resultColors?: WorldResultColors;
   isKnown?: boolean;
   onAnswer: (answer: string) => void;
   onKnownChange?: (isKnown: boolean) => void;
@@ -159,6 +162,7 @@ export function MultipleChoiceExercise({
                   isCorrectOption: option === prompt.expectedAnswer,
                   isSelected: option === selectedAnswer,
                   isSubmitted,
+                  resultColors,
                 }),
               }}
             >
@@ -182,18 +186,18 @@ export function MultipleChoiceExercise({
                 minWidth: 148,
                 ...(isCorrect
                   ? {
-                      bgcolor: footballResultColors.correct.main,
+                      bgcolor: resultColors.correct.main,
                       '&:hover': {
-                        bgcolor: footballResultColors.correct.main,
+                        bgcolor: resultColors.correct.main,
                         boxShadow: 'none',
                       },
                     }
                   : {
-                      bgcolor: footballResultColors.incorrect.soft,
-                      border: `1px solid ${footballResultColors.incorrect.border}`,
-                      color: footballResultColors.incorrect.text,
+                      bgcolor: resultColors.incorrect.soft,
+                      border: `1px solid ${resultColors.incorrect.border}`,
+                      color: resultColors.incorrect.text,
                       '&:hover': {
-                        bgcolor: footballResultColors.incorrect.soft,
+                        bgcolor: resultColors.incorrect.soft,
                         boxShadow: 'none',
                       },
                     }),
@@ -222,10 +226,12 @@ function getOptionStyles({
   isCorrectOption,
   isSelected,
   isSubmitted,
+  resultColors,
 }: {
   isCorrectOption: boolean;
   isSelected: boolean;
   isSubmitted: boolean;
+  resultColors: WorldResultColors;
 }) {
   if (!isSubmitted) {
     return {
@@ -241,8 +247,8 @@ function getOptionStyles({
 
   if (isCorrectOption) {
     return {
-      bgcolor: footballResultColors.correct.soft,
-      borderColor: footballResultColors.correct.border,
+      bgcolor: resultColors.correct.soft,
+      borderColor: resultColors.correct.border,
       color: '#203015',
       opacity: 1,
       WebkitTextFillColor: '#203015',
@@ -251,11 +257,11 @@ function getOptionStyles({
 
   if (isSelected) {
     return {
-      bgcolor: footballResultColors.incorrect.soft,
-      borderColor: footballResultColors.incorrect.border,
-      color: footballResultColors.incorrect.text,
+      bgcolor: resultColors.incorrect.soft,
+      borderColor: resultColors.incorrect.border,
+      color: resultColors.incorrect.text,
       opacity: 1,
-      WebkitTextFillColor: footballResultColors.incorrect.text,
+      WebkitTextFillColor: resultColors.incorrect.text,
     };
   }
 

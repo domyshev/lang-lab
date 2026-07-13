@@ -193,6 +193,33 @@ describe('LanguageSelectors', () => {
     ).toBe(3);
   });
 
+  it('switches the app world from the top-right settings menu', async () => {
+    const user = userEvent.setup();
+    const store = createStore();
+
+    render(
+      <Provider store={store}>
+        <LanguageSelectors />
+      </Provider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Настройки практики' }));
+
+    const worldSelect = screen.getByRole('combobox', {
+      name: 'Мир приложения',
+    });
+    expect(worldSelect).toHaveTextContent('Футбол');
+
+    await user.click(worldSelect);
+    await user.click(screen.getByRole('option', { name: 'Лес' }));
+
+    expect(store.getState().app.worldId).toBe('forest');
+    expect(store.getState().app.assistantId).toBe('studyTroll');
+    expect(
+      screen.getByTestId('language_selectors__assistant_selected_icon__studyTroll'),
+    ).toBeInTheDocument();
+  });
+
   it('updates practice frequency percentages from the top-right menu', async () => {
     const user = userEvent.setup();
     const store = createStore();

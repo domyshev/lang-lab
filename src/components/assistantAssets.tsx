@@ -1,18 +1,33 @@
 import { Box } from '@mui/material';
 import type { SxProps, Theme as MuiTheme } from '@mui/material';
 import capeChampion from '../assets/characters/cape-champion.svg';
+import capeChampionForest from '../assets/characters/cape-champion-forest.svg';
 import greenPower from '../assets/characters/green-power.svg';
+import greenPowerForest from '../assets/characters/green-power-forest.svg';
 import studyTroll from '../assets/characters/study-troll.svg';
+import studyTrollForest from '../assets/characters/study-troll-forest.svg';
 import trollMama from '../assets/characters/troll-mama.svg';
+import trollMamaForest from '../assets/characters/troll-mama-forest.svg';
 import webRunner from '../assets/characters/web-runner.svg';
+import webRunnerForest from '../assets/characters/web-runner-forest.svg';
 import { AssistantId, resolveAssistantId } from '../domain/assistants';
+import { WorldId, resolveWorldId } from '../domain/worlds';
 
-const assistantImages: Record<AssistantId, string> = {
-  capeChampion,
-  greenPower,
-  studyTroll,
-  trollMama,
-  webRunner,
+const assistantImages: Record<WorldId, Record<AssistantId, string>> = {
+  football: {
+    capeChampion,
+    greenPower,
+    studyTroll,
+    trollMama,
+    webRunner,
+  },
+  forest: {
+    capeChampion: capeChampionForest,
+    greenPower: greenPowerForest,
+    studyTroll: studyTrollForest,
+    trollMama: trollMamaForest,
+    webRunner: webRunnerForest,
+  },
 };
 
 export function AssistantStickerIcon({
@@ -22,6 +37,7 @@ export function AssistantStickerIcon({
   dataTest,
   size = 36,
   sx,
+  worldId,
 }: {
   ariaLabel?: string;
   assistantId: AssistantId | string | undefined;
@@ -29,8 +45,10 @@ export function AssistantStickerIcon({
   dataTest?: string;
   size?: number;
   sx?: SxProps<MuiTheme>;
+  worldId?: WorldId;
 }) {
-  const resolvedAssistantId = resolveAssistantId(assistantId);
+  const resolvedWorldId = resolveWorldId(worldId);
+  const resolvedAssistantId = resolveAssistantId(assistantId, resolvedWorldId);
 
   return (
     <Box
@@ -39,7 +57,7 @@ export function AssistantStickerIcon({
       aria-label={ariaLabel}
       className={className}
       data-test={dataTest ?? `assistant_sticker_icon__${resolvedAssistantId}`}
-      src={assistantImages[resolvedAssistantId]}
+      src={assistantImages[resolvedWorldId][resolvedAssistantId]}
       sx={{
         display: 'block',
         filter: 'drop-shadow(0 8px 10px rgba(32, 48, 21, 0.18))',

@@ -1,5 +1,6 @@
 import { AssistantId, defaultAssistantId, resolveAssistantId } from './assistants';
 import { SupportedLanguage, supportedLanguages } from './languages';
+import type { WorldId } from './worlds';
 
 type ThoughtSource = {
   openings: string[];
@@ -563,10 +564,58 @@ export function getCoachThought(
   interfaceLanguage: SupportedLanguage,
   seed: number,
   assistantId: AssistantId | string | undefined = defaultAssistantId,
+  worldId: WorldId = 'football',
 ): string {
-  const resolvedAssistantId = resolveAssistantId(assistantId);
-  const thoughts = coachThoughts[resolvedAssistantId][interfaceLanguage];
+  const resolvedAssistantId = resolveAssistantId(assistantId, worldId);
+  const thoughts =
+    worldId === 'forest'
+      ? forestCoachThoughts[resolvedAssistantId][interfaceLanguage]
+      : coachThoughts[resolvedAssistantId][interfaceLanguage];
   return thoughts[Math.abs(Math.trunc(seed)) % thoughts.length];
+}
+
+const forestCoachThoughts: Record<AssistantId, Record<SupportedLanguage, string[]>> = {
+  studyTroll: makeForestThoughts({
+    en: ['A fresh leaf remembers softly', 'The path is small, but it is yours'],
+    ru: ['Свежий лист помнит мягко', 'Тропа маленькая, зато твоя'],
+    es: ['Una hoja fresca recuerda suave', 'El sendero es pequeno, pero es tuyo'],
+    uk: ['Свіжий листок памʼятає мʼяко', 'Стежка маленька, зате твоя'],
+  }),
+  trollMama: makeForestThoughts({
+    en: ['Warm tea, tidy clue, calm answer', 'Memory likes a clean table'],
+    ru: ['Теплый чай, ровная подсказка, спокойный ответ', 'Память любит чистый стол'],
+    es: ['Te tibio, pista clara, respuesta tranquila', 'La memoria quiere mesa limpia'],
+    uk: ['Теплий чай, рівна підказка, спокійна відповідь', 'Памʼять любить чистий стіл'],
+  }),
+  capeChampion: makeForestThoughts({
+    en: ['Context lights the forest trail', 'A small clue can save the mission'],
+    ru: ['Контекст освещает лесную тропу', 'Маленькая подсказка спасает миссию'],
+    es: ['El contexto ilumina el sendero', 'Una pista pequena salva la mision'],
+    uk: ['Контекст освітлює лісову стежку', 'Маленька підказка рятує місію'],
+  }),
+  greenPower: makeForestThoughts({
+    en: ['Break the word into friendly logs', 'Strong memory still walks gently'],
+    ru: ['Разломи слово на дружелюбные поленья', 'Сильная память все равно идет мягко'],
+    es: ['Parte la palabra en troncos amables', 'La memoria fuerte tambien pisa suave'],
+    uk: ['Розділи слово на дружні поліна', 'Сильна памʼять усе одно йде мʼяко'],
+  }),
+  webRunner: makeForestThoughts({
+    en: ['Every word leaves a silver thread', 'Follow the web, not the panic'],
+    ru: ['Каждое слово оставляет серебряную нить', 'Следуй за сетью, а не за паникой'],
+    es: ['Cada palabra deja un hilo plateado', 'Sigue la red, no el panico'],
+    uk: ['Кожне слово залишає срібну нитку', 'Йди за мережею, а не за панікою'],
+  }),
+};
+
+function makeForestThoughts(
+  values: Record<SupportedLanguage, string[]>,
+): Record<SupportedLanguage, string[]> {
+  return Object.fromEntries(
+    Object.entries(values).map(([language, thoughts]) => [
+      language,
+      thoughts.map(ensurePeriod),
+    ]),
+  ) as Record<SupportedLanguage, string[]>;
 }
 
 function buildThoughts(openings: string[], endings: string[]): string[] {

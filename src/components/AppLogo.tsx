@@ -1,14 +1,20 @@
 import { Box, Typography } from '@mui/material';
 import { t } from '../domain/i18n';
 import { SupportedLanguage } from '../domain/languages';
+import { WorldId, resolveWorldId } from '../domain/worlds';
 
 export function AppLogo({
   interfaceLanguage,
   onClick,
+  worldId,
 }: {
   interfaceLanguage: SupportedLanguage;
   onClick?: () => void;
+  worldId?: WorldId;
 }) {
+  const resolvedWorldId = resolveWorldId(worldId);
+  const isForest = resolvedWorldId === 'forest';
+
   return (
     <Box
       aria-label={t(interfaceLanguage, 'appName')}
@@ -19,8 +25,10 @@ export function AppLogo({
       sx={{
         alignItems: 'center',
         appearance: 'none',
-        bgcolor: '#f7ffe5',
-        border: '1px solid rgba(32, 48, 21, 0.16)',
+        bgcolor: isForest ? '#f4fbeb' : '#f7ffe5',
+        border: isForest
+          ? '1px solid rgba(117, 168, 67, 0.24)'
+          : '1px solid rgba(32, 48, 21, 0.16)',
         borderRadius: 2,
         boxShadow: '0 8px 18px rgba(32, 48, 21, 0.08)',
         cursor: 'pointer',
@@ -68,78 +76,7 @@ export function AppLogo({
           zIndex: 0,
         }}
       />
-      <Box
-        component="svg"
-        aria-hidden="true"
-        data-test="app_logo__football_crest_svg"
-        viewBox="0 0 44 50"
-        sx={{
-          display: 'block',
-          flexShrink: 0,
-          filter: 'drop-shadow(0 4px 7px rgba(124, 21, 24, 0.18))',
-          height: 40,
-          position: 'relative',
-          transform: 'rotate(-2deg)',
-          width: 42,
-          zIndex: 1,
-        }}
-      >
-        <defs>
-          <clipPath id="app-logo-football-crest-clip">
-            <path d="M22 2 39 7v16c0 11.5-7.3 19.2-17 24C12.3 42.2 5 34.5 5 23V7Z" />
-          </clipPath>
-        </defs>
-        <path
-          data-test="app_logo__crest_shield"
-          d="M22 2 39 7v16c0 11.5-7.3 19.2-17 24C12.3 42.2 5 34.5 5 23V7Z"
-          fill="#fffdf4"
-          stroke="#7c1518"
-          strokeWidth="2.4"
-        />
-        <g clipPath="url(#app-logo-football-crest-clip)">
-          <rect width="44" height="13" fill="#c60b1e" />
-          <rect y="13" width="44" height="19" fill="#ffc400" />
-          <rect y="32" width="44" height="18" fill="#c60b1e" />
-          <path
-            d="M7 7h30M7 32h30M22 2v45"
-            stroke="rgba(255, 255, 255, 0.55)"
-            strokeWidth="1.1"
-          />
-          <path
-            d="M10 9c6 3 18 3 24 0"
-            fill="none"
-            stroke="rgba(32, 48, 21, 0.35)"
-            strokeWidth="1.2"
-          />
-        </g>
-        <circle
-          data-test="app_logo__crest_ball"
-          cx="22"
-          cy="27"
-          r="8"
-          fill="#fffdf4"
-          stroke="#203015"
-          strokeWidth="1.5"
-        />
-        <path
-          d="M22 19v16M14 27h16M16 21l12 12M28 21 16 33"
-          stroke="#203015"
-          strokeWidth="0.85"
-          opacity="0.58"
-        />
-        <text
-          x="22"
-          y="15"
-          fill="#203015"
-          fontFamily="Arial, sans-serif"
-          fontSize="8"
-          fontWeight="900"
-          letterSpacing="0"
-          textAnchor="middle"
-        >
-          LL
-        </text>
-      </Box>
+      {isForest ? <ForestLogoMark /> : <FootballLogoMark />}
       <Typography
         component="span"
         data-test="app_logo__text"
@@ -156,4 +93,134 @@ export function AppLogo({
       </Typography>
     </Box>
   );
+}
+
+function FootballLogoMark() {
+  return (
+    <Box
+      component="svg"
+      aria-hidden="true"
+      data-test="app_logo__football_crest_svg"
+      viewBox="0 0 44 50"
+      sx={logoMarkSx('drop-shadow(0 4px 7px rgba(124, 21, 24, 0.18))')}
+    >
+      <defs>
+        <clipPath id="app-logo-football-crest-clip">
+          <path d="M22 2 39 7v16c0 11.5-7.3 19.2-17 24C12.3 42.2 5 34.5 5 23V7Z" />
+        </clipPath>
+      </defs>
+      <path
+        data-test="app_logo__crest_shield"
+        d="M22 2 39 7v16c0 11.5-7.3 19.2-17 24C12.3 42.2 5 34.5 5 23V7Z"
+        fill="#fffdf4"
+        stroke="#7c1518"
+        strokeWidth="2.4"
+      />
+      <g clipPath="url(#app-logo-football-crest-clip)">
+        <rect width="44" height="13" fill="#c60b1e" />
+        <rect y="13" width="44" height="19" fill="#ffc400" />
+        <rect y="32" width="44" height="18" fill="#c60b1e" />
+        <path
+          d="M7 7h30M7 32h30M22 2v45"
+          stroke="rgba(255, 255, 255, 0.55)"
+          strokeWidth="1.1"
+        />
+        <path
+          d="M10 9c6 3 18 3 24 0"
+          fill="none"
+          stroke="rgba(32, 48, 21, 0.35)"
+          strokeWidth="1.2"
+        />
+      </g>
+      <circle
+        data-test="app_logo__crest_ball"
+        cx="22"
+        cy="27"
+        r="8"
+        fill="#fffdf4"
+        stroke="#203015"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M22 19v16M14 27h16M16 21l12 12M28 21 16 33"
+        stroke="#203015"
+        strokeWidth="0.85"
+        opacity="0.58"
+      />
+      <text
+        x="22"
+        y="15"
+        fill="#203015"
+        fontFamily="Arial, sans-serif"
+        fontSize="8"
+        fontWeight="900"
+        letterSpacing="0"
+        textAnchor="middle"
+      >
+        LL
+      </text>
+    </Box>
+  );
+}
+
+function ForestLogoMark() {
+  return (
+    <Box
+      component="svg"
+      aria-hidden="true"
+      data-test="app_logo__forest_leaf_svg"
+      viewBox="0 0 44 50"
+      sx={logoMarkSx('drop-shadow(0 4px 7px rgba(78, 122, 50, 0.18))')}
+    >
+      <rect
+        x="3"
+        y="5"
+        width="38"
+        height="38"
+        rx="12"
+        fill="#f7ffe5"
+        stroke="#75a843"
+        strokeWidth="2.4"
+      />
+      <path
+        data-test="app_logo__forest_leaf"
+        d="M8 27c12-18 27-21 31-12-3 14-18 23-31 12Z"
+        fill="#9cca56"
+        stroke="#203015"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M12 26c7-2 15-6 24-11"
+        fill="none"
+        stroke="#f7ffe5"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+      <text
+        x="22"
+        y="36"
+        fill="#203015"
+        fontFamily="Arial, sans-serif"
+        fontSize="8"
+        fontWeight="900"
+        letterSpacing="0"
+        textAnchor="middle"
+      >
+        LL
+      </text>
+    </Box>
+  );
+}
+
+function logoMarkSx(filter: string) {
+  return {
+    display: 'block',
+    flexShrink: 0,
+    filter,
+    height: 40,
+    position: 'relative',
+    transform: 'rotate(-2deg)',
+    width: 42,
+    zIndex: 1,
+  };
 }

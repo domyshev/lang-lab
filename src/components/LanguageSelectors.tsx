@@ -19,8 +19,8 @@ import {
   AssistantId,
   defaultAssistantId,
   getAssistantTooltip,
+  getVisibleAssistantCharacters,
   resolveAssistantId,
-  visibleAssistantCharacters,
 } from '../domain/assistants';
 import {
   languageFlags,
@@ -42,10 +42,18 @@ import {
   setNewCardMixFrequencyPercent,
   setRecentMistakeRepeatFrequencyPercent,
   setTargetLanguage,
+  setWorldId,
 } from '../store/appSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { AssistantStickerIcon } from './assistantAssets';
 import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
+import {
+  WorldId,
+  getDefaultAssistantIdForWorld,
+  resolveWorldId,
+  worldDefinitions,
+  worldIds,
+} from '../domain/worlds';
 
 export function LanguageSelectors() {
   const dispatch = useDispatch<AppDispatch>();
@@ -53,11 +61,15 @@ export function LanguageSelectors() {
   const complementaryLabelPrefix = useId();
   const interfaceLabelId = useId();
   const targetLabelId = useId();
+  const worldLabelId = useId();
   const [settingsAnchor, setSettingsAnchor] = useState<HTMLElement | null>(
     null,
   );
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
+  );
   const assistantId = useSelector((state: RootState) =>
-    resolveAssistantId(state.app.assistantId ?? defaultAssistantId),
+    resolveAssistantId(state.app.assistantId ?? defaultAssistantId, worldId),
   );
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
@@ -75,6 +87,7 @@ export function LanguageSelectors() {
   const complementaryLanguages = getComplementaryLanguages(
     storedComplementaryLanguages,
   );
+  const visibleAssistants = getVisibleAssistantCharacters(worldId);
   const isSettingsOpen = Boolean(settingsAnchor);
 
   const handleInterfaceChange = (
@@ -85,6 +98,12 @@ export function LanguageSelectors() {
 
   const handleTargetChange = (event: SelectChangeEvent<SupportedLanguage>) => {
     dispatch(setTargetLanguage(event.target.value as SupportedLanguage));
+  };
+
+  const handleWorldChange = (event: SelectChangeEvent<WorldId>) => {
+    const nextWorldId = resolveWorldId(event.target.value);
+    dispatch(setWorldId(nextWorldId));
+    dispatch(setAssistantId(getDefaultAssistantIdForWorld(nextWorldId)));
   };
 
   const handleComplementaryLanguageChange =
@@ -130,7 +149,7 @@ export function LanguageSelectors() {
             dispatch(setAssistantId(event.target.value as AssistantId))
           }
           renderValue={(value) => {
-            const tooltip = getAssistantTooltip(value, interfaceLanguage);
+            const tooltip = getAssistantTooltip(value, interfaceLanguage, worldId);
             return (
               <AssistantSelectorTooltip
                 arrowDataTest={`language_selectors__assistant_selected_tooltip_arrow__${value}`}
@@ -146,6 +165,7 @@ export function LanguageSelectors() {
                     assistantId={value}
                     dataTest={`language_selectors__assistant_selected_sticker__${value}`}
                     size={30}
+                    worldId={worldId}
                   />
                 </Box>
               </AssistantSelectorTooltip>
@@ -161,17 +181,25 @@ export function LanguageSelectors() {
             },
           }}
         >
-          {visibleAssistantCharacters.map((assistant) => (
+          {visibleAssistants.map((assistant) => (
             <MenuItem
               data-test={`language_selectors__assistant_option__${assistant.id}`}
               key={assistant.id}
-              aria-label={getAssistantTooltip(assistant.id, interfaceLanguage)}
+              aria-label={getAssistantTooltip(
+                assistant.id,
+                interfaceLanguage,
+                worldId,
+              )}
               value={assistant.id}
               sx={{ justifyContent: 'center' }}
             >
               <AssistantSelectorTooltip
                 arrowDataTest={`language_selectors__assistant_option_tooltip_arrow__${assistant.id}`}
-                tooltip={getAssistantTooltip(assistant.id, interfaceLanguage)}
+                tooltip={getAssistantTooltip(
+                  assistant.id,
+                  interfaceLanguage,
+                  worldId,
+                )}
               >
                 <Box
                   component="span"
@@ -182,10 +210,12 @@ export function LanguageSelectors() {
                     ariaLabel={getAssistantTooltip(
                       assistant.id,
                       interfaceLanguage,
+                      worldId,
                     )}
                     assistantId={assistant.id}
                     dataTest={`language_selectors__assistant_option_sticker__${assistant.id}`}
                     size={36}
+                    worldId={worldId}
                   />
                 </Box>
               </AssistantSelectorTooltip>
@@ -315,6 +345,35 @@ export function LanguageSelectors() {
           >
             {t(interfaceLanguage, 'practiceSettings')}
           </Typography>
+          <FormControl
+            data-test="language_selectors__world_control"
+            size="small"
+            fullWidth
+          >
+            <InputLabel
+              data-test="language_selectors__world_label"
+              id={worldLabelId}
+            >
+              {t(interfaceLanguage, 'appWorld')}
+            </InputLabel>
+            <Select
+              data-test="language_selectors__world_select"
+              label={t(interfaceLanguage, 'appWorld')}
+              labelId={worldLabelId}
+              value={worldId}
+              onChange={handleWorldChange}
+            >
+              {worldIds.map((world) => (
+                <MenuItem
+                  data-test={`language_selectors__world_option__${world}`}
+                  key={world}
+                  value={world}
+                >
+                  {worldDefinitions[world].label[interfaceLanguage]}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <Stack
             data-test="language_selectors__complementary_language_settings"
             spacing={1}

@@ -8,6 +8,7 @@ import type { CrosswordAttemptSnapshot } from '../../domain/exercises';
 import { footballResultColors } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
 import type { SupportedLanguage } from '../../domain/languages';
+import type { WorldResultColors } from '../../domain/worlds';
 import { CursorAnchoredTooltip } from '../CursorAnchoredTooltip';
 import { formatAttemptDate, type RecentCardResult } from './RecentAnswersChip';
 
@@ -16,12 +17,14 @@ export function CrosswordHistoryReplay({
   dataTestPrefix,
   interfaceLanguage,
   recentResultsByCardId = {},
+  resultColors = footballResultColors,
   snapshot,
 }: {
   correctness: Record<string, boolean>;
   dataTestPrefix: string;
   interfaceLanguage: SupportedLanguage;
   recentResultsByCardId?: Record<string, RecentCardResult[]>;
+  resultColors?: WorldResultColors;
   snapshot: CrosswordAttemptSnapshot;
 }) {
   const { bounds } = snapshot.puzzle;
@@ -103,15 +106,15 @@ export function CrosswordHistoryReplay({
               style={{
                 backgroundColor:
                   tone === 'correct'
-                    ? footballResultColors.correct.soft
+                    ? resultColors.correct.soft
                     : tone === 'incorrect'
-                      ? footballResultColors.incorrect.soft
+                      ? resultColors.incorrect.soft
                       : undefined,
                 borderColor:
                   tone === 'correct'
-                    ? footballResultColors.correct.border
+                    ? resultColors.correct.border
                     : tone === 'incorrect'
-                      ? footballResultColors.incorrect.border
+                      ? resultColors.incorrect.border
                       : undefined,
                 textDecorationLine: shouldStrike ? 'line-through' : 'none',
                 textDecorationThickness: '2px',
@@ -214,7 +217,7 @@ export function CrosswordHistoryReplay({
                                     component="span"
                                     data-test={`${entryDataTest}__answer__cell__${index}`}
                                     key={`${character}-${index}`}
-                                    sx={correctionAnswerCellStyles}
+                                    sx={getCorrectionAnswerCellStyles(resultColors)}
                                   >
                                     {character}
                                   </Box>
@@ -228,6 +231,7 @@ export function CrosswordHistoryReplay({
                                 recentResultsByCardId[entry.cardId]?.slice(0, 10) ??
                                 []
                               }
+                              resultColors={resultColors}
                             />
                           </Stack>
                         );
@@ -349,10 +353,12 @@ function RecentResultsBlock({
   dataTestPrefix,
   interfaceLanguage,
   recentResults,
+  resultColors,
 }: {
   dataTestPrefix: string;
   interfaceLanguage: SupportedLanguage;
   recentResults: RecentCardResult[];
+  resultColors: WorldResultColors;
 }) {
   return (
     <Stack data-test={`${dataTestPrefix}__recent`} spacing={0.5}>
@@ -383,7 +389,7 @@ function RecentResultsBlock({
                 result.isCorrect ? 'metricCorrectSuffix' : 'metricIncorrectSuffix',
               )}
               size="small"
-              sx={recentResultChipStyles(result.isCorrect)}
+              sx={recentResultChipStyles(result.isCorrect, resultColors)}
             />
             <Typography
               data-test={`${dataTestPrefix}__recent_result_date__${index}`}
@@ -398,15 +404,18 @@ function RecentResultsBlock({
   );
 }
 
-function recentResultChipStyles(isCorrect: boolean) {
+function recentResultChipStyles(
+  isCorrect: boolean,
+  resultColors: WorldResultColors,
+) {
   return {
     bgcolor: isCorrect
-      ? footballResultColors.correct.soft
-      : footballResultColors.incorrect.soft,
+      ? resultColors.correct.soft
+      : resultColors.incorrect.soft,
     border: '1px solid',
     borderColor: isCorrect
-      ? footballResultColors.correct.border
-      : footballResultColors.incorrect.border,
+      ? resultColors.correct.border
+      : resultColors.incorrect.border,
     color: '#111111',
     fontSize: 12,
     fontWeight: 800,
@@ -475,21 +484,23 @@ const correctionNumberStyles = {
   width: 26,
 };
 
-const correctionAnswerCellStyles = {
-  alignItems: 'center',
-  bgcolor: footballResultColors.correct.soft,
-  border: `1px solid ${footballResultColors.correct.border}`,
-  borderRadius: 1,
-  color: '#203015',
-  display: 'inline-flex',
-  fontSize: 20,
-  fontWeight: 800,
-  height: 34,
-  justifyContent: 'center',
-  lineHeight: 1,
-  textTransform: 'lowercase',
-  width: 34,
-};
+function getCorrectionAnswerCellStyles(resultColors: WorldResultColors) {
+  return {
+    alignItems: 'center',
+    bgcolor: resultColors.correct.soft,
+    border: `1px solid ${resultColors.correct.border}`,
+    borderRadius: 1,
+    color: '#203015',
+    display: 'inline-flex',
+    fontSize: 20,
+    fontWeight: 800,
+    height: 34,
+    justifyContent: 'center',
+    lineHeight: 1,
+    textTransform: 'lowercase',
+    width: 34,
+  };
+}
 
 const correctionAnswerSpaceStyles = {
   display: 'inline-flex',

@@ -2,21 +2,21 @@ import { Box } from '@mui/material';
 import { footballResultColors } from '../domain/footballTheme';
 import { t } from '../domain/i18n';
 import { SupportedLanguage } from '../domain/languages';
-
-const correctBackground = footballResultColors.correct.soft;
-const incorrectBackground = footballResultColors.incorrect.soft;
+import type { WorldResultColors } from '../domain/worlds';
 
 export function SplitWordStatsChip({
   correct,
   dataTestPrefix = 'split_word_stats_chip',
   incorrect,
   interfaceLanguage,
+  resultColors = footballResultColors,
   statsLabel,
 }: {
   correct: number;
   dataTestPrefix?: string;
   incorrect: number;
   interfaceLanguage: SupportedLanguage;
+  resultColors?: WorldResultColors;
   statsLabel?: string;
 }) {
   const correctLabel = t(interfaceLanguage, 'correct');
@@ -44,7 +44,7 @@ export function SplitWordStatsChip({
         data-test={`${dataTestPrefix}__correct_segment`}
         sx={{
           alignItems: 'center',
-          bgcolor: correctBackground,
+          bgcolor: resultColors.correct.soft,
           clipPath: 'polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%)',
           color: '#203015',
           display: 'inline-flex',
@@ -61,9 +61,9 @@ export function SplitWordStatsChip({
         data-test={`${dataTestPrefix}__incorrect_segment`}
         sx={{
           alignItems: 'center',
-          bgcolor: incorrectBackground,
+          bgcolor: resultColors.incorrect.soft,
           clipPath: 'polygon(12px 0, 100% 0, 100% 100%, 0 100%)',
-          color: footballResultColors.incorrect.text,
+          color: resultColors.incorrect.text,
           display: 'inline-flex',
           fontSize: 17,
           fontWeight: 900,

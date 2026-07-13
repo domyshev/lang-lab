@@ -29,7 +29,11 @@ import {
   getCardSetName,
   isArchivedCardSet,
 } from '../domain/cardSets';
-import { footballResultColors, stadiumAccent } from '../domain/footballTheme';
+import {
+  getWorldAccent,
+  getWorldResultColors,
+  resolveWorldId,
+} from '../domain/worlds';
 import {
   createCardById,
   createCardStatsByTarget,
@@ -59,15 +63,19 @@ import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
 import { KnownCardToggleButton } from './KnownCardToggleButton';
 import { SplitWordStatsChip } from './SplitWordStatsChip';
 
-const cardSetFootballBlueBorder = 'rgba(24, 119, 201, 0.52)';
-const cardSetFootballBlueHover = 'rgba(24, 119, 201, 0.08)';
-const cardSetFootballBlueSoft = 'rgba(24, 119, 201, 0.055)';
-
 export function CardSetDetailView() {
   const dispatch = useDispatch<AppDispatch>();
   const [isEditingCards, setIsEditingCards] = useState(false);
   const [draftCardIds, setDraftCardIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
+  );
+  const worldAccent = getWorldAccent(worldId);
+  const worldResultColors = getWorldResultColors(worldId);
+  const cardSetAccentBorder = hexToRgba(worldAccent.main, 0.52);
+  const cardSetAccentHover = hexToRgba(worldAccent.main, 0.08);
+  const cardSetAccentSoft = hexToRgba(worldAccent.main, 0.055);
   const cardsListRef = useRef<HTMLDivElement | null>(null);
   const cards = useSelector((state: RootState) => state.cards.cards);
   const targetLanguage = useSelector(
@@ -259,13 +267,13 @@ export function CardSetDetailView() {
         sx={{
           border: '1px solid',
           borderColor: isAlreadyInCardSet
-            ? cardSetFootballBlueBorder
+            ? cardSetAccentBorder
             : 'rgba(32, 48, 21, 0.14)',
           borderLeft: '4px solid',
-          borderLeftColor: isAlreadyInCardSet ? stadiumAccent.main : 'primary.main',
+          borderLeftColor: isAlreadyInCardSet ? worldAccent.main : 'primary.main',
           borderRadius: 1,
           bgcolor: isAlreadyInCardSet
-            ? cardSetFootballBlueSoft
+            ? cardSetAccentSoft
             : 'background.paper',
           p: 1.5,
         }}
@@ -390,6 +398,7 @@ export function CardSetDetailView() {
                   dataTestPrefix={`card_set_detail__card_stats__${card.id}`}
                   incorrect={stats?.incorrect ?? 0}
                   interfaceLanguage={interfaceLanguage}
+                  resultColors={worldResultColors}
                   statsLabel={statsLabel}
                 />
               </RecentCardStatsTooltip>
@@ -455,8 +464,8 @@ export function CardSetDetailView() {
                 label={t(interfaceLanguage, 'archived')}
                 variant="outlined"
                 sx={{
-                  borderColor: cardSetFootballBlueBorder,
-                  color: stadiumAccent.dark,
+                  borderColor: cardSetAccentBorder,
+                  color: worldAccent.dark,
                   fontWeight: 850,
                 }}
               />
@@ -489,12 +498,12 @@ export function CardSetDetailView() {
                 }
                 variant="outlined"
                 sx={{
-                  borderColor: stadiumAccent.main,
-                  color: stadiumAccent.dark,
+                  borderColor: worldAccent.main,
+                  color: worldAccent.dark,
                   mr: { sm: 3.75 },
                   '&:hover': {
-                    bgcolor: cardSetFootballBlueHover,
-                    borderColor: stadiumAccent.dark,
+                    bgcolor: cardSetAccentHover,
+                    borderColor: worldAccent.dark,
                   },
                 }}
               >
@@ -510,8 +519,8 @@ export function CardSetDetailView() {
                 isAllCardsSelected
                   ? undefined
                   : {
-                      borderColor: stadiumAccent.main,
-                      color: stadiumAccent.dark,
+                      borderColor: worldAccent.main,
+                      color: worldAccent.dark,
                       fontWeight: 750,
                     }
               }
@@ -647,6 +656,11 @@ function RecentCardStatsTooltip({
   recentResults: RecentCardResult[];
   subject: string;
 }) {
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
+  );
+  const worldResultColors = getWorldResultColors(worldId);
+
   return (
     <CursorAnchoredTooltip
       arrowDataTest={`${dataTestPrefix}__tooltip_arrow`}
@@ -703,12 +717,12 @@ function RecentCardStatsTooltip({
                   size="small"
                   sx={{
                     bgcolor: result.isCorrect
-                      ? footballResultColors.correct.soft
-                      : footballResultColors.incorrect.soft,
+                      ? worldResultColors.correct.soft
+                      : worldResultColors.incorrect.soft,
                     border: '1px solid',
                     borderColor: result.isCorrect
-                      ? footballResultColors.correct.border
-                      : footballResultColors.incorrect.border,
+                      ? worldResultColors.correct.border
+                      : worldResultColors.incorrect.border,
                     color: '#111111',
                     fontSize: 12,
                     fontWeight: 800,
@@ -861,6 +875,14 @@ function formatAttemptDate(value: string): string {
 
 function padDatePart(value: number): string {
   return String(value).padStart(2, '0');
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const normalized = hex.replace('#', '');
+  const red = parseInt(normalized.slice(0, 2), 16);
+  const green = parseInt(normalized.slice(2, 4), 16);
+  const blue = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
 
 const recentCardStatsTooltipStyles = {

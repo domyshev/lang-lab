@@ -2,6 +2,7 @@ import { Chip, Stack, Typography } from '@mui/material';
 import type { SupportedLanguage } from '../../domain/languages';
 import { footballResultColors } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
+import type { WorldResultColors } from '../../domain/worlds';
 import { CursorAnchoredTooltip } from '../CursorAnchoredTooltip';
 
 export type RecentCardResult = {
@@ -13,11 +14,13 @@ export function RecentAnswersChip({
   dataTestPrefix,
   interfaceLanguage,
   recentResults,
+  resultColors = footballResultColors,
   subject,
 }: {
   dataTestPrefix: string;
   interfaceLanguage: SupportedLanguage;
   recentResults: RecentCardResult[];
+  resultColors?: WorldResultColors;
   subject: string;
 }) {
   return (
@@ -66,12 +69,12 @@ export function RecentAnswersChip({
                   size="small"
                   sx={{
                     bgcolor: result.isCorrect
-                      ? footballResultColors.correct.soft
-                      : footballResultColors.incorrect.soft,
+                      ? resultColors.correct.soft
+                      : resultColors.incorrect.soft,
                     border: '1px solid',
                     borderColor: result.isCorrect
-                      ? footballResultColors.correct.border
-                      : footballResultColors.incorrect.border,
+                      ? resultColors.correct.border
+                      : resultColors.incorrect.border,
                     color: '#111111',
                     fontSize: 12,
                     fontWeight: 800,

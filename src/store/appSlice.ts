@@ -11,6 +11,7 @@ import {
   defaultPracticeSettings,
   getPracticeSettings,
 } from '../domain/practiceOrdering';
+import { WorldId, defaultWorldId, resolveWorldId } from '../domain/worlds';
 
 export interface AppState {
   assistantId: AssistantId;
@@ -24,6 +25,7 @@ export interface AppState {
   playerProfile?: PlayerProfile;
   practiceSettings?: PracticeSettings;
   targetLanguage: SupportedLanguage;
+  worldId?: WorldId;
 }
 
 export interface PlayerProfile {
@@ -55,6 +57,7 @@ const initialState: AppState = {
   isGameHelpCollapsed: false,
   practiceSettings: defaultPracticeSettings,
   targetLanguage: 'en',
+  worldId: defaultWorldId,
 };
 
 const appSlice = createSlice({
@@ -108,6 +111,9 @@ const appSlice = createSlice({
     setTargetLanguage(state, action: PayloadAction<SupportedLanguage>) {
       state.targetLanguage = action.payload;
     },
+    setWorldId(state, action: PayloadAction<WorldId>) {
+      state.worldId = resolveWorldId(action.payload);
+    },
     setCorrectStreakCooldownMonths(
       state,
       action: PayloadAction<{
@@ -152,6 +158,7 @@ export const {
   setPlayerProfile,
   setRecentMistakeRepeatFrequencyPercent,
   setTargetLanguage,
+  setWorldId,
 } = appSlice.actions;
 export const appReducer = appSlice.reducer;
 

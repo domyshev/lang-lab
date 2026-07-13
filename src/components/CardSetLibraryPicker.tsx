@@ -28,9 +28,11 @@ import {
 import { formatCardCount, t } from '../domain/i18n';
 import { SupportedLanguage } from '../domain/languages';
 import {
-  getFootballPaletteForCardSet,
-  stadiumAccent,
-} from '../domain/footballTheme';
+  getPaletteForCardSet,
+  getWorldAccent,
+  resolveWorldId,
+  type WorldId,
+} from '../domain/worlds';
 import { RootState } from '../store/store';
 
 const featuredCardSetLimit = 3;
@@ -52,6 +54,7 @@ export function CardSetLibraryPicker({
   onSelect,
   selectedCardSetId,
   targetLanguage,
+  worldId = 'football',
 }: {
   cards: LanguageCard[];
   cardSets: CardSet[];
@@ -60,8 +63,11 @@ export function CardSetLibraryPicker({
   onSelect: (cardSetId: string) => void;
   selectedCardSetId: string;
   targetLanguage: SupportedLanguage;
+  worldId?: WorldId;
 }) {
   const wheelDeltaAccumulator = useRef(0);
+  const resolvedWorldId = resolveWorldId(worldId);
+  const worldAccent = getWorldAccent(resolvedWorldId);
   const items = useMemo<CardSetLibraryItem[]>(() => {
     const cardById = new Map(cards.map((card) => [card.id, card]));
     const countPlayableCards = (cardIds: string[]) =>
@@ -216,7 +222,7 @@ export function CardSetLibraryPicker({
                   size="small"
                   sx={{
                     bgcolor: 'rgba(24, 119, 201, 0.10)',
-                    color: stadiumAccent.main,
+                    color: worldAccent.main,
                     flexShrink: 0,
                     '&:hover': { bgcolor: 'rgba(24, 119, 201, 0.18)' },
                   }}
@@ -251,7 +257,7 @@ export function CardSetLibraryPicker({
             sx={{
               bgcolor: '#fff3c9',
               border: '1px solid rgba(131, 88, 17, 0.18)',
-              color: stadiumAccent.main,
+              color: worldAccent.main,
               '&:hover': { bgcolor: '#ffe8a3' },
             }}
           >
@@ -271,7 +277,7 @@ export function CardSetLibraryPicker({
             data-test="card_set_library__previous_button"
             disabled={!canPageBack}
             onClick={() => pageFeaturedItems(-1)}
-            sx={carouselButtonSx}
+            sx={getCarouselButtonSx(worldAccent)}
           >
             <KeyboardArrowLeftRoundedIcon sx={{ fontSize: 18 }} />
           </IconButton>
@@ -296,6 +302,7 @@ export function CardSetLibraryPicker({
                 key={item.id}
                 onSelect={() => handleSelect(item.id, 'featured')}
                 selected={item.id === selectedCardSetId}
+                worldId={resolvedWorldId}
               />
             ))}
           </Box>
@@ -304,7 +311,7 @@ export function CardSetLibraryPicker({
             data-test="card_set_library__next_button"
             disabled={!canPageForward}
             onClick={() => pageFeaturedItems(1)}
-            sx={carouselButtonSx}
+            sx={getCarouselButtonSx(worldAccent)}
           >
             <KeyboardArrowRightRoundedIcon sx={{ fontSize: 18 }} />
           </IconButton>
@@ -382,6 +389,7 @@ export function CardSetLibraryPicker({
                   key={item.id}
                   onSelect={() => handleSelect(item.id, 'dialog')}
                   selected={item.id === selectedCardSetId}
+                  worldId={resolvedWorldId}
                 />
               ))}
             </Box>
@@ -406,14 +414,17 @@ function CardSetLibraryChip({
   item,
   onSelect,
   selected,
+  worldId,
 }: {
   dialogMode?: boolean;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   item: CardSetLibraryItem;
   onSelect: () => void;
   selected: boolean;
+  worldId: WorldId;
 }) {
-  const palette = getFootballPaletteForCardSet(item.id, {
+  const worldAccent = getWorldAccent(worldId);
+  const palette = getPaletteForCardSet(item.id, worldId, {
     isAllCards: item.isAllCards,
   });
   const dataTestPrefix = dialogMode
@@ -433,7 +444,7 @@ function CardSetLibraryChip({
         selected
           ? {
               boxShadow:
-                '0 0 0 4px #123c69, 0 0 0 7px #fffdf4, 0 18px 36px rgba(18, 60, 105, 0.30)',
+                `0 0 0 4px ${worldAccent.dark}, 0 0 0 7px #fffdf4, 0 18px 36px rgba(18, 60, 105, 0.30)`,
             }
           : undefined
       }
@@ -444,7 +455,7 @@ function CardSetLibraryChip({
           : '1px solid rgba(32, 48, 21, 0.14)',
         borderRadius: 3,
         boxShadow: selected
-          ? '0 0 0 4px #123c69, 0 0 0 7px #fffdf4, 0 18px 36px rgba(18, 60, 105, 0.30)'
+          ? `0 0 0 4px ${worldAccent.dark}, 0 0 0 7px #fffdf4, 0 18px 36px rgba(18, 60, 105, 0.30)`
           : '0 10px 22px rgba(32, 48, 21, 0.10)',
         color: palette.foreground,
         display: 'flex',
@@ -529,10 +540,10 @@ function CardSetLibraryChip({
               data-test={`${dataTestPrefix}_selected_icon__${item.id}`}
               sx={{
                 bgcolor: '#fffdf4',
-                border: '2px solid #123c69',
+                border: `2px solid ${worldAccent.dark}`,
                 borderRadius: '999px',
                 boxShadow: '0 8px 18px rgba(18, 60, 105, 0.24)',
-                color: stadiumAccent.dark,
+                color: worldAccent.dark,
                 flex: '0 0 auto',
                 fontSize: 34,
               }}
@@ -587,23 +598,25 @@ function getCenteredStartIndex(index: number, itemCount: number) {
   return Math.min(Math.max(0, index - 1), maxStartIndex);
 }
 
-const carouselButtonSx = {
-  alignSelf: 'stretch',
-  bgcolor: 'transparent',
-  border: '0px solid transparent',
-  borderRadius: 2,
-  color: stadiumAccent.main,
-  justifyContent: 'center',
-  minWidth: 0,
-  px: 0,
-  width: { xs: 18, sm: 12 },
-  '&:hover': {
+function getCarouselButtonSx(worldAccent: ReturnType<typeof getWorldAccent>) {
+  return {
+    alignSelf: 'stretch',
     bgcolor: 'transparent',
-    color: stadiumAccent.dark,
-  },
-  '&.Mui-disabled': {
-    bgcolor: 'transparent',
-    borderColor: 'transparent',
-    color: 'rgba(32, 48, 21, 0.22)',
-  },
-};
+    border: '0px solid transparent',
+    borderRadius: 2,
+    color: worldAccent.main,
+    justifyContent: 'center',
+    minWidth: 0,
+    px: 0,
+    width: { xs: 18, sm: 12 },
+    '&:hover': {
+      bgcolor: 'transparent',
+      color: worldAccent.dark,
+    },
+    '&.Mui-disabled': {
+      bgcolor: 'transparent',
+      borderColor: 'transparent',
+      color: 'rgba(32, 48, 21, 0.22)',
+    },
+  };
+}

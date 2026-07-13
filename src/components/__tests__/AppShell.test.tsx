@@ -55,11 +55,13 @@ describe('AppShell', () => {
     ).toBeInTheDocument();
     const dialog = screen.getByRole('dialog', { name: 'Как тебя зовут?' });
 
+    expect(within(dialog).getByRole('combobox', { name: 'Мир' })).toBeInTheDocument();
     expect(within(dialog).getByRole('combobox', { name: 'Персонаж' })).toBeInTheDocument();
     expect(within(dialog).getByRole('combobox', { name: 'Интерфейс' })).toBeInTheDocument();
     expect(within(dialog).getByRole('combobox', { name: 'Цель' })).toBeInTheDocument();
     expect(within(dialog).getByRole('button', { name: 'Продолжить анонимно' })).toBeDisabled();
 
+    await selectOnboardingOption(user, dialog, 'Мир', 'Футбол');
     await selectOnboardingOption(user, dialog, 'Персонаж', 'Португальский бомбардир');
     await selectOnboardingOption(user, dialog, 'Интерфейс', 'English');
     await selectOnboardingOption(user, dialog, 'Target', 'Español');
@@ -85,8 +87,9 @@ describe('AppShell', () => {
     expect(store.getState().app.assistantId).toBe('greenPower');
     expect(store.getState().app.interfaceLanguage).toBe('en');
     expect(store.getState().app.targetLanguage).toBe('es');
+    expect(store.getState().app.worldId).toBe('football');
     expect(store.getState().app.playerProfile?.avatarSeed).toEqual(
-      expect.stringContaining('supporter:spain'),
+      expect.stringContaining('supporter:portugal'),
     );
   });
 
@@ -107,7 +110,8 @@ describe('AppShell', () => {
     );
 
     const dialog = screen.getByRole('dialog', { name: 'Как тебя зовут?' });
-    await selectOnboardingOption(user, dialog, 'Персонаж', 'Испанский вингер');
+    await selectOnboardingOption(user, dialog, 'Мир', 'Лес');
+    await selectOnboardingOption(user, dialog, 'Персонаж', 'Веселый листочек');
     await selectOnboardingOption(user, dialog, 'Интерфейс', 'Русский');
     await selectOnboardingOption(user, dialog, 'Цель', 'English');
     await user.type(within(dialog).getByLabelText('Имя игрока'), 'Илья');
@@ -118,10 +122,11 @@ describe('AppShell', () => {
     });
     expect(screen.getByTestId('player_greeting__label').textContent).toBe('Илья');
     expect(store.getState().app.playerProfile).toMatchObject({
-      avatarSeed: expect.stringContaining('supporter:spain'),
+      avatarSeed: expect.stringContaining('supporter:forest'),
       displayName: 'Илья',
       isAnonymous: false,
     });
+    expect(store.getState().app.worldId).toBe('forest');
   });
 
   it('shows the player flag for the selected assistant country in the top bar', () => {

@@ -11,7 +11,15 @@ export type FootballCountryPalette = {
 };
 
 export type FootballGameTileTheme = FootballCountryPalette & {
-  art: 'goal' | 'ball' | 'worldCup2026' | 'goalkeeper';
+  art:
+    | 'goal'
+    | 'ball'
+    | 'worldCup2026'
+    | 'goalkeeper'
+    | 'forestCrossword'
+    | 'forestChoice'
+    | 'forestLetters'
+    | 'forestPhrase';
 };
 
 export const stadiumAccent = {

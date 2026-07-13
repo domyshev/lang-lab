@@ -33,15 +33,22 @@ import type { SelectChangeEvent } from '@mui/material/Select';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   AssistantId,
-  visibleAssistantCharacters,
+  getVisibleAssistantCharacters,
 } from '../domain/assistants';
-import { stadiumAccent } from '../domain/footballTheme';
 import { t } from '../domain/i18n';
+import {
+  WorldId,
+  getWorldAccent,
+  resolveWorldId,
+  worldDefinitions,
+  worldIds,
+} from '../domain/worlds';
 import {
   setAssistantId,
   setInterfaceLanguage,
   setPlayerProfile,
   setTargetLanguage,
+  setWorldId,
 } from '../store/appSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { AppLogo } from './AppLogo';
@@ -89,12 +96,17 @@ export function AppShell({
   const targetLanguage = useSelector(
     (state: RootState) => state.app.targetLanguage,
   );
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
+  );
   const completedGameCount = useSelector(
     (state: RootState & { attempts?: RootState['attempts'] }) =>
       state.attempts?.attempts.length ?? 0,
   );
   const dispatch = useDispatch<AppDispatch>();
   const scrollRootRef = useRef<HTMLDivElement>(null);
+  const worldAccent = getWorldAccent(worldId);
+  const appBarWorldSx = getAppBarWorldSx(worldId);
   const tabValue = visibleTabSections.includes(activeSection)
     ? activeSection
     : false;
@@ -122,11 +134,7 @@ export function AppShell({
         position="sticky"
         elevation={0}
         sx={{
-          background:
-            'linear-gradient(90deg, #fff0a8 0%, #ffd24d 46%, #fff3bd 100%)',
-          bgcolor: '#ffd24d',
-          borderBottom: '2px solid rgba(198, 11, 30, 0.28)',
-          boxShadow: '0 8px 22px rgba(124, 21, 24, 0.08)',
+          ...appBarWorldSx,
           color: '#203015',
           overscrollBehaviorY: 'none',
         }}
@@ -166,6 +174,7 @@ export function AppShell({
             <AppLogo
               interfaceLanguage={interfaceLanguage}
               onClick={onLogoClick}
+              worldId={worldId}
             />
           </Box>
 
@@ -204,10 +213,10 @@ export function AppShell({
                 gap: '15px',
               },
               '& .Mui-selected': {
-                color: stadiumAccent.dark,
+                color: worldAccent.dark,
               },
               '& .MuiTabs-indicator': {
-                bgcolor: stadiumAccent.dark,
+                bgcolor: worldAccent.dark,
                 height: 3,
               },
             }}
@@ -240,13 +249,13 @@ export function AppShell({
             <Tab
               data-test="app_shell__tab__chat"
               value="chat"
-              icon={<FootballAiChatIcon />}
+              icon={<FootballAiChatIcon accent={worldAccent} />}
               iconPosition="start"
               label={t(interfaceLanguage, 'aiChatTitle')}
               sx={{
-                color: stadiumAccent.dark,
+                color: worldAccent.dark,
                 minWidth: '0 !important',
-                '&.Mui-selected': { color: stadiumAccent.dark },
+                '&.Mui-selected': { color: worldAccent.dark },
               }}
             />
             <Tab
@@ -287,7 +296,7 @@ export function AppShell({
           >
             {playerProfile && (
               <PlayerGreeting
-                avatarCountry={getAssistantSupporterCountry(assistantId)}
+                avatarCountry={getPlayerSupporterCountry(worldId, assistantId)}
                 avatarSeed={playerProfile.avatarSeed}
                 completedGameCount={completedGameCount}
                 interfaceLanguage={interfaceLanguage}
@@ -300,7 +309,10 @@ export function AppShell({
                   const trimmedName = name.trim();
                   dispatch(
                     setPlayerProfile({
-                      avatarSeed: createPlayerAvatarSeed(trimmedName),
+                      avatarSeed: createPlayerAvatarSeed(
+                        trimmedName,
+                        getPlayerSupporterCountry(worldId, assistantId),
+                      ),
                       displayName: trimmedName || undefined,
                       isAnonymous: !trimmedName,
                     }),
@@ -338,14 +350,25 @@ export function AppShell({
         interfaceLanguage={interfaceLanguage}
         open={!playerProfile}
         targetLanguage={targetLanguage}
-        onComplete={({ assistantId, interfaceLanguage, name, targetLanguage }) => {
+        worldId={worldId}
+        onComplete={({
+          assistantId,
+          interfaceLanguage,
+          name,
+          targetLanguage,
+          worldId,
+        }) => {
           const trimmedName = name.trim();
+          dispatch(setWorldId(worldId));
           dispatch(setAssistantId(assistantId));
           dispatch(setInterfaceLanguage(interfaceLanguage));
           dispatch(setTargetLanguage(targetLanguage));
           dispatch(
             setPlayerProfile({
-              avatarSeed: createPlayerAvatarSeed(trimmedName),
+              avatarSeed: createPlayerAvatarSeed(
+                trimmedName,
+                getPlayerSupporterCountry(worldId, assistantId),
+              ),
               displayName: trimmedName || undefined,
               isAnonymous: !trimmedName,
             }),
@@ -356,7 +379,7 @@ export function AppShell({
   );
 }
 
-function FootballAiChatIcon() {
+function FootballAiChatIcon({ accent }: { accent: ReturnType<typeof getWorldAccent> }) {
   return (
     <Box
       component="svg"
@@ -370,12 +393,12 @@ function FootballAiChatIcon() {
         cy="20"
         r="15"
         fill="#fffdf4"
-        stroke={stadiumAccent.dark}
+        stroke={accent.dark}
         strokeWidth="2"
       />
       <path
         d="M20 8v24M8 20h24M12 12l16 16M28 12 12 28"
-        stroke={stadiumAccent.main}
+        stroke={accent.main}
         strokeWidth="1.4"
         opacity="0.62"
       />
@@ -392,7 +415,7 @@ function FootballAiChatIcon() {
         strokeLinecap="round"
         strokeWidth="1.5"
       />
-      <circle cx="12" cy="31" r="2" fill={stadiumAccent.main} />
+      <circle cx="12" cy="31" r="2" fill={accent.main} />
     </Box>
   );
 }
@@ -903,6 +926,7 @@ function PlayerOnboardingDialog({
   onComplete,
   open,
   targetLanguage,
+  worldId,
 }: {
   assistantId: AssistantId;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
@@ -911,17 +935,21 @@ function PlayerOnboardingDialog({
     interfaceLanguage: SupportedLanguage;
     name: string;
     targetLanguage: SupportedLanguage;
+    worldId: WorldId;
   }) => void;
   open: boolean;
   targetLanguage: SupportedLanguage;
+  worldId: WorldId;
 }) {
   const titleId = useId();
+  const worldLabelId = useId();
   const assistantLabelId = useId();
   const interfaceLabelId = useId();
   const targetLabelId = useId();
   const [name, setName] = useState('');
   const [selectedAssistantId, setSelectedAssistantId] =
     useState<AssistantId | ''>('');
+  const [selectedWorldId, setSelectedWorldId] = useState<WorldId | ''>('');
   const [selectedInterfaceLanguage, setSelectedInterfaceLanguage] = useState<
     SupportedLanguage | ''
   >('');
@@ -932,12 +960,17 @@ function PlayerOnboardingDialog({
   const previewSeed = trimmedName
     ? createPlayerAvatarSeed(trimmedName)
     : 'player:anonymous-preview';
+  const resolvedSelectedWorldId = selectedWorldId || worldId;
   const previewCountry = selectedAssistantId
-    ? getAssistantSupporterCountry(selectedAssistantId)
-    : 'spain';
+    ? getPlayerSupporterCountry(resolvedSelectedWorldId, selectedAssistantId)
+    : getPlayerSupporterCountry(resolvedSelectedWorldId, assistantId);
   const copyLanguage = selectedInterfaceLanguage || interfaceLanguage;
+  const visibleAssistants = getVisibleAssistantCharacters(resolvedSelectedWorldId);
   const isReady = Boolean(
-    selectedAssistantId && selectedInterfaceLanguage && selectedTargetLanguage,
+    selectedWorldId &&
+      selectedAssistantId &&
+      selectedInterfaceLanguage &&
+      selectedTargetLanguage,
   );
   const complete = (nextName: string) => {
     if (!isReady) {
@@ -948,6 +981,7 @@ function PlayerOnboardingDialog({
       interfaceLanguage: selectedInterfaceLanguage || interfaceLanguage,
       name: nextName,
       targetLanguage: selectedTargetLanguage || targetLanguage,
+      worldId: selectedWorldId || worldId,
     });
   };
 
@@ -984,6 +1018,30 @@ function PlayerOnboardingDialog({
             </Typography>
           </Stack>
           <FormControl
+            data-test="player_onboarding__world_control"
+            fullWidth
+          >
+            <InputLabel id={worldLabelId}>
+              {t(copyLanguage, 'world')}
+            </InputLabel>
+            <Select
+              data-test="player_onboarding__world_select"
+              label={t(copyLanguage, 'world')}
+              labelId={worldLabelId}
+              value={selectedWorldId}
+              onChange={(event: SelectChangeEvent<WorldId | ''>) => {
+                setSelectedWorldId(event.target.value as WorldId);
+                setSelectedAssistantId('');
+              }}
+            >
+              {worldIds.map((world) => (
+                <MenuItem key={world} value={world}>
+                  {worldDefinitions[world].label[copyLanguage]}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl
             data-test="player_onboarding__assistant_control"
             fullWidth
           >
@@ -999,7 +1057,7 @@ function PlayerOnboardingDialog({
                 setSelectedAssistantId(event.target.value as AssistantId)
               }
             >
-              {visibleAssistantCharacters.map((assistant) => (
+              {visibleAssistants.map((assistant) => (
                 <MenuItem key={assistant.id} value={assistant.id}>
                   {assistant.name[copyLanguage]}
                 </MenuItem>
@@ -1135,6 +1193,35 @@ function getAssistantSupporterCountry(
     default:
       return 'spain';
   }
+}
+
+function getPlayerSupporterCountry(
+  worldId: WorldId,
+  assistantId: AssistantId | string | undefined,
+): SupporterCountry {
+  return worldId === 'forest'
+    ? 'forest'
+    : getAssistantSupporterCountry(assistantId);
+}
+
+function getAppBarWorldSx(worldId: WorldId) {
+  if (worldId === 'forest') {
+    return {
+      background:
+        'linear-gradient(90deg, #f4fbeb 0%, #d8f1b7 48%, #f9ffe9 100%)',
+      bgcolor: '#d8f1b7',
+      borderBottom: '2px solid rgba(117, 168, 67, 0.30)',
+      boxShadow: '0 8px 22px rgba(63, 91, 38, 0.08)',
+    };
+  }
+
+  return {
+    background:
+      'linear-gradient(90deg, #fff0a8 0%, #ffd24d 46%, #fff3bd 100%)',
+    bgcolor: '#ffd24d',
+    borderBottom: '2px solid rgba(198, 11, 30, 0.28)',
+    boxShadow: '0 8px 22px rgba(124, 21, 24, 0.08)',
+  };
 }
 
 const visibleTabSections: AppShellSection[] = [

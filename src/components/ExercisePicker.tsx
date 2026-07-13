@@ -8,11 +8,13 @@ import {
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import { useSelector } from 'react-redux';
 import { ExerciseType } from '../domain/exercises';
-import {
-  FootballGameTileTheme,
-  gameTileThemes,
-} from '../domain/footballTheme';
+import { FootballGameTileTheme } from '../domain/footballTheme';
 import { t } from '../domain/i18n';
+import {
+  getGameTileThemes,
+  getWorldAccent,
+  resolveWorldId,
+} from '../domain/worlds';
 import { RootState } from '../store/store';
 import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
 import {
@@ -60,6 +62,11 @@ export function ExercisePicker({
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
+  );
+  const gameTileThemes = getGameTileThemes(worldId);
+  const worldAccent = getWorldAccent(worldId);
 
   return (
     <Box data-test="exercise_picker__panel">
@@ -108,7 +115,7 @@ export function ExercisePicker({
                   ...(isSelected
                     ? {
                         boxShadow:
-                          '0 0 0 3px #fffdf4, 0 0 0 7px #123c69, 0 18px 36px rgba(18, 60, 105, 0.30)',
+                          `0 0 0 3px #fffdf4, 0 0 0 7px ${worldAccent.dark}, 0 18px 36px rgba(18, 60, 105, 0.30)`,
                       }
                     : {}),
                 }}
@@ -136,7 +143,7 @@ export function ExercisePicker({
                     background: tileBackground,
                     borderColor: '#fffdf4',
                     boxShadow:
-                      '0 0 0 3px #fffdf4, 0 0 0 7px #123c69, 0 18px 36px rgba(18, 60, 105, 0.30)',
+                      `0 0 0 3px #fffdf4, 0 0 0 7px ${worldAccent.dark}, 0 18px 36px rgba(18, 60, 105, 0.30)`,
                     transform: 'translateY(-2px)',
                   },
                   '&.Mui-selected:hover': {
@@ -155,10 +162,10 @@ export function ExercisePicker({
                     sx={{
                       alignItems: 'center',
                       bgcolor: '#fffdf4',
-                      border: '2px solid #123c69',
+                      border: `2px solid ${worldAccent.dark}`,
                       borderRadius: '999px',
                       boxShadow: '0 10px 22px rgba(18, 60, 105, 0.26)',
-                      color: '#123c69',
+                      color: worldAccent.dark,
                       display: 'inline-flex',
                       height: 38,
                       justifyContent: 'center',
@@ -267,6 +274,133 @@ function GameTileArt({
   dataTest: string;
   type: ExerciseType;
 }) {
+  if (art === 'forestCrossword') {
+    return (
+      <Box
+        aria-hidden="true"
+        component="svg"
+        data-test={dataTest}
+        focusable="false"
+        viewBox="0 0 240 150"
+        preserveAspectRatio="none"
+        sx={tileArtStyles}
+      >
+        <rect width="240" height="150" fill="transparent" />
+        <path d="M28 118 C70 72 119 118 168 62 C190 38 214 32 232 36" fill="none" stroke={accent} strokeWidth="8" strokeLinecap="round" opacity="0.22" />
+        <g data-test={`exercise_picker__art_forest_crossword__${type}`}>
+          {[
+            [32, 24, 'L'],
+            [68, 24, 'E'],
+            [104, 24, 'S'],
+            [68, 60, 'A'],
+            [68, 96, 'F'],
+            [104, 60, 'Я'],
+            [140, 60, 'Ñ'],
+          ].map(([x, y, letter]) => (
+            <g key={`${x}-${y}-${letter}`}>
+              <rect x={Number(x)} y={Number(y)} width="32" height="32" rx="9" fill="#fffdf4" stroke={accent} strokeWidth="2.4" opacity="0.94" />
+              <text x={Number(x) + 16} y={Number(y) + 23} textAnchor="middle" fontSize="17" fontWeight="900" fill="#203015">{letter}</text>
+            </g>
+          ))}
+        </g>
+        <path d="M174 34 C184 12 213 14 220 36 C207 52 184 56 174 34 Z" fill={accent} opacity="0.28" />
+        <path d="M180 36 C192 32 204 28 216 20" stroke="#fffdf4" strokeWidth="3" strokeLinecap="round" opacity="0.72" />
+      </Box>
+    );
+  }
+
+  if (art === 'forestChoice') {
+    return (
+      <Box
+        aria-hidden="true"
+        component="svg"
+        data-test={dataTest}
+        focusable="false"
+        viewBox="0 0 240 150"
+        preserveAspectRatio="none"
+        sx={tileArtStyles}
+      >
+        <rect width="240" height="150" fill="transparent" />
+        <path d="M24 96 C62 58 102 114 142 78 C172 50 198 64 224 42" fill="none" stroke={accent} strokeWidth="11" strokeLinecap="round" opacity="0.22" />
+        {[
+          [34, 32, '#ffffff', 'A'],
+          [54, 70, '#eef9e8', 'B'],
+          [74, 108, '#fff8d8', 'C'],
+        ].map(([x, y, fill, letter]) => (
+          <g key={`${x}-${y}-${letter}`}>
+            <rect x={Number(x)} y={Number(y)} width="134" height="30" rx="11" fill={String(fill)} stroke={accent} strokeWidth="2" opacity="0.95" />
+            <circle cx={Number(x) + 17} cy={Number(y) + 15} r="8" fill={accent} opacity="0.24" />
+            <text x={Number(x) + 17} y={Number(y) + 20} textAnchor="middle" fontSize="11" fontWeight="900" fill="#203015">{letter}</text>
+            <path d={`M${Number(x) + 40} ${Number(y) + 15} H${Number(x) + 114}`} stroke="#203015" strokeWidth="4" strokeLinecap="round" opacity="0.18" />
+          </g>
+        ))}
+        <g data-test={`exercise_picker__art_forest_choice__${type}`} transform="translate(190 38)">
+          <path d="M0 26 C-8 -6 28 -16 36 12 C24 32 8 38 0 26 Z" fill={accent} opacity="0.32" />
+          <path d="M6 24 C14 18 22 10 31 0" stroke="#fffdf4" strokeWidth="3" strokeLinecap="round" />
+        </g>
+      </Box>
+    );
+  }
+
+  if (art === 'forestLetters') {
+    return (
+      <Box
+        aria-hidden="true"
+        component="svg"
+        data-test={dataTest}
+        focusable="false"
+        viewBox="0 0 240 150"
+        preserveAspectRatio="none"
+        sx={tileArtStyles}
+      >
+        <rect width="240" height="150" fill="transparent" />
+        <path d="M34 42 C70 18 104 24 132 50 C160 78 190 60 216 34" fill="none" stroke={accent} strokeWidth="7" strokeLinecap="round" opacity="0.2" />
+        {[
+          [30, 62, 'm', true],
+          [70, 62, '', false],
+          [110, 62, 's', true],
+          [150, 62, '', false],
+          [190, 62, 's', true],
+        ].map(([x, y, letter, filled]) => (
+          <g key={`${x}-${letter}`}>
+            <rect x={Number(x)} y={Number(y)} width="32" height="38" rx="10" fill={filled ? '#ffffff' : '#fff7df'} stroke={accent} strokeWidth="2.2" opacity="0.96" />
+            {filled ? (
+              <text x={Number(x) + 16} y={Number(y) + 27} textAnchor="middle" fontSize="20" fontWeight="900" fill="#203015">{letter}</text>
+            ) : (
+              <path d={`M${Number(x) + 9} ${Number(y) + 21} H${Number(x) + 23}`} stroke={accent} strokeWidth="4" strokeLinecap="round" opacity="0.75" />
+            )}
+          </g>
+        ))}
+        <path data-test={`exercise_picker__art_forest_letters__${type}`} d="M184 28 C192 6 224 8 230 32 C214 48 192 50 184 28 Z" fill={accent} opacity="0.3" />
+      </Box>
+    );
+  }
+
+  if (art === 'forestPhrase') {
+    return (
+      <Box
+        aria-hidden="true"
+        component="svg"
+        data-test={dataTest}
+        focusable="false"
+        viewBox="0 0 240 150"
+        preserveAspectRatio="none"
+        sx={tileArtStyles}
+      >
+        <rect width="240" height="150" fill="transparent" />
+        <path d="M28 50 H126 M28 82 H90 M132 82 H212 M28 114 H188" stroke="#203015" strokeWidth="8" strokeLinecap="round" opacity="0.14" />
+        <rect x="92" y="64" width="50" height="34" rx="11" fill="#fffdf4" stroke={accent} strokeWidth="2.5" opacity="0.95" />
+        <path d="M104 81 H130" stroke={accent} strokeWidth="5" strokeLinecap="round" />
+        <g data-test={`exercise_picker__art_forest_phrase__${type}`} transform="translate(174 42)">
+          <path d="M-26 36 C-22 4 4 -10 30 4 C48 14 54 34 48 52 C22 44 -2 44 -26 36 Z" fill={accent} opacity="0.3" />
+          <path d="M-4 40 H22 L28 82 H-10 Z" fill="#fff7df" stroke={accent} strokeWidth="3" opacity="0.8" />
+          <circle cx="-2" cy="18" r="5" fill="#fffdf4" opacity="0.85" />
+          <circle cx="22" cy="20" r="5" fill="#fffdf4" opacity="0.85" />
+        </g>
+      </Box>
+    );
+  }
+
   if (art === 'goal') {
     return (
       <Box

@@ -1,5 +1,6 @@
 import type { KeyboardEvent } from 'react';
 import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import DeleteSweepOutlinedIcon from '@mui/icons-material/DeleteSweepOutlined';
 import ReplayIcon from '@mui/icons-material/Replay';
@@ -15,10 +16,11 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { stadiumAccent } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
+import { getWorldAccent, resolveWorldId } from '../../domain/worlds';
 import { AiAssistantMessage } from '../../store/aiAssistantSlice';
+import { RootState } from '../../store/store';
 import { PlannedAiOperation } from '../../domain/aiOperations';
 import { AiBlockedOperationPreview } from './AiBlockedOperationPreview';
 import { AiMarkdownMessage } from './AiMarkdownMessage';
@@ -58,6 +60,10 @@ export function AiChatPanel({
   showHeader = true,
 }: AiChatPanelProps) {
   const messagesRef = useRef<HTMLDivElement | null>(null);
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
+  );
+  const worldAccent = getWorldAccent(worldId);
   const canSend = Boolean(draft.trim()) && !isThinking;
   const scrollSignature = useMemo(
     () =>
@@ -179,11 +185,11 @@ export function AiChatPanel({
                   sx={{
                     borderColor: 'rgba(24, 119, 201, 0.42)',
                     borderRadius: 999,
-                    color: stadiumAccent.dark,
+                    color: worldAccent.dark,
                     textTransform: 'none',
                     '&:hover': {
                       bgcolor: 'rgba(24, 119, 201, 0.08)',
-                      borderColor: stadiumAccent.main,
+                      borderColor: worldAccent.main,
                     },
                   }}
                 >
@@ -314,11 +320,11 @@ export function AiChatPanel({
                     spacing={0.75}
                     sx={{ alignItems: 'center', flexWrap: 'wrap' }}
                   >
-                    <ShortcutKey>Enter</ShortcutKey>
+                    <ShortcutKey accent={worldAccent}>Enter</ShortcutKey>
                     <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>
                       /
                     </Typography>
-                    <ShortcutKey>Shift Enter</ShortcutKey>
+                    <ShortcutKey accent={worldAccent}>Shift Enter</ShortcutKey>
                   </Stack>
                 </Stack>
               }
@@ -374,7 +380,13 @@ export function AiChatPanel({
   );
 }
 
-function ShortcutKey({ children }: { children: string }) {
+function ShortcutKey({
+  accent,
+  children,
+}: {
+  accent: ReturnType<typeof getWorldAccent>;
+  children: string;
+}) {
   return (
     <Box
       component="span"
@@ -383,7 +395,7 @@ function ShortcutKey({ children }: { children: string }) {
         border: '1px solid rgba(24, 119, 201, 0.22)',
         borderRadius: 1.25,
         boxShadow: '0 2px 0 rgba(18, 60, 105, 0.16)',
-        color: stadiumAccent.dark,
+        color: accent.dark,
         fontSize: 13,
         fontWeight: 900,
         letterSpacing: 0,

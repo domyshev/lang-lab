@@ -8,6 +8,7 @@ import {
   resolveAssistantId,
 } from '../domain/assistants';
 import { t } from '../domain/i18n';
+import { resolveWorldId } from '../domain/worlds';
 import { RootState } from '../store/store';
 import { AssistantStickerIcon } from './assistantAssets';
 
@@ -19,10 +20,18 @@ export function AssistantProfileView({
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
+  );
   const resolvedAssistantId = resolveAssistantId(
     assistantId ?? defaultAssistantId,
+    worldId,
   );
-  const assistant = getAssistantProfile(resolvedAssistantId, interfaceLanguage);
+  const assistant = getAssistantProfile(
+    resolvedAssistantId,
+    interfaceLanguage,
+    worldId,
+  );
   const name = assistant.name[interfaceLanguage];
   const motto = assistant.motto[interfaceLanguage];
 
@@ -43,6 +52,7 @@ export function AssistantProfileView({
             dataTest={`assistant_profile__sticker__${resolvedAssistantId}`}
             size={132}
             sx={{ height: { xs: 112, sm: 132 }, width: { xs: 112, sm: 132 } }}
+            worldId={worldId}
           />
           <Box data-test={`assistant_profile__hero_text__${resolvedAssistantId}`}>
             <Typography
