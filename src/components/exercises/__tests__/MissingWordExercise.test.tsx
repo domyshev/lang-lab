@@ -407,5 +407,11 @@ function createStore() {
       stats: statsReducer,
       cardSets: cardSetsReducer,
     },
+    preloadedState: {
+      app: {
+        ...appReducer(undefined, { type: 'test/init' }),
+        interfaceLanguage: 'ru' as const,
+      },
+    },
   });
 }

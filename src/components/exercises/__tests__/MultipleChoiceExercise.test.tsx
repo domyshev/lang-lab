@@ -15,10 +15,10 @@ const prompt = {
 };
 
 describe('MultipleChoiceExercise', () => {
-  it('puts the complementary translation first and makes it visually primary', () => {
+  it('puts companion translations first and moves extra hints to the second row', () => {
     render(
       <MultipleChoiceExercise
-        complementaryLanguage="es"
+        complementaryLanguages={['es', 'ru']}
         interfaceLanguage="ru"
         prompt={prompt}
         onAnswer={vi.fn()}
@@ -47,6 +47,11 @@ describe('MultipleChoiceExercise', () => {
         'multiple_choice_exercise__prompt_hint__airport__secondary_language_code__ru',
       ),
     ).toHaveStyle({ marginRight: '4px' });
+    expect(
+      screen.getByTestId(
+        'multiple_choice_exercise__prompt_hint__airport__secondary_row',
+      ),
+    ).toHaveStyle({ marginTop: '8px' });
   });
 
   it('shows white answer options and marks the selected result before next', async () => {
@@ -78,10 +83,10 @@ describe('MultipleChoiceExercise', () => {
     expect(onAnswer).toHaveBeenCalledWith('train');
     expect(screen.queryByText('Правильный ответ')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'train' })).toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(253, 232, 223)',
     });
     expect(screen.getByRole('button', { name: 'airport' })).toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
+      backgroundColor: 'rgb(232, 247, 223)',
     });
     expect(screen.getByRole('button', { name: 'Неверно' })).toBeInTheDocument();
     expect(screen.queryByText('Я знаю')).not.toBeInTheDocument();
@@ -124,10 +129,10 @@ describe('MultipleChoiceExercise', () => {
     expect(onAnswer).toHaveBeenCalledWith('airport');
     expect(screen.queryByText('Правильный ответ')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'airport' })).toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
+      backgroundColor: 'rgb(232, 247, 223)',
     });
     expect(screen.getByRole('button', { name: 'train' })).not.toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(253, 232, 223)',
     });
     expect(screen.getByRole('button', { name: 'Правильно!' })).toBeInTheDocument();
   });

@@ -5,9 +5,16 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import { useSelector } from 'react-redux';
 import { ExerciseType } from '../domain/exercises';
+import { FootballGameTileTheme } from '../domain/footballTheme';
 import { t } from '../domain/i18n';
+import {
+  getGameTileThemes,
+  getWorldAccent,
+  resolveWorldId,
+} from '../domain/worlds';
 import { RootState } from '../store/store';
 import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
 import {
@@ -18,36 +25,22 @@ import {
 const exerciseOptions: Array<{
   type: ExerciseType;
   labelKey: Parameters<typeof t>[1];
-  accent: string;
-  background: string;
 }> = [
   {
     type: 'crossword',
     labelKey: 'crossword',
-    accent: '#c60b1e',
-    background:
-      'radial-gradient(circle at 18% 18%, rgba(255,255,255,0.64) 0 12%, transparent 13%), radial-gradient(circle at 78% 20%, rgba(255,196,0,0.40) 0 15%, transparent 16%), linear-gradient(135deg, #ffc400 0%, #ff7a36 42%, #c60b1e 100%)',
   },
   {
     type: 'multipleChoice',
     labelKey: 'multipleChoice',
-    accent: '#7c1518',
-    background:
-      'radial-gradient(circle at 80% 18%, rgba(255,255,255,0.58) 0 13%, transparent 14%), radial-gradient(circle at 14% 82%, rgba(255,196,0,0.34) 0 13%, transparent 14%), linear-gradient(135deg, #ffe15d 0%, #ff9d2e 46%, #c60b1e 100%)',
   },
   {
     type: 'missingLetters',
     labelKey: 'missingLetters',
-    accent: '#f4b000',
-    background:
-      'radial-gradient(circle at 20% 76%, rgba(255,255,255,0.55) 0 11%, transparent 12%), radial-gradient(circle at 78% 28%, rgba(198,11,30,0.20) 0 13%, transparent 14%), linear-gradient(135deg, #fff06a 0%, #ffc400 44%, #f15b3a 100%)',
   },
   {
     type: 'missingWord',
     labelKey: 'missingWord',
-    accent: '#c60b1e',
-    background:
-      'radial-gradient(circle at 78% 76%, rgba(255,255,255,0.56) 0 12%, transparent 13%), radial-gradient(circle at 22% 18%, rgba(198,11,30,0.20) 0 15%, transparent 16%), linear-gradient(135deg, #fff1a8 0%, #ffc400 45%, #d9272f 100%)',
   },
 ];
 
@@ -69,6 +62,11 @@ export function ExercisePicker({
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
+  );
+  const gameTileThemes = getGameTileThemes(worldId);
+  const worldAccent = getWorldAccent(worldId);
 
   return (
     <Box data-test="exercise_picker__panel">
@@ -99,17 +97,28 @@ export function ExercisePicker({
             const optionLabel = t(interfaceLanguage, option.labelKey);
             const isDisabled = Boolean(disabledExerciseTypes[option.type]);
             const disabledTooltip = disabledExerciseTooltips[option.type];
-            const tileAccent = isDisabled ? disabledTileAccent : option.accent;
+            const theme = gameTileThemes[option.type];
+            const tileAccent = isDisabled ? disabledTileAccent : theme.accent;
             const tileBackground = isDisabled
               ? disabledTileBackground
-              : option.background;
+              : theme.gradient;
+            const isSelected = selectedExerciseType === option.type;
             const tileButton = (
               <ToggleButton
                 aria-label={optionLabel}
+                data-football-country={theme.countryKey}
                 data-test={`exercise_picker__option__${option.type}`}
                 disabled={isDisabled}
                 key={option.type}
-                style={{ backgroundImage: tileBackground }}
+                style={{
+                  backgroundImage: tileBackground,
+                  ...(isSelected
+                    ? {
+                        boxShadow:
+                          `0 0 0 3px #fffdf4, 0 0 0 7px ${worldAccent.dark}, 0 18px 36px rgba(18, 60, 105, 0.30)`,
+                      }
+                    : {}),
+                }}
                 value={option.type}
                 sx={{
                   alignItems: 'stretch',
@@ -132,8 +141,10 @@ export function ExercisePicker({
                   },
                   '&.Mui-selected': {
                     background: tileBackground,
-                    borderColor: tileAccent,
-                    boxShadow: `0 0 0 2px ${tileAccent}33`,
+                    borderColor: '#fffdf4',
+                    boxShadow:
+                      `0 0 0 3px #fffdf4, 0 0 0 7px ${worldAccent.dark}, 0 18px 36px rgba(18, 60, 105, 0.30)`,
+                    transform: 'translateY(-2px)',
                   },
                   '&.Mui-selected:hover': {
                     background: tileBackground,
@@ -145,8 +156,32 @@ export function ExercisePicker({
                   },
                 }}
               >
+                {isSelected && (
+                  <Box
+                    data-test={`exercise_picker__option_selected_badge__${option.type}`}
+                    sx={{
+                      alignItems: 'center',
+                      bgcolor: '#fffdf4',
+                      border: `2px solid ${worldAccent.dark}`,
+                      borderRadius: '999px',
+                      boxShadow: '0 10px 22px rgba(18, 60, 105, 0.26)',
+                      color: worldAccent.dark,
+                      display: 'inline-flex',
+                      height: 38,
+                      justifyContent: 'center',
+                      position: 'absolute',
+                      right: 12,
+                      top: 12,
+                      width: 38,
+                      zIndex: 2,
+                    }}
+                  >
+                    <CheckCircleRoundedIcon sx={{ fontSize: 28 }} />
+                  </Box>
+                )}
                 <GameTileArt
                   accent={tileAccent}
+                  art={theme.art}
                   dataTest={`exercise_picker__option_art__${option.type}`}
                   type={option.type}
                 />
@@ -230,14 +265,143 @@ export function ExercisePicker({
 
 function GameTileArt({
   accent,
+  art,
   dataTest,
   type,
 }: {
   accent: string;
+  art: FootballGameTileTheme['art'];
   dataTest: string;
   type: ExerciseType;
 }) {
-  if (type === 'crossword') {
+  if (art === 'forestCrossword') {
+    return (
+      <Box
+        aria-hidden="true"
+        component="svg"
+        data-test={dataTest}
+        focusable="false"
+        viewBox="0 0 240 150"
+        preserveAspectRatio="none"
+        sx={tileArtStyles}
+      >
+        <rect width="240" height="150" fill="transparent" />
+        <path d="M28 118 C70 72 119 118 168 62 C190 38 214 32 232 36" fill="none" stroke={accent} strokeWidth="8" strokeLinecap="round" opacity="0.22" />
+        <g data-test={`exercise_picker__art_forest_crossword__${type}`}>
+          {[
+            [32, 24, 'L'],
+            [68, 24, 'E'],
+            [104, 24, 'S'],
+            [68, 60, 'A'],
+            [68, 96, 'F'],
+            [104, 60, 'Я'],
+            [140, 60, 'Ñ'],
+          ].map(([x, y, letter]) => (
+            <g key={`${x}-${y}-${letter}`}>
+              <rect x={Number(x)} y={Number(y)} width="32" height="32" rx="9" fill="#fffdf4" stroke={accent} strokeWidth="2.4" opacity="0.94" />
+              <text x={Number(x) + 16} y={Number(y) + 23} textAnchor="middle" fontSize="17" fontWeight="900" fill="#203015">{letter}</text>
+            </g>
+          ))}
+        </g>
+        <path d="M174 34 C184 12 213 14 220 36 C207 52 184 56 174 34 Z" fill={accent} opacity="0.28" />
+        <path d="M180 36 C192 32 204 28 216 20" stroke="#fffdf4" strokeWidth="3" strokeLinecap="round" opacity="0.72" />
+      </Box>
+    );
+  }
+
+  if (art === 'forestChoice') {
+    return (
+      <Box
+        aria-hidden="true"
+        component="svg"
+        data-test={dataTest}
+        focusable="false"
+        viewBox="0 0 240 150"
+        preserveAspectRatio="none"
+        sx={tileArtStyles}
+      >
+        <rect width="240" height="150" fill="transparent" />
+        <path d="M24 96 C62 58 102 114 142 78 C172 50 198 64 224 42" fill="none" stroke={accent} strokeWidth="11" strokeLinecap="round" opacity="0.22" />
+        {[
+          [34, 32, '#ffffff', 'A'],
+          [54, 70, '#eef9e8', 'B'],
+          [74, 108, '#fff8d8', 'C'],
+        ].map(([x, y, fill, letter]) => (
+          <g key={`${x}-${y}-${letter}`}>
+            <rect x={Number(x)} y={Number(y)} width="134" height="30" rx="11" fill={String(fill)} stroke={accent} strokeWidth="2" opacity="0.95" />
+            <circle cx={Number(x) + 17} cy={Number(y) + 15} r="8" fill={accent} opacity="0.24" />
+            <text x={Number(x) + 17} y={Number(y) + 20} textAnchor="middle" fontSize="11" fontWeight="900" fill="#203015">{letter}</text>
+            <path d={`M${Number(x) + 40} ${Number(y) + 15} H${Number(x) + 114}`} stroke="#203015" strokeWidth="4" strokeLinecap="round" opacity="0.18" />
+          </g>
+        ))}
+        <g data-test={`exercise_picker__art_forest_choice__${type}`} transform="translate(190 38)">
+          <path d="M0 26 C-8 -6 28 -16 36 12 C24 32 8 38 0 26 Z" fill={accent} opacity="0.32" />
+          <path d="M6 24 C14 18 22 10 31 0" stroke="#fffdf4" strokeWidth="3" strokeLinecap="round" />
+        </g>
+      </Box>
+    );
+  }
+
+  if (art === 'forestLetters') {
+    return (
+      <Box
+        aria-hidden="true"
+        component="svg"
+        data-test={dataTest}
+        focusable="false"
+        viewBox="0 0 240 150"
+        preserveAspectRatio="none"
+        sx={tileArtStyles}
+      >
+        <rect width="240" height="150" fill="transparent" />
+        <path d="M34 42 C70 18 104 24 132 50 C160 78 190 60 216 34" fill="none" stroke={accent} strokeWidth="7" strokeLinecap="round" opacity="0.2" />
+        {[
+          [30, 62, 'm', true],
+          [70, 62, '', false],
+          [110, 62, 's', true],
+          [150, 62, '', false],
+          [190, 62, 's', true],
+        ].map(([x, y, letter, filled]) => (
+          <g key={`${x}-${letter}`}>
+            <rect x={Number(x)} y={Number(y)} width="32" height="38" rx="10" fill={filled ? '#ffffff' : '#fff7df'} stroke={accent} strokeWidth="2.2" opacity="0.96" />
+            {filled ? (
+              <text x={Number(x) + 16} y={Number(y) + 27} textAnchor="middle" fontSize="20" fontWeight="900" fill="#203015">{letter}</text>
+            ) : (
+              <path d={`M${Number(x) + 9} ${Number(y) + 21} H${Number(x) + 23}`} stroke={accent} strokeWidth="4" strokeLinecap="round" opacity="0.75" />
+            )}
+          </g>
+        ))}
+        <path data-test={`exercise_picker__art_forest_letters__${type}`} d="M184 28 C192 6 224 8 230 32 C214 48 192 50 184 28 Z" fill={accent} opacity="0.3" />
+      </Box>
+    );
+  }
+
+  if (art === 'forestPhrase') {
+    return (
+      <Box
+        aria-hidden="true"
+        component="svg"
+        data-test={dataTest}
+        focusable="false"
+        viewBox="0 0 240 150"
+        preserveAspectRatio="none"
+        sx={tileArtStyles}
+      >
+        <rect width="240" height="150" fill="transparent" />
+        <path d="M28 50 H126 M28 82 H90 M132 82 H212 M28 114 H188" stroke="#203015" strokeWidth="8" strokeLinecap="round" opacity="0.14" />
+        <rect x="92" y="64" width="50" height="34" rx="11" fill="#fffdf4" stroke={accent} strokeWidth="2.5" opacity="0.95" />
+        <path d="M104 81 H130" stroke={accent} strokeWidth="5" strokeLinecap="round" />
+        <g data-test={`exercise_picker__art_forest_phrase__${type}`} transform="translate(174 42)">
+          <path d="M-26 36 C-22 4 4 -10 30 4 C48 14 54 34 48 52 C22 44 -2 44 -26 36 Z" fill={accent} opacity="0.3" />
+          <path d="M-4 40 H22 L28 82 H-10 Z" fill="#fff7df" stroke={accent} strokeWidth="3" opacity="0.8" />
+          <circle cx="-2" cy="18" r="5" fill="#fffdf4" opacity="0.85" />
+          <circle cx="22" cy="20" r="5" fill="#fffdf4" opacity="0.85" />
+        </g>
+      </Box>
+    );
+  }
+
+  if (art === 'goal') {
     return (
       <Box
         aria-hidden="true"
@@ -250,6 +414,10 @@ function GameTileArt({
       >
         <rect width="240" height="150" fill="transparent" />
         <path d="M24 120 C70 86 112 132 166 88 C196 64 214 70 238 52" fill="none" stroke={accent} strokeWidth="8" strokeLinecap="round" opacity="0.22" />
+        <g data-test={`exercise_picker__art_goal__${type}`} opacity="0.36">
+          <rect x="154" y="34" width="62" height="42" rx="4" fill="none" stroke={accent} strokeWidth="5" />
+          <path d="M166 34v42M178 34v42M190 34v42M202 34v42M154 48h62M154 62h62" stroke={accent} strokeWidth="1.8" />
+        </g>
         {[
           [28, 18, 'A'],
           [68, 18, 'Ñ'],
@@ -270,7 +438,7 @@ function GameTileArt({
     );
   }
 
-  if (type === 'multipleChoice') {
+  if (art === 'ball') {
     return (
       <Box
         aria-hidden="true"
@@ -282,8 +450,11 @@ function GameTileArt({
         sx={tileArtStyles}
       >
         <rect width="240" height="150" fill="transparent" />
-        <circle cx="188" cy="34" r="30" fill={accent} opacity="0.14" />
-        <text x="188" y="45" textAnchor="middle" fontSize="42" fontWeight="900" fill={accent} opacity="0.5">?</text>
+        <g data-test={`exercise_picker__art_ball__${type}`} transform="translate(176 32)">
+          <circle r="26" fill="#fffdf4" stroke={accent} strokeWidth="4" />
+          <path d="M0-15 13-5 8 12H-8l-5-17Z" fill={accent} opacity="0.78" />
+          <path d="M0-26v11M0 15v11M-25 0h12M13 0h12" stroke="#203015" strokeWidth="2" opacity="0.34" />
+        </g>
         {[
           [30, 28, '#ffffff', 'A'],
           [48, 66, '#fdf0f4', 'B'],
@@ -301,7 +472,7 @@ function GameTileArt({
     );
   }
 
-  if (type === 'missingLetters') {
+  if (art === 'worldCup2026') {
     return (
       <Box
         aria-hidden="true"
@@ -314,6 +485,17 @@ function GameTileArt({
       >
         <rect width="240" height="150" fill="transparent" />
         <path d="M34 42 C70 18 106 28 130 52 C154 76 190 62 214 36" fill="none" stroke={accent} strokeWidth="7" strokeLinecap="round" opacity="0.18" />
+        <text
+          data-test={`exercise_picker__art_wc2026__${type}`}
+          x="132"
+          y="34"
+          textAnchor="middle"
+          fontSize="18"
+          fontWeight="950"
+          fill={accent}
+        >
+          FIFA WC 2026
+        </text>
         {[
           [30, 60, 'h', true],
           [70, 60, '', false],
@@ -350,6 +532,11 @@ function GameTileArt({
       <path d="M30 46 H122 M30 78 H84 M140 78 H210 M30 110 H190" stroke="#203015" strokeWidth="8" strokeLinecap="round" opacity="0.16" />
       <rect x="88" y="58" width="48" height="34" rx="10" fill="#ffffff" stroke={accent} strokeWidth="2.5" opacity="0.95" />
       <path d="M100 75 H124" stroke={accent} strokeWidth="5" strokeLinecap="round" />
+      <g data-test={`exercise_picker__art_goalkeeper__${type}`} transform="translate(174 42)" opacity="0.72">
+        <circle cx="0" cy="-18" r="10" fill={accent} />
+        <path d="M-6-8 10 8 2 34 -16 28Z" fill={accent} />
+        <path d="M-10-2 -38-20M8 0 34-18M-8 28 -28 48M2 34 24 48" stroke={accent} strokeWidth="8" strokeLinecap="round" />
+      </g>
       <path d="M152 34 C178 30 202 48 210 76 C218 104 190 124 160 114 C134 106 126 78 138 56 C142 46 146 39 152 34Z" fill={accent} opacity="0.18" />
       <path d="M166 58 H196 M156 78 H204 M166 98 H190" stroke={accent} strokeWidth="5" strokeLinecap="round" opacity="0.5" />
     </Box>

@@ -76,7 +76,7 @@ describe('MissingLettersExercise', () => {
     expect(missingLetterInputs[0]).toBeDisabled();
     expect(missingLetterInputs[0]).toHaveStyle({ color: 'rgb(117, 117, 117)' });
     expect(missingLetterInputs[0]).toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
+      backgroundColor: 'rgb(232, 247, 223)',
     });
     expect(screen.queryByText('Правильный ответ')).not.toBeInTheDocument();
     expect(
@@ -139,7 +139,7 @@ describe('MissingLettersExercise', () => {
 
     expect(onAnswer).toHaveBeenCalledWith('axrxoxt');
     expect(missingLetterInputs[0]).toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(253, 232, 223)',
     });
     expect(screen.getByText('Правильный ответ')).toBeInTheDocument();
     const correctAnswer = screen.getByLabelText('Правильный ответ: airport');

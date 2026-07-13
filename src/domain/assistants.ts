@@ -1,4 +1,5 @@
 import { SupportedLanguage } from './languages';
+import type { WorldId } from './worlds';
 
 export type AssistantId =
   | 'studyTroll'
@@ -17,24 +18,37 @@ export interface AssistantCharacter {
   superpower: Record<SupportedLanguage, string>;
 }
 
-export const assistantCharacters: AssistantCharacter[] = [
+interface RawAssistantCharacter {
+  abilities: Record<SupportedLanguage, string[]>;
+  description: Record<SupportedLanguage, string>;
+  id: AssistantId;
+  label: string;
+  motto: Record<SupportedLanguage, string>;
+  name: Record<SupportedLanguage, string>;
+  superpower: Record<SupportedLanguage, string>;
+}
+
+const footballAssistantCharacters: RawAssistantCharacter[] = [
   {
     id: 'studyTroll',
-    label: 'Yamal Flash',
+    label: 'Spain Winger',
     motto: {
       en: 'One touch, one sprint, one brave answer.',
       ru: 'Одно касание, один рывок, один смелый ответ.',
       es: 'Un toque, una carrera, una respuesta valiente.',
+      uk: 'Один дотик, один ривок, одна смілива відповідь.',
     },
     name: {
-      en: 'Yamal Flash',
-      ru: 'Ямал-молния',
-      es: 'Yamal Relampago',
+      en: 'Spanish Winger',
+      ru: 'Испанский вингер',
+      es: 'Extremo Espanol',
+      uk: 'Іспанський вінгер',
     },
     description: {
       en: 'A fearless wing wonderkid for fast games and brave guesses. He keeps the tempo bright, attacks weak cards early, and turns a difficult prompt into a chance to break through the flank.',
       ru: 'Бесстрашный фланговый вундеркинд для быстрых игр и смелых попыток. Он держит яркий темп, рано атакует слабые карточки и превращает трудный вопрос в шанс прорваться по краю.',
       es: 'Un extremo joven y valiente para partidas rapidas e intentos atrevidos. Mantiene el ritmo vivo, ataca tarjetas debiles pronto y convierte una pregunta dificil en una ruptura por banda.',
+      uk: 'Безстрашний фланговий вундеркінд для швидких ігор і сміливих спроб. Він тримає яскравий темп, рано атакує слабкі картки й перетворює складне запитання на шанс прорватися краєм.',
     },
     abilities: {
       en: [
@@ -52,11 +66,17 @@ export const assistantCharacters: AssistantCharacter[] = [
         'Primer toque: tras un fallo duro mantiene la siguiente pregunta simple y rapida.',
         'Chispa de grada: celebra rachas con animo corto de dia de partido.',
       ],
+      uk: [
+        'Ривок флангом: піднімає свіжі помилки вище, але не застрягає весь матч.',
+        'Перший дотик: після важкого промаху тримає наступне запитання простим і швидким.',
+        'Іскра трибун: коротко святкує серії, як небезпечну атаку біля воріт.',
+      ],
     },
     superpower: {
       en: 'Explodes down the wing and brings weak cards back into scoring range.',
       ru: 'Взрывает фланг и возвращает слабые карточки в ударную позицию.',
       es: 'Explota la banda y devuelve tarjetas debiles a zona de remate.',
+      uk: 'Вибухає на фланзі й повертає слабкі картки в ударну позицію.',
     },
   },
   {
@@ -66,16 +86,19 @@ export const assistantCharacters: AssistantCharacter[] = [
       en: 'Calm feet, clean pass, perfect pause.',
       ru: 'Спокойные ноги, чистый пас, идеальная пауза.',
       es: 'Pies tranquilos, pase limpio, pausa perfecta.',
+      uk: 'Спокійні ноги, чистий пас, ідеальна пауза.',
     },
     name: {
       en: 'Iniesta Maestro',
       ru: 'Иньеста-маэстро',
       es: 'Iniesta Maestro',
+      uk: 'Іньєста-маестро',
     },
     description: {
       en: 'A quiet midfield artist for careful phrases, soft rhythm, and answers that need one extra second. He slows the game just enough for memory to find the open lane.',
       ru: 'Тихий художник центра поля для аккуратных фраз, мягкого ритма и ответов, которым нужна лишняя секунда. Он замедляет игру ровно настолько, чтобы память нашла свободный коридор.',
       es: 'Un artista silencioso del centro para frases cuidadas, ritmo suave y respuestas que necesitan un segundo mas. Baja el ritmo lo justo para que la memoria encuentre el pasillo.',
+      uk: 'Тихий художник центру поля для акуратних фраз, мʼякого ритму й відповідей, яким потрібна ще одна секунда. Він сповільнює гру рівно настільки, щоб памʼять знайшла відкритий коридор.',
     },
     abilities: {
       en: [
@@ -93,30 +116,39 @@ export const assistantCharacters: AssistantCharacter[] = [
         'Pase filtrado: conecta la lengua de la pista con la linea exacta.',
         'Control sereno: prioriza precision cuando los ultimos intentos hacen ruido.',
       ],
+      uk: [
+        'La pausa: дає фразам трохи більше повітря перед відповіддю.',
+        'Розрізний пас: зʼєднує мову підказки з точною лінією відповіді.',
+        'Спокійний контроль: обирає точність, коли останні спроби шумлять.',
+      ],
     },
     superpower: {
       en: 'Finds the quiet passing lane between clue, phrase, and answer.',
       ru: 'Находит тихий коридор паса между подсказкой, фразой и ответом.',
       es: 'Encuentra el pasillo tranquilo entre pista, frase y respuesta.',
+      uk: 'Знаходить тихий коридор пасу між підказкою, фразою та відповіддю.',
     },
   },
   {
     id: 'capeChampion',
-    label: 'Casillas Wall',
+    label: 'German Saver',
     motto: {
-      en: 'Hold the line, save the point.',
-      ru: 'Держи линию, спасай очко.',
-      es: 'Mantén la linea, salva el punto.',
+      en: 'Read the strike, own the line, keep the match alive.',
+      ru: 'Читай удар, держи линию, сохраняй матч живым.',
+      es: 'Lee el tiro, domina la linea y salva el partido.',
+      uk: 'Читай удар, тримай лінію, зберігай матч живим.',
     },
     name: {
-      en: 'Casillas Wall',
-      ru: 'Касильяс-стена',
-      es: 'Muro Casillas',
+      en: 'German Saver',
+      ru: 'Немецкий сейвер',
+      es: 'Salvador Aleman',
+      uk: 'Німецький сейвер',
     },
     description: {
-      en: 'A legendary keeper for defensive focus and pressure moments. He protects the session from panic, asks for one clean save, and makes even a wrong answer useful for the next attack.',
-      ru: 'Легендарный вратарь для концентрации и моментов давления. Он защищает сессию от паники, просит один чистый сейв и делает даже неверный ответ полезным для следующей атаки.',
-      es: 'Un portero legendario para concentracion y momentos de presion. Protege la partida del panico, pide una parada limpia y convierte un fallo en informacion para el siguiente ataque.',
+      en: 'A German keeper for defensive focus and pressure moments. He protects the session from panic, asks for one clean save, and makes even a wrong answer useful for the next attack.',
+      ru: 'Немецкий вратарь для концентрации и моментов давления. Он защищает игру от паники, просит один чистый сейв и делает даже неверный ответ полезным для следующей атаки.',
+      es: 'Un portero aleman para concentracion y momentos de presion. Protege la partida del panico, pide una parada limpia y convierte un fallo en informacion para el siguiente ataque.',
+      uk: 'Німецький воротар для концентрації та моментів тиску. Він захищає гру від паніки, просить один чистий сейв і робить навіть неправильну відповідь корисною для наступної атаки.',
     },
     abilities: {
       en: [
@@ -134,30 +166,39 @@ export const assistantCharacters: AssistantCharacter[] = [
         'Calma de penalti: estabiliza al jugador tras un resultado rojo.',
         'Porteria a cero: nota una tarjeta que mantiene una racha correcta.',
       ],
+      uk: [
+        'Сейв рукавицею: ловить повторні помилки до того, як вони стануть легкими голами.',
+        'Пенальті-спокій: стабілізує гравця після червоного результату.',
+        'Сухий матч: помічає картку, що тримається правильною серією.',
+      ],
     },
     superpower: {
-      en: 'Turns pressure into a clean save and protects the learning streak.',
-      ru: 'Превращает давление в чистый сейв и защищает серию обучения.',
+      en: 'Turns pressure into a clean save and protects the match streak.',
+      ru: 'Превращает давление в чистый сейв и защищает игровую серию.',
       es: 'Convierte la presion en parada limpia y protege la racha.',
+      uk: 'Перетворює тиск на чистий сейв і захищає ігрову серію.',
     },
   },
   {
     id: 'greenPower',
-    label: 'Ramos Captain',
+    label: 'Portugal Striker',
     motto: {
-      en: 'Fight for the ball until the last whistle.',
-      ru: 'Борись за мяч до последнего свистка.',
-      es: 'Pelea el balon hasta el ultimo silbato.',
+      en: 'Shoot early, press high, celebrate loud.',
+      ru: 'Бей рано, прессингуй высоко, празднуй громко.',
+      es: 'Remata pronto, presiona arriba y celebra fuerte.',
+      uk: 'Бий рано, пресингуй високо, святкуй гучно.',
     },
     name: {
-      en: 'Ramos Captain',
-      ru: 'Рамос-капитан',
-      es: 'Capitan Ramos',
+      en: 'Portuguese Striker',
+      ru: 'Португальский бомбардир',
+      es: 'Goleador Portugues',
+      uk: 'Португальський бомбардир',
     },
     description: {
-      en: 'A captain with late-match fire for stubborn words and heavy spelling. He tackles long answers in pieces and refuses to let difficult cards boss the midfield.',
-      ru: 'Капитан с огнем последних минут для упрямых слов и тяжелого написания. Он отбирает длинные ответы по частям и не дает сложным карточкам командовать центром поля.',
-      es: 'Un capitan con fuego de ultimo minuto para palabras tercas y ortografia pesada. Entra a respuestas largas por partes y no deja que las tarjetas dificiles manden en el centro.',
+      en: 'A Portuguese finisher for stubborn words and heavy spelling. He attacks long answers in pieces and turns a difficult card into a shot on target.',
+      ru: 'Португальский финишер для упрямых слов и тяжелого написания. Он атакует длинные ответы по частям и превращает сложную карточку в удар в створ.',
+      es: 'Un rematador portugues para palabras tercas y ortografia pesada. Ataca respuestas largas por partes y convierte una tarjeta dificil en tiro a puerta.',
+      uk: 'Португальський фінішер для впертих слів і важкого написання. Він атакує довгі відповіді частинами й перетворює складну картку на удар у площину воріт.',
     },
     abilities: {
       en: [
@@ -175,30 +216,39 @@ export const assistantCharacters: AssistantCharacter[] = [
         'Cabeza a balon parado: devuelve la tarjeta cuando se puede ganar.',
         'Rugido final: mantiene vivo un juego duro despues de errores.',
       ],
+      uk: [
+        'Капітанський підкат: ділить довгі слова на шматки, які можна захистити.',
+        'Удар головою зі стандарту: повертає картку в момент, коли її можна виграти.',
+        'Рев останніх хвилин: тримає важку гру живою після помилок.',
+      ],
     },
     superpower: {
-      en: 'Tackles long words into chunks and wins them in stoppage time.',
-      ru: 'Отбирает длинные слова по частям и выигрывает их в добавленное время.',
-      es: 'Entra a palabras largas por bloques y las gana en el descuento.',
+      en: 'Breaks long answers into shots and finishes them under pressure.',
+      ru: 'Разбивает длинные ответы на удары и завершает их под давлением.',
+      es: 'Divide respuestas largas en remates y las define bajo presion.',
+      uk: 'Розбиває довгі відповіді на удари й завершує їх під тиском.',
     },
   },
   {
     id: 'webRunner',
-    label: 'Xavi Conductor',
+    label: 'England Captain',
     motto: {
-      en: 'See the pass before the pass exists.',
-      ru: 'Увидь пас раньше, чем он появился.',
-      es: 'Ve el pase antes de que exista.',
+      en: 'Lead the press, call the pass, keep the shape.',
+      ru: 'Веди прессинг, зови пас, держи схему.',
+      es: 'Lidera la presion, pide el pase y guarda la forma.',
+      uk: 'Веди пресинг, клич пас, тримай схему.',
     },
     name: {
-      en: 'Xavi Conductor',
-      ru: 'Хави-дирижер',
-      es: 'Xavi Director',
+      en: 'English Captain',
+      ru: 'Английский капитан',
+      es: 'Capitan Ingles',
+      uk: 'Англійський капітан',
     },
     description: {
-      en: 'A midfield conductor for patterns, passing triangles, and language links. He sees similar words early, spots false friends, and makes the whole library feel like a team shape.',
-      ru: 'Дирижер центра поля для паттернов, треугольников паса и языковых связей. Он рано видит похожие слова, замечает ложных друзей и превращает библиотеку в командную схему.',
-      es: 'Un director del centro para patrones, triangulos de pase y enlaces entre idiomas. Ve palabras parecidas pronto, detecta falsos amigos y convierte la biblioteca en forma de equipo.',
+      en: 'An English captain for patterns, passing lanes, and language links. He sees similar words early, spots false friends, and makes the whole library feel like a team shape.',
+      ru: 'Английский капитан для паттернов, линий паса и языковых связей. Он рано видит похожие слова, замечает ложных друзей и превращает библиотеку в командную схему.',
+      es: 'Un capitan ingles para patrones, lineas de pase y enlaces entre idiomas. Ve palabras parecidas pronto, detecta falsos amigos y convierte la biblioteca en forma de equipo.',
+      uk: 'Англійський капітан для патернів, ліній пасу та мовних звʼязків. Він рано бачить схожі слова, помічає хибних друзів і перетворює бібліотеку на командну схему.',
     },
     abilities: {
       en: [
@@ -216,38 +266,349 @@ export const assistantCharacters: AssistantCharacter[] = [
         'Silbato de falso amigo: marca una palabra familiar antes de que engane.',
         'Triangulo de memoria: usa tarjetas cercanas para abrir linea de recuerdo.',
       ],
+      uk: [
+        'Карта тікі-таки: повʼязує картки зі схожими коренями, написанням або змістом.',
+        'Свисток хибного друга: позначає знайоме на вигляд слово до того, як воно обдурить.',
+        'Трикутник памʼяті: використовує сусідні картки, щоб відкрити лінію згадування.',
+      ],
     },
     superpower: {
-      en: 'Builds passing triangles between cards so the answer has a route.',
-      ru: 'Строит треугольники паса между карточками, чтобы у ответа был маршрут.',
-      es: 'Construye triangulos de pase entre tarjetas para que la respuesta tenga ruta.',
+      en: 'Organizes cards into passing lanes so every answer has a route.',
+      ru: 'Собирает карточки в линии паса, чтобы у каждого ответа был маршрут.',
+      es: 'Ordena tarjetas en lineas de pase para que cada respuesta tenga ruta.',
+      uk: 'Збирає картки в лінії пасу, щоб кожна відповідь мала маршрут.',
     },
   },
 ];
 
+const forestAssistantCharacters: RawAssistantCharacter[] = [
+  {
+    id: 'studyTroll',
+    label: 'Cheerful Leaf',
+    motto: {
+      en: 'Soft repeats, fresh attention.',
+      ru: 'Мягкий повтор, свежее внимание.',
+      es: 'Repeticion suave, atencion fresca.',
+      uk: 'Мʼяке повторення, свіжа увага.',
+    },
+    name: {
+      en: 'Cheerful Leaf',
+      ru: 'Веселый листочек',
+      es: 'Hojita Alegre',
+      uk: 'Веселий листочок',
+    },
+    description: {
+      en: 'A light forest coach for days when vocabulary feels heavy. It keeps practice playful, nudges recent mistakes back into view, and mixes in fresh words before repetition gets stale.',
+      ru: 'Легкий лесной тренер для дней, когда словарь становится тяжелым. Он оставляет практику игровой, возвращает свежие ошибки в поле зрения и подмешивает новые слова до того, как повторение надоест.',
+      es: 'Un entrenador ligero del bosque para dias en que el vocabulario pesa. Mantiene la practica juguetona, devuelve errores recientes y mezcla palabras nuevas antes de que la repeticion canse.',
+      uk: 'Легкий лісовий тренер для днів, коли словник здається важким. Він зберігає практику ігровою, повертає свіжі помилки в поле зору й домішує нові слова до того, як повторення набридає.',
+    },
+    abilities: {
+      en: [
+        'Recent-mistake breeze: brings back a missed card soon, but not endlessly.',
+        'Fresh leaf mix-in: adds new cards between repeats to protect attention.',
+        'Gentle streak watch: praises stable recall without rushing the next card.',
+      ],
+      ru: [
+        'Ветер свежих ошибок: возвращает промахнутую карточку скоро, но не бесконечно.',
+        'Подмешивание свежих листьев: вставляет новые карточки между повторами, чтобы не убить внимание.',
+        'Мягкий контроль серии: замечает устойчивое вспоминание без спешки к следующей карточке.',
+      ],
+      es: [
+        'Brisa de errores recientes: devuelve pronto una tarjeta fallada, pero no sin fin.',
+        'Mezcla de hojas frescas: intercala tarjetas nuevas entre repeticiones para cuidar la atencion.',
+        'Vigilancia suave de rachas: reconoce recuerdo estable sin apresurar la siguiente tarjeta.',
+      ],
+      uk: [
+        'Вітер свіжих помилок: швидко повертає промахнуту картку, але не безкінечно.',
+        'Домішування свіжого листя: вставляє нові картки між повторами, щоб берегти увагу.',
+        'Мʼякий контроль серії: помічає стабільне згадування без поспіху до наступної картки.',
+      ],
+    },
+    superpower: {
+      en: 'Notices stubborn mistakes and brings them back before they fossilize.',
+      ru: 'Замечает упрямые ошибки и возвращает их до того, как они окаменеют.',
+      es: 'Detecta errores tercos y los devuelve antes de que se fosilicen.',
+      uk: 'Помічає вперті помилки й повертає їх до того, як вони закамʼяніють.',
+    },
+  },
+  {
+    id: 'trollMama',
+    label: 'Mnemo-Mama',
+    motto: {
+      en: 'Memory likes order and a warm cup.',
+      ru: 'Память любит порядок и теплую кружку.',
+      es: 'La memoria quiere orden y una taza tibia.',
+      uk: 'Памʼять любить порядок і теплу чашку.',
+    },
+    name: {
+      en: 'Mnemo-Mama',
+      ru: 'Мнемо-мама',
+      es: 'Mama Mnemo',
+      uk: 'Мнемо-мама',
+    },
+    description: {
+      en: 'A calm mentor who turns scattered attempts into rituals. She is best for careful learners who want steady review, tidy answers, and less panic around difficult phrases.',
+      ru: 'Спокойная наставница, которая превращает разбросанные попытки в ритуалы. Лучше всего подходит аккуратным ученикам, которым нужны ровное повторение, чистые ответы и меньше паники вокруг сложных фраз.',
+      es: 'Una mentora tranquila que convierte intentos dispersos en rituales. Va bien para estudiantes cuidadosos que quieren repaso estable, respuestas limpias y menos panico con frases dificiles.',
+      uk: 'Спокійна наставниця, що перетворює розкидані спроби на ритуали. Найкраще пасує уважним учням, яким потрібні рівне повторення, охайні відповіді й менше паніки навколо складних фраз.',
+    },
+    abilities: {
+      en: [
+        'Ritual queue: groups weak cards into small calm batches.',
+        'Phrase blanket: gives phrase cards a little more review space.',
+        'Careful finish: favors accuracy over speed when recent answers are noisy.',
+      ],
+      ru: [
+        'Очередь-ритуал: собирает слабые карточки в маленькие спокойные порции.',
+        'Плед для фраз: дает карточкам-фразам чуть больше места для повторения.',
+        'Аккуратный финиш: ставит точность выше скорости, когда последние ответы шумные.',
+      ],
+      es: [
+        'Cola ritual: agrupa tarjetas debiles en lotes pequenos y tranquilos.',
+        'Manta para frases: da a las frases un poco mas de espacio de repaso.',
+        'Final cuidadoso: prioriza precision sobre velocidad cuando las respuestas recientes son ruidosas.',
+      ],
+      uk: [
+        'Черга-ритуал: збирає слабкі картки в маленькі спокійні порції.',
+        'Плед для фраз: дає карткам-фразам трохи більше простору для повторення.',
+        'Охайний фініш: ставить точність вище швидкості, коли останні відповіді шумні.',
+      ],
+    },
+    superpower: {
+      en: 'Turns messy attempts into calm repeatable memory rituals.',
+      ru: 'Превращает хаотичные попытки в спокойные ритуалы запоминания.',
+      es: 'Convierte intentos caoticos en rituales tranquilos de memoria.',
+      uk: 'Перетворює хаотичні спроби на спокійні ритуали запамʼятовування.',
+    },
+  },
+  {
+    id: 'capeChampion',
+    label: 'Captain Knowledge',
+    motto: {
+      en: 'Context first, victory second.',
+      ru: 'Сначала контекст, потом победа.',
+      es: 'Primero contexto, luego victoria.',
+      uk: 'Спершу контекст, потім перемога.',
+    },
+    name: {
+      en: 'Captain Knowledge',
+      ru: 'Капитан знаний',
+      es: 'Capitan Saber',
+      uk: 'Капітан знань',
+    },
+    description: {
+      en: 'A cinematic strategist who treats each prompt like a mission brief. He helps connect answers with clues, definitions, and examples so recall comes from meaning, not guessing.',
+      ru: 'Кинематографичный стратег, который относится к каждому заданию как к брифингу миссии. Он связывает ответы с подсказками, определениями и примерами, чтобы вспоминание шло от смысла, а не от угадывания.',
+      es: 'Un estratega cinematografico que trata cada ejercicio como informe de mision. Conecta respuestas con pistas, definiciones y ejemplos para recordar por sentido, no por azar.',
+      uk: 'Кінематографічний стратег, який сприймає кожне завдання як брифінг місії. Він повʼязує відповіді з підказками, визначеннями й прикладами, щоб згадування йшло від змісту, а не від вгадування.',
+    },
+    abilities: {
+      en: [
+        'Context beam: highlights the clue language that best separates close answers.',
+        'Mission brief: summarizes why this card belongs in the current topic.',
+        'Example anchor: favors cards with examples when phrases need context.',
+      ],
+      ru: [
+        'Луч контекста: подсвечивает подсказку, которая лучше отделяет близкие ответы.',
+        'Брифинг миссии: кратко объясняет, почему карточка относится к текущей теме.',
+        'Якорь примера: чаще опирается на примеры, когда фразам нужен контекст.',
+      ],
+      es: [
+        'Rayo de contexto: destaca la pista que mejor separa respuestas cercanas.',
+        'Informe de mision: resume por que la tarjeta pertenece al tema actual.',
+        'Ancla de ejemplo: favorece ejemplos cuando las frases necesitan contexto.',
+      ],
+      uk: [
+        'Промінь контексту: підсвічує підказку, яка найкраще відділяє близькі відповіді.',
+        'Брифінг місії: коротко пояснює, чому картка належить до поточного набору.',
+        'Якір прикладу: частіше спирається на приклади, коли фразам потрібен контекст.',
+      ],
+    },
+    superpower: {
+      en: 'Connects a word to its clue so the answer is easier to retrieve.',
+      ru: 'Связывает слово с подсказкой, чтобы ответ было легче достать из памяти.',
+      es: 'Conecta una palabra con su pista para recuperar mejor la respuesta.',
+      uk: 'Повʼязує слово з підказкою, щоб відповідь було легше дістати з памʼяті.',
+    },
+  },
+  {
+    id: 'greenPower',
+    label: 'Memory Hulk',
+    motto: {
+      en: 'Break the word, not the learner.',
+      ru: 'Ломай слово на части, а не ученика.',
+      es: 'Rompe la palabra, no al estudiante.',
+      uk: 'Ламай слово на частини, а не учня.',
+    },
+    name: {
+      en: 'Memory Hulk',
+      ru: 'Халк запоминания',
+      es: 'Hulk de Memoria',
+      uk: 'Халк запамʼятовування',
+    },
+    description: {
+      en: 'A big-energy coach for long words, dense spelling, and stubborn patterns. He turns intimidating answers into chunks, rhythm, and visible structure.',
+      ru: 'Энергичный тренер для длинных слов, плотного написания и упрямых паттернов. Он превращает пугающие ответы в куски, ритм и видимую структуру.',
+      es: 'Un entrenador de mucha energia para palabras largas, ortografia densa y patrones tercos. Convierte respuestas intimidantes en bloques, ritmo y estructura visible.',
+      uk: 'Енергійний тренер для довгих слів, щільного написання й упертих патернів. Він перетворює лячні відповіді на шматки, ритм і видиму структуру.',
+    },
+    abilities: {
+      en: [
+        'Chunk smash: splits long answers into recallable pieces.',
+        'Pattern grip: notices repeated letter shapes across cards.',
+        'Strength reserve: saves the hardest cards for moments with enough momentum.',
+      ],
+      ru: [
+        'Удар по кускам: делит длинные ответы на части, которые легче вспоминать.',
+        'Хват паттерна: замечает повторяющиеся формы букв между карточками.',
+        'Запас силы: оставляет самые тяжелые карточки на моменты, когда уже есть разгон.',
+      ],
+      es: [
+        'Golpe de bloques: divide respuestas largas en partes recordables.',
+        'Agarre de patron: detecta formas de letras repetidas entre tarjetas.',
+        'Reserva de fuerza: guarda tarjetas duras para momentos con suficiente impulso.',
+      ],
+      uk: [
+        'Удар по шматках: ділить довгі відповіді на частини, які легше згадати.',
+        'Хват патерна: помічає повторювані форми літер між картками.',
+        'Запас сили: залишає найважчі картки на моменти, коли вже є розгін.',
+      ],
+    },
+    superpower: {
+      en: 'Crushes long words into visible chunks and rhythm.',
+      ru: 'Разбивает длинные слова на видимые куски и ритм.',
+      es: 'Rompe palabras largas en bloques visibles y ritmo.',
+      uk: 'Розбиває довгі слова на видимі шматки й ритм.',
+    },
+  },
+  {
+    id: 'webRunner',
+    label: 'Wise Spider',
+    motto: {
+      en: 'Every word is a thread.',
+      ru: 'Каждое слово - это нить.',
+      es: 'Cada palabra es un hilo.',
+      uk: 'Кожне слово - це нитка.',
+    },
+    name: {
+      en: 'Wise Spider',
+      ru: 'Мудрый паучок',
+      es: 'Aranita Sabia',
+      uk: 'Мудрий павучок',
+    },
+    description: {
+      en: 'A precise connector for learners who like patterns between languages. It notices similar words, false friends, and translation threads so vocabulary becomes a web instead of a pile.',
+      ru: 'Точный связист для учеников, которым нравятся связи между языками. Он замечает похожие слова, ложных друзей и нити переводов, чтобы словарь становился сетью, а не кучей.',
+      es: 'Un conector preciso para quienes disfrutan patrones entre idiomas. Nota palabras parecidas, falsos amigos e hilos de traduccion para que el vocabulario sea red, no monton.',
+      uk: 'Точний звʼязківець для учнів, яким подобаються звʼязки між мовами. Він помічає схожі слова, хибних друзів і нитки перекладів, щоб словник ставав мережею, а не купою.',
+    },
+    abilities: {
+      en: [
+        'Thread map: links cards that share spelling, roots, or meaning.',
+        'False-friend alert: warns when a familiar-looking word can mislead.',
+        'Web recall: suggests nearby cards when one answer keeps slipping.',
+      ],
+      ru: [
+        'Карта нитей: связывает карточки с похожим написанием, корнями или смыслом.',
+        'Сигнал ложного друга: предупреждает, когда знакомое на вид слово может обмануть.',
+        'Сетевое вспоминание: предлагает соседние карточки, когда один ответ постоянно ускользает.',
+      ],
+      es: [
+        'Mapa de hilos: conecta tarjetas con escritura, raices o sentido parecidos.',
+        'Alerta de falso amigo: avisa cuando una palabra familiar puede enganar.',
+        'Recuerdo en red: sugiere tarjetas vecinas cuando una respuesta se escapa.',
+      ],
+      uk: [
+        'Карта ниток: повʼязує картки зі схожим написанням, коренями або змістом.',
+        'Сигнал хибного друга: попереджає, коли знайоме на вигляд слово може обманути.',
+        'Мережеве згадування: пропонує сусідні картки, коли одна відповідь постійно вислизає.',
+      ],
+    },
+    superpower: {
+      en: 'Spots fast associations between similar words without rushing the answer.',
+      ru: 'Быстро замечает связи между похожими словами, не торопя ответ.',
+      es: 'Detecta asociaciones rapidas entre palabras parecidas sin precipitar la respuesta.',
+      uk: 'Швидко помічає звʼязки між схожими словами, не кваплячи відповідь.',
+    },
+  },
+];
+
+export const assistantCharacters: AssistantCharacter[] = footballAssistantCharacters;
+
+export const assistantCharactersByWorld: Record<WorldId, AssistantCharacter[]> = {
+  football: footballAssistantCharacters,
+  forest: forestAssistantCharacters,
+};
+
 export const defaultAssistantId: AssistantId = 'studyTroll';
 
-export function resolveAssistantId(value: unknown): AssistantId {
-  return assistantCharacters.some((assistant) => assistant.id === value)
+export const visibleAssistantIds: AssistantId[] = [
+  'studyTroll',
+  'greenPower',
+  'webRunner',
+  'capeChampion',
+];
+
+const visibleAssistantIdsByWorld: Record<WorldId, AssistantId[]> = {
+  football: visibleAssistantIds,
+  forest: ['studyTroll', 'trollMama', 'capeChampion', 'greenPower', 'webRunner'],
+};
+
+export const visibleAssistantCharacters = getVisibleAssistantCharacters('football');
+
+export function resolveAssistantId(
+  value: unknown,
+  worldId: WorldId = 'football',
+): AssistantId {
+  if (value === 'trollMama') {
+    return worldId === 'forest' ? 'trollMama' : defaultAssistantId;
+  }
+  const visibleIds = visibleAssistantIdsByWorld[worldId] ?? visibleAssistantIds;
+  return visibleIds.some((assistantId) => assistantId === value)
     ? (value as AssistantId)
-    : defaultAssistantId;
+    : getDefaultAssistantIdForAssistantWorld(worldId);
 }
 
 export function getAssistantProfile(
   value: unknown,
   interfaceLanguage: SupportedLanguage,
+  worldId: WorldId = 'football',
 ): AssistantCharacter {
-  const assistantId = resolveAssistantId(value);
+  const assistantId = resolveAssistantId(value, worldId);
   return (
-    assistantCharacters.find((assistant) => assistant.id === assistantId) ??
-    assistantCharacters[0]
+    getAssistantCharactersForWorld(worldId).find(
+      (assistant) => assistant.id === assistantId,
+    ) ?? getAssistantCharactersForWorld(worldId)[0]
   );
 }
 
 export function getAssistantTooltip(
   value: unknown,
   interfaceLanguage: SupportedLanguage,
+  worldId: WorldId = 'football',
 ): string {
-  const assistant = getAssistantProfile(value, interfaceLanguage);
+  const assistant = getAssistantProfile(value, interfaceLanguage, worldId);
   return `${assistant.name[interfaceLanguage]}: ${assistant.superpower[interfaceLanguage]}`;
+}
+
+export function getAssistantCharactersForWorld(
+  worldId: WorldId = 'football',
+): AssistantCharacter[] {
+  return assistantCharactersByWorld[worldId] ?? footballAssistantCharacters;
+}
+
+export function getVisibleAssistantCharacters(
+  worldId: WorldId = 'football',
+): AssistantCharacter[] {
+  const visibleIds = visibleAssistantIdsByWorld[worldId] ?? visibleAssistantIds;
+  return getAssistantCharactersForWorld(worldId).filter((assistant) =>
+    visibleIds.includes(assistant.id),
+  );
+}
+
+export function getDefaultAssistantIdForAssistantWorld(
+  worldId: WorldId = 'football',
+): AssistantId {
+  return worldId === 'forest' ? 'studyTroll' : defaultAssistantId;
 }

@@ -50,7 +50,7 @@ function renderBlocks(content: string): ReactNode[] {
         <Divider
           key={`divider-${index}`}
           sx={{
-            borderColor: 'rgba(126, 87, 194, 0.18)',
+            borderColor: 'rgba(24, 119, 201, 0.18)',
             my: 1.25,
           }}
         />,
@@ -223,7 +223,7 @@ function renderTable(lines: string[], startIndex: number): {
               borderLeft: '1px solid rgba(68, 83, 56, 0.12)',
             },
             '& thead th': {
-              bgcolor: 'rgba(126, 87, 194, 0.11)',
+              bgcolor: 'rgba(24, 119, 201, 0.10)',
               borderTop: '1px solid rgba(68, 83, 56, 0.12)',
               color: '#263c22',
               fontWeight: 900,
@@ -300,10 +300,10 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
           component="code"
           key={key}
           sx={{
-            bgcolor: 'rgba(126, 87, 194, 0.10)',
-            border: '1px solid rgba(126, 87, 194, 0.18)',
+            bgcolor: 'rgba(24, 119, 201, 0.10)',
+            border: '1px solid rgba(24, 119, 201, 0.18)',
             borderRadius: 0.75,
-            color: '#4c3476',
+            color: '#123c69',
             fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
             fontSize: '0.92em',
             px: 0.45,

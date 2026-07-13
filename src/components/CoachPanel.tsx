@@ -10,6 +10,7 @@ import {
 import { CoachProgressMessage } from '../domain/coachProgress';
 import { getCoachThought } from '../domain/coachThoughts';
 import { t } from '../domain/i18n';
+import { resolveWorldId } from '../domain/worlds';
 import { RootState } from '../store/store';
 import { AssistantStickerIcon } from './assistantAssets';
 import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
@@ -26,17 +27,20 @@ export function CoachPanel({
   const theme = useTheme();
   const isNarrowAssistantLayout = useMediaQuery(theme.breakpoints.down('md'));
   const assistantTooltipPlacement = isNarrowAssistantLayout ? 'right' : 'left';
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
+  );
   const assistantId = useSelector((state: RootState) =>
-    resolveAssistantId(state.app.assistantId ?? defaultAssistantId),
+    resolveAssistantId(state.app.assistantId ?? defaultAssistantId, worldId),
   );
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
   const thought =
     progressMessage?.text ??
-    getCoachThought(interfaceLanguage, thoughtSeed, assistantId);
+    getCoachThought(interfaceLanguage, thoughtSeed, assistantId, worldId);
   const thoughtTooltip = progressMessage?.tooltip ?? '';
-  const assistant = getAssistantProfile(assistantId, interfaceLanguage);
+  const assistant = getAssistantProfile(assistantId, interfaceLanguage, worldId);
   const assistantName = assistant.name[interfaceLanguage];
   const assistantMotto = assistant.motto[interfaceLanguage];
   const assistantTooltip = `${assistantName}: ${assistant.superpower[interfaceLanguage]}`;
@@ -142,6 +146,7 @@ export function CoachPanel({
             dataTest={`coach_panel__assistant_sticker__${assistantId}`}
             size={118}
             sx={{ height: { xs: 90, lg: 118 }, width: { xs: 90, lg: 118 } }}
+            worldId={worldId}
           />
         </Box>
       </CursorAnchoredTooltip>

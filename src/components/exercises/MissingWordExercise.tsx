@@ -21,14 +21,17 @@ import { useSelector } from 'react-redux';
 import { shouldStrikeAnswerCharacter } from '../../domain/answerCharacters';
 import { MISSING_ANSWER_CHARACTER } from '../../domain/answerPlaceholders';
 import { MissingWordPrompt } from '../../domain/exercises';
+import { footballResultColors } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
+import type { WorldResultColors } from '../../domain/worlds';
 import { RootState } from '../../store/store';
 import { KnownCardToggleButton } from '../KnownCardToggleButton';
 import {
   ExerciseProgressChip,
   ExerciseRepeatChip,
   ExerciseCardSetChip,
+  ExerciseTargetLanguageChip,
 } from './ExerciseCardSetChip';
 import { TranslationHintRow } from './TranslationHintRow';
 
@@ -36,9 +39,11 @@ type SubmissionOutcome = 'correct' | 'incorrect' | 'memorize';
 
 export function MissingWordExercise({
   complementaryLanguage,
+  complementaryLanguages,
   isRepeatedPrompt = false,
   prompt,
   repeatProgress,
+  resultColors = footballResultColors,
   onAnswer,
   isKnown = false,
   onKnownChange,
@@ -48,11 +53,14 @@ export function MissingWordExercise({
   progressTotalCount,
   cardSetName,
   finishAction,
+  targetLanguage = 'en',
 }: {
   complementaryLanguage?: SupportedLanguage;
+  complementaryLanguages?: SupportedLanguage[];
   isRepeatedPrompt?: boolean;
   prompt: MissingWordPrompt;
   repeatProgress?: { current: number; total: number };
+  resultColors?: WorldResultColors;
   onAnswer: (answer: string) => void;
   isKnown?: boolean;
   onKnownChange?: (isKnown: boolean) => void;
@@ -62,6 +70,7 @@ export function MissingWordExercise({
   progressTotalCount?: number;
   cardSetName?: string;
   finishAction?: ReactNode;
+  targetLanguage?: SupportedLanguage;
 }) {
   const [letters, setLetters] = useState<Record<number, string>>({});
   const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
@@ -205,6 +214,11 @@ export function MissingWordExercise({
             >
               {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'missingWord')}
             </Typography>
+            <ExerciseTargetLanguageChip
+              dataTest={`missing_word_exercise__target_language_chip__${prompt.cardId}`}
+              interfaceLanguage={interfaceLanguage}
+              targetLanguage={targetLanguage}
+            />
             <Stack
               data-test={`missing_word_exercise__metadata_row__${prompt.cardId}`}
               direction="row"
@@ -240,6 +254,7 @@ export function MissingWordExercise({
         >
           <TranslationHintRow
             complementaryLanguage={complementaryLanguage}
+            complementaryLanguages={complementaryLanguages}
             dataTest={`missing_word_exercise__prompt__${prompt.cardId}`}
             fallbackPrompt={prompt.prompt}
             hints={prompt.translationHints}
@@ -276,6 +291,7 @@ export function MissingWordExercise({
             inputRefs,
             isSubmitted,
             letters,
+            resultColors,
             resultTone,
             onCellKeyDown: handleCellKeyDown,
             setLetters,
@@ -316,7 +332,11 @@ export function MissingWordExercise({
                     key={`correct-${character}-${index}`}
                     component="span"
                     data-test={`missing_word_exercise__correct_answer_cell__${prompt.cardId}__${index}`}
-                    style={getLetterCellInlineStyle('correct', 'strong')}
+                    style={getLetterCellInlineStyle(
+                      'correct',
+                      resultColors,
+                      'strong',
+                    )}
                     sx={letterCellStyles}
                   >
                     {character}
@@ -358,16 +378,22 @@ export function MissingWordExercise({
               minWidth: 148,
               ...(isSubmitted && isCorrect
                 ? {
-                    bgcolor: '#2f7d32',
-                    '&:hover': { bgcolor: '#276b2a', boxShadow: 'none' },
+                    bgcolor: resultColors.correct.main,
+                    '&:hover': {
+                      bgcolor: resultColors.correct.main,
+                      boxShadow: 'none',
+                    },
                   }
                 : {}),
               ...(submissionOutcome === 'incorrect'
                 ? {
-                    bgcolor: '#fdebee',
-                    border: '1px solid #f2a7b4',
-                    color: '#9f1239',
-                    '&:hover': { bgcolor: '#fbdde3', boxShadow: 'none' },
+                    bgcolor: resultColors.incorrect.soft,
+                    border: `1px solid ${resultColors.incorrect.border}`,
+                    color: resultColors.incorrect.text,
+                    '&:hover': {
+                      bgcolor: resultColors.incorrect.soft,
+                      boxShadow: 'none',
+                    },
                   }
                 : {}),
               ...(submissionOutcome === 'memorize'
@@ -435,6 +461,7 @@ function renderAnswerCells({
   isSubmitted,
   letters,
   onCellKeyDown,
+  resultColors,
   resultTone,
   setLetters,
 }: {
@@ -445,6 +472,7 @@ function renderAnswerCells({
   isSubmitted: boolean;
   letters: Record<number, string>;
   onCellKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
+  resultColors: WorldResultColors;
   resultTone: SubmissionOutcome | null;
   setLetters: Dispatch<SetStateAction<Record<number, string>>>;
 }) {
@@ -466,7 +494,7 @@ function renderAnswerCells({
         key={`${character}-${index}`}
         component="span"
         data-test={`${dataTestPrefix}__fixed_cell__${index}`}
-        style={getLetterCellInlineStyle(resultTone)}
+        style={getLetterCellInlineStyle(resultTone, resultColors)}
           sx={letterCellStyles}
         >
           {character}
@@ -488,6 +516,7 @@ function renderAnswerCells({
         style={getSubmittedInputCellStyle({
           actual: letters[index] ?? '',
           expected: characters[index] ?? '',
+          resultColors,
           resultTone,
         })}
         value={letters[index] ?? ''}
@@ -574,6 +603,7 @@ const exerciseCardSetChipStyles = {
 
 function getLetterCellInlineStyle(
   resultTone: SubmissionOutcome | null,
+  resultColors: WorldResultColors,
   textTone: 'muted' | 'strong' = 'muted',
 ): CSSProperties | undefined {
   if (!resultTone) {
@@ -583,16 +613,16 @@ function getLetterCellInlineStyle(
   return {
     backgroundColor:
       resultTone === 'correct'
-        ? 'rgb(235, 247, 225)'
+        ? resultColors.correct.soft
         : resultTone === 'memorize'
           ? 'rgb(255, 243, 205)'
-          : 'rgb(253, 235, 238)',
+          : resultColors.incorrect.soft,
     borderColor:
       resultTone === 'correct'
-        ? '#8fc773'
+        ? resultColors.correct.border
         : resultTone === 'memorize'
           ? '#f2cf66'
-          : '#f2a7b4',
+          : resultColors.incorrect.border,
     color: textTone === 'strong' ? '#203015' : 'rgb(117, 117, 117)',
     WebkitTextFillColor:
       textTone === 'strong' ? '#203015' : 'rgb(117, 117, 117)',
@@ -603,14 +633,16 @@ function getLetterCellInlineStyle(
 function getSubmittedInputCellStyle({
   actual,
   expected,
+  resultColors,
   resultTone,
 }: {
   actual: string;
   expected: string;
+  resultColors: WorldResultColors;
   resultTone: SubmissionOutcome | null;
 }): CSSProperties {
   return {
-    ...getLetterCellInlineStyle(resultTone),
+    ...getLetterCellInlineStyle(resultTone, resultColors),
     textDecorationLine: shouldStrikeAnswerCharacter({
       actual,
       expected,

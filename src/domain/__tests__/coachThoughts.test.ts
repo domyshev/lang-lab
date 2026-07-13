@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { coachThoughts, getCoachThought } from '../coachThoughts';
-import { assistantCharacters } from '../assistants';
+import { visibleAssistantCharacters } from '../assistants';
 import { supportedLanguages } from '../languages';
 
 describe('coachThoughts', () => {
   it('keeps localized character-specific standalone phrases for every assistant', () => {
-    for (const assistant of assistantCharacters) {
+    for (const assistant of visibleAssistantCharacters) {
       for (const language of supportedLanguages) {
         expect(coachThoughts[assistant.id][language]).toHaveLength(20);
         expect(new Set(coachThoughts[assistant.id][language]).size).toBe(20);
@@ -25,8 +25,20 @@ describe('coachThoughts', () => {
     );
   });
 
+  it('uses real Ukrainian football thoughts instead of Russian fallback phrases', () => {
+    for (const assistant of visibleAssistantCharacters) {
+      expect(coachThoughts[assistant.id].uk).not.toEqual(
+        coachThoughts[assistant.id].ru,
+      );
+    }
+
+    expect(coachThoughts.studyTroll.uk).toContain(
+      'Фланг відкритий, можна прискорюватися.',
+    );
+  });
+
   it('keeps generated transition thoughts to one sentence', () => {
-    for (const assistant of assistantCharacters) {
+    for (const assistant of visibleAssistantCharacters) {
       for (const language of supportedLanguages) {
         for (const thought of coachThoughts[assistant.id][language]) {
           expect(thought.match(/\./g)).toHaveLength(1);

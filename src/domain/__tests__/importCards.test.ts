@@ -45,6 +45,25 @@ describe('importLanguageCards', () => {
     expect(result.cards[0].id).toMatch(/^card-/);
   });
 
+  it('accepts Ukrainian translations as supported card data', () => {
+    const result = importLanguageCards({
+      existingCards: [],
+      pastedJson: JSON.stringify([
+        {
+          translations: {
+            en: 'ticket',
+            uk: 'квиток',
+          },
+        },
+      ]),
+      now,
+    });
+
+    expect(result.summary.added).toBe(1);
+    expect(result.summary.invalid).toBe(0);
+    expect(result.cards[0].translations.uk).toBe('квиток');
+  });
+
   it('safe-merges missing fields and records history', () => {
     const result = importLanguageCards({
       existingCards: [existingCard()],

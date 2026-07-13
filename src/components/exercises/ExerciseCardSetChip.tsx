@@ -3,8 +3,8 @@ import { Box, Chip } from '@mui/material';
 import type { ChipProps } from '@mui/material/Chip';
 import type { SxProps, Theme as MuiTheme } from '@mui/material/styles';
 import { forwardRef } from 'react';
-import { t } from '../../domain/i18n';
-import { SupportedLanguage } from '../../domain/languages';
+import { getLanguageDisplayName, t } from '../../domain/i18n';
+import { languageFlags, SupportedLanguage } from '../../domain/languages';
 
 type ExerciseCardSetChipProps = {
   clickable?: boolean;
@@ -143,6 +143,62 @@ export function ExerciseProgressChip({
           px: 1.25,
         },
       }}
+    />
+  );
+}
+
+export function ExerciseTargetLanguageChip({
+  dataTest,
+  interfaceLanguage,
+  targetLanguage,
+}: {
+  dataTest: string;
+  interfaceLanguage: SupportedLanguage;
+  targetLanguage: SupportedLanguage;
+}) {
+  return (
+    <Chip
+      data-test={dataTest}
+      label={
+        <Box
+          component="span"
+          data-test={`${dataTest}__label`}
+          sx={{ alignItems: 'baseline', display: 'inline-flex' }}
+        >
+          <Box
+            component="span"
+            data-test={`${dataTest}__prefix`}
+            sx={{
+              fontSize: 11,
+              fontWeight: 750,
+              lineHeight: 1,
+              opacity: 0.72,
+              whiteSpace: 'pre',
+            }}
+          >
+            {t(interfaceLanguage, 'targetAnswerLabel')}:{' '}
+          </Box>
+          <Box
+            component="span"
+            data-test={`${dataTest}__language`}
+            sx={{ fontSize: 13, fontWeight: 850, lineHeight: 1 }}
+          >
+            {languageFlags[targetLanguage]}{' '}
+            {getLanguageDisplayName(interfaceLanguage, targetLanguage)}
+          </Box>
+        </Box>
+      }
+      sx={{
+        bgcolor: '#e8f5ff',
+        border: '1px solid #8fc8f2',
+        color: '#123c69',
+        fontWeight: 850,
+        height: 30,
+        '& .MuiChip-label': {
+          px: 1.2,
+        },
+      }}
+      variant="outlined"
     />
   );
 }

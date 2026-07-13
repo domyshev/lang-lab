@@ -11,6 +11,7 @@ import {
   defaultPracticeSettings,
   getPracticeSettings,
 } from '../domain/practiceOrdering';
+import { WorldId, defaultWorldId, resolveWorldId } from '../domain/worlds';
 
 export interface AppState {
   assistantId: AssistantId;
@@ -24,6 +25,7 @@ export interface AppState {
   playerProfile?: PlayerProfile;
   practiceSettings?: PracticeSettings;
   targetLanguage: SupportedLanguage;
+  worldId?: WorldId;
 }
 
 export interface PlayerProfile {
@@ -34,13 +36,14 @@ export interface PlayerProfile {
 
 export type ComplementaryLanguages = Record<
   SupportedLanguage,
-  SupportedLanguage
+  SupportedLanguage[]
 >;
 
 export const defaultComplementaryLanguages: ComplementaryLanguages = {
-  en: 'ru',
-  es: 'ru',
-  ru: 'en',
+  en: ['ru', 'es'],
+  es: ['ru', 'en'],
+  ru: ['en', 'es'],
+  uk: ['ru', 'en'],
 };
 
 const initialState: AppState = {
@@ -50,10 +53,11 @@ const initialState: AppState = {
   hasAgentsIntroCoachmarkBeenShown: false,
   hasGameHelpCoachmarkBeenShown: false,
   hasHypersonicJumpLampBeenShown: false,
-  interfaceLanguage: 'ru',
+  interfaceLanguage: 'en',
   isGameHelpCollapsed: false,
   practiceSettings: defaultPracticeSettings,
   targetLanguage: 'en',
+  worldId: defaultWorldId,
 };
 
 const appSlice = createSlice({
@@ -98,14 +102,53 @@ const appSlice = createSlice({
 
       state.complementaryLanguages = {
         ...getComplementaryLanguages(state.complementaryLanguages),
-        [targetLanguage]: complementaryLanguage,
+        [targetLanguage]: [complementaryLanguage],
+      };
+    },
+    setComplementaryLanguagesForTarget(
+      state,
+      action: PayloadAction<{
+        complementaryLanguages: SupportedLanguage[];
+        targetLanguage: SupportedLanguage;
+      }>,
+    ) {
+      const { complementaryLanguages, targetLanguage } = action.payload;
+      state.complementaryLanguages = {
+        ...getComplementaryLanguages(state.complementaryLanguages, {
+          interfaceLanguage: state.interfaceLanguage,
+          targetLanguage: state.targetLanguage,
+        }),
+        [targetLanguage]: sanitizeComplementaryLanguages(
+          complementaryLanguages,
+          {
+            interfaceLanguage: state.interfaceLanguage,
+            targetLanguage,
+          },
+        ),
       };
     },
     setInterfaceLanguage(state, action: PayloadAction<SupportedLanguage>) {
       state.interfaceLanguage = action.payload;
+      state.complementaryLanguages = getComplementaryLanguages(
+        state.complementaryLanguages,
+        {
+          interfaceLanguage: state.interfaceLanguage,
+          targetLanguage: state.targetLanguage,
+        },
+      );
     },
     setTargetLanguage(state, action: PayloadAction<SupportedLanguage>) {
       state.targetLanguage = action.payload;
+      state.complementaryLanguages = getComplementaryLanguages(
+        state.complementaryLanguages,
+        {
+          interfaceLanguage: state.interfaceLanguage,
+          targetLanguage: state.targetLanguage,
+        },
+      );
+    },
+    setWorldId(state, action: PayloadAction<WorldId>) {
+      state.worldId = resolveWorldId(action.payload);
     },
     setCorrectStreakCooldownMonths(
       state,
@@ -145,41 +188,95 @@ export const {
   markHypersonicJumpLampShown,
   setAssistantId,
   setComplementaryLanguageForTarget,
+  setComplementaryLanguagesForTarget,
   setCorrectStreakCooldownMonths,
   setInterfaceLanguage,
   setNewCardMixFrequencyPercent,
   setPlayerProfile,
   setRecentMistakeRepeatFrequencyPercent,
   setTargetLanguage,
+  setWorldId,
 } = appSlice.actions;
 export const appReducer = appSlice.reducer;
 
 export function getComplementaryLanguages(
-  value?: Partial<Record<SupportedLanguage, SupportedLanguage>>,
+  value?:
+    | Partial<Record<SupportedLanguage, SupportedLanguage | SupportedLanguage[]>>
+    | ComplementaryLanguages,
+  exclusions?: {
+    interfaceLanguage?: SupportedLanguage;
+    targetLanguage?: SupportedLanguage;
+  },
 ): ComplementaryLanguages {
   const resolved: ComplementaryLanguages = {
-    ...defaultComplementaryLanguages,
+    en: [...defaultComplementaryLanguages.en],
+    es: [...defaultComplementaryLanguages.es],
+    ru: [...defaultComplementaryLanguages.ru],
+    uk: [...defaultComplementaryLanguages.uk],
   };
 
   supportedLanguages.forEach((targetLanguage) => {
-    const complementaryLanguage = value?.[targetLanguage];
-    if (
-      typeof complementaryLanguage === 'string' &&
-      isSupportedLanguage(complementaryLanguage) &&
-      complementaryLanguage !== targetLanguage
-    ) {
-      resolved[targetLanguage] = complementaryLanguage;
-    }
+    resolved[targetLanguage] = sanitizeComplementaryLanguages(
+      value?.[targetLanguage] ?? resolved[targetLanguage],
+      {
+        interfaceLanguage:
+          exclusions?.targetLanguage === targetLanguage
+            ? exclusions.interfaceLanguage
+            : undefined,
+        targetLanguage,
+      },
+    );
   });
 
   return resolved;
 }
 
 export function getComplementaryLanguageForTarget(
-  value: Partial<Record<SupportedLanguage, SupportedLanguage>> | undefined,
+  value:
+    | Partial<Record<SupportedLanguage, SupportedLanguage | SupportedLanguage[]>>
+    | undefined,
   targetLanguage: SupportedLanguage,
 ): SupportedLanguage {
-  return getComplementaryLanguages(value)[targetLanguage];
+  return getComplementaryLanguages(value)[targetLanguage][0];
+}
+
+export function getComplementaryLanguagesForTarget(
+  value:
+    | Partial<Record<SupportedLanguage, SupportedLanguage | SupportedLanguage[]>>
+    | undefined,
+  targetLanguage: SupportedLanguage,
+  interfaceLanguage?: SupportedLanguage,
+): SupportedLanguage[] {
+  return getComplementaryLanguages(value, {
+    interfaceLanguage,
+    targetLanguage,
+  })[targetLanguage];
+}
+
+function sanitizeComplementaryLanguages(
+  value: SupportedLanguage | SupportedLanguage[] | undefined,
+  exclusions: {
+    interfaceLanguage?: SupportedLanguage;
+    targetLanguage: SupportedLanguage;
+  },
+): SupportedLanguage[] {
+  const values = Array.isArray(value) ? value : value ? [value] : [];
+  const seen = new Set<SupportedLanguage>();
+
+  return values
+    .filter((language): language is SupportedLanguage =>
+      typeof language === 'string' && isSupportedLanguage(language),
+    )
+    .filter((language) => language !== exclusions.targetLanguage)
+    .filter((language) => language !== exclusions.interfaceLanguage)
+    .filter((language) => {
+      if (seen.has(language)) {
+        return false;
+      }
+      seen.add(language);
+      return true;
+    })
+    .slice(0, 2);
 }
 
 function sanitizeMonths(value: number): number {

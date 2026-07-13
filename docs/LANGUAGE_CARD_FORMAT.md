@@ -36,7 +36,8 @@ Use these language codes:
 
 - `ru` for Russian;
 - `en` for English;
-- `es` for Spanish.
+- `es` for Spanish;
+- `uk` for Ukrainian.
 
 ## Card Object
 
@@ -59,7 +60,8 @@ Example:
   "translations": {
     "ru": "аэропорт",
     "en": "airport",
-    "es": "aeropuerto"
+    "es": "aeropuerto",
+    "uk": "аеропорт"
   }
 }
 ```
@@ -90,7 +92,8 @@ Good examples:
   "translations": {
     "ru": "билет",
     "en": "ticket",
-    "es": "billete"
+    "es": "billete",
+    "uk": "квиток"
   }
 }
 ```
@@ -100,7 +103,8 @@ Good examples:
   "translations": {
     "ru": "Я бы хотел билет",
     "en": "I would like a ticket",
-    "es": "Quisiera un billete"
+    "es": "Quisiera un billete",
+    "uk": "Я хотів би квиток"
   }
 }
 ```
@@ -114,7 +118,8 @@ Bad example:
   "translations": {
     "ru": "ключ",
     "en": "key, spring, clue",
-    "es": "llave"
+    "es": "llave",
+    "uk": "ключ"
   }
 }
 ```
@@ -134,12 +139,14 @@ Example:
   "translations": {
     "ru": "аэропорт",
     "en": "airport",
-    "es": "aeropuerto"
+    "es": "aeropuerto",
+    "uk": "аеропорт"
   },
   "definitions": {
     "en": "A place where airplanes take off, land, and passengers travel through.",
     "ru": "Место, где самолёты взлетают, садятся и принимают пассажиров.",
-    "es": "Lugar donde los aviones despegan, aterrizan y reciben pasajeros."
+    "es": "Lugar donde los aviones despegan, aterrizan y reciben pasajeros.",
+    "uk": "Місце, де літаки злітають, сідають і приймають пасажирів."
   }
 }
 ```
@@ -168,7 +175,8 @@ Example:
   "translations": {
     "ru": "Я бы хотел билет",
     "en": "I would like a ticket",
-    "es": "Quisiera un billete"
+    "es": "Quisiera un billete",
+    "uk": "Я хотів би квиток"
   },
   "examples": {
     "en": [
@@ -181,6 +189,12 @@ Example:
       {
         "sentence": "Quisiera un billete a Madrid.",
         "answer": "Quisiera un billete"
+      }
+    ],
+    "uk": [
+      {
+        "sentence": "Я хотів би квиток до Мадрида.",
+        "answer": "Я хотів би квиток"
       }
     ]
   }
@@ -227,7 +241,8 @@ Example:
     "translations": {
       "ru": "аэропорт",
       "en": "airport",
-      "es": "aeropuerto"
+      "es": "aeropuerto",
+      "uk": "аеропорт"
     },
     "definitions": {
       "en": "A place where airplanes take off, land, and passengers travel through."
@@ -239,7 +254,8 @@ Example:
     "translations": {
       "ru": "Я бы хотел билет",
       "en": "I would like a ticket",
-      "es": "Quisiera un billete"
+      "es": "Quisiera un billete",
+      "uk": "Я хотів би квиток"
     },
     "definitions": {
       "en": "A polite phrase used when buying a ticket."
@@ -271,7 +287,7 @@ If a duplicate provides missing information, the app may safely merge it. If it 
 Follow these rules when creating cards:
 
 - Use at least two translations per card.
-- Prefer all three languages when possible.
+- Prefer all four supported languages when possible.
 - Keep one meaning per card.
 - Do not put comma-separated alternatives into one translation field.
 - Do not mix unrelated meanings.

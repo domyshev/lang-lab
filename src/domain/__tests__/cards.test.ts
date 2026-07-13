@@ -5,6 +5,7 @@ import {
   getTranslationHints,
   isCardEligibleForTarget,
   isPhraseValue,
+  orderTranslationHints,
 } from '../cards';
 
 const card = {
@@ -31,6 +32,15 @@ describe('language cards', () => {
     expect(getTranslationHints(card, 'en')).toEqual([
       { language: 'ru', value: 'аэропорт' },
       { language: 'es', value: 'aeropuerto' },
+    ]);
+  });
+
+  it('orders translation hints by multiple companion languages', () => {
+    expect(
+      orderTranslationHints(getTranslationHints(card, 'en'), ['es', 'ru']),
+    ).toEqual([
+      { language: 'es', value: 'aeropuerto' },
+      { language: 'ru', value: 'аэропорт' },
     ]);
   });
 

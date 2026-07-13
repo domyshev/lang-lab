@@ -430,7 +430,7 @@ describe('AiAssistantView chat', () => {
     );
   });
 
-  it('shows a shortcut tooltip and glam AI styling on the send button', async () => {
+  it('shows a shortcut tooltip and football AI styling on the send button', async () => {
     const user = userEvent.setup();
     renderView({ language: 'ru' });
 
@@ -439,7 +439,7 @@ describe('AiAssistantView chat', () => {
 
     expect(sendButton).toHaveStyle({
       background:
-        'linear-gradient(135deg, rgba(126, 87, 194, 0.96) 0%, rgba(190, 132, 255, 0.9) 46%, rgba(255, 203, 112, 0.96) 100%)',
+        'linear-gradient(135deg, rgba(24, 119, 201, 0.96) 0%, rgba(73, 167, 232, 0.92) 48%, rgba(47, 143, 58, 0.9) 100%)',
       color: '#fffdf7',
     });
 

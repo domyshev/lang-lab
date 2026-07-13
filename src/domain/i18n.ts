@@ -1,5 +1,7 @@
 import { SupportedLanguage } from './languages';
 
+type MessageLanguage = Exclude<SupportedLanguage, 'uk'>;
+
 type I18nKey =
   | 'appName'
   | 'game'
@@ -10,6 +12,12 @@ type I18nKey =
   | 'history'
   | 'interfaceLanguage'
   | 'targetLanguage'
+  | 'targetLearningLanguage'
+  | 'targetLearningLanguages'
+  | 'world'
+  | 'appWorld'
+  | 'footballWorld'
+  | 'forestWorld'
   | 'assistant'
   | 'assistantProfileLink'
   | 'assistantSuperpowersTitle'
@@ -17,6 +25,8 @@ type I18nKey =
   | 'playerOnboardingBody'
   | 'playerNameLabel'
   | 'savePlayerName'
+  | 'editPlayerName'
+  | 'savePlayerNameChange'
   | 'continueAnonymously'
   | 'playerGreetingPrefix'
   | 'playerAnonymousName'
@@ -273,7 +283,7 @@ type I18nKey =
   | 'crosswordSubmitNeedsCompletedWord'
   | 'submitCrossword';
 
-const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
+const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
   en: {
     appName: 'Language Lab',
     game: 'Game',
@@ -282,8 +292,14 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     statistics: 'Statistics',
     cardSets: 'Card sets',
     history: 'History',
-    interfaceLanguage: 'Interface',
+    interfaceLanguage: 'Interface language',
     targetLanguage: 'Target',
+    targetLearningLanguage: 'Target learning language',
+    targetLearningLanguages: 'Target learning languages',
+    world: 'World',
+    appWorld: 'App world',
+    footballWorld: 'Football',
+    forestWorld: 'Forest',
     assistant: 'Character',
     assistantProfileLink: 'Meet them properly',
     assistantSuperpowersTitle: 'Superpowers',
@@ -292,11 +308,13 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
       'Your Spain supporter flag will travel with you through the football language lab.',
     playerNameLabel: 'Player name',
     savePlayerName: 'Save',
+    editPlayerName: 'Edit name',
+    savePlayerNameChange: 'Save name',
     continueAnonymously: 'Continue anonymously',
     playerGreetingPrefix: 'Hello',
     playerAnonymousName: 'wanderer',
     practiceSettings: 'Practice settings',
-    complementaryLanguage: 'Complementary language',
+    complementaryLanguage: 'Companion languages',
     correctStreakCooldownFivePlus: 'Last 5 or more answers correct',
     correctStreakCooldownFour: 'Last 4 answers correct',
     correctStreakCooldownThree: 'Last 3 answers correct',
@@ -548,7 +566,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     metricTotalSuffix: 'total',
     repeatPrompt: 'repeat',
     totalExercisesTooltip: 'Total number of completed games.',
-    targetAnswerLabel: 'Target answer',
+    targetAnswerLabel: 'Target language',
     cardSetCardSelectionMode: 'Select cards for the card set.',
     targetLanguageAnswer: 'answer',
     fallbackTranslationShown: 'Fallback translation shown',
@@ -603,8 +621,14 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     statistics: 'Статистика',
     cardSets: 'Наборы',
     history: 'История',
-    interfaceLanguage: 'Интерфейс',
+    interfaceLanguage: 'Язык интерфейса',
     targetLanguage: 'Цель',
+    targetLearningLanguage: 'Язык - цель изучения',
+    targetLearningLanguages: 'Языки - цель изучения',
+    world: 'Мир',
+    appWorld: 'Мир приложения',
+    footballWorld: 'Футбол',
+    forestWorld: 'Лес',
     assistant: 'Персонаж',
     assistantProfileLink: 'Познакомиться поближе',
     assistantSuperpowersTitle: 'Супер-способности',
@@ -613,11 +637,13 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
       'Флаг болельщика Испании будет путешествовать с тобой по футбольной языковой лаборатории.',
     playerNameLabel: 'Имя игрока',
     savePlayerName: 'Сохранить',
+    editPlayerName: 'Изменить имя',
+    savePlayerNameChange: 'Сохранить имя',
     continueAnonymously: 'Продолжить анонимно',
     playerGreetingPrefix: 'Привет',
     playerAnonymousName: 'странник',
     practiceSettings: 'Настройки практики',
-    complementaryLanguage: 'Дополняющий язык',
+    complementaryLanguage: 'Сопутствующие языки',
     correctStreakCooldownFivePlus: 'Последние 5 и более раз верно',
     correctStreakCooldownFour: 'Последние 4 раза верно',
     correctStreakCooldownThree: 'Последние 3 раза верно',
@@ -871,7 +897,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     metricTotalSuffix: 'всего',
     repeatPrompt: 'повтор',
     totalExercisesTooltip: 'Общее количество пройденных игр.',
-    targetAnswerLabel: 'Целевой ответ',
+    targetAnswerLabel: 'Целевой язык',
     cardSetCardSelectionMode: 'Выберите карточки для набора.',
     targetLanguageAnswer: 'ответ',
     fallbackTranslationShown: 'Показан запасной перевод',
@@ -926,8 +952,14 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     statistics: 'Estadisticas',
     cardSets: 'Conjuntos',
     history: 'Historial',
-    interfaceLanguage: 'Interfaz',
+    interfaceLanguage: 'Idioma de interfaz',
     targetLanguage: 'Objetivo',
+    targetLearningLanguage: 'Idioma objetivo de estudio',
+    targetLearningLanguages: 'Idiomas objetivo de estudio',
+    world: 'Mundo',
+    appWorld: 'Mundo de la app',
+    footballWorld: 'Futbol',
+    forestWorld: 'Bosque',
     assistant: 'Personaje',
     assistantProfileLink: 'Conocerlo mejor',
     assistantSuperpowersTitle: 'Superpoderes',
@@ -936,11 +968,13 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
       'Tu bandera de hincha de Espana viajara contigo por el laboratorio futbolero.',
     playerNameLabel: 'Nombre de jugador',
     savePlayerName: 'Guardar',
+    editPlayerName: 'Cambiar nombre',
+    savePlayerNameChange: 'Guardar nombre',
     continueAnonymously: 'Continuar anonimo',
     playerGreetingPrefix: 'Hola',
     playerAnonymousName: 'viajero',
     practiceSettings: 'Ajustes de practica',
-    complementaryLanguage: 'Idioma complementario',
+    complementaryLanguage: 'Idiomas acompanantes',
     correctStreakCooldownFivePlus: 'Ultimas 5 o mas respuestas correctas',
     correctStreakCooldownFour: 'Ultimas 4 respuestas correctas',
     correctStreakCooldownThree: 'Ultimas 3 respuestas correctas',
@@ -1194,7 +1228,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     metricTotalSuffix: 'total',
     repeatPrompt: 'repeticion',
     totalExercisesTooltip: 'Numero total de juegos completados.',
-    targetAnswerLabel: 'Respuesta objetivo',
+    targetAnswerLabel: 'Idioma objetivo',
     cardSetCardSelectionMode: 'Selecciona tarjetas para el conjunto.',
     targetLanguageAnswer: 'respuesta',
     fallbackTranslationShown: 'Traduccion alternativa mostrada',
@@ -1243,6 +1277,63 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
   },
 };
 
+const ukrainianMessages: Partial<Record<I18nKey, string>> = {
+  agentsSection: 'AI помічник',
+  agentsTitle: 'AI помічник',
+  aiAssistantTitle: 'AI помічник',
+  aiChatTitle: 'Чат',
+  aiComposerLabel: 'Повідомлення AI-помічнику',
+  aiSendMessage: 'Надіслати повідомлення',
+  allCards: 'Усі картки',
+  appWorld: 'Світ застосунку',
+  appName: 'Language Lab',
+  assistant: 'Персонаж',
+  cardSetLabel: 'Набір карток',
+  cardSetLibrary: 'Бібліотека карток',
+  cards: 'Картки',
+  cardSets: 'Набори',
+  chooseCardSet: 'Виберіть набір карток',
+  chooseCardSetPlaceholder: 'Виберіть набір карток',
+  chooseExercise: 'Виберіть гру',
+  complementaryLanguage: 'Супутні мови',
+  continueAnonymously: 'Продовжити анонімно',
+  crossword: 'Кросворд',
+  editPlayerName: "Змінити ім'я",
+  footballWorld: 'Футбол',
+  forestWorld: 'Ліс',
+  finishExercise: 'Закінчити гру',
+  game: 'Гра',
+  gameHelpTitle: 'Допомога',
+  gameLibrary: 'Бібліотека ігор',
+  gamesTab: 'Грати',
+  history: 'Історія',
+  interfaceLanguage: 'Мова інтерфейсу',
+  missingLetters: 'Пропущені літери',
+  missingWord: 'Пропущене слово',
+  multipleChoice: 'Питання з 3 варіантами',
+  next: 'Далі',
+  openAiAssistant: 'Відкрити AI помічника',
+  playerAnonymousName: 'мандрівник',
+  playerNameLabel: "Ім'я гравця",
+  playerOnboardingBody:
+    'Прапор уболівальника Іспанії подорожуватиме з тобою футбольною мовною лабораторією.',
+  playerOnboardingTitle: 'Як тебе називати?',
+  practiceSettings: 'Налаштування практики',
+  resultsTitle: 'Результати',
+  savePlayerName: 'Зберегти',
+  savePlayerNameChange: "Зберегти ім'я",
+  searchCards: 'Пошук карток',
+  searchCardSets: 'Пошук наборів',
+  start: 'Грати',
+  statistics: 'Статистика',
+  submit: 'Надіслати',
+  targetLanguage: 'Ціль',
+  targetLearningLanguage: 'Мова - ціль вивчення',
+  targetLearningLanguages: 'Мови - ціль вивчення',
+  targetAnswerLabel: 'Цільова мова',
+  world: 'Світ',
+};
+
 const languageNames: Record<
   SupportedLanguage,
   Record<SupportedLanguage, string>
@@ -1251,20 +1342,33 @@ const languageNames: Record<
     ru: 'Russian',
     en: 'English',
     es: 'Spanish',
+    uk: 'Ukrainian',
   },
   ru: {
     ru: 'Русский',
     en: 'Английский',
     es: 'Испанский',
+    uk: 'Украинский',
   },
   es: {
     ru: 'ruso',
     en: 'ingles',
     es: 'espanol',
+    uk: 'ucraniano',
+  },
+  uk: {
+    ru: 'російська',
+    en: 'англійська',
+    es: 'іспанська',
+    uk: 'українська',
   },
 };
 
 export function t(language: SupportedLanguage, key: I18nKey): string {
+  if (language === 'uk') {
+    return ukrainianMessages[key] ?? messages.ru[key];
+  }
+
   return messages[language][key];
 }
 
@@ -1283,6 +1387,10 @@ export function formatCardSetCount(
     return formatRussianCount(value, ['набор', 'набора', 'наборов']);
   }
 
+  if (language === 'uk') {
+    return formatRussianCount(value, ['набір', 'набори', 'наборів']);
+  }
+
   if (language === 'es') {
     return `${value} ${value === 1 ? 'conjunto' : 'conjuntos'}`;
   }
@@ -1298,6 +1406,10 @@ export function formatCardCount(
     return formatRussianCount(value, ['карточка', 'карточки', 'карточек']);
   }
 
+  if (language === 'uk') {
+    return formatRussianCount(value, ['картка', 'картки', 'карток']);
+  }
+
   if (language === 'es') {
     return `${value} ${value === 1 ? 'tarjeta' : 'tarjetas'}`;
   }
@@ -1311,6 +1423,10 @@ export function formatStoredCardCount(
 ): string {
   if (language === 'ru') {
     return `Сейчас сохранено: ${formatCardCount(language, value)}`;
+  }
+
+  if (language === 'uk') {
+    return `Зараз збережено: ${formatCardCount(language, value)}`;
   }
 
   if (language === 'es') {

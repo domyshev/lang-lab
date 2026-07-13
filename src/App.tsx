@@ -92,7 +92,7 @@ import { createCardById, getCardsByIds } from './domain/cardIndexes';
 import { forgetExerciseSession, saveAttempt } from './store/attemptsSlice';
 import {
   acknowledgeGameHelp,
-  getComplementaryLanguageForTarget,
+  getComplementaryLanguagesForTarget,
   markFinishExerciseLampShown,
   markHypersonicJumpLampShown,
 } from './store/appSlice';
@@ -104,6 +104,12 @@ import {
   selectCardSet,
 } from './store/cardSetsSlice';
 import { AppDispatch, RootState } from './store/store';
+import {
+  getWorldAccent,
+  getWorldResultColors,
+  resolveWorldId,
+  type WorldId,
+} from './domain/worlds';
 
 type ExercisePreview =
   | { type: 'crossword'; puzzle: CrosswordPuzzle }
@@ -235,6 +241,11 @@ export function App() {
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
   );
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
+  );
+  const worldAccent = getWorldAccent(worldId);
+  const worldResultColors = getWorldResultColors(worldId);
   const isGameHelpCollapsed = useSelector((state: RootState) =>
     Boolean(state.app.isGameHelpCollapsed),
   );
@@ -244,10 +255,12 @@ export function App() {
   const complementaryLanguages = useSelector(
     (state: RootState) => state.app.complementaryLanguages,
   );
-  const complementaryLanguage = getComplementaryLanguageForTarget(
+  const complementaryLanguagesForTarget = getComplementaryLanguagesForTarget(
     complementaryLanguages,
     targetLanguage,
+    interfaceLanguage,
   );
+  const complementaryLanguage = complementaryLanguagesForTarget[0];
   const cardById = useMemo(() => createCardById(cards), [cards]);
   const practiceOrderingAttempts = useMemo(
     () =>
@@ -999,22 +1012,6 @@ export function App() {
       );
     }
 
-    if (activeSection === 'chat') {
-      return (
-        <Box
-          data-test="app__chat_section"
-          sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}
-        >
-          <AiAssistantView
-            collapsible={false}
-            dataTest="app_chat__assistant"
-            embedded
-            showManualImport={false}
-          />
-        </Box>
-      );
-    }
-
     if (activeSection === 'help') {
       return (
         <Box data-test="app__help_section">
@@ -1068,6 +1065,7 @@ export function App() {
             exerciseType={currentPromptStats.exerciseType}
             interfaceLanguage={interfaceLanguage}
             prompt={currentPromptStats.prompt}
+            resultColors={worldResultColors}
             targetLanguage={targetLanguage}
           />
         )}
@@ -1076,6 +1074,7 @@ export function App() {
             attempt={lastSavedAttempt}
             cardStats={cardStats}
             interfaceLanguage={interfaceLanguage}
+            resultColors={worldResultColors}
             showExpectedAnswers={
               lastSavedAttempt.exerciseType !== 'missingLetters' &&
               lastSavedAttempt.exerciseType !== 'missingWord' &&
@@ -1210,10 +1209,10 @@ export function App() {
                     onClick={openGameAiAssistant}
                     size="small"
                     sx={{
-                      bgcolor: 'rgba(111, 75, 216, 0.10)',
-                      color: '#6f4bd8',
+                      bgcolor: 'rgba(24, 119, 201, 0.10)',
+                      color: worldAccent.main,
                       flexShrink: 0,
-                      '&:hover': { bgcolor: 'rgba(111, 75, 216, 0.18)' },
+                      '&:hover': { bgcolor: 'rgba(24, 119, 201, 0.18)' },
                     }}
                   >
                     <AutoFixHighIcon
@@ -1273,6 +1272,7 @@ export function App() {
             onSelect={handleCardSetChange}
             selectedCardSetId={currentCardSetId}
             targetLanguage={targetLanguage}
+            worldId={worldId}
           />
 
           <Stack
@@ -1468,6 +1468,7 @@ export function App() {
           incorrect={completedExerciseSummary.incorrect}
           interfaceLanguage={interfaceLanguage}
           onFinish={resetExerciseState}
+          resultColors={worldResultColors}
         />
       );
     }
@@ -1510,6 +1511,8 @@ export function App() {
             setActiveSection('cards');
           }}
           puzzle={exercisePreview.puzzle}
+          resultColors={worldResultColors}
+          targetLanguage={targetLanguage}
           recentResultsByCardId={getRecentResultsByCardId({
             attempts,
             cardIds: exercisePreview.puzzle.entries.map((entry) => entry.cardId),
@@ -1535,11 +1538,13 @@ export function App() {
       return (
         <MultipleChoiceExercise
           key={`${exercisePreview.prompt.cardId}:${generationSeed}`}
-          complementaryLanguage={complementaryLanguage}
+          complementaryLanguages={complementaryLanguagesForTarget}
           interfaceLanguage={interfaceLanguage}
           progressCompletedCount={completedMultipleChoiceCardIds.length}
           progressTotalCount={eligibleCards.length}
           prompt={exercisePreview.prompt}
+          resultColors={worldResultColors}
+          targetLanguage={targetLanguage}
           isKnown={isCardKnownForTarget(
             cardById.get(exercisePreview.prompt.cardId) ?? {
               knownTargetLanguages: [],
@@ -1598,7 +1603,7 @@ export function App() {
       return (
         <MissingLettersExercise
           key={missingLettersPrompt.practiceKey}
-          complementaryLanguage={complementaryLanguage}
+          complementaryLanguages={complementaryLanguagesForTarget}
           interfaceLanguage={interfaceLanguage}
           isRepeatedPrompt={completedMissingLettersCardIds.includes(
             missingLettersPrompt.cardId,
@@ -1610,6 +1615,8 @@ export function App() {
           progressCompletedCount={completedMissingLettersCardIds.length}
           progressTotalCount={missingLettersPracticeCardIds.length}
           prompt={missingLettersPrompt}
+          resultColors={worldResultColors}
+          targetLanguage={targetLanguage}
           isKnown={isCardKnownForTarget(
             cardById.get(missingLettersPrompt.cardId) ?? {
               knownTargetLanguages: [],
@@ -1669,7 +1676,7 @@ export function App() {
     return (
       <MissingWordExercise
         key={missingWordPrompt.practiceKey}
-        complementaryLanguage={complementaryLanguage}
+        complementaryLanguages={complementaryLanguagesForTarget}
         finishAction={renderFinishExerciseAction(
           buildMissingWordJumpSelector(missingWordPrompt),
         )}
@@ -1681,6 +1688,8 @@ export function App() {
           missingWordPracticePrompts,
         )}
         prompt={missingWordPrompt}
+        resultColors={worldResultColors}
+        targetLanguage={targetLanguage}
         isKnown={isCardKnownForTarget(
           cardById.get(missingWordPrompt.cardId) ?? {
             knownTargetLanguages: [],
@@ -1756,7 +1765,7 @@ export function App() {
           position: 'relative',
         }}
       >
-        <TargetStatsFootballBackground />
+        <TargetStatsWorldBackground worldId={worldId} />
         <Stack
           data-test="target_stats__content"
           spacing={1.5}
@@ -1853,6 +1862,7 @@ export function App() {
                   incorrect={incorrect}
                   incorrectTooltip={t(interfaceLanguage, 'targetIncorrectCardsTooltip')}
                   interfaceLanguage={interfaceLanguage}
+                  resultColors={worldResultColors}
                   rootDataTest="target_stats__answered_formula__stats_root"
                   showLabel={false}
                   total={totalAnswered}
@@ -1875,7 +1885,26 @@ export function App() {
       onLogoClick={handleLogoClick}
       onNavigate={handleNavigate}
     >
-      {renderMainContent()}
+      <Box
+        aria-hidden={activeSection === 'chat' ? undefined : 'true'}
+        data-test={
+          activeSection === 'chat' ? 'app__chat_section' : 'app__chat_section_hidden'
+        }
+        sx={{
+          display: activeSection === 'chat' ? 'block' : 'none',
+          maxWidth: 760,
+          mx: 'auto',
+          width: '100%',
+        }}
+      >
+        <AiAssistantView
+          collapsible={false}
+          dataTest="app_chat__assistant"
+          embedded
+          showManualImport={false}
+        />
+      </Box>
+      {activeSection === 'chat' ? null : renderMainContent()}
       <FinishExerciseDialog
         hasCrosswordDraftLetters={
           selectedExerciseType === 'crossword' &&
@@ -1899,7 +1928,11 @@ export function App() {
   );
 }
 
-function TargetStatsFootballBackground() {
+function TargetStatsWorldBackground({ worldId }: { worldId: WorldId }) {
+  if (worldId === 'forest') {
+    return <TargetStatsForestBackground />;
+  }
+
   return (
     <Box
       aria-hidden="true"
@@ -2015,17 +2048,130 @@ function TargetStatsFootballBackground() {
   );
 }
 
+function TargetStatsForestBackground() {
+  return (
+    <Box
+      aria-hidden="true"
+      data-test="target_stats__forest_background"
+      sx={{
+        inset: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        position: 'absolute',
+        zIndex: 0,
+      }}
+    >
+      <Box
+        component="svg"
+        data-test="target_stats__forest_leaf"
+        viewBox="0 0 140 120"
+        sx={{
+          height: 160,
+          opacity: 0.16,
+          position: 'absolute',
+          right: { xs: -24, sm: 36 },
+          top: -46,
+          width: 180,
+        }}
+      >
+        <path
+          d="M22 82 C34 28 92 5 128 20 C118 68 76 108 22 82 Z"
+          fill="#75a843"
+          stroke="#2f4d24"
+          strokeWidth="5"
+        />
+        <path
+          d="M30 78 C56 62 82 44 118 24"
+          fill="none"
+          stroke="#f4fbeb"
+          strokeLinecap="round"
+          strokeWidth="7"
+        />
+        <path
+          d="M58 62 C58 48 54 38 48 29 M78 50 C80 38 78 29 72 20 M52 66 C42 61 33 60 24 61"
+          fill="none"
+          stroke="#f4fbeb"
+          strokeLinecap="round"
+          strokeWidth="4"
+          opacity="0.74"
+        />
+      </Box>
+      <Box
+        component="svg"
+        data-test="target_stats__forest_mushroom"
+        viewBox="0 0 128 128"
+        sx={{
+          bottom: -40,
+          height: 150,
+          left: '48%',
+          opacity: 0.12,
+          position: 'absolute',
+          transform: 'translateX(-50%) rotate(6deg)',
+          width: 150,
+        }}
+      >
+        <path
+          d="M18 62 C24 26 50 14 72 18 C96 22 112 42 110 68 C86 64 52 64 18 62 Z"
+          fill="#d86b7c"
+          stroke="#6a2130"
+          strokeWidth="5"
+        />
+        <path
+          d="M48 62 H82 L88 111 H42 Z"
+          fill="#fff7df"
+          stroke="#6a2130"
+          strokeWidth="5"
+        />
+        <circle cx="48" cy="38" fill="#fff7df" r="8" />
+        <circle cx="78" cy="34" fill="#fff7df" r="7" />
+        <circle cx="94" cy="53" fill="#fff7df" r="6" />
+      </Box>
+      <Box
+        component="svg"
+        data-test="target_stats__forest_creek"
+        viewBox="0 0 260 62"
+        sx={{
+          bottom: 18,
+          height: 70,
+          left: -42,
+          opacity: 0.17,
+          position: 'absolute',
+          transform: 'rotate(-10deg)',
+          width: 280,
+        }}
+      >
+        <path
+          d="M10 42 C46 10 88 58 130 28 C174 -4 210 42 252 20"
+          fill="none"
+          stroke="#65a8c9"
+          strokeLinecap="round"
+          strokeWidth="18"
+        />
+        <path
+          d="M20 40 C54 20 84 50 124 31 C166 12 202 36 246 22"
+          fill="none"
+          stroke="#e7f7ef"
+          strokeLinecap="round"
+          strokeWidth="6"
+        />
+      </Box>
+    </Box>
+  );
+}
+
 function CurrentPromptStatsPanel({
   attempts,
   exerciseType,
   interfaceLanguage,
   prompt,
+  resultColors,
   targetLanguage,
 }: {
   attempts: RootState['attempts']['attempts'];
   exerciseType: 'missingLetters' | 'missingWord';
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   prompt: ExercisePrompt;
+  resultColors: ReturnType<typeof getWorldResultColors>;
   targetLanguage: RootState['app']['targetLanguage'];
 }) {
   const statsLabel = t(
@@ -2037,28 +2183,101 @@ function CurrentPromptStatsPanel({
     cardId: prompt.cardId,
     targetLanguage,
   });
+  const recentResults =
+    getRecentResultsByCardId({
+      attempts,
+      cardIds: [prompt.cardId],
+      targetLanguage,
+    })[prompt.cardId] ?? [];
 
   return (
-    <Paper
-      data-test={`current_prompt_stats__panel__${prompt.cardId}`}
-      sx={{ p: 2, borderLeft: '4px solid', borderColor: 'primary.main' }}
+    <CursorAnchoredTooltip
+      arrowDataTest={`current_prompt_stats__tooltip_arrow__${prompt.cardId}`}
+      closeOnOtherOpen
+      leaveDelay={0}
+      transitionTimeout={0}
+      tooltipSx={{
+        bgcolor: '#ffffff',
+        border: '1px solid rgba(32, 48, 21, 0.14)',
+        boxShadow: '0 12px 28px rgba(32, 48, 21, 0.14)',
+        color: '#203015',
+        p: 1.25,
+      }}
+      title={
+        <Stack data-test={`current_prompt_stats__tooltip__${prompt.cardId}`} spacing={1}>
+          <SplitWordStatsChip
+            correct={stats.correct}
+            dataTestPrefix={`current_prompt_stats__tooltip_split_stats__${prompt.cardId}`}
+            incorrect={stats.incorrect}
+            interfaceLanguage={interfaceLanguage}
+            resultColors={resultColors}
+            statsLabel={statsLabel}
+          />
+          <Typography
+            data-test={`current_prompt_stats__recent_title__${prompt.cardId}`}
+            sx={{ color: '#203015', fontSize: 14, fontWeight: 850 }}
+          >
+            {t(interfaceLanguage, 'recentAnswersTitle')}
+          </Typography>
+          <Stack data-test={`current_prompt_stats__recent_results__${prompt.cardId}`} spacing={0.5}>
+            {recentResults.slice(0, 10).map((result, index) => (
+              <Stack
+                data-test={`current_prompt_stats__recent_result__${prompt.cardId}__${index}`}
+                direction="row"
+                key={`${result.occurredAt}-${index}`}
+                spacing={0.75}
+                sx={{ alignItems: 'center' }}
+              >
+                <Chip
+                  data-test={`current_prompt_stats__recent_result_chip__${prompt.cardId}__${index}`}
+                  label={t(
+                    interfaceLanguage,
+                    result.isCorrect
+                      ? 'metricCorrectSuffix'
+                      : 'metricIncorrectSuffix',
+                  )}
+                  size="small"
+                  sx={{
+                    bgcolor: result.isCorrect
+                      ? resultColors.correct.soft
+                      : resultColors.incorrect.soft,
+                    border: '1px solid',
+                    borderColor: result.isCorrect
+                      ? resultColors.correct.border
+                      : resultColors.incorrect.border,
+                    color: '#111111',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    height: 24,
+                  }}
+                />
+                <Typography sx={{ color: 'rgba(32, 48, 21, 0.72)', fontSize: 11 }}>
+                  {formatAttemptDate(result.occurredAt)}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
+        </Stack>
+      }
     >
-      <Stack data-test={`current_prompt_stats__content__${prompt.cardId}`} spacing={1}>
-        <Typography
-          data-test={`current_prompt_stats__label__${prompt.cardId}`}
-          variant="overline"
-        >
-          {statsLabel}
-        </Typography>
-        <SplitWordStatsChip
-          correct={stats.correct}
-          dataTestPrefix={`current_prompt_stats__split_stats__${prompt.cardId}`}
-          incorrect={stats.incorrect}
-          interfaceLanguage={interfaceLanguage}
-          statsLabel={statsLabel}
-        />
-      </Stack>
-    </Paper>
+      <Chip
+        component="button"
+        data-test={`current_prompt_stats__chip__${prompt.cardId}`}
+        label={statsLabel}
+        type="button"
+        variant="outlined"
+        sx={{
+          alignSelf: 'flex-start',
+          bgcolor: 'rgba(18, 60, 105, 0.06)',
+          borderColor: 'rgba(18, 60, 105, 0.34)',
+          color: '#123c69',
+          cursor: 'pointer',
+          fontSize: 13,
+          fontWeight: 850,
+          height: 30,
+        }}
+      />
+    </CursorAnchoredTooltip>
   );
 }
 
@@ -2626,12 +2845,14 @@ function ExerciseCompletePanel({
   incorrect,
   interfaceLanguage,
   onFinish,
+  resultColors,
 }: {
   completedAt: string;
   correct: number;
   incorrect: number;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   onFinish: () => void;
+  resultColors: ReturnType<typeof getWorldResultColors>;
 }) {
   const finishButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -2685,6 +2906,7 @@ function ExerciseCompletePanel({
           dataTestPrefix="exercise_complete__split_stats"
           incorrect={incorrect}
           interfaceLanguage={interfaceLanguage}
+          resultColors={resultColors}
           statsLabel={t(interfaceLanguage, 'resultsTitle')}
         />
         <Button
@@ -2735,12 +2957,14 @@ function AttemptSummary({
   attempt,
   cardStats,
   interfaceLanguage,
+  resultColors,
   showExpectedAnswers,
   targetLanguage,
 }: {
   attempt: ExerciseAttempt;
   cardStats: RootState['stats']['cardStats'];
   interfaceLanguage: RootState['app']['interfaceLanguage'];
+  resultColors: ReturnType<typeof getWorldResultColors>;
   showExpectedAnswers: boolean;
   targetLanguage: RootState['app']['targetLanguage'];
 }) {
@@ -2833,6 +3057,7 @@ function AttemptSummary({
               dataTestPrefix={`attempt_summary__crossword_formula__${attempt.id}`}
               incorrect={attemptIncorrectCount}
               interfaceLanguage={interfaceLanguage}
+              resultColors={resultColors}
               showLabel={false}
               total={attemptTotalCount}
               totalLabel={t(interfaceLanguage, 'totalAnsweredQuestions')}
@@ -2843,6 +3068,7 @@ function AttemptSummary({
               dataTestPrefix={`attempt_summary__split_stats__${attempt.id}`}
               incorrect={incorrectCount}
               interfaceLanguage={interfaceLanguage}
+              resultColors={resultColors}
               statsLabel={statsLabel}
             />
           ) : (

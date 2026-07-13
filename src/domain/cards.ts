@@ -51,11 +51,17 @@ export function getTranslationHints(
 
 export function orderTranslationHints(
   hints: TranslationHint[],
-  complementaryLanguage: SupportedLanguage,
+  complementaryLanguages: SupportedLanguage | SupportedLanguage[],
 ): TranslationHint[] {
+  const preferredLanguages = Array.isArray(complementaryLanguages)
+    ? complementaryLanguages
+    : [complementaryLanguages];
+
   return [
-    ...hints.filter((hint) => hint.language === complementaryLanguage),
-    ...hints.filter((hint) => hint.language !== complementaryLanguage),
+    ...preferredLanguages.flatMap((language) =>
+      hints.filter((hint) => hint.language === language),
+    ),
+    ...hints.filter((hint) => !preferredLanguages.includes(hint.language)),
   ];
 }
 

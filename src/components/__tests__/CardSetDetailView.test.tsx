@@ -7,6 +7,7 @@ import { Provider } from 'react-redux';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ExerciseAttempt } from '../../domain/exercises';
 import { appReducer } from '../../store/appSlice';
+import type { ComplementaryLanguages } from '../../store/appSlice';
 import { attemptsReducer } from '../../store/attemptsSlice';
 import { cardsReducer } from '../../store/cardsSlice';
 import { statsReducer } from '../../store/statsSlice';
@@ -180,8 +181,16 @@ describe('CardSetDetailView', () => {
 
     expect(screen.queryByTestId('card_set_detail__add_card_form__card-set-road')).not.toBeInTheDocument();
     expect(screen.getByTestId('card_set_detail__card_count_chip__card-set-road')).toHaveStyle({
-      borderColor: '#6f4bd8',
-      color: '#5e3fc0',
+      borderColor: '#1877c9',
+      color: '#123c69',
+    });
+    expect(screen.getByTestId('card_set_detail__edit_cards_button__card-set-road')).toHaveStyle({
+      borderColor: '#1877c9',
+      color: '#123c69',
+    });
+    expect(screen.getByTestId('card_set_detail__card_item__card-airport')).toHaveStyle({
+      borderColor: 'rgba(24, 119, 201, 0.52)',
+      borderLeftColor: '#1877c9',
     });
     expect(screen.getByTestId('card_set_detail__card_language_note__card-airport')).toHaveTextContent(
       'ru: аэропорт / es: aeropuerto',
@@ -420,6 +429,10 @@ function createStore({
       cardSets: cardSetsReducer,
     },
     preloadedState: {
+      app: {
+        ...appReducer(undefined, { type: 'test/init' }),
+        interfaceLanguage: 'ru' as const,
+      },
       cards: {
         cards: [
           {
@@ -509,7 +522,12 @@ function createStoreWithLargeCardList(count: number) {
     preloadedState: {
       app: {
         assistantId: 'studyTroll' as const,
-        complementaryLanguages: { en: 'ru', ru: 'en', es: 'en' } as const,
+        complementaryLanguages: {
+          en: ['ru'],
+          ru: ['en'],
+          es: ['en'],
+          uk: ['ru'],
+        } satisfies ComplementaryLanguages,
         interfaceLanguage: 'ru' as const,
         targetLanguage: 'en' as const,
       },

@@ -30,6 +30,11 @@ import {
   isArchivedCardSet,
 } from '../domain/cardSets';
 import {
+  getWorldAccent,
+  getWorldResultColors,
+  resolveWorldId,
+} from '../domain/worlds';
+import {
   createCardById,
   createCardStatsByTarget,
   getCardsByIds,
@@ -63,6 +68,14 @@ export function CardSetDetailView() {
   const [isEditingCards, setIsEditingCards] = useState(false);
   const [draftCardIds, setDraftCardIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
+  );
+  const worldAccent = getWorldAccent(worldId);
+  const worldResultColors = getWorldResultColors(worldId);
+  const cardSetAccentBorder = hexToRgba(worldAccent.main, 0.52);
+  const cardSetAccentHover = hexToRgba(worldAccent.main, 0.08);
+  const cardSetAccentSoft = hexToRgba(worldAccent.main, 0.055);
   const cardsListRef = useRef<HTMLDivElement | null>(null);
   const cards = useSelector((state: RootState) => state.cards.cards);
   const targetLanguage = useSelector(
@@ -254,13 +267,13 @@ export function CardSetDetailView() {
         sx={{
           border: '1px solid',
           borderColor: isAlreadyInCardSet
-            ? 'rgba(111, 75, 216, 0.52)'
+            ? cardSetAccentBorder
             : 'rgba(32, 48, 21, 0.14)',
           borderLeft: '4px solid',
-          borderLeftColor: isAlreadyInCardSet ? '#6f4bd8' : 'primary.main',
+          borderLeftColor: isAlreadyInCardSet ? worldAccent.main : 'primary.main',
           borderRadius: 1,
           bgcolor: isAlreadyInCardSet
-            ? 'rgba(111, 75, 216, 0.045)'
+            ? cardSetAccentSoft
             : 'background.paper',
           p: 1.5,
         }}
@@ -385,6 +398,7 @@ export function CardSetDetailView() {
                   dataTestPrefix={`card_set_detail__card_stats__${card.id}`}
                   incorrect={stats?.incorrect ?? 0}
                   interfaceLanguage={interfaceLanguage}
+                  resultColors={worldResultColors}
                   statsLabel={statsLabel}
                 />
               </RecentCardStatsTooltip>
@@ -450,8 +464,8 @@ export function CardSetDetailView() {
                 label={t(interfaceLanguage, 'archived')}
                 variant="outlined"
                 sx={{
-                  borderColor: 'rgba(111, 75, 216, 0.52)',
-                  color: '#5e3fc0',
+                  borderColor: cardSetAccentBorder,
+                  color: worldAccent.dark,
                   fontWeight: 850,
                 }}
               />
@@ -484,12 +498,12 @@ export function CardSetDetailView() {
                 }
                 variant="outlined"
                 sx={{
-                  borderColor: '#6f4bd8',
-                  color: '#5e3fc0',
+                  borderColor: worldAccent.main,
+                  color: worldAccent.dark,
                   mr: { sm: 3.75 },
                   '&:hover': {
-                    bgcolor: 'rgba(111, 75, 216, 0.08)',
-                    borderColor: '#5e3fc0',
+                    bgcolor: cardSetAccentHover,
+                    borderColor: worldAccent.dark,
                   },
                 }}
               >
@@ -505,8 +519,8 @@ export function CardSetDetailView() {
                 isAllCardsSelected
                   ? undefined
                   : {
-                      borderColor: '#6f4bd8',
-                      color: '#5e3fc0',
+                      borderColor: worldAccent.main,
+                      color: worldAccent.dark,
                       fontWeight: 750,
                     }
               }
@@ -642,6 +656,11 @@ function RecentCardStatsTooltip({
   recentResults: RecentCardResult[];
   subject: string;
 }) {
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
+  );
+  const worldResultColors = getWorldResultColors(worldId);
+
   return (
     <CursorAnchoredTooltip
       arrowDataTest={`${dataTestPrefix}__tooltip_arrow`}
@@ -698,10 +717,12 @@ function RecentCardStatsTooltip({
                   size="small"
                   sx={{
                     bgcolor: result.isCorrect
-                      ? 'rgb(235, 247, 225)'
-                      : 'rgb(253, 235, 238)',
+                      ? worldResultColors.correct.soft
+                      : worldResultColors.incorrect.soft,
                     border: '1px solid',
-                    borderColor: result.isCorrect ? '#8fc773' : '#f2a7b4',
+                    borderColor: result.isCorrect
+                      ? worldResultColors.correct.border
+                      : worldResultColors.incorrect.border,
                     color: '#111111',
                     fontSize: 12,
                     fontWeight: 800,
@@ -854,6 +875,14 @@ function formatAttemptDate(value: string): string {
 
 function padDatePart(value: number): string {
   return String(value).padStart(2, '0');
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const normalized = hex.replace('#', '');
+  const red = parseInt(normalized.slice(0, 2), 16);
+  const green = parseInt(normalized.slice(2, 4), 16);
+  const blue = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
 
 const recentCardStatsTooltipStyles = {

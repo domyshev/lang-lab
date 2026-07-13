@@ -565,10 +565,11 @@ describe('planAiOperation', () => {
   });
 
   it.each([
+    [{ uk: 'Подорожі' }, 'Подорожі'],
     [{ es: 'Viajes' }, 'Viajes'],
     [{ ru: 'Путешествия', es: 'Viajes' }, 'Путешествия'],
     [{ en: 'Journeys', ru: 'Путешествия', es: 'Viajes' }, 'Journeys'],
-  ])('derives a created set canonical name by en, ru, es priority', (names, expected) => {
+  ])('derives a created set canonical name by en, ru, es, uk priority', (names, expected) => {
     const result = planAiOperation(
       plannerInput({
         title: 'Names',

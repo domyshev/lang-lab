@@ -2,8 +2,10 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DragHandleRoundedIcon from '@mui/icons-material/DragHandleRounded';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
+import { footballResultColors } from '../domain/footballTheme';
 import { t } from '../domain/i18n';
 import { SupportedLanguage } from '../domain/languages';
+import type { WorldResultColors } from '../domain/worlds';
 import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
 
 export function CountMetric({
@@ -52,6 +54,7 @@ export function StatsFormula({
   interfaceLanguage,
   labelDisplay,
   rootDataTest,
+  resultColors = footballResultColors,
   totalDisplay = 'chip',
   totalTooltip,
   valueGroupJustify = 'flex-start',
@@ -68,6 +71,7 @@ export function StatsFormula({
   interfaceLanguage: SupportedLanguage;
   labelDisplay?: ReactNode;
   rootDataTest?: string;
+  resultColors?: WorldResultColors;
   totalDisplay?: 'chip' | 'plain';
   totalTooltip?: string;
   valueGroupJustify?: 'center' | 'flex-start';
@@ -141,6 +145,7 @@ export function StatsFormula({
             ariaLabel={`${correctLabel}: ${correct}`}
             dataTest={`${dataTestPrefix}__correct_chip`}
             label={correct}
+            resultColors={resultColors}
             suffix={t(interfaceLanguage, 'metricCorrectSuffix')}
             tone="correct"
             tooltip={correctTooltip ?? t(interfaceLanguage, 'correctAnsweredTooltip')}
@@ -156,6 +161,7 @@ export function StatsFormula({
             ariaLabel={`${incorrectLabel}: ${incorrect}`}
             dataTest={`${dataTestPrefix}__incorrect_chip`}
             label={incorrect}
+            resultColors={resultColors}
             suffix={t(interfaceLanguage, 'metricIncorrectSuffix')}
             tone="incorrect"
             tooltip={incorrectTooltip ?? t(interfaceLanguage, 'incorrectAnsweredTooltip')}
@@ -193,6 +199,7 @@ export function MetricChip({
   ariaLabel,
   dataTest,
   label,
+  resultColors = footballResultColors,
   suffix,
   tone,
   tooltip,
@@ -200,6 +207,7 @@ export function MetricChip({
   ariaLabel: string;
   dataTest: string;
   label: number;
+  resultColors?: WorldResultColors;
   suffix?: string;
   tone: 'total' | 'correct' | 'incorrect';
   tooltip?: string;
@@ -244,9 +252,9 @@ export function MetricChip({
       variant="outlined"
       sx={
         tone === 'correct'
-          ? correctChipStyles
+          ? getCorrectChipStyles(resultColors)
           : tone === 'incorrect'
-            ? incorrectChipStyles
+            ? getIncorrectChipStyles(resultColors)
             : totalChipStyles
       }
     />
@@ -396,19 +404,23 @@ const totalChipStyles = {
   color: '#203015',
 };
 
-const correctChipStyles = {
-  ...formulaChipBaseStyles,
-  bgcolor: 'rgb(235, 247, 225)',
-  borderColor: '#8fc773',
-  color: '#111111',
-};
+function getCorrectChipStyles(resultColors: WorldResultColors) {
+  return {
+    ...formulaChipBaseStyles,
+    bgcolor: resultColors.correct.soft,
+    borderColor: resultColors.correct.border,
+    color: '#111111',
+  };
+}
 
-const incorrectChipStyles = {
-  ...formulaChipBaseStyles,
-  bgcolor: 'rgb(253, 235, 238)',
-  borderColor: '#f2a7b4',
-  color: '#111111',
-};
+function getIncorrectChipStyles(resultColors: WorldResultColors) {
+  return {
+    ...formulaChipBaseStyles,
+    bgcolor: resultColors.incorrect.soft,
+    borderColor: resultColors.incorrect.border,
+    color: '#111111',
+  };
+}
 
 const metricTooltipStyles = {
   bgcolor: '#ffffff',

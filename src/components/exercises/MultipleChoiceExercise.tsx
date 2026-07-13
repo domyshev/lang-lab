@@ -9,28 +9,39 @@ import {
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { MultipleChoicePrompt } from '../../domain/exercises';
+import { footballResultColors } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
+import type { WorldResultColors } from '../../domain/worlds';
 import { KnownCardToggleButton } from '../KnownCardToggleButton';
-import { ExerciseProgressChip, ExerciseCardSetChip } from './ExerciseCardSetChip';
+import {
+  ExerciseProgressChip,
+  ExerciseCardSetChip,
+  ExerciseTargetLanguageChip,
+} from './ExerciseCardSetChip';
 import { TranslationHintRow } from './TranslationHintRow';
 
 export function MultipleChoiceExercise({
   complementaryLanguage,
+  complementaryLanguages,
   interfaceLanguage,
   progressCompletedCount,
   progressTotalCount,
   prompt,
+  resultColors = footballResultColors,
   isKnown = false,
   onAnswer,
   onKnownChange,
   onNext,
   cardSetName,
   finishAction,
+  targetLanguage = 'en',
 }: {
   complementaryLanguage?: SupportedLanguage;
+  complementaryLanguages?: SupportedLanguage[];
   interfaceLanguage: SupportedLanguage;
   prompt: MultipleChoicePrompt;
+  resultColors?: WorldResultColors;
   isKnown?: boolean;
   onAnswer: (answer: string) => void;
   onKnownChange?: (isKnown: boolean) => void;
@@ -39,6 +50,7 @@ export function MultipleChoiceExercise({
   progressTotalCount?: number;
   cardSetName?: string;
   finishAction?: ReactNode;
+  targetLanguage?: SupportedLanguage;
 }) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const isSubmitted = selectedAnswer !== null;
@@ -78,6 +90,11 @@ export function MultipleChoiceExercise({
             >
               {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'multipleChoice')}
             </Typography>
+            <ExerciseTargetLanguageChip
+              dataTest={`multiple_choice_exercise__target_language_chip__${prompt.cardId}`}
+              interfaceLanguage={interfaceLanguage}
+              targetLanguage={targetLanguage}
+            />
             <Stack
               data-test={`multiple_choice_exercise__metadata_row__${prompt.cardId}`}
               direction="row"
@@ -107,6 +124,7 @@ export function MultipleChoiceExercise({
         </Stack>
         <TranslationHintRow
           complementaryLanguage={complementaryLanguage}
+          complementaryLanguages={complementaryLanguages}
           dataTest={`multiple_choice_exercise__prompt__${prompt.cardId}`}
           fallbackPrompt={prompt.prompt}
           hints={prompt.translationHints}
@@ -147,6 +165,7 @@ export function MultipleChoiceExercise({
                   isCorrectOption: option === prompt.expectedAnswer,
                   isSelected: option === selectedAnswer,
                   isSubmitted,
+                  resultColors,
                 }),
               }}
             >
@@ -170,14 +189,20 @@ export function MultipleChoiceExercise({
                 minWidth: 148,
                 ...(isCorrect
                   ? {
-                      bgcolor: '#2f7d32',
-                      '&:hover': { bgcolor: '#276b2a', boxShadow: 'none' },
+                      bgcolor: resultColors.correct.main,
+                      '&:hover': {
+                        bgcolor: resultColors.correct.main,
+                        boxShadow: 'none',
+                      },
                     }
                   : {
-                      bgcolor: '#fdebee',
-                      border: '1px solid #f2a7b4',
-                      color: '#9f1239',
-                      '&:hover': { bgcolor: '#fbdde3', boxShadow: 'none' },
+                      bgcolor: resultColors.incorrect.soft,
+                      border: `1px solid ${resultColors.incorrect.border}`,
+                      color: resultColors.incorrect.text,
+                      '&:hover': {
+                        bgcolor: resultColors.incorrect.soft,
+                        boxShadow: 'none',
+                      },
                     }),
               }}
             >
@@ -204,10 +229,12 @@ function getOptionStyles({
   isCorrectOption,
   isSelected,
   isSubmitted,
+  resultColors,
 }: {
   isCorrectOption: boolean;
   isSelected: boolean;
   isSubmitted: boolean;
+  resultColors: WorldResultColors;
 }) {
   if (!isSubmitted) {
     return {
@@ -223,8 +250,8 @@ function getOptionStyles({
 
   if (isCorrectOption) {
     return {
-      bgcolor: 'rgb(235, 247, 225)',
-      borderColor: '#8fc773',
+      bgcolor: resultColors.correct.soft,
+      borderColor: resultColors.correct.border,
       color: '#203015',
       opacity: 1,
       WebkitTextFillColor: '#203015',
@@ -233,11 +260,11 @@ function getOptionStyles({
 
   if (isSelected) {
     return {
-      bgcolor: 'rgb(253, 235, 238)',
-      borderColor: '#f2a7b4',
-      color: '#4a111b',
+      bgcolor: resultColors.incorrect.soft,
+      borderColor: resultColors.incorrect.border,
+      color: resultColors.incorrect.text,
       opacity: 1,
-      WebkitTextFillColor: '#4a111b',
+      WebkitTextFillColor: resultColors.incorrect.text,
     };
   }
 

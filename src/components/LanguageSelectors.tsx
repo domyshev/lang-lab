@@ -13,15 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
-import type { ReactElement } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  AssistantId,
-  assistantCharacters,
-  defaultAssistantId,
-  getAssistantTooltip,
-  resolveAssistantId,
-} from '../domain/assistants';
 import {
   languageFlags,
   languageLabels,
@@ -34,30 +26,36 @@ import {
   getPracticeSettings,
 } from '../domain/practiceOrdering';
 import {
-  getComplementaryLanguages,
+  getComplementaryLanguagesForTarget,
   setCorrectStreakCooldownMonths,
   setAssistantId,
-  setComplementaryLanguageForTarget,
+  setComplementaryLanguagesForTarget,
   setInterfaceLanguage,
   setNewCardMixFrequencyPercent,
   setRecentMistakeRepeatFrequencyPercent,
   setTargetLanguage,
+  setWorldId,
 } from '../store/appSlice';
 import { AppDispatch, RootState } from '../store/store';
-import { AssistantStickerIcon } from './assistantAssets';
-import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
+import {
+  WorldId,
+  getDefaultAssistantIdForWorld,
+  resolveWorldId,
+  worldDefinitions,
+  worldIds,
+} from '../domain/worlds';
 
 export function LanguageSelectors() {
   const dispatch = useDispatch<AppDispatch>();
-  const assistantLabelId = useId();
-  const complementaryLabelPrefix = useId();
+  const companionLabelId = useId();
   const interfaceLabelId = useId();
   const targetLabelId = useId();
+  const worldLabelId = useId();
   const [settingsAnchor, setSettingsAnchor] = useState<HTMLElement | null>(
     null,
   );
-  const assistantId = useSelector((state: RootState) =>
-    resolveAssistantId(state.app.assistantId ?? defaultAssistantId),
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
   );
   const interfaceLanguage = useSelector(
     (state: RootState) => state.app.interfaceLanguage,
@@ -72,8 +70,13 @@ export function LanguageSelectors() {
     (state: RootState) => state.app.complementaryLanguages,
   );
   const practiceSettings = getPracticeSettings(storedPracticeSettings);
-  const complementaryLanguages = getComplementaryLanguages(
+  const companionLanguages = getComplementaryLanguagesForTarget(
     storedComplementaryLanguages,
+    targetLanguage,
+    interfaceLanguage,
+  );
+  const companionLanguageOptions = supportedLanguages.filter(
+    (language) => language !== targetLanguage && language !== interfaceLanguage,
   );
   const isSettingsOpen = Boolean(settingsAnchor);
 
@@ -87,16 +90,27 @@ export function LanguageSelectors() {
     dispatch(setTargetLanguage(event.target.value as SupportedLanguage));
   };
 
-  const handleComplementaryLanguageChange =
-    (target: SupportedLanguage) =>
-    (event: SelectChangeEvent<SupportedLanguage>) => {
-      dispatch(
-        setComplementaryLanguageForTarget({
-          complementaryLanguage: event.target.value as SupportedLanguage,
-          targetLanguage: target,
-        }),
-      );
-    };
+  const handleWorldChange = (event: SelectChangeEvent<WorldId>) => {
+    const nextWorldId = resolveWorldId(event.target.value);
+    dispatch(setWorldId(nextWorldId));
+    dispatch(setAssistantId(getDefaultAssistantIdForWorld(nextWorldId)));
+  };
+
+  const handleCompanionLanguagesChange = (
+    event: SelectChangeEvent<typeof companionLanguages>,
+  ) => {
+    const rawValue = event.target.value;
+    const nextLanguages =
+      typeof rawValue === 'string'
+        ? rawValue.split(',')
+        : rawValue;
+    dispatch(
+      setComplementaryLanguagesForTarget({
+        complementaryLanguages: nextLanguages as SupportedLanguage[],
+        targetLanguage,
+      }),
+    );
+  };
 
   return (
     <Stack
@@ -110,90 +124,6 @@ export function LanguageSelectors() {
         width: { xs: '100%', md: 'auto' },
       }}
     >
-      <FormControl
-        data-test="language_selectors__assistant_control"
-        size="small"
-        sx={{ minWidth: 86 }}
-      >
-        <InputLabel
-          data-test="language_selectors__assistant_label"
-          id={assistantLabelId}
-        >
-          {t(interfaceLanguage, 'assistant')}
-        </InputLabel>
-        <Select
-          data-test="language_selectors__assistant_select"
-          labelId={assistantLabelId}
-          label={t(interfaceLanguage, 'assistant')}
-          value={assistantId}
-          onChange={(event: SelectChangeEvent<AssistantId>) =>
-            dispatch(setAssistantId(event.target.value as AssistantId))
-          }
-          renderValue={(value) => {
-            const tooltip = getAssistantTooltip(value, interfaceLanguage);
-            return (
-              <AssistantSelectorTooltip
-                arrowDataTest={`language_selectors__assistant_selected_tooltip_arrow__${value}`}
-                tooltip={tooltip}
-              >
-                <Box
-                  component="span"
-                  data-test={`language_selectors__assistant_selected_icon__${value}`}
-                  sx={{ display: 'inline-flex', mx: 'auto' }}
-                >
-                  <AssistantStickerIcon
-                    ariaLabel={tooltip}
-                    assistantId={value}
-                    dataTest={`language_selectors__assistant_selected_sticker__${value}`}
-                    size={30}
-                  />
-                </Box>
-              </AssistantSelectorTooltip>
-            );
-          }}
-          sx={{
-            ...compactSelectSx,
-            '& .MuiSelect-select': {
-              ...compactSelectSx['& .MuiSelect-select'],
-              alignItems: 'center',
-              display: 'flex',
-              justifyContent: 'center',
-            },
-          }}
-        >
-          {assistantCharacters.map((assistant) => (
-            <MenuItem
-              data-test={`language_selectors__assistant_option__${assistant.id}`}
-              key={assistant.id}
-              aria-label={getAssistantTooltip(assistant.id, interfaceLanguage)}
-              value={assistant.id}
-              sx={{ justifyContent: 'center' }}
-            >
-              <AssistantSelectorTooltip
-                arrowDataTest={`language_selectors__assistant_option_tooltip_arrow__${assistant.id}`}
-                tooltip={getAssistantTooltip(assistant.id, interfaceLanguage)}
-              >
-                <Box
-                  component="span"
-                  data-test={`language_selectors__assistant_option_icon__${assistant.id}`}
-                  sx={{ display: 'inline-flex' }}
-                >
-                  <AssistantStickerIcon
-                    ariaLabel={getAssistantTooltip(
-                      assistant.id,
-                      interfaceLanguage,
-                    )}
-                    assistantId={assistant.id}
-                    dataTest={`language_selectors__assistant_option_sticker__${assistant.id}`}
-                    size={36}
-                  />
-                </Box>
-              </AssistantSelectorTooltip>
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
       <FormControl
         data-test="language_selectors__interface_language_control"
         size="small"
@@ -250,12 +180,12 @@ export function LanguageSelectors() {
             data-test="language_selectors__target_language_label"
             id={targetLabelId}
           >
-            {t(interfaceLanguage, 'targetLanguage')}
+            {t(interfaceLanguage, 'targetLearningLanguages')}
           </InputLabel>
           <Select
             data-test="language_selectors__target_language_select"
             labelId={targetLabelId}
-            label={t(interfaceLanguage, 'targetLanguage')}
+            label={t(interfaceLanguage, 'targetLearningLanguages')}
             value={targetLanguage}
             onChange={handleTargetChange}
             renderValue={(value) => (
@@ -278,6 +208,63 @@ export function LanguageSelectors() {
                 />
               </MenuItem>
             ))}
+          </Select>
+        </FormControl>
+
+        <FormControl
+          data-test="language_selectors__companion_languages_control"
+          size="small"
+          sx={{ minWidth: { xs: 168, sm: 196 } }}
+        >
+          <InputLabel
+            data-test="language_selectors__companion_languages_label"
+            id={companionLabelId}
+          >
+            {t(interfaceLanguage, 'complementaryLanguage')}
+          </InputLabel>
+          <Select
+            data-test="language_selectors__companion_languages_select"
+            labelId={companionLabelId}
+            label={t(interfaceLanguage, 'complementaryLanguage')}
+            multiple
+            value={companionLanguages}
+            onChange={handleCompanionLanguagesChange}
+            renderValue={(value) => (
+              <Stack
+                component="span"
+                data-test="language_selectors__companion_languages_selected__root"
+                direction="row"
+                spacing={0.75}
+                sx={{ alignItems: 'center', minWidth: 0 }}
+              >
+                {(value as SupportedLanguage[]).map((language) => (
+                  <LanguageLabel
+                    dataTestPrefix={`language_selectors__companion_languages_selected__${language}`}
+                    key={language}
+                    language={language}
+                  />
+                ))}
+              </Stack>
+            )}
+            sx={compactSelectSx}
+          >
+            {companionLanguageOptions.map((language) => {
+              const isSelected = companionLanguages.includes(language);
+              const isDisabled = !isSelected && companionLanguages.length >= 2;
+              return (
+                <MenuItem
+                  data-test={`language_selectors__companion_languages_option__${language}`}
+                  disabled={isDisabled}
+                  key={language}
+                  value={language}
+                >
+                  <LanguageLabel
+                    dataTestPrefix={`language_selectors__companion_languages_option_label__${language}`}
+                    language={language}
+                  />
+                </MenuItem>
+              );
+            })}
           </Select>
         </FormControl>
 
@@ -315,74 +302,35 @@ export function LanguageSelectors() {
           >
             {t(interfaceLanguage, 'practiceSettings')}
           </Typography>
-          <Stack
-            data-test="language_selectors__complementary_language_settings"
-            spacing={1}
+          <FormControl
+            data-test="language_selectors__world_control"
+            size="small"
+            fullWidth
           >
-            <Typography
-              data-test="language_selectors__complementary_language_title"
-              fontSize={14}
-              fontWeight={900}
-              sx={{ color: '#5f6b59' }}
+            <InputLabel
+              data-test="language_selectors__world_label"
+              id={worldLabelId}
             >
-              {t(interfaceLanguage, 'complementaryLanguage')}
-            </Typography>
-            <Stack
-              data-test="language_selectors__complementary_language_controls"
-              sx={{ gap: 1.5 }}
+              {t(interfaceLanguage, 'appWorld')}
+            </InputLabel>
+            <Select
+              data-test="language_selectors__world_select"
+              label={t(interfaceLanguage, 'appWorld')}
+              labelId={worldLabelId}
+              value={worldId}
+              onChange={handleWorldChange}
             >
-              {supportedLanguages.map((target) => {
-                const label = getComplementaryLanguageFieldLabel(
-                  interfaceLanguage,
-                  target,
-                );
-                const labelId = `${complementaryLabelPrefix}-${target}`;
-                return (
-                  <FormControl
-                    data-test={`language_selectors__complementary_language_control__${target}`}
-                    key={target}
-                    size="small"
-                    fullWidth
-                  >
-                    <InputLabel
-                      data-test={`language_selectors__complementary_language_label__${target}`}
-                      id={labelId}
-                    >
-                      {label}
-                    </InputLabel>
-                    <Select
-                      data-test={`language_selectors__complementary_language_select__${target}`}
-                      labelId={labelId}
-                      label={label}
-                      value={complementaryLanguages[target]}
-                      onChange={handleComplementaryLanguageChange(target)}
-                      renderValue={(value) => (
-                        <LanguageLabel
-                          dataTestPrefix={`language_selectors__complementary_language_selected__${target}`}
-                          language={value as SupportedLanguage}
-                        />
-                      )}
-                    >
-                      {supportedLanguages
-                        .filter((language) => language !== target)
-                        .map((language) => (
-                          <MenuItem
-                            data-test={`language_selectors__complementary_language_option__${target}__${language}`}
-                            key={language}
-                            value={language}
-                          >
-                            <LanguageLabel
-                              dataTestPrefix={`language_selectors__complementary_language_option_label__${target}__${language}`}
-                              language={language}
-                            />
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-                );
-              })}
-            </Stack>
-          </Stack>
+              {worldIds.map((world) => (
+                <MenuItem
+                  data-test={`language_selectors__world_option__${world}`}
+                  key={world}
+                  value={world}
+                >
+                  {worldDefinitions[world].label[interfaceLanguage]}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           {cooldownFields.map((field) => (
             <TextField
               data-test={`language_selectors__cooldown_input__${field.key}`}
@@ -472,64 +420,6 @@ const compactSelectSx = {
     minHeight: 'unset',
     py: 0.25,
   },
-};
-
-function getComplementaryLanguageFieldLabel(
-  interfaceLanguage: SupportedLanguage,
-  targetLanguage: SupportedLanguage,
-): string {
-  if (interfaceLanguage === 'ru') {
-    return `Дополняющий язык для ${languageLabels[targetLanguage]}`;
-  }
-
-  if (interfaceLanguage === 'es') {
-    return `Idioma complementario para ${languageLabels[targetLanguage]}`;
-  }
-
-  return `Complementary language for ${languageLabels[targetLanguage]}`;
-}
-
-function AssistantSelectorTooltip({
-  arrowDataTest,
-  children,
-  tooltip,
-}: {
-  arrowDataTest: string;
-  children: ReactElement;
-  tooltip: string;
-}) {
-  return (
-    <CursorAnchoredTooltip
-      arrowDataTest={arrowDataTest}
-      closeOnOtherOpen
-      placement="left"
-      title={
-        <TooltipContent sx={assistantTooltipContentStyles}>
-          {tooltip}
-        </TooltipContent>
-      }
-      tooltipSx={assistantTooltipStyles}
-    >
-      {children}
-    </CursorAnchoredTooltip>
-  );
-}
-
-const assistantTooltipStyles = {
-  bgcolor: '#ffffff',
-  border: '1px solid rgba(32, 48, 21, 0.16)',
-  boxShadow: '0 10px 24px rgba(32, 48, 21, 0.14)',
-  color: '#203015',
-  maxWidth: 280,
-  px: 1.25,
-  py: 1,
-};
-
-const assistantTooltipContentStyles = {
-  bgcolor: '#ffffff',
-  color: '#203015',
-  fontSize: 14,
-  lineHeight: 1.35,
 };
 
 function LanguageLabel({

@@ -18,6 +18,11 @@ import {
   summarizeExerciseHistory,
 } from '../domain/exerciseHistory';
 import { t } from '../domain/i18n';
+import {
+  getWorldResultColors,
+  resolveWorldId,
+  type WorldResultColors,
+} from '../domain/worlds';
 import { RootState } from '../store/store';
 import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
 import { StatsFormula } from './StatsFormula';
@@ -38,6 +43,10 @@ export function HistoryView() {
   const allAttempts = useSelector(
     (state: RootState) => state.attempts.attempts,
   );
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
+  );
+  const resultColors = getWorldResultColors(worldId);
   const attemptSummaries = useMemo(
     () =>
       summarizeExerciseHistory(
@@ -58,6 +67,7 @@ export function HistoryView() {
           attempt={attempt}
           allAttempts={allAttempts}
           interfaceLanguage={interfaceLanguage}
+          resultColors={resultColors}
         />
       ))}
       {attemptSummaries.length === 0 && (
@@ -75,10 +85,12 @@ function AttemptHistoryCard({
   allAttempts,
   attempt,
   interfaceLanguage,
+  resultColors,
 }: {
   allAttempts: RootState['attempts']['attempts'];
   attempt: ExerciseHistorySummary;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
+  resultColors: WorldResultColors;
 }) {
   const attemptDomKey = toDomKey(attempt.id);
   const detailRows = attempt.attempts.flatMap((savedAttempt) =>
@@ -162,6 +174,7 @@ function AttemptHistoryCard({
             dataTestPrefix={`history_view__attempt_formula__${attemptDomKey}`}
             incorrect={attempt.incorrect}
             interfaceLanguage={interfaceLanguage}
+            resultColors={resultColors}
             showLabel={false}
             total={attempt.total}
             totalLabel={t(interfaceLanguage, 'totalAnsweredQuestions')}
@@ -178,6 +191,7 @@ function AttemptHistoryCard({
             dataTestPrefix={`history_view__crossword_replay__${attemptDomKey}`}
             interfaceLanguage={interfaceLanguage}
             recentResultsByCardId={crosswordRecentResultsByCardId}
+            resultColors={resultColors}
             snapshot={crosswordAttempt.crosswordSnapshot}
           />
         ) : (
@@ -223,6 +237,7 @@ function AttemptHistoryCard({
                       isCorrect={row.isCorrect}
                       options={row.options}
                       recentResults={row.recentResults}
+                      resultColors={resultColors}
                       type={row.exerciseType}
                     />
                   </Stack>
@@ -288,6 +303,7 @@ function HistoryAnswer({
   isCorrect,
   options,
   recentResults,
+  resultColors,
   type,
 }: {
   answer: string;
@@ -297,6 +313,7 @@ function HistoryAnswer({
   isCorrect: boolean;
   options: string[];
   recentResults: RecentCardResult[];
+  resultColors: WorldResultColors;
   type: ExerciseHistorySummary['exerciseType'];
 }) {
   const answerContent =
@@ -310,16 +327,16 @@ function HistoryAnswer({
               border: '1px solid',
               borderColor:
                 option === expectedAnswer
-                  ? '#8fc773'
+                  ? resultColors.correct.border
                   : option === answer
-                    ? '#f2a7b4'
+                    ? resultColors.incorrect.border
                     : 'divider',
               borderRadius: 1,
               bgcolor:
                 option === expectedAnswer
-                  ? 'rgb(235, 247, 225)'
+                  ? resultColors.correct.soft
                   : option === answer
-                    ? 'rgb(253, 235, 238)'
+                    ? resultColors.incorrect.soft
                     : '#ffffff',
               color: '#203015',
               fontSize: 18,
@@ -338,6 +355,7 @@ function HistoryAnswer({
         <AnswerCells
           ariaLabel={`${t(interfaceLanguage, 'correctAnswer')}: ${expectedAnswer}`}
           dataTestPrefix={`${dataTestPrefix}__correct_cells`}
+          resultColors={resultColors}
           tone="correct"
           value={expectedAnswer}
         />
@@ -350,6 +368,7 @@ function HistoryAnswer({
           }`}
           dataTestPrefix={`${dataTestPrefix}__incorrect_cells`}
           expectedValue={expectedAnswer}
+          resultColors={resultColors}
           tone="incorrect"
           value={answer || t(interfaceLanguage, 'noAnswer')}
         />
@@ -357,6 +376,7 @@ function HistoryAnswer({
           ariaLabel={`${t(interfaceLanguage, 'correctAnswer')}: ${expectedAnswer}`}
           dataTestPrefix={`${dataTestPrefix}__correct_cells`}
           expectedValue={expectedAnswer}
+          resultColors={resultColors}
           tone="correct"
           value={expectedAnswer}
         />
@@ -374,6 +394,7 @@ function HistoryAnswer({
       dataTestPrefix={dataTestPrefix}
       interfaceLanguage={interfaceLanguage}
       recentResults={recentResults}
+      resultColors={resultColors}
       subject={expectedAnswer}
       />
     </Stack>
@@ -384,12 +405,14 @@ function AnswerCells({
   ariaLabel,
   dataTestPrefix,
   expectedValue,
+  resultColors,
   tone,
   value,
 }: {
   ariaLabel: string;
   dataTestPrefix: string;
   expectedValue?: string;
+  resultColors: WorldResultColors;
   tone: 'correct' | 'incorrect';
   value: string;
 }) {
@@ -443,10 +466,13 @@ function AnswerCells({
               alignItems: 'center',
               bgcolor:
                 tone === 'correct'
-                  ? 'rgb(235, 247, 225)'
-                  : 'rgb(253, 235, 238)',
+                  ? resultColors.correct.soft
+                  : resultColors.incorrect.soft,
               border: '1px solid',
-              borderColor: tone === 'correct' ? '#8fc773' : '#f2a7b4',
+              borderColor:
+                tone === 'correct'
+                  ? resultColors.correct.border
+                  : resultColors.incorrect.border,
               borderRadius: 1,
               color: '#203015',
               display: 'inline-flex',

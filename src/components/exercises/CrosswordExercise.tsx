@@ -28,14 +28,20 @@ import {
   getIncorrectCrosswordEntries,
 } from '../../domain/crosswordResults';
 import type { CrosswordAttemptSnapshot } from '../../domain/exercises';
+import { footballResultColors } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
+import type { WorldResultColors } from '../../domain/worlds';
 import {
   CursorAnchoredTooltip,
   TooltipContent,
 } from '../CursorAnchoredTooltip';
 import { GameWarningIcon, GameWarningTooltip } from '../GameWarningTooltip';
-import { ExerciseProgressChip, ExerciseCardSetChip } from './ExerciseCardSetChip';
+import {
+  ExerciseProgressChip,
+  ExerciseCardSetChip,
+  ExerciseTargetLanguageChip,
+} from './ExerciseCardSetChip';
 
 export type CrosswordDraftState = {
   answers: Record<string, string>;
@@ -51,8 +57,10 @@ export function CrosswordExercise({
   onCardSetOpen,
   puzzle,
   recentResultsByCardId = {},
+  resultColors = footballResultColors,
   cardSetName,
   finishAction,
+  targetLanguage = 'en',
   onFinish,
   onSubmit,
 }: {
@@ -64,8 +72,10 @@ export function CrosswordExercise({
     string,
     Array<{ isCorrect: boolean; occurredAt: string }>
   >;
+  resultColors?: WorldResultColors;
   cardSetName?: string;
   finishAction?: ReactNode;
+  targetLanguage?: SupportedLanguage;
   onFinish?: () => void;
   onSubmit: (
     answers: Record<string, string>,
@@ -230,6 +240,11 @@ export function CrosswordExercise({
             >
               {t(interfaceLanguage, 'game')}: {t(interfaceLanguage, 'crossword')}
             </Typography>
+            <ExerciseTargetLanguageChip
+              dataTest="crossword_exercise__target_language_chip"
+              interfaceLanguage={interfaceLanguage}
+              targetLanguage={targetLanguage}
+            />
             <Stack
               data-test="crossword_exercise__metadata_row"
               direction="row"
@@ -460,7 +475,7 @@ export function CrosswordExercise({
                     }}
                     sx={letterCellStyles}
                     style={{
-                      ...getSubmittedCellStyle(cellTone),
+                      ...getSubmittedCellStyle(cellTone, resultColors),
                       ...(isGhostValue ? ghostCellStyle : {}),
                       textDecorationLine: shouldStrikeAnswerCharacter({
                         actual: rawCellValue,
@@ -483,6 +498,7 @@ export function CrosswordExercise({
                     interfaceLanguage={interfaceLanguage}
                     key={key}
                     recentResultsByCardId={recentResultsByCardId}
+                    resultColors={resultColors}
                   >
                     {cellInput}
                   </CorrectionTooltip>
@@ -542,6 +558,7 @@ function CorrectionTooltip({
   entries,
   interfaceLanguage,
   recentResultsByCardId,
+  resultColors,
 }: {
   children: ReactElement;
   dataTestPrefix: string;
@@ -551,6 +568,7 @@ function CorrectionTooltip({
     string,
     Array<{ isCorrect: boolean; occurredAt: string }>
   >;
+  resultColors: WorldResultColors;
 }) {
   return (
     <CursorAnchoredTooltip
@@ -575,6 +593,7 @@ function CorrectionTooltip({
                 dataTestPrefix={`${dataTestPrefix}__entry__${encodeURIComponent(
                   entry.cardId,
                 )}__answer`}
+                resultColors={resultColors}
                 value={entry.answer}
               />
               <RecentResultsBlock
@@ -583,6 +602,7 @@ function CorrectionTooltip({
                 )}`}
                 interfaceLanguage={interfaceLanguage}
                 recentResults={recentResultsByCardId[entry.cardId]?.slice(0, 10) ?? []}
+                resultColors={resultColors}
               />
             </Stack>
           ))}
@@ -598,10 +618,12 @@ function RecentResultsBlock({
   dataTestPrefix,
   interfaceLanguage,
   recentResults,
+  resultColors,
 }: {
   dataTestPrefix: string;
   interfaceLanguage: SupportedLanguage;
   recentResults: Array<{ isCorrect: boolean; occurredAt: string }>;
+  resultColors: WorldResultColors;
 }) {
   return (
     <Stack data-test={`${dataTestPrefix}__recent`} spacing={0.5}>
@@ -632,7 +654,7 @@ function RecentResultsBlock({
                 result.isCorrect ? 'metricCorrectSuffix' : 'metricIncorrectSuffix',
               )}
               size="small"
-              sx={recentResultChipStyles(result.isCorrect)}
+              sx={recentResultChipStyles(result.isCorrect, resultColors)}
             />
             <Typography
               data-test={`${dataTestPrefix}__recent_result_date__${index}`}
@@ -649,9 +671,11 @@ function RecentResultsBlock({
 
 function AnswerCells({
   dataTestPrefix,
+  resultColors,
   value,
 }: {
   dataTestPrefix: string;
+  resultColors: WorldResultColors;
   value: string;
 }) {
   return (
@@ -678,7 +702,7 @@ function AnswerCells({
             component="span"
             data-test={`${dataTestPrefix}__cell__${index}`}
             key={`${character}-${index}`}
-            sx={correctionAnswerCellStyles}
+            sx={getCorrectionAnswerCellStyles(resultColors)}
           >
             {character}
           </Box>
@@ -787,13 +811,20 @@ function normalizeAnswer(value: string): string {
 
 function getSubmittedCellStyle(
   tone: 'correct' | 'incorrect' | undefined,
+  resultColors: WorldResultColors,
 ): { backgroundColor?: string; borderColor?: string } {
   if (tone === 'correct') {
-    return { backgroundColor: 'rgb(235, 247, 225)', borderColor: '#8fc773' };
+    return {
+      backgroundColor: resultColors.correct.soft,
+      borderColor: resultColors.correct.border,
+    };
   }
 
   if (tone === 'incorrect') {
-    return { backgroundColor: 'rgb(253, 235, 238)', borderColor: '#f2a7b4' };
+    return {
+      backgroundColor: resultColors.incorrect.soft,
+      borderColor: resultColors.incorrect.border,
+    };
   }
 
   return {};
@@ -936,21 +967,23 @@ const ghostCellStyle = {
   color: 'rgba(32, 48, 21, 0.38)',
 };
 
-const correctionAnswerCellStyles = {
-  alignItems: 'center',
-  bgcolor: 'rgb(235, 247, 225)',
-  border: '1px solid #8fc773',
-  borderRadius: 1,
-  color: '#203015',
-  display: 'inline-flex',
-  fontSize: 20,
-  fontWeight: 800,
-  height: 34,
-  justifyContent: 'center',
-  lineHeight: 1,
-  textTransform: 'lowercase',
-  width: 34,
-};
+function getCorrectionAnswerCellStyles(resultColors: WorldResultColors) {
+  return {
+    alignItems: 'center',
+    bgcolor: resultColors.correct.soft,
+    border: `1px solid ${resultColors.correct.border}`,
+    borderRadius: 1,
+    color: '#203015',
+    display: 'inline-flex',
+    fontSize: 20,
+    fontWeight: 800,
+    height: 34,
+    justifyContent: 'center',
+    lineHeight: 1,
+    textTransform: 'lowercase',
+    width: 34,
+  };
+}
 
 const correctionAnswerSpaceStyles = {
   display: 'inline-flex',
@@ -958,11 +991,18 @@ const correctionAnswerSpaceStyles = {
   width: 34,
 };
 
-function recentResultChipStyles(isCorrect: boolean) {
+function recentResultChipStyles(
+  isCorrect: boolean,
+  resultColors: WorldResultColors,
+) {
   return {
-    bgcolor: isCorrect ? 'rgb(235, 247, 225)' : 'rgb(253, 235, 238)',
+    bgcolor: isCorrect
+      ? resultColors.correct.soft
+      : resultColors.incorrect.soft,
     border: '1px solid',
-    borderColor: isCorrect ? '#8fc773' : '#f2a7b4',
+    borderColor: isCorrect
+      ? resultColors.correct.border
+      : resultColors.incorrect.border,
     color: '#111111',
     fontSize: 12,
     fontWeight: 800,

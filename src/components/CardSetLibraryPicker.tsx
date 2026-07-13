@@ -27,6 +27,12 @@ import {
 } from '../domain/cardSets';
 import { formatCardCount, t } from '../domain/i18n';
 import { SupportedLanguage } from '../domain/languages';
+import {
+  getPaletteForCardSet,
+  getWorldAccent,
+  resolveWorldId,
+  type WorldId,
+} from '../domain/worlds';
 import { RootState } from '../store/store';
 
 const featuredCardSetLimit = 3;
@@ -48,6 +54,7 @@ export function CardSetLibraryPicker({
   onSelect,
   selectedCardSetId,
   targetLanguage,
+  worldId = 'football',
 }: {
   cards: LanguageCard[];
   cardSets: CardSet[];
@@ -56,8 +63,11 @@ export function CardSetLibraryPicker({
   onSelect: (cardSetId: string) => void;
   selectedCardSetId: string;
   targetLanguage: SupportedLanguage;
+  worldId?: WorldId;
 }) {
   const wheelDeltaAccumulator = useRef(0);
+  const resolvedWorldId = resolveWorldId(worldId);
+  const worldAccent = getWorldAccent(resolvedWorldId);
   const items = useMemo<CardSetLibraryItem[]>(() => {
     const cardById = new Map(cards.map((card) => [card.id, card]));
     const countPlayableCards = (cardIds: string[]) =>
@@ -211,10 +221,10 @@ export function CardSetLibraryPicker({
                   onClick={onOpenAiAssistant}
                   size="small"
                   sx={{
-                    bgcolor: 'rgba(111, 75, 216, 0.10)',
-                    color: '#6f4bd8',
+                    bgcolor: 'rgba(24, 119, 201, 0.10)',
+                    color: worldAccent.main,
                     flexShrink: 0,
-                    '&:hover': { bgcolor: 'rgba(111, 75, 216, 0.18)' },
+                    '&:hover': { bgcolor: 'rgba(24, 119, 201, 0.18)' },
                   }}
                 >
                   <AutoFixHighIcon
@@ -247,7 +257,7 @@ export function CardSetLibraryPicker({
             sx={{
               bgcolor: '#fff3c9',
               border: '1px solid rgba(131, 88, 17, 0.18)',
-              color: '#6f4bd8',
+              color: worldAccent.main,
               '&:hover': { bgcolor: '#ffe8a3' },
             }}
           >
@@ -267,7 +277,7 @@ export function CardSetLibraryPicker({
             data-test="card_set_library__previous_button"
             disabled={!canPageBack}
             onClick={() => pageFeaturedItems(-1)}
-            sx={carouselButtonSx}
+            sx={getCarouselButtonSx(worldAccent)}
           >
             <KeyboardArrowLeftRoundedIcon sx={{ fontSize: 18 }} />
           </IconButton>
@@ -292,6 +302,7 @@ export function CardSetLibraryPicker({
                 key={item.id}
                 onSelect={() => handleSelect(item.id, 'featured')}
                 selected={item.id === selectedCardSetId}
+                worldId={resolvedWorldId}
               />
             ))}
           </Box>
@@ -300,7 +311,7 @@ export function CardSetLibraryPicker({
             data-test="card_set_library__next_button"
             disabled={!canPageForward}
             onClick={() => pageFeaturedItems(1)}
-            sx={carouselButtonSx}
+            sx={getCarouselButtonSx(worldAccent)}
           >
             <KeyboardArrowRightRoundedIcon sx={{ fontSize: 18 }} />
           </IconButton>
@@ -378,6 +389,7 @@ export function CardSetLibraryPicker({
                   key={item.id}
                   onSelect={() => handleSelect(item.id, 'dialog')}
                   selected={item.id === selectedCardSetId}
+                  worldId={resolvedWorldId}
                 />
               ))}
             </Box>
@@ -402,14 +414,19 @@ function CardSetLibraryChip({
   item,
   onSelect,
   selected,
+  worldId,
 }: {
   dialogMode?: boolean;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   item: CardSetLibraryItem;
   onSelect: () => void;
   selected: boolean;
+  worldId: WorldId;
 }) {
-  const gradient = getCardSetGradient(item.id, item.isAllCards);
+  const worldAccent = getWorldAccent(worldId);
+  const palette = getPaletteForCardSet(item.id, worldId, {
+    isAllCards: item.isAllCards,
+  });
   const dataTestPrefix = dialogMode
     ? 'card_set_library_dialog__item'
     : 'card_set_library__chip_select';
@@ -420,18 +437,27 @@ function CardSetLibraryChip({
   return (
     <ButtonBase
       aria-label={`${ariaPrefix}: ${item.name}`}
+      data-football-country={palette.countryKey}
       data-test={`${dataTestPrefix}__${item.id}`}
       onClick={onSelect}
+      style={
+        selected
+          ? {
+              boxShadow:
+                `0 0 0 4px ${worldAccent.dark}, 0 0 0 7px #fffdf4, 0 18px 36px rgba(18, 60, 105, 0.30)`,
+            }
+          : undefined
+      }
       sx={{
         alignItems: 'stretch',
         border: selected
-          ? '2px solid rgba(111, 75, 216, 0.88)'
+          ? '2px solid #fffdf4'
           : '1px solid rgba(32, 48, 21, 0.14)',
         borderRadius: 3,
         boxShadow: selected
-          ? '0 14px 30px rgba(111, 75, 216, 0.22)'
+          ? `0 0 0 4px ${worldAccent.dark}, 0 0 0 7px #fffdf4, 0 18px 36px rgba(18, 60, 105, 0.30)`
           : '0 10px 22px rgba(32, 48, 21, 0.10)',
-        color: '#203015',
+        color: palette.foreground,
         display: 'flex',
         minHeight: dialogMode ? 118 : 86,
         minWidth: 0,
@@ -445,7 +471,7 @@ function CardSetLibraryChip({
         aria-hidden="true"
         data-test={`${dataTestPrefix}_background__${item.id}`}
         sx={{
-          background: gradient,
+          background: palette.gradient,
           inset: 0,
           position: 'absolute',
         }}
@@ -512,7 +538,15 @@ function CardSetLibraryChip({
           {selected && (
             <CheckCircleRoundedIcon
               data-test={`${dataTestPrefix}_selected_icon__${item.id}`}
-              sx={{ color: '#5e3fc0', flex: '0 0 auto' }}
+              sx={{
+                bgcolor: '#fffdf4',
+                border: `2px solid ${worldAccent.dark}`,
+                borderRadius: '999px',
+                boxShadow: '0 8px 18px rgba(18, 60, 105, 0.24)',
+                color: worldAccent.dark,
+                flex: '0 0 auto',
+                fontSize: 34,
+              }}
             />
           )}
         </Stack>
@@ -555,26 +589,6 @@ function cardSetMatchesSearch({
     );
 }
 
-function getCardSetGradient(id: string, isAllCards?: boolean) {
-  if (isAllCards) {
-    return 'linear-gradient(135deg, #fff1a8 0%, #ffc400 45%, #ff6b4a 100%)';
-  }
-
-  const gradients = [
-    'linear-gradient(135deg, #ffe15d 0%, #ff8a3d 48%, #c60b1e 100%)',
-    'linear-gradient(135deg, #fff3bd 0%, #ffc400 42%, #e24b38 100%)',
-    'linear-gradient(135deg, #ffd166 0%, #c60b1e 48%, #7c1518 100%)',
-    'linear-gradient(135deg, #fff1a8 0%, #ffb703 44%, #d9272f 100%)',
-    'linear-gradient(135deg, #ffc400 0%, #ff7043 45%, #9b1c1f 100%)',
-    'linear-gradient(135deg, #ffe9a3 0%, #f4b000 48%, #c60b1e 100%)',
-  ];
-  const hash = Array.from(id).reduce(
-    (value, char) => value + char.charCodeAt(0),
-    0,
-  );
-  return gradients[hash % gradients.length];
-}
-
 function getCenteredStartIndex(index: number, itemCount: number) {
   if (index < 0) {
     return 0;
@@ -584,23 +598,25 @@ function getCenteredStartIndex(index: number, itemCount: number) {
   return Math.min(Math.max(0, index - 1), maxStartIndex);
 }
 
-const carouselButtonSx = {
-  alignSelf: 'stretch',
-  bgcolor: 'transparent',
-  border: '0px solid transparent',
-  borderRadius: 2,
-  color: '#6f4bd8',
-  justifyContent: 'center',
-  minWidth: 0,
-  px: 0,
-  width: { xs: 18, sm: 12 },
-  '&:hover': {
+function getCarouselButtonSx(worldAccent: ReturnType<typeof getWorldAccent>) {
+  return {
+    alignSelf: 'stretch',
     bgcolor: 'transparent',
-    color: '#4d31aa',
-  },
-  '&.Mui-disabled': {
-    bgcolor: 'transparent',
-    borderColor: 'transparent',
-    color: 'rgba(32, 48, 21, 0.22)',
-  },
-};
+    border: '0px solid transparent',
+    borderRadius: 2,
+    color: worldAccent.main,
+    justifyContent: 'center',
+    minWidth: 0,
+    px: 0,
+    width: { xs: 18, sm: 12 },
+    '&:hover': {
+      bgcolor: 'transparent',
+      color: worldAccent.dark,
+    },
+    '&.Mui-disabled': {
+      bgcolor: 'transparent',
+      borderColor: 'transparent',
+      color: 'rgba(32, 48, 21, 0.22)',
+    },
+  };
+}

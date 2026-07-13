@@ -1,5 +1,6 @@
 import { AssistantId, defaultAssistantId, resolveAssistantId } from './assistants';
-import { SupportedLanguage } from './languages';
+import { SupportedLanguage, supportedLanguages } from './languages';
+import type { WorldId } from './worlds';
 
 type ThoughtSource = {
   openings: string[];
@@ -88,6 +89,32 @@ const thoughtSources: Record<AssistantId, CharacterThoughtSources> = {
         'Espana ama un final valiente.',
       ],
     },
+    uk: {
+      openings: [
+        'Фланг відкритий, можна прискорюватися',
+        'Трибуни відчувають твій перший дотик',
+        'Зміщуйся в центр і довірся наступній літері',
+        'Сміливий дриблінг починається з однієї картки',
+        'Це запитання просить швидкості',
+        'Захисник кліпнув, забирай коридор',
+        'Відповідь уже набирає розгін',
+        'На правому фланзі сьогодні є простір',
+        'Молода зірка не чекає надто довго',
+        'Матч просить сміливого дотику',
+      ],
+      endings: [
+        'Спершу дотик, потім ривок.',
+        'Бий у вільну зону, доки її не закрили.',
+        'Швидка думка робить пас чистішим.',
+        'Якщо повз, атакуй знову.',
+        'Нехай підказка стане твоїм вінгером.',
+        'Малого простору вистачить для гола.',
+        'Потрібен лише один чистий хід.',
+        'Наступна картка це контратака.',
+        'Тримай темп сонячним і гострим.',
+        'Іспанія любить безстрашний фініш.',
+      ],
+    },
   },
   trollMama: {
     en: {
@@ -166,6 +193,32 @@ const thoughtSources: Record<AssistantId, CharacterThoughtSources> = {
         'Un pase medido basta.',
         'El centro pertenece a la paciencia.',
         'Pies tranquilos hacen respuestas valientes.',
+      ],
+    },
+    uk: {
+      openings: [
+        'Сповільни центр поля й підніми голову',
+        'Пас схований у паузі',
+        'Спокійний дотик відкриває фразу',
+        'Нехай мʼяч полежить під ногою',
+        'Відповіді потрібен мʼякий темп',
+        'Одна тиха секунда може виграти хід',
+        'У речення є лінія пасу',
+        'Спершу контроль, святкування потім',
+        'Стадіон стихає перед генієм',
+        'Ідеальна пауза сильніша за поспішний удар',
+      ],
+      endings: [
+        'Знайди пас раніше за удар.',
+        'Дай підказці вдихнути один такт.',
+        'Чистий кут робить памʼять легшою.',
+        'Найкраща відповідь приходить між лініями.',
+        'Збережи володіння думкою.',
+        'Мʼякий контроль усе одно контроль.',
+        'Фраза відкриється, коли ти перестанеш тиснути.',
+        'Одного вивіреного пасу достатньо.',
+        'Центр поля належить терпінню.',
+        'Спокійні ноги роблять відповіді сміливими.',
       ],
     },
   },
@@ -248,6 +301,32 @@ const thoughtSources: Record<AssistantId, CharacterThoughtSources> = {
         'Espana construye desde atras.',
       ],
     },
+    uk: {
+      openings: [
+        'Тримай лінію й дивися на мʼяч',
+        'Пенальті спокійніше, ніж здається',
+        'Чистий сейв починається з нерухомих очей',
+        'Ці ворота твої на цю картку',
+        'Тиск це лише шум трибун',
+        'Постав рукавиці перед відповіддю',
+        'Воротар читає удар заздалегідь',
+        'Лінія в безпеці, якщо ти дихаєш',
+        'Це запитання як сейв у доданий час',
+        'Стій високо, доки мʼяч не пішов',
+      ],
+      endings: [
+        'Спіймай помилку до лінії воріт.',
+        'Сейв може бути тихим та ідеальним.',
+        'Нехай підказка прилетить у руки.',
+        'Неправильна відповідь теж показує кут удару.',
+        'Захисти серію одним чистим вибором.',
+        'Не стрибай раніше руху літери.',
+        'Наступній картці потрібен твій спокій.',
+        'Воротар виграє раннім читанням.',
+        'Стій міцно й роби сейв памʼяті.',
+        'Іспанія починає атаки від своїх воріт.',
+      ],
+    },
   },
   greenPower: {
     en: {
@@ -326,6 +405,32 @@ const thoughtSources: Record<AssistantId, CharacterThoughtSources> = {
         'El rebote es tuyo si estas listo.',
         'La estructura gana el duelo aereo.',
         'Espana pelea hasta el ultimo toque.',
+      ],
+    },
+    uk: {
+      openings: [
+        'Режим капітана увімкнено до свистка',
+        'Цьому слову потрібен жорсткий підкат',
+        'Верховий мʼяч твій',
+        'Довгу відповідь можна виграти частинами',
+        'Битва в центрі починається зараз',
+        'Доданий час теж час',
+        'Картка сильна, але ти теж',
+        'Приймай дуель і тримай рівновагу',
+        'Капітан не кидає відскок',
+        'Стандарт уже чекає',
+      ],
+      endings: [
+        'Виграй перше єдиноборство.',
+        'Розбий відповідь на підкати.',
+        'Пізній гол теж зараховується.',
+        'Іди головою крізь важкі літери.',
+        'Тримай форму й винось небезпеку.',
+        'Один сильний шматок відкриє решту.',
+        'Не давай картці командувати матчем.',
+        'Відскок твій, якщо ти готовий.',
+        'Структура виграє верхову дуель.',
+        'Іспанія бореться до останнього дотику.',
       ],
     },
   },
@@ -408,6 +513,32 @@ const thoughtSources: Record<AssistantId, CharacterThoughtSources> = {
         'Espana guarda el balon hasta que sale espacio.',
       ],
     },
+    uk: {
+      openings: [
+        'Трикутник уже складається',
+        'Один пас відкриває дві памʼяті',
+        'Дивися на корінь до ривка',
+        'У слова поруч є партнер',
+        'Тікі-така починається з маленького звʼязку',
+        'Хибний друг високо пресингує',
+        'Відповідь знаходиться між лініями',
+        'Короткий пас рухає всю команду',
+        'Патерн просить володіння',
+        'Наступна підказка хоче стіночку',
+      ],
+      endings: [
+        'Грай простий пас.',
+        'Нехай сусідня картка прийме мʼяч.',
+        'Володіння робить відповідь видимою.',
+        'Перевір футболку, перш ніж довіряти обличчю.',
+        'Стіночка може відкрити підказку.',
+        'Не форсуй вертикальний пас.',
+        'Найбезпечніший маршрут може бути діагональним.',
+        'Нехай командна форма тихо допоможе.',
+        'Один точний звʼязок будує атаку.',
+        'Іспанія тримає мʼяч, доки не зʼявиться простір.',
+      ],
+    },
   },
 };
 
@@ -418,10 +549,13 @@ export const coachThoughts: Record<
   Object.entries(thoughtSources).map(([assistantId, byLanguage]) => [
     assistantId,
     Object.fromEntries(
-      Object.entries(byLanguage).map(([language, source]) => [
-        language,
-        buildThoughts(source.openings, source.endings),
-      ]),
+      supportedLanguages.map((language) => {
+        const source = byLanguage[language];
+        return [
+          language,
+          buildThoughts(source.openings, source.endings),
+        ];
+      }),
     ),
   ]),
 ) as Record<AssistantId, Record<SupportedLanguage, string[]>>;
@@ -430,10 +564,58 @@ export function getCoachThought(
   interfaceLanguage: SupportedLanguage,
   seed: number,
   assistantId: AssistantId | string | undefined = defaultAssistantId,
+  worldId: WorldId = 'football',
 ): string {
-  const resolvedAssistantId = resolveAssistantId(assistantId);
-  const thoughts = coachThoughts[resolvedAssistantId][interfaceLanguage];
+  const resolvedAssistantId = resolveAssistantId(assistantId, worldId);
+  const thoughts =
+    worldId === 'forest'
+      ? forestCoachThoughts[resolvedAssistantId][interfaceLanguage]
+      : coachThoughts[resolvedAssistantId][interfaceLanguage];
   return thoughts[Math.abs(Math.trunc(seed)) % thoughts.length];
+}
+
+const forestCoachThoughts: Record<AssistantId, Record<SupportedLanguage, string[]>> = {
+  studyTroll: makeForestThoughts({
+    en: ['A fresh leaf remembers softly', 'The path is small, but it is yours'],
+    ru: ['Свежий лист помнит мягко', 'Тропа маленькая, зато твоя'],
+    es: ['Una hoja fresca recuerda suave', 'El sendero es pequeno, pero es tuyo'],
+    uk: ['Свіжий листок памʼятає мʼяко', 'Стежка маленька, зате твоя'],
+  }),
+  trollMama: makeForestThoughts({
+    en: ['Warm tea, tidy clue, calm answer', 'Memory likes a clean table'],
+    ru: ['Теплый чай, ровная подсказка, спокойный ответ', 'Память любит чистый стол'],
+    es: ['Te tibio, pista clara, respuesta tranquila', 'La memoria quiere mesa limpia'],
+    uk: ['Теплий чай, рівна підказка, спокійна відповідь', 'Памʼять любить чистий стіл'],
+  }),
+  capeChampion: makeForestThoughts({
+    en: ['Context lights the forest trail', 'A small clue can save the mission'],
+    ru: ['Контекст освещает лесную тропу', 'Маленькая подсказка спасает миссию'],
+    es: ['El contexto ilumina el sendero', 'Una pista pequena salva la mision'],
+    uk: ['Контекст освітлює лісову стежку', 'Маленька підказка рятує місію'],
+  }),
+  greenPower: makeForestThoughts({
+    en: ['Break the word into friendly logs', 'Strong memory still walks gently'],
+    ru: ['Разломи слово на дружелюбные поленья', 'Сильная память все равно идет мягко'],
+    es: ['Parte la palabra en troncos amables', 'La memoria fuerte tambien pisa suave'],
+    uk: ['Розділи слово на дружні поліна', 'Сильна памʼять усе одно йде мʼяко'],
+  }),
+  webRunner: makeForestThoughts({
+    en: ['Every word leaves a silver thread', 'Follow the web, not the panic'],
+    ru: ['Каждое слово оставляет серебряную нить', 'Следуй за сетью, а не за паникой'],
+    es: ['Cada palabra deja un hilo plateado', 'Sigue la red, no el panico'],
+    uk: ['Кожне слово залишає срібну нитку', 'Йди за мережею, а не за панікою'],
+  }),
+};
+
+function makeForestThoughts(
+  values: Record<SupportedLanguage, string[]>,
+): Record<SupportedLanguage, string[]> {
+  return Object.fromEntries(
+    Object.entries(values).map(([language, thoughts]) => [
+      language,
+      thoughts.map(ensurePeriod),
+    ]),
+  ) as Record<SupportedLanguage, string[]>;
 }
 
 function buildThoughts(openings: string[], endings: string[]): string[] {

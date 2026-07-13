@@ -89,19 +89,19 @@ describe('CrosswordHistoryReplay', () => {
       color: 'rgba(32, 48, 21, 0.38)',
     });
     expect(screen.getByTestId('crossword_history__cell__3_3')).not.toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
+      backgroundColor: 'rgb(232, 247, 223)',
     });
     expect(screen.getByTestId('crossword_history__cell__3_3')).not.toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(253, 232, 223)',
     });
     expect(
       screen.getByTestId('crossword_history__empty_cell__2_1'),
     ).toBeInTheDocument();
     expect(screen.getByTestId('crossword_history__cell__1_1')).toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
+      backgroundColor: 'rgb(232, 247, 223)',
     });
     expect(screen.getByTestId('crossword_history__cell__2_3')).not.toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(253, 232, 223)',
     });
 
     await user.hover(screen.getByTestId('crossword_history__clue_number__tea'));
@@ -136,7 +136,7 @@ describe('CrosswordHistoryReplay', () => {
       color: 'rgba(32, 48, 21, 0.38)',
     });
     expect(screen.getByTestId('crossword_history__cell__3_3')).not.toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(253, 232, 223)',
     });
 
     rerender(
@@ -160,11 +160,11 @@ describe('CrosswordHistoryReplay', () => {
     );
 
     expect(screen.getByTestId('crossword_history__cell__2_3')).toHaveStyle({
-      backgroundColor: 'rgb(253, 235, 238)',
+      backgroundColor: 'rgb(253, 232, 223)',
       textDecorationLine: 'line-through',
     });
     expect(screen.getByTestId('crossword_history__cell__1_3')).toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
+      backgroundColor: 'rgb(232, 247, 223)',
       textDecorationLine: 'none',
     });
     expect(
@@ -193,8 +193,8 @@ describe('CrosswordHistoryReplay', () => {
         'crossword_history__correction__2_3__entry__tea__answer__cell__0',
       ),
     ).toHaveStyle({
-      backgroundColor: 'rgb(235, 247, 225)',
-        borderColor: '#8fc773',
+      backgroundColor: 'rgb(232, 247, 223)',
+        borderColor: '#7fc77a',
       });
     expect(
       within(correctionTooltip).getByTestId(
