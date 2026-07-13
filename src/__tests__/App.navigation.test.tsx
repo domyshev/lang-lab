@@ -1511,7 +1511,7 @@ describe('App navigation', () => {
 
     expect(screen.getByLabelText('Персонаж')).toBeInTheDocument();
     expect(
-      screen.getByLabelText(/Веселый листочек: Замечает упрямые ошибки/),
+      screen.getByLabelText(/Ямал-молния: Взрывает фланг/),
     ).toBeInTheDocument();
     expect(screen.queryByText('Forest Tutor')).not.toBeInTheDocument();
   });
@@ -1528,7 +1528,7 @@ describe('App navigation', () => {
     const tooltip = await screen.findByTestId('coach_panel__assistant_tooltip');
     expect(
       within(tooltip).getByTestId('coach_panel__assistant_tooltip_title'),
-    ).toHaveTextContent('Веселый листочек');
+    ).toHaveTextContent('Ямал-молния');
     expect(
       within(tooltip).getByTestId('coach_panel__assistant_tooltip_motto'),
     ).toHaveStyle({ fontStyle: 'italic' });
@@ -1546,7 +1546,10 @@ describe('App navigation', () => {
       screen.getByTestId('assistant_profile__page__studyTroll'),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: 'Веселый листочек' }),
+      screen.queryByRole('heading', { name: 'Веселый листочек' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Ямал-молния' }),
     ).toBeInTheDocument();
     expect(screen.getByTestId('assistant_profile__motto__studyTroll')).toHaveStyle({
       fontStyle: 'italic',

@@ -557,16 +557,16 @@ function cardSetMatchesSearch({
 
 function getCardSetGradient(id: string, isAllCards?: boolean) {
   if (isAllCards) {
-    return 'linear-gradient(135deg, #f9f871 0%, #9be667 42%, #61d4ff 100%)';
+    return 'linear-gradient(135deg, #fff1a8 0%, #ffc400 45%, #ff6b4a 100%)';
   }
 
   const gradients = [
-    'linear-gradient(135deg, #ffd166 0%, #ff8fa3 48%, #8ec5ff 100%)',
-    'linear-gradient(135deg, #baff7a 0%, #61e8c8 48%, #73a7ff 100%)',
-    'linear-gradient(135deg, #ffc6ff 0%, #bdb2ff 46%, #a0c4ff 100%)',
-    'linear-gradient(135deg, #fdff8f 0%, #ffb703 44%, #fb7185 100%)',
-    'linear-gradient(135deg, #9bf6ff 0%, #7bdff2 45%, #c77dff 100%)',
-    'linear-gradient(135deg, #caffbf 0%, #ffd6a5 48%, #ffadad 100%)',
+    'linear-gradient(135deg, #ffe15d 0%, #ff8a3d 48%, #c60b1e 100%)',
+    'linear-gradient(135deg, #fff3bd 0%, #ffc400 42%, #e24b38 100%)',
+    'linear-gradient(135deg, #ffd166 0%, #c60b1e 48%, #7c1518 100%)',
+    'linear-gradient(135deg, #fff1a8 0%, #ffb703 44%, #d9272f 100%)',
+    'linear-gradient(135deg, #ffc400 0%, #ff7043 45%, #9b1c1f 100%)',
+    'linear-gradient(135deg, #ffe9a3 0%, #f4b000 48%, #c60b1e 100%)',
   ];
   const hash = Array.from(id).reduce(
     (value, char) => value + char.charCodeAt(0),

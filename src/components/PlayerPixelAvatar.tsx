@@ -7,54 +7,97 @@ type PlayerPixelAvatarProps = {
   size?: number;
 };
 
-const palette = [
-  ['#ff6b6b', '#ffd166', '#5dd39e', '#4d96ff'],
-  ['#7c3aed', '#f472b6', '#22d3ee', '#facc15'],
-  ['#fb923c', '#84cc16', '#06b6d4', '#a78bfa'],
-  ['#ef4444', '#14b8a6', '#f59e0b', '#60a5fa'],
-];
-
 export function PlayerPixelAvatar({
   ariaLabel,
   dataTest = 'player_pixel_avatar',
   seed,
   size = 34,
 }: PlayerPixelAvatarProps) {
-  const hash = hashSeed(seed);
-  const colors = palette[hash % palette.length];
-  const cells = createMirroredCells(seed);
+  const shimmerId = `fan-flag-shimmer-${hashSeed(seed)}`;
 
   return (
     <Box
       aria-label={ariaLabel}
+      component="svg"
       data-test={dataTest}
+      focusable="false"
       role={ariaLabel ? 'img' : undefined}
+      viewBox="0 0 54 38"
       sx={{
-        bgcolor: '#203015',
-        border: '2px solid rgba(255,255,255,0.86)',
         borderRadius: 1.5,
         boxShadow:
-          '0 5px 0 rgba(32, 48, 21, 0.22), 0 10px 18px rgba(32, 48, 21, 0.16)',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(5, 1fr)',
+          '0 5px 0 rgba(124, 21, 24, 0.22), 0 10px 18px rgba(32, 48, 21, 0.14)',
+        display: 'block',
         height: size,
         overflow: 'hidden',
-        p: '2px',
         width: size,
       }}
     >
-      {cells.map((value, index) => (
-        <Box
-          aria-hidden="true"
-          data-test={`${dataTest}__cell_${index}`}
-          key={`${seed}-${index}`}
-          sx={{
-            bgcolor: value === -1 ? 'transparent' : colors[value % colors.length],
-            boxShadow:
-              value === -1 ? 'none' : 'inset -1px -1px 0 rgba(32, 48, 21, 0.20)',
-          }}
-        />
-      ))}
+      <defs>
+        <linearGradient id={shimmerId} x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stopColor="rgba(255,255,255,0.70)" />
+          <stop offset="0.45" stopColor="rgba(255,255,255,0.10)" />
+          <stop offset="1" stopColor="rgba(32,48,21,0.16)" />
+        </linearGradient>
+      </defs>
+      <rect
+        data-test={`${dataTest}__spain_red_top_stripe`}
+        fill="#c60b1e"
+        height="10"
+        width="54"
+      />
+      <rect
+        data-test={`${dataTest}__spain_yellow_stripe`}
+        fill="#ffc400"
+        height="18"
+        width="54"
+        y="10"
+      />
+      <rect
+        data-test={`${dataTest}__spain_red_bottom_stripe`}
+        fill="#c60b1e"
+        height="10"
+        width="54"
+        y="28"
+      />
+      <rect
+        fill={`url(#${shimmerId})`}
+        height="38"
+        opacity="0.72"
+        width="54"
+      />
+      <path
+        data-test={`${dataTest}__supporter_crest`}
+        d="M13 13 h10 v7 c0 5 -3 8 -5 9 c-2 -1 -5 -4 -5 -9 Z"
+        fill="#f8f1d7"
+        stroke="#7c2d12"
+        strokeWidth="1.2"
+      />
+      <path
+        d="M16 16 h4 M16 19 h4 M18 14 v11"
+        fill="none"
+        stroke="#c60b1e"
+        strokeLinecap="round"
+        strokeWidth="1.1"
+      />
+      <path
+        d="M27 19 c5 -3 12 -3 17 0"
+        fill="none"
+        stroke="#7c2d12"
+        strokeLinecap="round"
+        strokeWidth="1.6"
+        opacity="0.55"
+      />
+      <rect
+        fill="none"
+        height="36"
+        rx="7"
+        stroke="rgba(255,255,255,0.86)"
+        strokeWidth="2"
+        width="52"
+        x="1"
+        y="1"
+      />
     </Box>
   );
 }
@@ -62,26 +105,10 @@ export function PlayerPixelAvatar({
 export function createPlayerAvatarSeed(value: string): string {
   const normalized = value.trim();
   return normalized
-    ? `player:${normalized}:${hashSeed(normalized)}`
-    : `player:anonymous:${Date.now()}:${Math.random().toString(36).slice(2)}`;
-}
-
-function createMirroredCells(seed: string): number[] {
-  const hash = hashSeed(seed);
-  const cells: number[] = [];
-  for (let y = 0; y < 5; y += 1) {
-    const row: number[] = [];
-    for (let x = 0; x < 3; x += 1) {
-      const bit = (hash >> ((x + y * 3) % 24)) & 3;
-      row[x] = bit === 0 ? -1 : bit;
-    }
-    row[3] = row[1];
-    row[4] = row[0];
-    cells.push(...row);
-  }
-
-  cells[12] = (hash % 3) + 1;
-  return cells;
+    ? `supporter:spain:${normalized}:${hashSeed(normalized)}`
+    : `supporter:spain:anonymous:${Date.now()}:${Math.random()
+        .toString(36)
+        .slice(2)}`;
 }
 
 function hashSeed(seed: string): number {

@@ -61,11 +61,20 @@ describe('AppShell', () => {
     });
     expect(screen.getByTestId('player_greeting__label').textContent).toBe('странник');
     expect(screen.getByTestId('player_greeting__avatar')).toBeInTheDocument();
+    expect(screen.getByTestId('player_greeting__avatar').tagName.toLowerCase()).toBe(
+      'svg',
+    );
+    expect(
+      screen.getByTestId('player_greeting__avatar__spain_yellow_stripe'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId('player_greeting__avatar__supporter_crest'),
+    ).toBeInTheDocument();
     expect(store.getState().app.playerProfile).toMatchObject({
       isAnonymous: true,
     });
     expect(store.getState().app.playerProfile?.avatarSeed).toEqual(
-      expect.any(String),
+      expect.stringContaining('supporter:spain'),
     );
   });
 
@@ -93,6 +102,7 @@ describe('AppShell', () => {
     });
     expect(screen.getByTestId('player_greeting__label').textContent).toBe('Илья');
     expect(store.getState().app.playerProfile).toMatchObject({
+      avatarSeed: expect.stringContaining('supporter:spain'),
       displayName: 'Илья',
       isAnonymous: false,
     });

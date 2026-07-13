@@ -3,12 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { AppLogo } from '../AppLogo';
 
 describe('AppLogo', () => {
-  it('keeps a 52px logo button and shows a real leaf accent without resizing the parent', () => {
+  it('keeps a 52px logo button and shows a Spain football accent without resizing the parent', () => {
     render(<AppLogo interfaceLanguage="ru" />);
 
     const logo = screen.getByRole('button', { name: 'Language Lab' });
     const legacyLeaf = screen.getByTestId('app_logo__legacy_leaf_hidden');
-    const visibleLeaf = screen.getByTestId('app_logo__tree_leaf_svg');
+    const footballFlag = screen.getByTestId('app_logo__football_flag_svg');
 
     expect(logo).toHaveStyle({
       alignSelf: 'center',
@@ -21,18 +21,15 @@ describe('AppLogo', () => {
       display: 'none',
       height: '12px',
     });
-    expect(visibleLeaf.tagName.toLowerCase()).toBe('svg');
-    expect(visibleLeaf).toHaveAttribute('viewBox', '0 0 64 28');
-    expect(visibleLeaf).toHaveStyle({
-      height: '15.84px',
+    expect(footballFlag.tagName.toLowerCase()).toBe('svg');
+    expect(footballFlag).toHaveAttribute('viewBox', '0 0 72 32');
+    expect(footballFlag).toHaveStyle({
+      height: '18px',
       right: '-5px',
       top: '0px',
-      width: '40.32px',
+      width: '44px',
     });
-    expect(screen.getByTestId('app_logo__tree_leaf_shape')).toHaveAttribute(
-      'd',
-      expect.stringContaining('C 21 0, 43 0, 60 14'),
-    );
-    expect(screen.getByTestId('app_logo__tree_leaf_main_vein')).toBeInTheDocument();
+    expect(screen.getByTestId('app_logo__flag_yellow')).toBeInTheDocument();
+    expect(screen.getByTestId('app_logo__football_ball')).toBeInTheDocument();
   });
 });

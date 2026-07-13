@@ -94,8 +94,11 @@ export function AppShell({
         position="sticky"
         elevation={0}
         sx={{
-          bgcolor: '#dcefb1',
-          borderBottom: '1px solid rgba(32, 48, 21, 0.16)',
+          background:
+            'linear-gradient(90deg, #fff0a8 0%, #ffd24d 46%, #fff3bd 100%)',
+          bgcolor: '#ffd24d',
+          borderBottom: '2px solid rgba(198, 11, 30, 0.28)',
+          boxShadow: '0 8px 22px rgba(124, 21, 24, 0.08)',
           color: '#203015',
           overscrollBehaviorY: 'none',
         }}

@@ -25,11 +25,11 @@ describe('assistantCharacters', () => {
         ]),
       ),
     ).toEqual({
-      capeChampion: 'Капитан знаний',
-      greenPower: 'Халк запоминания',
-      studyTroll: 'Веселый листочек',
-      trollMama: 'Мнемо-мама',
-      webRunner: 'Мудрый паучок',
+      capeChampion: 'Касильяс-стена',
+      greenPower: 'Рамос-капитан',
+      studyTroll: 'Ямал-молния',
+      trollMama: 'Иньеста-маэстро',
+      webRunner: 'Хави-дирижер',
     });
   });
 });

@@ -37,20 +37,20 @@ describe('coachThoughts', () => {
 
   it('does not combine two standalone character sayings into one thought', () => {
     expect(coachThoughts.studyTroll.ru).toContain(
-      'Крепкая голова проходит даже через туман.',
+      'Фланг открыт, можно ускоряться.',
     );
     expect(coachThoughts.studyTroll.ru).toContain(
-      'У следующей попытки уже лучше опора.',
+      'Сначала касание, потом рывок.',
     );
     expect(coachThoughts.studyTroll.ru).not.toContain(
-      'Крепкая голова проходит даже через туман: у следующей попытки уже лучше опора.',
+      'Фланг открыт, можно ускоряться: сначала касание, потом рывок.',
     );
 
     expect(coachThoughts.studyTroll.en).not.toContain(
-      'A sturdy mind keeps walking through fog: your next attempt has better footing.',
+      'The wing is open, accelerate now: first touch, then sprint.',
     );
     expect(coachThoughts.studyTroll.es).not.toContain(
-      'Una cabeza firme cruza incluso la niebla: el siguiente intento ya pisa mejor.',
+      'La banda esta abierta, acelera ahora: primero toque, luego carrera.',
     );
   });
 });

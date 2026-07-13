@@ -1,11 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 180" fill="none">
-  <path d="M46 164c30-7 50-7 80 0l-11-78 23-25c-22-11-43-18-61-18S39 50 22 61l24 25-10 78Z" fill="#fff" stroke="#fff" stroke-width="16" stroke-linejoin="round"/>
-  <path d="M46 164c30-7 50-7 80 0l-11-78 23-25c-22-11-43-18-61-18S39 50 22 61l24 25-10 78Z" fill="#3C7DD9" stroke="#203015" stroke-width="5" stroke-linejoin="round"/>
-  <path d="M47 86 22 61c7 36 15 70 24 103l9-54-8-24ZM115 86l23-25c-6 35-13 69-22 103l-11-54 10-24Z" fill="#D94242" stroke="#203015" stroke-width="5" stroke-linejoin="round"/>
-  <circle cx="81" cy="54" r="33" fill="#F5C08A" stroke="#203015" stroke-width="5"/>
-  <path d="M56 45c9-18 41-22 57 2-16-1-31-5-45-13-3 7-7 11-12 11Z" fill="#203015"/>
-  <circle cx="69" cy="58" r="5" fill="#203015"/>
-  <circle cx="93" cy="58" r="5" fill="#203015"/>
-  <path d="M71 75c6 5 15 5 21 0" stroke="#203015" stroke-width="4" stroke-linecap="round"/>
-  <path d="M67 105h29l-14 20-15-20Z" fill="#FFD957" stroke="#203015" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M21 152c19-21 25-50 23-78-2-26 12-49 37-49 28 0 45 22 42 49-3 30 5 58 22 78-34 18-89 18-124 0Z" fill="#fff" stroke="#fff" stroke-width="16" stroke-linejoin="round"/>
+  <path d="M21 152c19-21 25-50 23-78-2-26 12-49 37-49 28 0 45 22 42 49-3 30 5 58 22 78-34 18-89 18-124 0Z" fill="#2257c9" stroke="#203015" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M45 113h75l18 39c-33 18-84 18-117 0l24-39Z" fill="#2aa8d8" stroke="#203015" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="82" cy="56" r="30" fill="#b87955" stroke="#203015" stroke-width="5"/>
+  <path d="M53 48c7-24 45-29 61-3-18-1-35-5-49-14-2 8-6 14-12 17Z" fill="#241d1b"/>
+  <circle cx="70" cy="62" r="4.5" fill="#203015"/>
+  <circle cx="94" cy="62" r="4.5" fill="#203015"/>
+  <path d="M73 77c6 4 14 4 20 0" stroke="#203015" stroke-width="4" stroke-linecap="round"/>
+  <text x="82" y="137" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" font-weight="900" fill="#fff">1</text>
+  <path d="M26 86c-14 3-21-8-15-21l26-8 8 23-19 6ZM134 86c14 3 21-8 15-21l-26-8-8 23 19 6Z" fill="#fff8cc" stroke="#203015" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M21 34c14 7 24 18 31 34M139 34c-14 7-24 18-31 34" stroke="#ffc400" stroke-width="6" stroke-linecap="round"/>
 </svg>

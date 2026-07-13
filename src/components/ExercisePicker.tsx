@@ -24,30 +24,30 @@ const exerciseOptions: Array<{
   {
     type: 'crossword',
     labelKey: 'crossword',
-    accent: '#ff4f73',
+    accent: '#c60b1e',
     background:
-      'radial-gradient(circle at 18% 18%, rgba(255,255,255,0.62) 0 12%, transparent 13%), linear-gradient(135deg, #ffe35f 0%, #ff8c42 48%, #ff5f86 100%)',
+      'radial-gradient(circle at 18% 18%, rgba(255,255,255,0.64) 0 12%, transparent 13%), radial-gradient(circle at 78% 20%, rgba(255,196,0,0.40) 0 15%, transparent 16%), linear-gradient(135deg, #ffc400 0%, #ff7a36 42%, #c60b1e 100%)',
   },
   {
     type: 'multipleChoice',
     labelKey: 'multipleChoice',
-    accent: '#8a4de8',
+    accent: '#7c1518',
     background:
-      'radial-gradient(circle at 80% 18%, rgba(255,255,255,0.58) 0 13%, transparent 14%), linear-gradient(135deg, #79e7ff 0%, #a47bff 50%, #ff79bf 100%)',
+      'radial-gradient(circle at 80% 18%, rgba(255,255,255,0.58) 0 13%, transparent 14%), radial-gradient(circle at 14% 82%, rgba(255,196,0,0.34) 0 13%, transparent 14%), linear-gradient(135deg, #ffe15d 0%, #ff9d2e 46%, #c60b1e 100%)',
   },
   {
     type: 'missingLetters',
     labelKey: 'missingLetters',
-    accent: '#22a85f',
+    accent: '#f4b000',
     background:
-      'radial-gradient(circle at 20% 76%, rgba(255,255,255,0.55) 0 11%, transparent 12%), linear-gradient(135deg, #f5ff69 0%, #83ee66 48%, #20c6aa 100%)',
+      'radial-gradient(circle at 20% 76%, rgba(255,255,255,0.55) 0 11%, transparent 12%), radial-gradient(circle at 78% 28%, rgba(198,11,30,0.20) 0 13%, transparent 14%), linear-gradient(135deg, #fff06a 0%, #ffc400 44%, #f15b3a 100%)',
   },
   {
     type: 'missingWord',
     labelKey: 'missingWord',
-    accent: '#2d7ee8',
+    accent: '#c60b1e',
     background:
-      'radial-gradient(circle at 78% 76%, rgba(255,255,255,0.55) 0 12%, transparent 13%), linear-gradient(135deg, #7df5ff 0%, #70a4ff 48%, #9278ff 100%)',
+      'radial-gradient(circle at 78% 76%, rgba(255,255,255,0.56) 0 12%, transparent 13%), radial-gradient(circle at 22% 18%, rgba(198,11,30,0.20) 0 15%, transparent 16%), linear-gradient(135deg, #fff1a8 0%, #ffc400 45%, #d9272f 100%)',
   },
 ];
 

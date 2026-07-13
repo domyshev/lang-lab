@@ -71,64 +71,51 @@ export function AppLogo({
       <Box
         component="svg"
         aria-hidden="true"
-        data-test="app_logo__tree_leaf_svg"
-        viewBox="0 0 64 28"
+        data-test="app_logo__football_flag_svg"
+        viewBox="0 0 72 32"
         sx={{
           display: 'block',
-          height: 15.84,
+          height: 18,
           position: 'absolute',
           right: -5,
           top: 0,
-          width: 40.32,
+          width: 44,
           zIndex: 0,
         }}
       >
         <path
-          data-test="app_logo__tree_leaf_shape"
-          d="M 4 15 C 21 0, 43 0, 60 14 C 44 30, 21 29, 4 15 Z"
-          fill="rgba(156, 202, 86, 0.30)"
-          stroke="rgba(96, 132, 46, 0.26)"
+          data-test="app_logo__football_flag_shadow"
+          d="M4 5h55c6 0 10 5 10 11s-4 11-10 11H4Z"
+          fill="rgba(124, 21, 24, 0.12)"
+        />
+        <clipPath id="app-logo-spain-flag">
+          <path d="M4 4h56c6 0 10 5 10 12s-4 12-10 12H4Z" />
+        </clipPath>
+        <g clipPath="url(#app-logo-spain-flag)">
+          <rect data-test="app_logo__flag_red_top" width="72" height="9" fill="#c60b1e" />
+          <rect data-test="app_logo__flag_yellow" y="9" width="72" height="14" fill="#ffc400" />
+          <rect data-test="app_logo__flag_red_bottom" y="23" width="72" height="9" fill="#c60b1e" />
+        </g>
+        <path
+          d="M4 4h56c6 0 10 5 10 12s-4 12-10 12H4Z"
+          fill="none"
+          stroke="rgba(124, 21, 24, 0.28)"
           strokeWidth="1.4"
         />
-        <path
-          data-test="app_logo__tree_leaf_main_vein"
-          d="M 8 15 C 23 12, 39 11, 58 14"
-          fill="none"
-          stroke="rgba(69, 98, 31, 0.34)"
-          strokeLinecap="round"
-          strokeWidth="1.4"
+        <circle
+          data-test="app_logo__football_ball"
+          cx="18"
+          cy="16"
+          r="7"
+          fill="#fffdf4"
+          stroke="#203015"
+          strokeWidth="1.5"
         />
         <path
-          data-test="app_logo__tree_leaf_vein_top_left"
-          d="M 25 12 C 22 9, 20 7, 17 5"
-          fill="none"
-          stroke="rgba(69, 98, 31, 0.20)"
-          strokeLinecap="round"
-          strokeWidth="1"
-        />
-        <path
-          data-test="app_logo__tree_leaf_vein_bottom_left"
-          d="M 31 12 C 28 16, 25 19, 21 22"
-          fill="none"
-          stroke="rgba(69, 98, 31, 0.20)"
-          strokeLinecap="round"
-          strokeWidth="1"
-        />
-        <path
-          data-test="app_logo__tree_leaf_vein_top_right"
-          d="M 40 12 C 37 9, 34 6, 30 4"
-          fill="none"
-          stroke="rgba(69, 98, 31, 0.18)"
-          strokeLinecap="round"
-          strokeWidth="1"
-        />
-        <path
-          data-test="app_logo__tree_leaf_vein_bottom_right"
-          d="M 46 13 C 42 17, 38 20, 34 23"
-          fill="none"
-          stroke="rgba(69, 98, 31, 0.18)"
-          strokeLinecap="round"
-          strokeWidth="1"
+          d="M18 9v14M11 16h14M13 11l10 10M23 11 13 21"
+          stroke="#203015"
+          strokeWidth="0.9"
+          opacity="0.48"
         />
       </Box>
       <Box

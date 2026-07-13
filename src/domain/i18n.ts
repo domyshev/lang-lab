@@ -289,7 +289,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     assistantSuperpowersTitle: 'Superpowers',
     playerOnboardingTitle: 'What should we call you?',
     playerOnboardingBody:
-      'A bright pixel avatar will travel with you through the learning lab.',
+      'Your Spain supporter flag will travel with you through the football language lab.',
     playerNameLabel: 'Player name',
     savePlayerName: 'Save',
     continueAnonymously: 'Continue anonymously',
@@ -610,7 +610,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     assistantSuperpowersTitle: 'Супер-способности',
     playerOnboardingTitle: 'Как тебя зовут?',
     playerOnboardingBody:
-      'Яркая пиксельная иконка будет путешествовать с тобой по учебной лаборатории.',
+      'Флаг болельщика Испании будет путешествовать с тобой по футбольной языковой лаборатории.',
     playerNameLabel: 'Имя игрока',
     savePlayerName: 'Сохранить',
     continueAnonymously: 'Продолжить анонимно',
@@ -933,7 +933,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     assistantSuperpowersTitle: 'Superpoderes',
     playerOnboardingTitle: 'Como te llamamos?',
     playerOnboardingBody:
-      'Un avatar pixelado y brillante viajara contigo por el laboratorio.',
+      'Tu bandera de hincha de Espana viajara contigo por el laboratorio futbolero.',
     playerNameLabel: 'Nombre de jugador',
     savePlayerName: 'Guardar',
     continueAnonymously: 'Continuar anonimo',
