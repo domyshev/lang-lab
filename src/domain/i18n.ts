@@ -554,7 +554,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     metricTotalSuffix: 'total',
     repeatPrompt: 'repeat',
     totalExercisesTooltip: 'Total number of completed games.',
-    targetAnswerLabel: 'Target answer',
+    targetAnswerLabel: 'Target language',
     cardSetCardSelectionMode: 'Select cards for the card set.',
     targetLanguageAnswer: 'answer',
     fallbackTranslationShown: 'Fallback translation shown',
@@ -879,7 +879,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     metricTotalSuffix: 'всего',
     repeatPrompt: 'повтор',
     totalExercisesTooltip: 'Общее количество пройденных игр.',
-    targetAnswerLabel: 'Целевой ответ',
+    targetAnswerLabel: 'Целевой язык',
     cardSetCardSelectionMode: 'Выберите карточки для набора.',
     targetLanguageAnswer: 'ответ',
     fallbackTranslationShown: 'Показан запасной перевод',
@@ -1204,7 +1204,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     metricTotalSuffix: 'total',
     repeatPrompt: 'repeticion',
     totalExercisesTooltip: 'Numero total de juegos completados.',
-    targetAnswerLabel: 'Respuesta objetivo',
+    targetAnswerLabel: 'Idioma objetivo',
     cardSetCardSelectionMode: 'Selecciona tarjetas para el conjunto.',
     targetLanguageAnswer: 'respuesta',
     fallbackTranslationShown: 'Traduccion alternativa mostrada',
@@ -1285,6 +1285,7 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   missingWord: 'Пропущене слово',
   multipleChoice: 'Питання з 3 варіантами',
   next: 'Далі',
+  openAiAssistant: 'Відкрити AI помічника',
   playerAnonymousName: 'мандрівник',
   playerNameLabel: "Ім'я гравця",
   playerOnboardingBody:
@@ -1300,6 +1301,7 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   statistics: 'Статистика',
   submit: 'Надіслати',
   targetLanguage: 'Ціль',
+  targetAnswerLabel: 'Цільова мова',
 };
 
 const languageNames: Record<

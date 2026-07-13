@@ -30,6 +30,7 @@ import {
   ExerciseProgressChip,
   ExerciseRepeatChip,
   ExerciseCardSetChip,
+  ExerciseTargetLanguageChip,
 } from './ExerciseCardSetChip';
 import { TranslationHintRow } from './TranslationHintRow';
 
@@ -49,6 +50,7 @@ export function MissingWordExercise({
   progressTotalCount,
   cardSetName,
   finishAction,
+  targetLanguage = 'en',
 }: {
   complementaryLanguage?: SupportedLanguage;
   isRepeatedPrompt?: boolean;
@@ -63,6 +65,7 @@ export function MissingWordExercise({
   progressTotalCount?: number;
   cardSetName?: string;
   finishAction?: ReactNode;
+  targetLanguage?: SupportedLanguage;
 }) {
   const [letters, setLetters] = useState<Record<number, string>>({});
   const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
@@ -220,6 +223,11 @@ export function MissingWordExercise({
                   cardSetName={cardSetName}
                 />
               )}
+              <ExerciseTargetLanguageChip
+                dataTest={`missing_word_exercise__target_language_chip__${prompt.cardId}`}
+                interfaceLanguage={interfaceLanguage}
+                targetLanguage={targetLanguage}
+              />
               {progressCompletedCount !== undefined &&
                 progressTotalCount !== undefined && (
                   <ExerciseProgressChip

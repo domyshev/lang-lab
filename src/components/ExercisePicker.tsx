@@ -5,6 +5,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import { useSelector } from 'react-redux';
 import { ExerciseType } from '../domain/exercises';
 import {
@@ -94,6 +95,7 @@ export function ExercisePicker({
             const tileBackground = isDisabled
               ? disabledTileBackground
               : theme.gradient;
+            const isSelected = selectedExerciseType === option.type;
             const tileButton = (
               <ToggleButton
                 aria-label={optionLabel}
@@ -101,7 +103,15 @@ export function ExercisePicker({
                 data-test={`exercise_picker__option__${option.type}`}
                 disabled={isDisabled}
                 key={option.type}
-                style={{ backgroundImage: tileBackground }}
+                style={{
+                  backgroundImage: tileBackground,
+                  ...(isSelected
+                    ? {
+                        boxShadow:
+                          '0 0 0 3px #fffdf4, 0 0 0 7px #123c69, 0 18px 36px rgba(18, 60, 105, 0.30)',
+                      }
+                    : {}),
+                }}
                 value={option.type}
                 sx={{
                   alignItems: 'stretch',
@@ -124,8 +134,10 @@ export function ExercisePicker({
                   },
                   '&.Mui-selected': {
                     background: tileBackground,
-                    borderColor: tileAccent,
-                    boxShadow: `0 0 0 2px ${tileAccent}33`,
+                    borderColor: '#fffdf4',
+                    boxShadow:
+                      '0 0 0 3px #fffdf4, 0 0 0 7px #123c69, 0 18px 36px rgba(18, 60, 105, 0.30)',
+                    transform: 'translateY(-2px)',
                   },
                   '&.Mui-selected:hover': {
                     background: tileBackground,
@@ -137,6 +149,29 @@ export function ExercisePicker({
                   },
                 }}
               >
+                {isSelected && (
+                  <Box
+                    data-test={`exercise_picker__option_selected_badge__${option.type}`}
+                    sx={{
+                      alignItems: 'center',
+                      bgcolor: '#fffdf4',
+                      border: '2px solid #123c69',
+                      borderRadius: '999px',
+                      boxShadow: '0 10px 22px rgba(18, 60, 105, 0.26)',
+                      color: '#123c69',
+                      display: 'inline-flex',
+                      height: 38,
+                      justifyContent: 'center',
+                      position: 'absolute',
+                      right: 12,
+                      top: 12,
+                      width: 38,
+                      zIndex: 2,
+                    }}
+                  >
+                    <CheckCircleRoundedIcon sx={{ fontSize: 28 }} />
+                  </Box>
+                )}
                 <GameTileArt
                   accent={tileAccent}
                   art={theme.art}

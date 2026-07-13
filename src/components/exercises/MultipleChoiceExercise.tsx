@@ -13,7 +13,11 @@ import { footballResultColors } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
 import { KnownCardToggleButton } from '../KnownCardToggleButton';
-import { ExerciseProgressChip, ExerciseCardSetChip } from './ExerciseCardSetChip';
+import {
+  ExerciseProgressChip,
+  ExerciseCardSetChip,
+  ExerciseTargetLanguageChip,
+} from './ExerciseCardSetChip';
 import { TranslationHintRow } from './TranslationHintRow';
 
 export function MultipleChoiceExercise({
@@ -28,6 +32,7 @@ export function MultipleChoiceExercise({
   onNext,
   cardSetName,
   finishAction,
+  targetLanguage = 'en',
 }: {
   complementaryLanguage?: SupportedLanguage;
   interfaceLanguage: SupportedLanguage;
@@ -40,6 +45,7 @@ export function MultipleChoiceExercise({
   progressTotalCount?: number;
   cardSetName?: string;
   finishAction?: ReactNode;
+  targetLanguage?: SupportedLanguage;
 }) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const isSubmitted = selectedAnswer !== null;
@@ -93,6 +99,11 @@ export function MultipleChoiceExercise({
                   cardSetName={cardSetName}
                 />
               )}
+              <ExerciseTargetLanguageChip
+                dataTest={`multiple_choice_exercise__target_language_chip__${prompt.cardId}`}
+                interfaceLanguage={interfaceLanguage}
+                targetLanguage={targetLanguage}
+              />
               {progressCompletedCount !== undefined &&
                 progressTotalCount !== undefined && (
                   <ExerciseProgressChip

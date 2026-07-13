@@ -36,7 +36,11 @@ import {
   TooltipContent,
 } from '../CursorAnchoredTooltip';
 import { GameWarningIcon, GameWarningTooltip } from '../GameWarningTooltip';
-import { ExerciseProgressChip, ExerciseCardSetChip } from './ExerciseCardSetChip';
+import {
+  ExerciseProgressChip,
+  ExerciseCardSetChip,
+  ExerciseTargetLanguageChip,
+} from './ExerciseCardSetChip';
 
 export type CrosswordDraftState = {
   answers: Record<string, string>;
@@ -54,6 +58,7 @@ export function CrosswordExercise({
   recentResultsByCardId = {},
   cardSetName,
   finishAction,
+  targetLanguage = 'en',
   onFinish,
   onSubmit,
 }: {
@@ -67,6 +72,7 @@ export function CrosswordExercise({
   >;
   cardSetName?: string;
   finishAction?: ReactNode;
+  targetLanguage?: SupportedLanguage;
   onFinish?: () => void;
   onSubmit: (
     answers: Record<string, string>,
@@ -258,6 +264,11 @@ export function CrosswordExercise({
                   />
                 </CursorAnchoredTooltip>
               )}
+              <ExerciseTargetLanguageChip
+                dataTest="crossword_exercise__target_language_chip"
+                interfaceLanguage={interfaceLanguage}
+                targetLanguage={targetLanguage}
+              />
               <ExerciseProgressChip
                 completed={filledEntryCount}
                 dataTest="crossword_exercise__progress_chip"

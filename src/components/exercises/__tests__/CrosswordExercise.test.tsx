@@ -55,8 +55,14 @@ describe('CrosswordExercise', () => {
     expect(screen.getByTestId('crossword_exercise__metadata_row')).toContainElement(
       screen.getByTestId('crossword_exercise__progress_chip'),
     );
+    expect(screen.getByTestId('crossword_exercise__metadata_row')).toContainElement(
+      screen.getByTestId('crossword_exercise__target_language_chip'),
+    );
     expect(screen.getByTestId('crossword_exercise__card_set_chip')).toHaveTextContent(
       'Набор карточек: Все карточки',
+    );
+    expect(screen.getByTestId('crossword_exercise__target_language_chip')).toHaveTextContent(
+      'Целевой язык: 🇬🇧 Английский',
     );
     expect(
       screen.getByTestId('crossword_exercise__card_set_chip__prefix'),

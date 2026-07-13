@@ -180,8 +180,16 @@ describe('CardSetDetailView', () => {
 
     expect(screen.queryByTestId('card_set_detail__add_card_form__card-set-road')).not.toBeInTheDocument();
     expect(screen.getByTestId('card_set_detail__card_count_chip__card-set-road')).toHaveStyle({
-      borderColor: '#6f4bd8',
-      color: '#5e3fc0',
+      borderColor: '#1877c9',
+      color: '#123c69',
+    });
+    expect(screen.getByTestId('card_set_detail__edit_cards_button__card-set-road')).toHaveStyle({
+      borderColor: '#1877c9',
+      color: '#123c69',
+    });
+    expect(screen.getByTestId('card_set_detail__card_item__card-airport')).toHaveStyle({
+      borderColor: 'rgba(24, 119, 201, 0.52)',
+      borderLeftColor: '#1877c9',
     });
     expect(screen.getByTestId('card_set_detail__card_language_note__card-airport')).toHaveTextContent(
       'ru: аэропорт / es: aeropuerto',

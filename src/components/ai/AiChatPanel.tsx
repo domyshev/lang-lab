@@ -15,6 +15,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import { stadiumAccent } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
 import { AiAssistantMessage } from '../../store/aiAssistantSlice';
@@ -106,6 +107,11 @@ export function AiChatPanel({
       data-test="ai_chat__panel"
       variant="outlined"
       sx={{
+        background:
+          'linear-gradient(145deg, rgba(232, 244, 255, 0.96) 0%, rgba(245, 255, 247, 0.94) 54%, rgba(226, 241, 252, 0.94) 100%)',
+        borderColor: 'rgba(24, 119, 201, 0.22)',
+        boxShadow:
+          '0 18px 42px rgba(18, 60, 105, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.72)',
         display: 'flex',
         height,
         minHeight: 0,
@@ -143,7 +149,16 @@ export function AiChatPanel({
           data-test="ai_chat__messages"
           ref={messagesRef}
           spacing={1}
-          sx={{ flex: 1, minHeight: 220, overflowY: 'auto' }}
+          sx={{
+            background:
+              'linear-gradient(180deg, rgba(255, 255, 255, 0.64) 0%, rgba(232, 244, 255, 0.42) 100%)',
+            border: '1px solid rgba(24, 119, 201, 0.12)',
+            borderRadius: 2,
+            flex: 1,
+            minHeight: 220,
+            overflowY: 'auto',
+            p: 1,
+          }}
         >
           {messages.length === 0 && !isThinking && (
             <Stack
@@ -161,7 +176,16 @@ export function AiChatPanel({
                   onClick={() => onDraftChange(label)}
                   size="small"
                   variant="outlined"
-                  sx={{ borderRadius: 999, textTransform: 'none' }}
+                  sx={{
+                    borderColor: 'rgba(24, 119, 201, 0.42)',
+                    borderRadius: 999,
+                    color: stadiumAccent.dark,
+                    textTransform: 'none',
+                    '&:hover': {
+                      bgcolor: 'rgba(24, 119, 201, 0.08)',
+                      borderColor: stadiumAccent.main,
+                    },
+                  }}
                 >
                   {label}
                 </Button>
@@ -177,11 +201,19 @@ export function AiChatPanel({
                 bgcolor: message.isError
                   ? '#fff1f1'
                   : message.role === 'user'
-                    ? '#e8f6fb'
-                    : '#f4f6f8',
+                    ? '#dff1ff'
+                    : '#eef9f2',
                 border: '1px solid',
-                borderColor: message.isError ? '#e3a2a2' : 'divider',
+                borderColor: message.isError
+                  ? '#e3a2a2'
+                  : message.role === 'user'
+                    ? 'rgba(24, 119, 201, 0.34)'
+                    : 'rgba(47, 143, 58, 0.24)',
                 borderRadius: 2,
+                boxShadow:
+                  message.role === 'user'
+                    ? '0 8px 18px rgba(18, 60, 105, 0.08)'
+                    : '0 8px 18px rgba(47, 143, 58, 0.07)',
                 maxWidth: '88%',
                 overflowWrap: 'anywhere',
                 px: 1.5,
@@ -308,11 +340,11 @@ export function AiChatPanel({
                         : 'rgba(255, 255, 255, 0.98)',
                     border: (theme) =>
                       theme.palette.mode === 'dark'
-                        ? '1px solid rgba(211, 188, 255, 0.28)'
-                        : '1px solid rgba(92, 66, 142, 0.18)',
+                        ? '1px solid rgba(142, 199, 239, 0.32)'
+                        : '1px solid rgba(24, 119, 201, 0.18)',
                     borderRadius: 2,
                     boxShadow:
-                      '0 16px 34px rgba(67, 45, 103, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.35) inset',
+                      '0 16px 34px rgba(18, 60, 105, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.35) inset',
                     color: (theme) =>
                       theme.palette.mode === 'dark' ? '#f6efff' : '#22331f',
                     fontSize: '14px',
@@ -347,11 +379,11 @@ function ShortcutKey({ children }: { children: string }) {
     <Box
       component="span"
       sx={{
-        bgcolor: 'rgba(126, 87, 194, 0.10)',
-        border: '1px solid rgba(126, 87, 194, 0.22)',
+        bgcolor: 'rgba(24, 119, 201, 0.10)',
+        border: '1px solid rgba(24, 119, 201, 0.22)',
         borderRadius: 1.25,
-        boxShadow: '0 2px 0 rgba(73, 49, 116, 0.16)',
-        color: '#4b3475',
+        boxShadow: '0 2px 0 rgba(18, 60, 105, 0.16)',
+        color: stadiumAccent.dark,
         fontSize: 13,
         fontWeight: 900,
         letterSpacing: 0,
@@ -368,10 +400,10 @@ function ShortcutKey({ children }: { children: string }) {
 
 const aiSendButtonStyles = {
   background:
-    'linear-gradient(135deg, rgba(126, 87, 194, 0.96) 0%, rgba(190, 132, 255, 0.9) 46%, rgba(255, 203, 112, 0.96) 100%)',
+    'linear-gradient(135deg, rgba(24, 119, 201, 0.96) 0%, rgba(73, 167, 232, 0.92) 48%, rgba(47, 143, 58, 0.9) 100%)',
   border: '1px solid rgba(255, 255, 255, 0.48)',
   boxShadow:
-    '0 13px 26px rgba(94, 64, 160, 0.28), 0 5px 12px rgba(108, 135, 74, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.46)',
+    '0 13px 26px rgba(18, 60, 105, 0.26), 0 5px 12px rgba(47, 143, 58, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.46)',
   color: '#fffdf7',
   height: 48,
   transition:
@@ -379,15 +411,15 @@ const aiSendButtonStyles = {
   width: 48,
   '&:hover': {
     background:
-      'linear-gradient(135deg, rgba(113, 73, 187, 0.98) 0%, rgba(202, 146, 255, 0.95) 44%, rgba(255, 211, 126, 1) 100%)',
+      'linear-gradient(135deg, rgba(18, 96, 168, 0.98) 0%, rgba(86, 180, 242, 0.96) 46%, rgba(61, 158, 73, 0.96) 100%)',
     boxShadow:
-      '0 16px 30px rgba(94, 64, 160, 0.34), 0 7px 16px rgba(108, 135, 74, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.55)',
+      '0 16px 30px rgba(18, 60, 105, 0.32), 0 7px 16px rgba(47, 143, 58, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.55)',
     filter: 'saturate(1.08)',
     transform: 'translateY(-1px)',
   },
   '&.Mui-disabled': {
     background:
-      'linear-gradient(135deg, rgba(158, 149, 176, 0.48) 0%, rgba(217, 207, 232, 0.44) 55%, rgba(231, 218, 184, 0.48) 100%)',
+      'linear-gradient(135deg, rgba(126, 155, 178, 0.48) 0%, rgba(198, 223, 237, 0.44) 55%, rgba(190, 222, 197, 0.48) 100%)',
     boxShadow: 'none',
     color: 'rgba(255, 255, 255, 0.62)',
   },

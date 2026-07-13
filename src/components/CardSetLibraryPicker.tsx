@@ -429,14 +429,22 @@ function CardSetLibraryChip({
       data-football-country={palette.countryKey}
       data-test={`${dataTestPrefix}__${item.id}`}
       onClick={onSelect}
+      style={
+        selected
+          ? {
+              boxShadow:
+                '0 0 0 4px #123c69, 0 0 0 7px #fffdf4, 0 18px 36px rgba(18, 60, 105, 0.30)',
+            }
+          : undefined
+      }
       sx={{
         alignItems: 'stretch',
         border: selected
-          ? `2px solid ${stadiumAccent.main}`
+          ? '2px solid #fffdf4'
           : '1px solid rgba(32, 48, 21, 0.14)',
         borderRadius: 3,
         boxShadow: selected
-          ? '0 14px 30px rgba(24, 119, 201, 0.20)'
+          ? '0 0 0 4px #123c69, 0 0 0 7px #fffdf4, 0 18px 36px rgba(18, 60, 105, 0.30)'
           : '0 10px 22px rgba(32, 48, 21, 0.10)',
         color: palette.foreground,
         display: 'flex',
@@ -519,7 +527,15 @@ function CardSetLibraryChip({
           {selected && (
             <CheckCircleRoundedIcon
               data-test={`${dataTestPrefix}_selected_icon__${item.id}`}
-              sx={{ color: stadiumAccent.dark, flex: '0 0 auto' }}
+              sx={{
+                bgcolor: '#fffdf4',
+                border: '2px solid #123c69',
+                borderRadius: '999px',
+                boxShadow: '0 8px 18px rgba(18, 60, 105, 0.24)',
+                color: stadiumAccent.dark,
+                flex: '0 0 auto',
+                fontSize: 34,
+              }}
             />
           )}
         </Stack>

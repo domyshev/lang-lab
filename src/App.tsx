@@ -77,6 +77,7 @@ import {
   getEligibleCardsForTarget,
 } from './domain/exercises';
 import { summarizeExerciseHistory } from './domain/exerciseHistory';
+import { stadiumAccent } from './domain/footballTheme';
 import { getLanguageDisplayName, t } from './domain/i18n';
 import { SupportedLanguage, languageFlags } from './domain/languages';
 import {
@@ -1194,10 +1195,10 @@ export function App() {
                     onClick={openGameAiAssistant}
                     size="small"
                     sx={{
-                      bgcolor: 'rgba(111, 75, 216, 0.10)',
-                      color: '#6f4bd8',
+                      bgcolor: 'rgba(24, 119, 201, 0.10)',
+                      color: stadiumAccent.main,
                       flexShrink: 0,
-                      '&:hover': { bgcolor: 'rgba(111, 75, 216, 0.18)' },
+                      '&:hover': { bgcolor: 'rgba(24, 119, 201, 0.18)' },
                     }}
                   >
                     <AutoFixHighIcon
@@ -1494,6 +1495,7 @@ export function App() {
             setActiveSection('cards');
           }}
           puzzle={exercisePreview.puzzle}
+          targetLanguage={targetLanguage}
           recentResultsByCardId={getRecentResultsByCardId({
             attempts,
             cardIds: exercisePreview.puzzle.entries.map((entry) => entry.cardId),
@@ -1524,6 +1526,7 @@ export function App() {
           progressCompletedCount={completedMultipleChoiceCardIds.length}
           progressTotalCount={eligibleCards.length}
           prompt={exercisePreview.prompt}
+          targetLanguage={targetLanguage}
           isKnown={isCardKnownForTarget(
             cardById.get(exercisePreview.prompt.cardId) ?? {
               knownTargetLanguages: [],
@@ -1594,6 +1597,7 @@ export function App() {
           progressCompletedCount={completedMissingLettersCardIds.length}
           progressTotalCount={missingLettersPracticeCardIds.length}
           prompt={missingLettersPrompt}
+          targetLanguage={targetLanguage}
           isKnown={isCardKnownForTarget(
             cardById.get(missingLettersPrompt.cardId) ?? {
               knownTargetLanguages: [],
@@ -1665,6 +1669,7 @@ export function App() {
           missingWordPracticePrompts,
         )}
         prompt={missingWordPrompt}
+        targetLanguage={targetLanguage}
         isKnown={isCardKnownForTarget(
           cardById.get(missingWordPrompt.cardId) ?? {
             knownTargetLanguages: [],

@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import type { ExerciseAttempt } from '../domain/exercises';
+import { stadiumAccent } from '../domain/footballTheme';
 import type { AiAgentResult } from '../services/aiAssistantAgent';
 import { runAiAssistant } from '../services/aiAssistantAgent';
 import { saveOpenRouterKey } from '../services/openRouterKeyStorage';
@@ -504,6 +505,21 @@ describe('App navigation', () => {
     expect(screen.getByTestId('exercise_picker__option_label__crossword')).toHaveStyle({
       borderRadius: '999px',
     });
+
+    await user.click(screen.getByRole('button', { name: 'Кроссворд' }));
+
+    expect(screen.getByRole('button', { name: 'Кроссворд' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByTestId('exercise_picker__option__crossword')).toHaveStyle({
+      boxShadow:
+        '0 0 0 3px #fffdf4, 0 0 0 7px #123c69, 0 18px 36px rgba(18, 60, 105, 0.30)',
+    });
+    expect(
+      screen.getByTestId('exercise_picker__option_selected_badge__crossword'),
+    ).toBeInTheDocument();
+
     const tileBackgrounds = [
       screen.getByTestId('exercise_picker__option__crossword'),
       screen.getByTestId('exercise_picker__option__multipleChoice'),
@@ -532,9 +548,6 @@ describe('App navigation', () => {
       expect(screen.getAllByText('Выберите набор карточек').length).toBeGreaterThan(
         1,
       ),
-    );
-    await waitFor(() =>
-      expect(screen.getAllByText('Выберите игру').length).toBeGreaterThan(1),
     );
     expect(screen.queryByTestId('game_setup__cannot_start_alert')).not.toBeInTheDocument();
     expect(screen.queryByTestId('game_setup__choose_game_alert')).not.toBeInTheDocument();
@@ -873,9 +886,15 @@ describe('App navigation', () => {
     expect(getByDataTestPrefix('missing_letters_exercise__metadata_row__')[0]).toContainElement(
       getByDataTestPrefix('missing_letters_exercise__progress_chip__')[0],
     );
+    expect(getByDataTestPrefix('missing_letters_exercise__metadata_row__')[0]).toContainElement(
+      getByDataTestPrefix('missing_letters_exercise__target_language_chip__')[0],
+    );
     expect(getByDataTestPrefix('missing_letters_exercise__card_set_chip__')[0]).toHaveTextContent(
       'Набор карточек: All cards',
     );
+    expect(
+      getByDataTestPrefix('missing_letters_exercise__target_language_chip__')[0],
+    ).toHaveTextContent('Целевой язык: 🇬🇧 Английский');
     expect(
       getByDataTestPrefix('missing_letters_exercise__progress_chip__')[0],
     ).toHaveTextContent('0 пройдено / 4 всего');
@@ -909,6 +928,15 @@ describe('App navigation', () => {
       historyTitle: 'Historial de operaciones',
       importTitle: 'Importacion manual de tarjetas',
     },
+    {
+      interfaceLanguage: 'uk' as const,
+      gamesTab: 'Грати',
+      title: 'AI помічник',
+      wandLabel: 'Відкрити AI помічника',
+      chatTitle: 'Чат',
+      historyTitle: 'История операций',
+      importTitle: 'Manual card import',
+    },
   ])('opens the dedicated chat tab from the library wands in $interfaceLanguage', async ({
     interfaceLanguage,
     gamesTab,
@@ -932,6 +960,16 @@ describe('App navigation', () => {
     const cardSetLibraryWand = screen.getByTestId('card_set_library__ai_assistant_button');
     expect(gameLibraryWand).toHaveAttribute('aria-label', wandLabel);
     expect(cardSetLibraryWand).toHaveAttribute('aria-label', wandLabel);
+    expect(getComputedStyle(gameLibraryWand).color).toBe(
+      getComputedStyle(cardSetLibraryWand).color,
+    );
+    expect(getComputedStyle(gameLibraryWand).color).toBe(
+      `rgb(${parseInt(stadiumAccent.main.slice(1, 3), 16)}, ${parseInt(
+        stadiumAccent.main.slice(3, 5),
+        16,
+      )}, ${parseInt(stadiumAccent.main.slice(5, 7), 16)})`,
+    );
+    expect(getComputedStyle(gameLibraryWand).color).not.toBe('rgb(111, 75, 216)');
 
     scrollRoot.scrollTop = 336.5;
     await user.click(gameLibraryWand);
@@ -1051,7 +1089,8 @@ describe('App navigation', () => {
     await user.click(allCardsTopic);
     expect(screen.getByText('1 набор')).toBeInTheDocument();
     expect(screen.getAllByText('6 карточек').length).toBeGreaterThan(0);
-    expect(screen.getByText('Целевой ответ: 🇬🇧 Английский')).toBeInTheDocument();
+    expect(screen.getByText('Целевой язык: 🇬🇧 Английский')).toBeInTheDocument();
+    expect(screen.queryByText('Целевой ответ: 🇬🇧 Английский')).not.toBeInTheDocument();
     expect(screen.queryByText('1 topics')).not.toBeInTheDocument();
     expect(screen.queryByText('5 cards')).not.toBeInTheDocument();
     expect(screen.queryByText('Target answer: 🇬🇧 English')).not.toBeInTheDocument();

@@ -266,6 +266,16 @@ describe('CardSetLibraryPicker', () => {
       'data-football-country',
       'spain',
     );
+    expect(screen.getByTestId('card_set_library__chip_select__all-cards')).toHaveStyle({
+      boxShadow:
+        '0 0 0 4px #123c69, 0 0 0 7px #fffdf4, 0 18px 36px rgba(18, 60, 105, 0.30)',
+    });
+    expect(
+      screen.getByTestId('card_set_library__chip_select_selected_icon__all-cards'),
+    ).toHaveStyle({
+      backgroundColor: '#fffdf4',
+      color: '#123c69',
+    });
 
     rerender(
       <CardSetLibraryPicker

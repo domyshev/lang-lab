@@ -29,7 +29,7 @@ import {
   getCardSetName,
   isArchivedCardSet,
 } from '../domain/cardSets';
-import { footballResultColors } from '../domain/footballTheme';
+import { footballResultColors, stadiumAccent } from '../domain/footballTheme';
 import {
   createCardById,
   createCardStatsByTarget,
@@ -58,6 +58,10 @@ import { AppDispatch, RootState } from '../store/store';
 import { CursorAnchoredTooltip } from './CursorAnchoredTooltip';
 import { KnownCardToggleButton } from './KnownCardToggleButton';
 import { SplitWordStatsChip } from './SplitWordStatsChip';
+
+const cardSetFootballBlueBorder = 'rgba(24, 119, 201, 0.52)';
+const cardSetFootballBlueHover = 'rgba(24, 119, 201, 0.08)';
+const cardSetFootballBlueSoft = 'rgba(24, 119, 201, 0.055)';
 
 export function CardSetDetailView() {
   const dispatch = useDispatch<AppDispatch>();
@@ -255,13 +259,13 @@ export function CardSetDetailView() {
         sx={{
           border: '1px solid',
           borderColor: isAlreadyInCardSet
-            ? 'rgba(111, 75, 216, 0.52)'
+            ? cardSetFootballBlueBorder
             : 'rgba(32, 48, 21, 0.14)',
           borderLeft: '4px solid',
-          borderLeftColor: isAlreadyInCardSet ? '#6f4bd8' : 'primary.main',
+          borderLeftColor: isAlreadyInCardSet ? stadiumAccent.main : 'primary.main',
           borderRadius: 1,
           bgcolor: isAlreadyInCardSet
-            ? 'rgba(111, 75, 216, 0.045)'
+            ? cardSetFootballBlueSoft
             : 'background.paper',
           p: 1.5,
         }}
@@ -451,8 +455,8 @@ export function CardSetDetailView() {
                 label={t(interfaceLanguage, 'archived')}
                 variant="outlined"
                 sx={{
-                  borderColor: 'rgba(111, 75, 216, 0.52)',
-                  color: '#5e3fc0',
+                  borderColor: cardSetFootballBlueBorder,
+                  color: stadiumAccent.dark,
                   fontWeight: 850,
                 }}
               />
@@ -485,12 +489,12 @@ export function CardSetDetailView() {
                 }
                 variant="outlined"
                 sx={{
-                  borderColor: '#6f4bd8',
-                  color: '#5e3fc0',
+                  borderColor: stadiumAccent.main,
+                  color: stadiumAccent.dark,
                   mr: { sm: 3.75 },
                   '&:hover': {
-                    bgcolor: 'rgba(111, 75, 216, 0.08)',
-                    borderColor: '#5e3fc0',
+                    bgcolor: cardSetFootballBlueHover,
+                    borderColor: stadiumAccent.dark,
                   },
                 }}
               >
@@ -506,8 +510,8 @@ export function CardSetDetailView() {
                 isAllCardsSelected
                   ? undefined
                   : {
-                      borderColor: '#6f4bd8',
-                      color: '#5e3fc0',
+                      borderColor: stadiumAccent.main,
+                      color: stadiumAccent.dark,
                       fontWeight: 750,
                     }
               }
