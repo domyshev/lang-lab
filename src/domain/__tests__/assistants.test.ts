@@ -22,6 +22,16 @@ describe('assistantCharacters', () => {
     }
   });
 
+  it('uses real Ukrainian assistant copy instead of Russian fallback text', () => {
+    for (const assistant of visibleAssistantCharacters) {
+      expect(assistant.name.uk).not.toBe(assistant.name.ru);
+      expect(assistant.motto.uk).not.toBe(assistant.motto.ru);
+      expect(assistant.description.uk).not.toBe(assistant.description.ru);
+      expect(assistant.superpower.uk).not.toBe(assistant.superpower.ru);
+      expect(assistant.abilities.uk).not.toEqual(assistant.abilities.ru);
+    }
+  });
+
   it('exposes four visible football-country assistants', () => {
     expect(visibleAssistantIds).toEqual([
       'studyTroll',

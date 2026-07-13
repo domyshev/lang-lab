@@ -46,7 +46,11 @@ import {
 import { AppDispatch, RootState } from '../store/store';
 import { AppLogo } from './AppLogo';
 import { LanguageSelectors } from './LanguageSelectors';
-import { createPlayerAvatarSeed, PlayerPixelAvatar } from './PlayerPixelAvatar';
+import {
+  createPlayerAvatarSeed,
+  PlayerPixelAvatar,
+  SupporterCountry,
+} from './PlayerPixelAvatar';
 import {
   languageFlags,
   languageLabels,
@@ -283,6 +287,7 @@ export function AppShell({
           >
             {playerProfile && (
               <PlayerGreeting
+                avatarCountry={getAssistantSupporterCountry(assistantId)}
                 avatarSeed={playerProfile.avatarSeed}
                 completedGameCount={completedGameCount}
                 interfaceLanguage={interfaceLanguage}
@@ -393,12 +398,14 @@ function FootballAiChatIcon() {
 }
 
 function PlayerGreeting({
+  avatarCountry,
   avatarSeed,
   completedGameCount,
   interfaceLanguage,
   name,
   onNameChange,
 }: {
+  avatarCountry: SupporterCountry;
   avatarSeed: string;
   completedGameCount: number;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
@@ -624,6 +631,7 @@ function PlayerGreeting({
         >
           <PlayerPixelAvatar
             ariaLabel={name}
+            country={avatarCountry}
             dataTest="player_greeting__avatar"
             seed={avatarSeed}
             size={30}
@@ -924,6 +932,9 @@ function PlayerOnboardingDialog({
   const previewSeed = trimmedName
     ? createPlayerAvatarSeed(trimmedName)
     : 'player:anonymous-preview';
+  const previewCountry = selectedAssistantId
+    ? getAssistantSupporterCountry(selectedAssistantId)
+    : 'spain';
   const copyLanguage = selectedInterfaceLanguage || interfaceLanguage;
   const isReady = Boolean(
     selectedAssistantId && selectedInterfaceLanguage && selectedTargetLanguage,
@@ -960,6 +971,7 @@ function PlayerOnboardingDialog({
           <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
             <PlayerPixelAvatar
               ariaLabel={trimmedName || t(copyLanguage, 'playerAnonymousName')}
+              country={previewCountry}
               dataTest="player_onboarding__avatar_preview"
               seed={previewSeed}
               size={54}
@@ -1106,6 +1118,23 @@ function PlayerOnboardingDialog({
       </DialogActions>
     </Dialog>
   );
+}
+
+function getAssistantSupporterCountry(
+  assistantId: AssistantId | string | undefined,
+): SupporterCountry {
+  switch (assistantId) {
+    case 'greenPower':
+      return 'portugal';
+    case 'webRunner':
+      return 'england';
+    case 'capeChampion':
+      return 'germany';
+    case 'studyTroll':
+    case 'trollMama':
+    default:
+      return 'spain';
+  }
 }
 
 const visibleTabSections: AppShellSection[] = [

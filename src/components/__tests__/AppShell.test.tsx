@@ -74,7 +74,7 @@ describe('AppShell', () => {
       'svg',
     );
     expect(
-      screen.getByTestId('player_greeting__avatar__spain_yellow_stripe'),
+      screen.getByTestId('player_greeting__avatar__portugal_green_field'),
     ).toBeInTheDocument();
     expect(
       screen.getByTestId('player_greeting__avatar__supporter_crest'),
@@ -122,6 +122,40 @@ describe('AppShell', () => {
       displayName: 'Илья',
       isAnonymous: false,
     });
+  });
+
+  it('shows the player flag for the selected assistant country in the top bar', () => {
+    const store = configureStore({
+      reducer: {
+        app: appReducer,
+      },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          assistantId: 'greenPower' as const,
+          playerProfile: {
+            avatarSeed: 'supporter:spain:legacy-seed',
+            displayName: 'Илья',
+            isAnonymous: false,
+          },
+        },
+      },
+    });
+
+    render(
+      <Provider store={store}>
+        <AppShell>
+          <div>Content</div>
+        </AppShell>
+      </Provider>,
+    );
+
+    expect(
+      screen.getByTestId('player_greeting__avatar__portugal_green_field'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId('player_greeting__avatar__spain_yellow_stripe'),
+    ).not.toBeInTheDocument();
   });
 
   it('edits the player name from the player tooltip', async () => {

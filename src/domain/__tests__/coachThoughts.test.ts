@@ -25,6 +25,18 @@ describe('coachThoughts', () => {
     );
   });
 
+  it('uses real Ukrainian football thoughts instead of Russian fallback phrases', () => {
+    for (const assistant of visibleAssistantCharacters) {
+      expect(coachThoughts[assistant.id].uk).not.toEqual(
+        coachThoughts[assistant.id].ru,
+      );
+    }
+
+    expect(coachThoughts.studyTroll.uk).toContain(
+      'Фланг відкритий, можна прискорюватися.',
+    );
+  });
+
   it('keeps generated transition thoughts to one sentence', () => {
     for (const assistant of visibleAssistantCharacters) {
       for (const language of supportedLanguages) {

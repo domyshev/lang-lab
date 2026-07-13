@@ -2,13 +2,17 @@ import { Box } from '@mui/material';
 
 type PlayerPixelAvatarProps = {
   ariaLabel?: string;
+  country?: SupporterCountry;
   dataTest?: string;
   seed: string;
   size?: number;
 };
 
+export type SupporterCountry = 'spain' | 'portugal' | 'england' | 'germany';
+
 export function PlayerPixelAvatar({
   ariaLabel,
+  country = 'spain',
   dataTest = 'player_pixel_avatar',
   seed,
   size = 34,
@@ -40,26 +44,7 @@ export function PlayerPixelAvatar({
           <stop offset="1" stopColor="rgba(32,48,21,0.16)" />
         </linearGradient>
       </defs>
-      <rect
-        data-test={`${dataTest}__spain_red_top_stripe`}
-        fill="#c60b1e"
-        height="10"
-        width="54"
-      />
-      <rect
-        data-test={`${dataTest}__spain_yellow_stripe`}
-        fill="#ffc400"
-        height="18"
-        width="54"
-        y="10"
-      />
-      <rect
-        data-test={`${dataTest}__spain_red_bottom_stripe`}
-        fill="#c60b1e"
-        height="10"
-        width="54"
-        y="28"
-      />
+      <SupporterFlag country={country} dataTest={dataTest} />
       <rect
         fill={`url(#${shimmerId})`}
         height="38"
@@ -100,6 +85,120 @@ export function PlayerPixelAvatar({
       />
     </Box>
   );
+}
+
+function SupporterFlag({
+  country,
+  dataTest,
+}: {
+  country: SupporterCountry;
+  dataTest: string;
+}) {
+  switch (country) {
+    case 'portugal':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__portugal_green_field`}
+            fill="#046a38"
+            height="38"
+            width="22"
+          />
+          <rect
+            data-test={`${dataTest}__portugal_red_field`}
+            fill="#da291c"
+            height="38"
+            width="32"
+            x="22"
+          />
+          <circle
+            data-test={`${dataTest}__portugal_crest`}
+            cx="22"
+            cy="19"
+            fill="#ffd100"
+            r="5"
+            stroke="#ffffff"
+            strokeWidth="1"
+          />
+        </>
+      );
+    case 'england':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__england_white_field`}
+            fill="#fffdf4"
+            height="38"
+            width="54"
+          />
+          <rect
+            data-test={`${dataTest}__england_red_cross_horizontal`}
+            fill="#c8102e"
+            height="7"
+            width="54"
+            y="15.5"
+          />
+          <rect
+            data-test={`${dataTest}__england_red_cross_vertical`}
+            fill="#c8102e"
+            height="38"
+            width="7"
+            x="23.5"
+          />
+        </>
+      );
+    case 'germany':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__germany_black_stripe`}
+            fill="#111111"
+            height="13"
+            width="54"
+          />
+          <rect
+            data-test={`${dataTest}__germany_red_stripe`}
+            fill="#dd0000"
+            height="12"
+            width="54"
+            y="13"
+          />
+          <rect
+            data-test={`${dataTest}__germany_yellow_stripe`}
+            fill="#ffce00"
+            height="13"
+            width="54"
+            y="25"
+          />
+        </>
+      );
+    case 'spain':
+    default:
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__spain_red_top_stripe`}
+            fill="#c60b1e"
+            height="10"
+            width="54"
+          />
+          <rect
+            data-test={`${dataTest}__spain_yellow_stripe`}
+            fill="#ffc400"
+            height="18"
+            width="54"
+            y="10"
+          />
+          <rect
+            data-test={`${dataTest}__spain_red_bottom_stripe`}
+            fill="#c60b1e"
+            height="10"
+            width="54"
+            y="28"
+          />
+        </>
+      );
+  }
 }
 
 export function createPlayerAvatarSeed(value: string): string {
