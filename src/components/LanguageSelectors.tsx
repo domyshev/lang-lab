@@ -365,6 +365,7 @@ export function LanguageSelectors() {
             borderRadius: 1,
             color: '#203015',
             height: 34,
+            ml: '10px',
             width: 34,
           }}
         >
@@ -394,6 +395,7 @@ export function LanguageSelectors() {
             data-test="language_selectors__world_control"
             size="small"
             fullWidth
+            sx={{ mb: '10px' }}
           >
             <InputLabel
               data-test="language_selectors__world_label"

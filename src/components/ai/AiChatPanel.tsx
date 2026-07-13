@@ -64,6 +64,7 @@ export function AiChatPanel({
     resolveWorldId(state.app.worldId),
   );
   const worldAccent = getWorldAccent(worldId);
+  const isForestWorld = worldId === 'forest';
   const canSend = Boolean(draft.trim()) && !isThinking;
   const scrollSignature = useMemo(
     () =>
@@ -113,9 +114,12 @@ export function AiChatPanel({
       data-test="ai_chat__panel"
       variant="outlined"
       sx={{
-        background:
-          'linear-gradient(145deg, rgba(232, 244, 255, 0.96) 0%, rgba(245, 255, 247, 0.94) 54%, rgba(226, 241, 252, 0.94) 100%)',
-        borderColor: 'rgba(24, 119, 201, 0.22)',
+        background: isForestWorld
+          ? 'linear-gradient(145deg, rgba(246, 255, 235, 0.96) 0%, rgba(250, 240, 255, 0.94) 55%, rgba(238, 250, 229, 0.94) 100%)'
+          : 'linear-gradient(145deg, rgba(232, 244, 255, 0.96) 0%, rgba(245, 255, 247, 0.94) 54%, rgba(226, 241, 252, 0.94) 100%)',
+        borderColor: isForestWorld
+          ? 'rgba(169, 137, 223, 0.30)'
+          : 'rgba(24, 119, 201, 0.22)',
         boxShadow:
           '0 18px 42px rgba(18, 60, 105, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.72)',
         display: 'flex',
@@ -156,9 +160,12 @@ export function AiChatPanel({
           ref={messagesRef}
           spacing={1}
           sx={{
-            background:
-              'linear-gradient(180deg, rgba(255, 255, 255, 0.64) 0%, rgba(232, 244, 255, 0.42) 100%)',
-            border: '1px solid rgba(24, 119, 201, 0.12)',
+            background: isForestWorld
+              ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.68) 0%, rgba(247, 239, 255, 0.46) 100%)'
+              : 'linear-gradient(180deg, rgba(255, 255, 255, 0.64) 0%, rgba(232, 244, 255, 0.42) 100%)',
+            border: isForestWorld
+              ? '1px solid rgba(169, 137, 223, 0.16)'
+              : '1px solid rgba(24, 119, 201, 0.12)',
             borderRadius: 2,
             flex: 1,
             minHeight: 220,
@@ -183,13 +190,19 @@ export function AiChatPanel({
                   size="small"
                   variant="outlined"
                   sx={{
-                    borderColor: 'rgba(24, 119, 201, 0.42)',
+                    borderColor: isForestWorld
+                      ? 'rgba(169, 137, 223, 0.42)'
+                      : 'rgba(24, 119, 201, 0.42)',
                     borderRadius: 999,
                     color: worldAccent.dark,
                     textTransform: 'none',
                     '&:hover': {
-                      bgcolor: 'rgba(24, 119, 201, 0.08)',
-                      borderColor: worldAccent.main,
+                      bgcolor: isForestWorld
+                        ? 'rgba(169, 137, 223, 0.10)'
+                        : 'rgba(24, 119, 201, 0.08)',
+                      borderColor: isForestWorld
+                        ? '#a989df'
+                        : worldAccent.main,
                     },
                   }}
                 >
@@ -207,18 +220,24 @@ export function AiChatPanel({
                 bgcolor: message.isError
                   ? '#fff1f1'
                   : message.role === 'user'
-                    ? '#dff1ff'
+                    ? isForestWorld
+                      ? '#f7efff'
+                      : '#dff1ff'
                     : '#eef9f2',
                 border: '1px solid',
                 borderColor: message.isError
                   ? '#e3a2a2'
                   : message.role === 'user'
-                    ? 'rgba(24, 119, 201, 0.34)'
+                    ? isForestWorld
+                      ? 'rgba(169, 137, 223, 0.34)'
+                      : 'rgba(24, 119, 201, 0.34)'
                     : 'rgba(47, 143, 58, 0.24)',
                 borderRadius: 2,
                 boxShadow:
                   message.role === 'user'
-                    ? '0 8px 18px rgba(18, 60, 105, 0.08)'
+                    ? isForestWorld
+                      ? '0 8px 18px rgba(52, 34, 79, 0.08)'
+                      : '0 8px 18px rgba(18, 60, 105, 0.08)'
                     : '0 8px 18px rgba(47, 143, 58, 0.07)',
                 maxWidth: '88%',
                 overflowWrap: 'anywhere',
@@ -320,11 +339,15 @@ export function AiChatPanel({
                     spacing={0.75}
                     sx={{ alignItems: 'center', flexWrap: 'wrap' }}
                   >
-                    <ShortcutKey accent={worldAccent}>Enter</ShortcutKey>
+                    <ShortcutKey accent={worldAccent} isForest={isForestWorld}>
+                      Enter
+                    </ShortcutKey>
                     <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>
                       /
                     </Typography>
-                    <ShortcutKey accent={worldAccent}>Shift Enter</ShortcutKey>
+                    <ShortcutKey accent={worldAccent} isForest={isForestWorld}>
+                      Shift Enter
+                    </ShortcutKey>
                   </Stack>
                 </Stack>
               }
@@ -367,7 +390,7 @@ export function AiChatPanel({
                   data-test="ai_chat__send_button"
                   disabled={!canSend}
                   onClick={onSend}
-                  sx={aiSendButtonStyles}
+                  sx={isForestWorld ? forestAiSendButtonStyles : aiSendButtonStyles}
                 >
                   <SendIcon />
                 </IconButton>
@@ -383,16 +406,20 @@ export function AiChatPanel({
 function ShortcutKey({
   accent,
   children,
+  isForest,
 }: {
   accent: ReturnType<typeof getWorldAccent>;
   children: string;
+  isForest: boolean;
 }) {
   return (
     <Box
       component="span"
       sx={{
-        bgcolor: 'rgba(24, 119, 201, 0.10)',
-        border: '1px solid rgba(24, 119, 201, 0.22)',
+        bgcolor: isForest ? 'rgba(169, 137, 223, 0.12)' : 'rgba(24, 119, 201, 0.10)',
+        border: isForest
+          ? '1px solid rgba(169, 137, 223, 0.24)'
+          : '1px solid rgba(24, 119, 201, 0.22)',
         borderRadius: 1.25,
         boxShadow: '0 2px 0 rgba(18, 60, 105, 0.16)',
         color: accent.dark,
@@ -434,5 +461,32 @@ const aiSendButtonStyles = {
       'linear-gradient(135deg, rgba(126, 155, 178, 0.48) 0%, rgba(198, 223, 237, 0.44) 55%, rgba(190, 222, 197, 0.48) 100%)',
     boxShadow: 'none',
     color: 'rgba(255, 255, 255, 0.62)',
+  },
+};
+
+const forestAiSendButtonStyles = {
+  background:
+    'linear-gradient(135deg, rgba(169, 137, 223, 0.96) 0%, rgba(205, 181, 244, 0.92) 48%, rgba(117, 168, 67, 0.92) 100%)',
+  border: '1px solid rgba(255, 255, 255, 0.52)',
+  boxShadow:
+    '0 13px 26px rgba(52, 34, 79, 0.20), 0 5px 12px rgba(75, 122, 44, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.50)',
+  color: '#fffdf7',
+  height: 48,
+  transition:
+    'transform 160ms ease, box-shadow 160ms ease, filter 160ms ease',
+  width: 48,
+  '&:hover': {
+    background:
+      'linear-gradient(135deg, rgba(150, 115, 208, 0.98) 0%, rgba(213, 190, 250, 0.96) 46%, rgba(128, 183, 72, 0.96) 100%)',
+    boxShadow:
+      '0 16px 30px rgba(52, 34, 79, 0.24), 0 7px 16px rgba(75, 122, 44, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.58)',
+    filter: 'saturate(1.08)',
+    transform: 'translateY(-1px)',
+  },
+  '&.Mui-disabled': {
+    background:
+      'linear-gradient(135deg, rgba(169, 137, 223, 0.34) 0%, rgba(219, 210, 232, 0.42) 55%, rgba(159, 196, 124, 0.40) 100%)',
+    boxShadow: 'none',
+    color: 'rgba(255, 255, 255, 0.64)',
   },
 };

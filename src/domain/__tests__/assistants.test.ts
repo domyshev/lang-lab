@@ -62,6 +62,7 @@ describe('assistantCharacters', () => {
       'studyTroll',
       'forestElf',
       'unicorn',
+      'ladybug',
     ]);
     expect(
       Object.fromEntries(
@@ -69,6 +70,7 @@ describe('assistantCharacters', () => {
       ),
     ).toEqual({
       forestElf: 'Лесной эльф',
+      ladybug: 'Смелая божья коровка',
       studyTroll: 'Веселый листочек',
       unicorn: 'Серебряный единорог',
     });

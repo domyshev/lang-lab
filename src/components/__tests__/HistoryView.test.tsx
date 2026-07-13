@@ -90,7 +90,7 @@ describe('HistoryView', () => {
       within(airportTooltip).getByTestId(
         'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_result_chip__0',
       ),
-    ).toHaveTextContent('правильно');
+    ).toHaveTextContent('верно');
     expect(
       within(airportTooltip).getByTestId(
         'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_result_date__0',

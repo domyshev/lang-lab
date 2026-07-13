@@ -102,6 +102,7 @@ function createCardSetOperation(id = 'operation-1'): PlannedAiOperation {
 
 function renderView({
   language = 'en',
+  worldId = 'football',
   embedded = false,
   showManualImport = true,
   messages = [],
@@ -114,6 +115,7 @@ function renderView({
   operationError,
 }: {
   language?: SupportedLanguage;
+  worldId?: 'football' | 'forest';
   embedded?: boolean;
   showManualImport?: boolean;
   messages?: ReturnType<typeof rootReducer>['aiAssistant']['messages'];
@@ -130,7 +132,7 @@ function renderView({
     reducer: rootReducer,
     preloadedState: {
       ...initial,
-      app: { ...initial.app, interfaceLanguage: language },
+      app: { ...initial.app, interfaceLanguage: language, worldId },
       cards: {
         ...initial.cards,
         ...(cards ? { cards } : {}),
@@ -1415,6 +1417,21 @@ describe('AiAssistantView localization and manual import', () => {
       overflowY: 'auto',
     });
     expect(within(dialog).getByText('Travel vocabulary')).toBeInTheDocument();
+  });
+
+  it('uses a forest-friendly green and lilac chat palette in the forest world', () => {
+    renderView({ worldId: 'forest', showManualImport: false });
+
+    expect(screen.getByTestId('ai_chat__panel')).toHaveStyle({
+      background:
+        'linear-gradient(145deg, rgba(246, 255, 235, 0.96) 0%, rgba(250, 240, 255, 0.94) 55%, rgba(238, 250, 229, 0.94) 100%)',
+      borderColor: 'rgba(169, 137, 223, 0.30)',
+    });
+    expect(screen.getByTestId('ai_chat__messages')).toHaveStyle({
+      background:
+        'linear-gradient(180deg, rgba(255, 255, 255, 0.68) 0%, rgba(247, 239, 255, 0.46) 100%)',
+      border: '1px solid rgba(169, 137, 223, 0.16)',
+    });
   });
 
   it('keeps manual file import functional below the assistant tools', async () => {

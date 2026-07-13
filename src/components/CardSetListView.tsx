@@ -34,6 +34,7 @@ import {
   selectCardSet,
 } from '../store/cardSetsSlice';
 import { AppDispatch, RootState } from '../store/store';
+import { forestLilacAccent, resolveWorldId, type WorldId } from '../domain/worlds';
 
 export function CardSetListView({
   onCardSetCreated,
@@ -51,6 +52,9 @@ export function CardSetListView({
   );
   const targetLanguage = useSelector(
     (state: RootState) => state.app.targetLanguage,
+  );
+  const worldId = useSelector((state: RootState) =>
+    resolveWorldId(state.app.worldId),
   );
   const cardById = useMemo(
     () => new Map(cards.map((card) => [card.id, card])),
@@ -161,6 +165,7 @@ export function CardSetListView({
             startIcon={<AddIcon />}
             variant="contained"
             onClick={() => setIsCreating((value) => !value)}
+            sx={getCardSetListActionSx(worldId)}
           >
             {t(interfaceLanguage, 'add')}
           </Button>
@@ -190,7 +195,7 @@ export function CardSetListView({
               variant="contained"
               onClick={createCardSet}
               disabled={!name.trim()}
-              sx={{ minWidth: 150 }}
+              sx={{ minWidth: 150, ...getCardSetListActionSx(worldId) }}
             >
               {t(interfaceLanguage, 'create')}
             </Button>
@@ -251,6 +256,7 @@ export function CardSetListView({
               name={allCardsName}
               cardCount={countPlayableCards(cards.map((card) => card.id))}
               interfaceLanguage={interfaceLanguage}
+              worldId={worldId}
               selected={
                 selectedCardSetId === ALL_CARDS_CARD_SET_ID || !selectedCardSetId
               }
@@ -265,6 +271,7 @@ export function CardSetListView({
               name={getCardSetName(cardSet, targetLanguage)}
               cardCount={countPlayableCards(cardSet.cardIds)}
               interfaceLanguage={interfaceLanguage}
+              worldId={worldId}
               selected={cardSet.id === selectedCardSetId}
               onArchive={
                 isArchivedCardSet(cardSet)
@@ -307,6 +314,7 @@ function CardSetTile({
   onCopyArchived,
   onSelect,
   selected,
+  worldId,
 }: {
   cardCount: number;
   id: string;
@@ -316,13 +324,17 @@ function CardSetTile({
   onCopyArchived?: () => void;
   onSelect: () => void;
   selected: boolean;
+  worldId: WorldId;
 }) {
+  const selectedBorderColor =
+    worldId === 'forest' ? forestLilacAccent.main : 'primary.main';
+
   return (
     <Paper
       data-test={`card_set_list__tile__${id}`}
       variant="outlined"
       sx={{
-        borderColor: selected ? 'primary.main' : 'divider',
+        borderColor: selected ? selectedBorderColor : 'divider',
         flexShrink: 0,
         overflow: 'hidden',
       }}
@@ -390,6 +402,29 @@ function CardSetTile({
       </Stack>
     </Paper>
   );
+}
+
+function getCardSetListActionSx(worldId: WorldId) {
+  if (worldId !== 'forest') {
+    return undefined;
+  }
+
+  return {
+    background:
+      `linear-gradient(135deg, ${forestLilacAccent.light} 0%, ${forestLilacAccent.mid} 52%, ${forestLilacAccent.main} 100%)`,
+    border: '1px solid rgba(52, 34, 79, 0.20)',
+    boxShadow:
+      '0 10px 20px rgba(52, 34, 79, 0.16), inset 0 1px 0 rgba(255,255,255,0.70)',
+    color: forestLilacAccent.dark,
+    fontWeight: 900,
+    textTransform: 'none',
+    '&:hover': {
+      background:
+        `linear-gradient(135deg, #ffffff 0%, ${forestLilacAccent.mid} 48%, ${forestLilacAccent.main} 100%)`,
+      boxShadow:
+        '0 12px 24px rgba(52, 34, 79, 0.19), inset 0 1px 0 rgba(255,255,255,0.76)',
+    },
+  };
 }
 
 function createCardSetId(): string {

@@ -73,6 +73,16 @@ export const forestResultColors: WorldResultColors = {
   },
 };
 
+export const forestLilacAccent = {
+  border: 'rgba(169, 137, 223, 0.52)',
+  dark: '#34224f',
+  glow: 'rgba(169, 137, 223, 0.18)',
+  light: '#fff7ff',
+  main: '#a989df',
+  mid: '#d8bcff',
+  soft: 'rgba(169, 137, 223, 0.055)',
+};
+
 const forestPalettes: FootballCountryPalette[] = [
   makePalette('moss', 'Moss', '#cfe9a4', '#9cca56', '#7fbf7b', '#203015'),
   makePalette('fern', 'Fern', '#dff2c4', '#7bbf83', '#4f8e5b', '#203015'),

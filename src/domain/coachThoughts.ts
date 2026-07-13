@@ -576,6 +576,24 @@ const thoughtSources: Record<AssistantId, CharacterThoughtSources> = {
       endings: ['Сяйлива практика теж рахується.', 'Сміливість краще росте з іскрами.'],
     },
   },
+  ladybug: {
+    en: {
+      openings: ['The ladybug counts the next tiny step', 'Small wings still carry brave answers'],
+      endings: ['One bright dot is enough to begin.', 'Tiny courage lands softly.'],
+    },
+    ru: {
+      openings: ['Божья коровка считает следующий маленький шаг', 'Маленькие крылья тоже несут смелые ответы'],
+      endings: ['Одной яркой точки достаточно для начала.', 'Крошечная смелость приземляется мягко.'],
+    },
+    es: {
+      openings: ['La mariquita cuenta el siguiente paso pequeno', 'Alas pequenas tambien llevan respuestas valientes'],
+      endings: ['Un puntito brillante basta para empezar.', 'El valor diminuto aterriza suave.'],
+    },
+    uk: {
+      openings: ['Сонечко рахує наступний маленький крок', 'Малі крила теж несуть сміливі відповіді'],
+      endings: ['Однієї яскравої крапки досить для початку.', 'Крихітна сміливість приземляється мʼяко.'],
+    },
+  },
 };
 
 export const coachThoughts: Record<
@@ -652,6 +670,12 @@ const forestCoachThoughts: Record<AssistantId, Record<SupportedLanguage, string[
     ru: ['Серебряная искра перезапускает карточку', 'Единорог держит смелость сияющей'],
     es: ['Un brillo plateado reinicia la tarjeta', 'El unicornio mantiene el animo brillante'],
     uk: ['Срібна іскра перезапускає картку', 'Єдиноріг тримає сміливість сяйливою'],
+  }),
+  ladybug: makeForestThoughts({
+    en: ['The ladybug lands on the smallest clue', 'Tiny wings can lift a heavy word'],
+    ru: ['Божья коровка садится на самую маленькую подсказку', 'Крошечные крылья поднимают тяжелое слово'],
+    es: ['La mariquita cae sobre la pista mas pequena', 'Alas diminutas levantan una palabra pesada'],
+    uk: ['Сонечко сідає на найменшу підказку', 'Крихітні крила піднімають важке слово'],
   }),
 };
 

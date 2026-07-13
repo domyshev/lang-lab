@@ -240,6 +240,33 @@ describe('CardSetDetailView', () => {
     expect(screen.getByText('impede')).toBeInTheDocument();
   });
 
+  it('uses the forest lilac accent for selected card frames in the forest world', () => {
+    render(
+      <Provider
+        store={createStore({
+          worldId: 'forest',
+          selectedCardSetId: 'card-set-road',
+          cardSets: [
+            {
+              id: 'card-set-road',
+              name: 'Road',
+              cardIds: ['card-airport'],
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+        })}
+      >
+        <CardSetDetailView />
+      </Provider>,
+    );
+
+    expect(screen.getByTestId('card_set_detail__card_item__card-airport')).toHaveStyle({
+      borderColor: 'rgba(169, 137, 223, 0.52)',
+      borderLeftColor: '#a989df',
+    });
+  });
+
   it('toggles the known marker for the current target language', async () => {
     const user = userEvent.setup();
     const store = createStore();
@@ -411,6 +438,7 @@ function getByDataTestPrefix(container: HTMLElement, prefix: string): HTMLElemen
 function createStore({
   selectedCardSetId,
   cardSets = [],
+  worldId = 'football',
 }: {
   selectedCardSetId?: string;
   cardSets?: Array<{
@@ -421,6 +449,7 @@ function createStore({
     updatedAt: string;
     archivedAt?: string;
   }>;
+  worldId?: 'football' | 'forest';
 } = {}) {
   return configureStore({
     reducer: {
@@ -434,6 +463,7 @@ function createStore({
       app: {
         ...appReducer(undefined, { type: 'test/init' }),
         interfaceLanguage: 'ru' as const,
+        worldId,
       },
       cards: {
         cards: [

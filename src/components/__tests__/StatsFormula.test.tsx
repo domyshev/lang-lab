@@ -47,7 +47,7 @@ describe('StatsFormula', () => {
     );
     expect(screen.getByTestId('stats_formula_correct_only__equals_icon')).toBeInTheDocument();
     expect(screen.getByTestId('stats_formula_correct_only__correct_chip')).toHaveTextContent(
-      '2 правильно',
+      '2 верно',
     );
     expect(
       screen.queryByTestId('stats_formula_correct_only__incorrect_chip'),
@@ -134,16 +134,16 @@ describe('StatsFormula', () => {
     ).toHaveTextContent('3 отвечено');
     expect(
       screen.getByTestId('stats_formula_with_suffixes__correct_chip'),
-    ).toHaveTextContent('2 правильно');
+    ).toHaveTextContent('2 верно');
     expect(
       screen.getByTestId('stats_formula_with_suffixes__incorrect_chip'),
     ).toHaveTextContent('1 неверно');
     expect(
       screen.getByTestId('stats_formula_with_suffixes__correct_chip__number'),
-    ).toHaveStyle({ fontSize: '16px' });
+    ).toHaveStyle({ fontSize: '13px' });
     expect(
       screen.getByTestId('stats_formula_with_suffixes__correct_chip__suffix'),
-    ).toHaveStyle({ fontSize: '11px' });
+    ).toHaveStyle({ fontSize: '10px' });
     expect(
       screen.getByTestId('stats_formula_with_suffixes__correct_chip__suffix'),
     ).toHaveStyle({ marginLeft: '4px' });
@@ -169,7 +169,7 @@ describe('StatsFormula', () => {
     });
     expect(screen.getByTestId('plain_total_formula__equals_icon')).toBeInTheDocument();
     expect(screen.getByTestId('plain_total_formula__correct_chip')).toHaveTextContent(
-      '1 правильно',
+      '1 верно',
     );
     expect(screen.getByTestId('plain_total_formula__incorrect_chip')).toHaveTextContent(
       '1 неверно',

@@ -79,6 +79,29 @@ describe('AppShell', () => {
     expect(
       within(dialog).getByTestId('player_onboarding__assistant_figure__forestElf'),
     ).toBeInTheDocument();
+    expect(
+      within(dialog).getByTestId('player_onboarding__assistant_figure__ladybug'),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByTestId('player_onboarding__save_warning_anchor'),
+    ).toBeInTheDocument();
+    await user.hover(
+      within(dialog).getByTestId('player_onboarding__assistant_figure__ladybug'),
+    );
+    const ladybugTooltipText = await screen.findByText(
+      /Brave Ladybug: Makes difficult cards feel small enough to try again\./,
+    );
+    expect(ladybugTooltipText.closest('.MuiTooltip-tooltip')).toHaveStyle({
+      backgroundColor: 'rgba(255, 255, 255, 0.98)',
+      fontSize: '14px',
+    });
+    expect(ladybugTooltipText.closest('[data-popper-placement]')).toHaveAttribute(
+      'data-popper-placement',
+      expect.stringMatching(/^top|^left|^right|^bottom/),
+    );
+    await user.unhover(
+      within(dialog).getByTestId('player_onboarding__assistant_figure__ladybug'),
+    );
     expect(within(dialog).getByRole('combobox', { name: 'Interface language' })).toBeInTheDocument();
     expect(within(dialog).getByRole('combobox', { name: 'Target learning language' })).toBeInTheDocument();
     expect(
@@ -92,7 +115,7 @@ describe('AppShell', () => {
     await selectOnboardingOption(user, dialog, 'Interface language', 'English');
     await selectOnboardingOption(user, dialog, 'Target learning language', 'Español');
     await user.type(within(dialog).getByLabelText('Player name'), 'Alex');
-    await user.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Configure' }));
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Game world setup' })).not.toBeInTheDocument();
@@ -152,7 +175,7 @@ describe('AppShell', () => {
     );
     await selectOnboardingOption(user, dialog, 'Язык - цель изучения', 'English');
     await user.type(within(dialog).getByLabelText('Имя игрока'), 'Илья');
-    await user.click(within(dialog).getByRole('button', { name: 'Сохранить' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Настроить' }));
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Настройка игрового мира' })).not.toBeInTheDocument();
@@ -509,9 +532,55 @@ describe('AppShell', () => {
 
     expect(screen.getByRole('tab', { name: 'Играть' })).toHaveStyle({
       background:
-        'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)',
-      color: '#183813',
+        'linear-gradient(180deg, #fff7ff 0%, #d8bcff 52%, #a989df 100%)',
+      color: '#34224f',
     });
+  });
+
+  it('uses a light left-side tooltip for character options in the top selector', async () => {
+    const user = userEvent.setup();
+    const store = configureStore({
+      reducer: {
+        app: appReducer,
+      },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          interfaceLanguage: 'ru' as const,
+          playerProfile: {
+            avatarSeed: 'test-player',
+            displayName: 'Илья',
+            isAnonymous: false,
+          },
+        },
+      },
+    });
+
+    render(
+      <Provider store={store}>
+        <AppShell>
+          <div>Content</div>
+        </AppShell>
+      </Provider>,
+    );
+
+    await user.click(screen.getByRole('combobox', { name: 'Персонаж' }));
+    const optionIcon = await screen.findByTestId(
+      'player_greeting__assistant_option_icon__studyTroll',
+    );
+    await user.hover(optionIcon);
+
+    const optionTooltipText = await screen.findByText(
+      /Испанский вингер: Взрывает фланг/,
+    );
+    expect(optionTooltipText.closest('.MuiTooltip-tooltip')).toHaveStyle({
+      backgroundColor: 'rgba(255, 255, 255, 0.98)',
+      fontSize: '14px',
+    });
+    expect(optionTooltipText.closest('[data-popper-placement]')).toHaveAttribute(
+      'data-popper-placement',
+      expect.stringMatching(/^left/),
+    );
   });
 
   it('uses a readable stadium-blue active tab and a football AI chat icon', () => {

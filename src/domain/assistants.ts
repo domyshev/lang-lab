@@ -8,7 +8,8 @@ export type AssistantId =
   | 'greenPower'
   | 'webRunner'
   | 'forestElf'
-  | 'unicorn';
+  | 'unicorn'
+  | 'ladybug';
 
 export interface AssistantCharacter {
   abilities: Record<SupportedLanguage, string[]>;
@@ -634,6 +635,56 @@ const forestAssistantCharacters: RawAssistantCharacter[] = [
       uk: 'Перетворює хиткі повтори на світлий перезапуск і підтримує сміливість.',
     },
   },
+  {
+    id: 'ladybug',
+    label: 'Brave Ladybug',
+    motto: {
+      en: 'Tiny steps, bright wings.',
+      ru: 'Маленькие шаги, яркие крылья.',
+      es: 'Pasos pequenos, alas brillantes.',
+      uk: 'Малі кроки, яскраві крила.',
+    },
+    name: {
+      en: 'Brave Ladybug',
+      ru: 'Смелая божья коровка',
+      es: 'Mariquita Valiente',
+      uk: 'Смілива сонечко',
+    },
+    description: {
+      en: 'A tiny forest teammate with a surprisingly steady heart. The ladybug keeps hard cards small, marks little wins clearly, and makes one more attempt feel possible.',
+      ru: 'Крошечный лесной напарник с удивительно ровным сердцем. Божья коровка уменьшает страшные карточки, ясно отмечает маленькие победы и помогает решиться еще на одну попытку.',
+      es: 'Una companera diminuta del bosque con un corazon sorprendentemente firme. La mariquita hace pequenas las tarjetas dificiles, celebra mini victorias y anima a probar una vez mas.',
+      uk: 'Крихітна лісова напарниця з напрочуд рівним серцем. Сонечко зменшує страшні картки, чітко відзначає малі перемоги й допомагає наважитися ще на одну спробу.',
+    },
+    abilities: {
+      en: [
+        'Spot-count focus: turns a long answer into a few visible steps.',
+        'Tiny victory mark: notices the first correct answer after a wobble.',
+        'Wingbeat repeat: brings back one weak card gently, then lets the forest breathe.',
+      ],
+      ru: [
+        'Фокус по точкам: превращает длинный ответ в несколько видимых шагов.',
+        'Отметка маленькой победы: замечает первый верный ответ после шатания.',
+        'Повтор взмахом крыльев: мягко возвращает одну слабую карточку, а потом дает лесу выдохнуть.',
+      ],
+      es: [
+        'Enfoque por puntitos: convierte una respuesta larga en pasos visibles.',
+        'Marca de mini victoria: nota la primera respuesta correcta tras una duda.',
+        'Repeticion de alas: devuelve una tarjeta debil suavemente y luego deja respirar al bosque.',
+      ],
+      uk: [
+        'Фокус по крапках: перетворює довгу відповідь на кілька видимих кроків.',
+        'Позначка малої перемоги: помічає першу вірну відповідь після хитання.',
+        'Повтор помахом крил: мʼяко повертає одну слабку картку, а потім дає лісу видихнути.',
+      ],
+    },
+    superpower: {
+      en: 'Makes difficult cards feel small enough to try again.',
+      ru: 'Делает сложные карточки достаточно маленькими, чтобы попробовать снова.',
+      es: 'Hace que las tarjetas dificiles parezcan pequenas para intentarlo otra vez.',
+      uk: 'Робить складні картки достатньо малими, щоб спробувати знову.',
+    },
+  },
 ];
 
 export const assistantCharacters: AssistantCharacter[] = footballAssistantCharacters;
@@ -654,7 +705,7 @@ export const visibleAssistantIds: AssistantId[] = [
 
 const visibleAssistantIdsByWorld: Record<WorldId, AssistantId[]> = {
   football: visibleAssistantIds,
-  forest: ['studyTroll', 'forestElf', 'unicorn'],
+  forest: ['studyTroll', 'forestElf', 'unicorn', 'ladybug'],
 };
 
 export const visibleAssistantCharacters = getVisibleAssistantCharacters('football');

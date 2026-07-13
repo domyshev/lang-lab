@@ -44,6 +44,7 @@ import {
 import { t } from '../domain/i18n';
 import {
   WorldId,
+  forestLilacAccent,
   getDefaultAssistantIdForWorld,
   getWorldAccent,
   resolveWorldId,
@@ -71,6 +72,7 @@ import {
   SupportedLanguage,
   supportedLanguages,
 } from '../domain/languages';
+import { GameWarningIcon, GameWarningTooltip } from './GameWarningTooltip';
 
 export type AppShellSection =
   | 'game'
@@ -86,6 +88,52 @@ interface AppShellProps {
   onLogoClick?: () => void;
   onNavigate?: (section: AppShellSection) => void;
 }
+
+const readableTooltipSlotProps = {
+  arrow: {
+    sx: {
+      color: (theme: any) =>
+        theme.palette.mode === 'dark'
+          ? 'rgba(29, 26, 43, 0.98)'
+          : 'rgba(255, 255, 255, 0.98)',
+    },
+  },
+  tooltip: {
+    sx: {
+      bgcolor: (theme: any) =>
+        theme.palette.mode === 'dark'
+          ? 'rgba(29, 26, 43, 0.98)'
+          : 'rgba(255, 255, 255, 0.98)',
+      border: (theme: any) =>
+        theme.palette.mode === 'dark'
+          ? '1px solid rgba(246, 240, 255, 0.18)'
+          : '1px solid rgba(32, 48, 21, 0.14)',
+      boxShadow: '0 12px 28px rgba(32, 48, 21, 0.16)',
+      color: (theme: any) =>
+        theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
+      fontSize: 14,
+      fontWeight: 750,
+      lineHeight: 1.35,
+      maxWidth: 280,
+      px: 1.5,
+      py: 1,
+    },
+  },
+};
+
+const readableTooltipComponentsProps = {
+  arrow: {
+    style: {
+      color: 'rgba(255, 255, 255, 0.98)',
+    },
+  },
+  tooltip: {
+    style: {
+      backgroundColor: 'rgba(255, 255, 255, 0.98)',
+      fontSize: '14px',
+    },
+  },
+};
 
 export function AppShell({
   activeSection = 'game',
@@ -488,8 +536,10 @@ function PlayerGreeting({
       }}
     >
       <Select
-        aria-label={t(interfaceLanguage, 'assistant')}
         data-test="player_greeting__assistant_select"
+        inputProps={{
+          'aria-label': t(interfaceLanguage, 'assistant'),
+        }}
         value={resolvedAssistantId}
         variant="standard"
         disableUnderline
@@ -536,7 +586,13 @@ function PlayerGreeting({
               value={assistant.id}
               sx={{ justifyContent: 'center' }}
             >
-              <Tooltip arrow title={tooltip}>
+              <Tooltip
+                arrow
+                componentsProps={readableTooltipComponentsProps}
+                placement="left"
+                slotProps={readableTooltipSlotProps}
+                title={tooltip}
+              >
                 <Box
                   component="span"
                   data-test={`player_greeting__assistant_option_icon__${assistant.id}`}
@@ -1149,6 +1205,17 @@ function PlayerOnboardingDialog({
       selectedInterfaceLanguage &&
       selectedTargetLanguage,
   );
+  const missingOnboardingMessages = [
+    !selectedWorldId ? t(copyLanguage, 'appWorld') : undefined,
+    !selectedAssistantId ? t(copyLanguage, 'assistant') : undefined,
+    !selectedInterfaceLanguage
+      ? t(copyLanguage, 'interfaceLanguage')
+      : undefined,
+    !selectedTargetLanguage
+      ? t(copyLanguage, 'targetLearningLanguage')
+      : undefined,
+    !trimmedName ? t(copyLanguage, 'playerNameLabel') : undefined,
+  ].filter((message): message is string => Boolean(message));
   const complete = (nextName: string) => {
     if (!isReady) {
       return;
@@ -1250,7 +1317,13 @@ function PlayerOnboardingDialog({
               const isSelected = selectedAssistantId === assistant.id;
 
               return (
-                <Tooltip arrow key={assistant.id} title={tooltip}>
+                <Tooltip
+                  arrow
+                  componentsProps={readableTooltipComponentsProps}
+                  key={assistant.id}
+                  slotProps={readableTooltipSlotProps}
+                  title={tooltip}
+                >
                   <Button
                     aria-label={assistant.name[copyLanguage]}
                     aria-pressed={isSelected}
@@ -1351,8 +1424,24 @@ function PlayerOnboardingDialog({
       </DialogContent>
       <DialogActions
         data-test="player_onboarding__actions"
-        sx={{ justifyContent: 'flex-end', px: 3, pb: 2.5 }}
+        sx={{
+          alignItems: 'center',
+          gap: 1,
+          justifyContent: 'flex-end',
+          px: 3,
+          pb: 2.5,
+        }}
       >
+        {(!trimmedName || !isReady) && missingOnboardingMessages.length > 0 && (
+          <GameWarningTooltip
+            anchorDataTest="player_onboarding__save_warning_anchor"
+            arrowDataTest="player_onboarding__save_warning_tooltip_arrow"
+            iconDataTest="player_onboarding__save_warning_tooltip_icon"
+            messages={missingOnboardingMessages}
+          >
+            <GameWarningIcon dataTest="player_onboarding__save_warning_icon" />
+          </GameWarningTooltip>
+        )}
         <Button
           data-test="player_onboarding__save_button"
           disabled={!trimmedName || !isReady}
@@ -1550,15 +1639,15 @@ function getGameTabSx(worldId: WorldId) {
   const isForest = worldId === 'forest';
   return {
     background: isForest
-      ? 'linear-gradient(180deg, #fbfff4 0%, #a9d957 50%, #6ea33f 100%)'
+      ? `linear-gradient(180deg, ${forestLilacAccent.light} 0%, ${forestLilacAccent.mid} 52%, ${forestLilacAccent.main} 100%)`
       : 'linear-gradient(180deg, #fff9d6 0%, #ffd24a 50%, #ee9825 100%)',
     border: '0 !important',
     borderRadius: '999px',
     boxSizing: 'border-box',
     boxShadow: isForest
-      ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.14), inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(36, 74, 28, 0.14)'
+      ? 'inset 0 0 0 1px rgba(52, 34, 79, 0.14), inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(52, 34, 79, 0.14)'
       : 'inset 0 0 0 1px rgba(116, 63, 8, 0.13), inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(121, 68, 8, 0.12)',
-    color: isForest ? '#213f17' : '#203015',
+    color: isForest ? forestLilacAccent.dark : '#203015',
     fontWeight: '950 !important',
     height: '36px !important',
     lineHeight: '1 !important',
@@ -1576,15 +1665,15 @@ function getGameTabSx(worldId: WorldId) {
     },
     '&.Mui-selected': {
       background: isForest
-        ? 'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)'
+        ? `linear-gradient(180deg, ${forestLilacAccent.light} 0%, ${forestLilacAccent.mid} 52%, ${forestLilacAccent.main} 100%)`
         : 'linear-gradient(180deg, #fff6b5 0%, #ffc52b 50%, #e98312 100%)',
       boxShadow: isForest
-        ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.16), inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -3px 0 rgba(36, 74, 28, 0.18)'
+        ? 'inset 0 0 0 1px rgba(52, 34, 79, 0.16), inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -3px 0 rgba(52, 34, 79, 0.18)'
         : 'inset 0 0 0 1px rgba(116, 63, 8, 0.15), inset 0 2px 0 rgba(255,255,255,0.90), inset 0 -3px 0 rgba(121, 68, 8, 0.15)',
-      color: isForest ? '#183813' : '#203015',
+      color: isForest ? forestLilacAccent.dark : '#203015',
       '&:hover': {
         boxShadow: isForest
-          ? 'inset 0 0 0 1px rgba(47, 77, 36, 0.14), inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -3px 0 rgba(36, 74, 28, 0.16)'
+          ? 'inset 0 0 0 1px rgba(52, 34, 79, 0.14), inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -3px 0 rgba(52, 34, 79, 0.16)'
           : 'inset 0 0 0 1px rgba(116, 63, 8, 0.13), inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -3px 0 rgba(121, 68, 8, 0.13)',
       },
     },

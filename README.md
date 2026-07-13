@@ -4,7 +4,7 @@ Language Lab is a local-first browser game for building and practicing a persona
 
 
 
-Current release: `0.1.0-alpha.0`
+Current release: `0.1.0-alpha.1`
 
 
 

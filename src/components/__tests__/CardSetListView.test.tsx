@@ -10,7 +10,7 @@ import { CardSetListView } from '../CardSetListView';
 
 const now = '2026-07-12T10:00:00.000Z';
 
-function renderList() {
+function renderList({ worldId = 'football' }: { worldId?: 'football' | 'forest' } = {}) {
   const store = configureStore({
     reducer: {
       app: appReducer,
@@ -22,6 +22,7 @@ function renderList() {
         ...appReducer(undefined, { type: 'test/init' }),
         interfaceLanguage: 'en' as const,
         targetLanguage: 'en' as const,
+        worldId,
       },
       cards: {
         cards: [
@@ -120,6 +121,18 @@ describe('CardSetListView archive browsing', () => {
     expect(
       screen.getByTestId('card_set_list__tile_card_count__set-family'),
     ).toHaveTextContent('0 cards');
+  });
+
+  it('uses the soft lilac forest accent for the add button and selected card-set frame', () => {
+    renderList({ worldId: 'forest' });
+
+    expect(screen.getByTestId('card_set_list__add_button')).toHaveStyle({
+      background: 'linear-gradient(135deg, #fff7ff 0%, #d8bcff 52%, #a989df 100%)',
+      color: '#34224f',
+    });
+    expect(screen.getByTestId('card_set_list__tile__all-cards')).toHaveStyle({
+      borderColor: '#a989df',
+    });
   });
 
   it('creates an active copy from an archived card set', async () => {

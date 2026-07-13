@@ -228,7 +228,7 @@ export function MetricChip({
           <Box
             component="span"
             data-test={`${dataTest}__number`}
-            sx={{ fontSize: 16, lineHeight: 1 }}
+            sx={{ fontSize: 13, lineHeight: 1 }}
           >
             {label}
           </Box>
@@ -237,7 +237,7 @@ export function MetricChip({
               component="span"
               data-test={`${dataTest}__suffix`}
               sx={{
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: 800,
                 lineHeight: 1,
                 ml: 0.5,

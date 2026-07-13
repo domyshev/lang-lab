@@ -33,6 +33,7 @@ import {
   getWorldAccent,
   getWorldResultColors,
   resolveWorldId,
+  forestLilacAccent,
   type WorldResultColors,
 } from '../domain/worlds';
 import {
@@ -74,9 +75,20 @@ export function CardSetDetailView() {
   );
   const worldAccent = getWorldAccent(worldId);
   const cardStatsResultColors = getCardDetailStatsColors(worldId);
-  const cardSetAccentBorder = hexToRgba(worldAccent.main, 0.52);
-  const cardSetAccentHover = hexToRgba(worldAccent.main, 0.08);
-  const cardSetAccentSoft = hexToRgba(worldAccent.main, 0.055);
+  const cardSetAccentMain =
+    worldId === 'forest' ? forestLilacAccent.main : worldAccent.main;
+  const cardSetAccentBorder =
+    worldId === 'forest'
+      ? forestLilacAccent.border
+      : hexToRgba(worldAccent.main, 0.52);
+  const cardSetAccentHover =
+    worldId === 'forest'
+      ? forestLilacAccent.glow
+      : hexToRgba(worldAccent.main, 0.08);
+  const cardSetAccentSoft =
+    worldId === 'forest'
+      ? forestLilacAccent.soft
+      : hexToRgba(worldAccent.main, 0.055);
   const cardsListRef = useRef<HTMLDivElement | null>(null);
   const cards = useSelector((state: RootState) => state.cards.cards);
   const targetLanguage = useSelector(
@@ -271,7 +283,7 @@ export function CardSetDetailView() {
             ? cardSetAccentBorder
             : 'rgba(32, 48, 21, 0.14)',
           borderLeft: '4px solid',
-          borderLeftColor: isAlreadyInCardSet ? worldAccent.main : 'primary.main',
+          borderLeftColor: isAlreadyInCardSet ? cardSetAccentMain : 'primary.main',
           borderRadius: 1,
           bgcolor: isAlreadyInCardSet
             ? cardSetAccentSoft
@@ -516,7 +528,7 @@ export function CardSetDetailView() {
                 }
                 variant="outlined"
                 sx={{
-                  borderColor: worldAccent.main,
+                  borderColor: cardSetAccentMain,
                   color: worldAccent.dark,
                   mr: { sm: 3.75 },
                   '&:hover': {
@@ -537,7 +549,7 @@ export function CardSetDetailView() {
                 isAllCardsSelected
                   ? undefined
                   : {
-                      borderColor: worldAccent.main,
+                  borderColor: cardSetAccentMain,
                       color: worldAccent.dark,
                       fontWeight: 750,
                     }

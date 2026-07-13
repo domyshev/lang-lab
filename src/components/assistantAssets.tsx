@@ -5,6 +5,7 @@ import capeChampionForest from '../assets/characters/cape-champion-forest.svg';
 import forestElf from '../assets/characters/forest-elf.svg';
 import greenPower from '../assets/characters/green-power.svg';
 import greenPowerForest from '../assets/characters/green-power-forest.svg';
+import ladybug from '../assets/characters/ladybug.svg';
 import studyTroll from '../assets/characters/study-troll.svg';
 import studyTrollForest from '../assets/characters/study-troll-forest.svg';
 import trollMama from '../assets/characters/troll-mama.svg';
@@ -20,6 +21,7 @@ const assistantImages: Record<WorldId, Record<AssistantId, string>> = {
     capeChampion,
     forestElf,
     greenPower,
+    ladybug,
     studyTroll,
     trollMama,
     unicorn,
@@ -29,6 +31,7 @@ const assistantImages: Record<WorldId, Record<AssistantId, string>> = {
     capeChampion: capeChampionForest,
     forestElf,
     greenPower: greenPowerForest,
+    ladybug,
     studyTroll: studyTrollForest,
     trollMama: trollMamaForest,
     unicorn,
