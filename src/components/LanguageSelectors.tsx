@@ -215,6 +215,7 @@ export function LanguageSelectors() {
         <SelectorInfoIcon
           interfaceLanguage={interfaceLanguage}
           kind="interface"
+          worldId={worldId}
         />
       </Stack>
 
@@ -272,6 +273,7 @@ export function LanguageSelectors() {
           <SelectorInfoIcon
             interfaceLanguage={interfaceLanguage}
             kind="target"
+            worldId={worldId}
           />
         </Stack>
 
@@ -386,6 +388,7 @@ export function LanguageSelectors() {
           <SelectorInfoIcon
             interfaceLanguage={interfaceLanguage}
             kind="companion"
+            worldId={worldId}
           />
         </Stack>
 
@@ -470,6 +473,7 @@ export function LanguageSelectors() {
               infoKey={field.key}
               interfaceLanguage={interfaceLanguage}
               key={field.key}
+              worldId={worldId}
             >
               <TextField
                 data-test={`language_selectors__cooldown_input__${field.key}`}
@@ -499,6 +503,7 @@ export function LanguageSelectors() {
           <SettingsFieldRow
             infoKey="mistake_repeat_frequency"
             interfaceLanguage={interfaceLanguage}
+            worldId={worldId}
           >
             <TextField
               data-test="language_selectors__mistake_repeat_frequency_input"
@@ -525,6 +530,7 @@ export function LanguageSelectors() {
           <SettingsFieldRow
             infoKey="new_card_mix_frequency"
             interfaceLanguage={interfaceLanguage}
+            worldId={worldId}
           >
             <TextField
               data-test="language_selectors__new_card_mix_frequency_input"
@@ -615,9 +621,11 @@ type SettingsInfoKey =
 function SelectorInfoIcon({
   interfaceLanguage,
   kind,
+  worldId,
 }: {
   interfaceLanguage: SupportedLanguage;
   kind: SelectorInfoKind;
+  worldId: WorldId;
 }) {
   return (
     <Box
@@ -653,7 +661,7 @@ function SelectorInfoIcon({
           aria-label={getSelectorInfoLabel(interfaceLanguage, kind)}
           data-test={`language_selectors__${selectorInfoDataKey[kind]}_info_button`}
           size="small"
-          sx={infoButtonSx}
+          sx={getInfoButtonSx(worldId)}
         >
           <InfoOutlinedIcon fontSize="inherit" />
         </IconButton>
@@ -666,10 +674,12 @@ function SettingsFieldRow({
   children,
   infoKey,
   interfaceLanguage,
+  worldId,
 }: {
   children: ReactNode;
   infoKey: SettingsInfoKey;
   interfaceLanguage: SupportedLanguage;
+  worldId: WorldId;
 }) {
   return (
     <Stack
@@ -679,7 +689,11 @@ function SettingsFieldRow({
       sx={{ alignItems: 'flex-start' }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
-      <SettingsInfoIcon infoKey={infoKey} interfaceLanguage={interfaceLanguage} />
+      <SettingsInfoIcon
+        infoKey={infoKey}
+        interfaceLanguage={interfaceLanguage}
+        worldId={worldId}
+      />
     </Stack>
   );
 }
@@ -687,9 +701,11 @@ function SettingsFieldRow({
 function SettingsInfoIcon({
   infoKey,
   interfaceLanguage,
+  worldId,
 }: {
   infoKey: SettingsInfoKey;
   interfaceLanguage: SupportedLanguage;
+  worldId: WorldId;
 }) {
   return (
     <Tooltip
@@ -710,7 +726,7 @@ function SettingsInfoIcon({
         aria-label={getSettingsInfoLabel(interfaceLanguage, infoKey)}
         data-test={`language_selectors__settings_info_button__${infoKey}`}
         size="small"
-        sx={{ ...infoButtonSx, mt: 0.25 }}
+        sx={{ ...getInfoButtonSx(worldId), mt: 0.25 }}
       >
         <InfoOutlinedIcon fontSize="inherit" />
       </IconButton>
@@ -718,16 +734,31 @@ function SettingsInfoIcon({
   );
 }
 
-const infoButtonSx = {
-  bgcolor: 'rgba(255, 255, 255, 0.46)',
-  border: '1px solid rgba(32, 48, 21, 0.14)',
-  color: '#4c6650',
-  height: 24,
-  width: 24,
-  '&:hover': {
-    bgcolor: 'rgba(255, 255, 255, 0.78)',
-  },
-};
+function getInfoButtonSx(worldId: WorldId) {
+  if (worldId === 'forest') {
+    return {
+      bgcolor: 'rgba(246, 255, 230, 0.76)',
+      border: '1px solid rgba(91, 150, 54, 0.34)',
+      color: '#386f2d',
+      height: 24,
+      width: 24,
+      '&:hover': {
+        bgcolor: 'rgba(246, 255, 230, 0.96)',
+      },
+    };
+  }
+
+  return {
+    bgcolor: 'rgba(255, 246, 181, 0.68)',
+    border: '1px solid rgba(198, 11, 30, 0.22)',
+    color: '#a45112',
+    height: 24,
+    width: 24,
+    '&:hover': {
+      bgcolor: 'rgba(255, 246, 181, 0.92)',
+    },
+  };
+}
 
 const selectorInfoDataKey: Record<SelectorInfoKind, string> = {
   companion: 'companion_languages',

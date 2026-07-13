@@ -239,6 +239,13 @@ describe('LanguageSelectors', () => {
     expect(
       screen.getByTestId('language_selectors__interface_language_info_wrapper'),
     ).toHaveStyle({ marginRight: '5px' });
+    expect(
+      screen.getByTestId('language_selectors__interface_language_info_button'),
+    ).toHaveStyle({
+      backgroundColor: 'rgba(255, 246, 181, 0.68)',
+      borderColor: 'rgba(198, 11, 30, 0.22)',
+      color: '#a45112',
+    });
 
     await user.hover(screen.getByTestId('language_selectors__interface_language_info_button'));
     let tooltip = await screen.findByTestId('language_selectors__interface_language_info_tooltip');
@@ -269,6 +276,41 @@ describe('LanguageSelectors', () => {
     expect(tooltip).toHaveTextContent(
       'По умолчанию: English -> Русский, Español, Українська.',
     );
+  });
+
+  it('uses the forest palette for selector and settings info icons in the forest world', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Provider store={createStore({ worldId: 'forest' })}>
+        <LanguageSelectors />
+      </Provider>,
+    );
+
+    expect(screen.getByTestId('language_selectors__target_language_info_button')).toHaveStyle({
+      backgroundColor: 'rgba(246, 255, 230, 0.76)',
+      borderColor: 'rgba(91, 150, 54, 0.34)',
+      color: '#386f2d',
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Настройки игр' }));
+    const settingsInfoButton = screen.getByTestId(
+      'language_selectors__settings_info_button__mistake_repeat_frequency',
+    );
+    expect(settingsInfoButton).toHaveStyle({
+      backgroundColor: 'rgba(246, 255, 230, 0.76)',
+      borderColor: 'rgba(91, 150, 54, 0.34)',
+      color: '#386f2d',
+    });
+
+    await user.hover(settingsInfoButton);
+    const tooltip = await screen.findByTestId(
+      'language_selectors__settings_info_tooltip__mistake_repeat_frequency',
+    );
+    expect(tooltip).toHaveStyle({
+      backgroundColor: 'rgba(255, 255, 255, 0.98)',
+      fontSize: '14px',
+    });
   });
 
   it('explains every game setting except the app world setting', async () => {
@@ -304,7 +346,7 @@ describe('LanguageSelectors', () => {
 
 });
 
-function createStore() {
+function createStore(app: Partial<ReturnType<typeof appReducer>> = {}) {
   return configureStore({
     reducer: {
       app: appReducer,
@@ -324,6 +366,7 @@ function createStore() {
         } satisfies ComplementaryLanguages,
         interfaceLanguage: 'ru' as const,
         targetLanguage: 'en' as const,
+        ...app,
       },
     },
   });
