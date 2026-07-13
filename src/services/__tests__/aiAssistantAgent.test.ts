@@ -145,6 +145,15 @@ describe('runAiAssistant', () => {
     );
     expect(first.messages[0].content).toContain('game history and learning statistics');
     expect(first.messages[0].content).toContain('Do not claim that game history');
+    expect(first.messages[0].content).toContain(
+      'Create and update cards in all supported languages: en, ru, es, and uk',
+    );
+    expect(first.messages[0].content).toContain(
+      'do not ask which languages to use',
+    );
+    expect(first.messages[0].content).toContain(
+      'do not ask the user which exact words they prefer',
+    );
     expect(first.messages[0].content).not.toContain('four bounded read tools');
 
     const second = sendChatMock.mock.calls[1][0];

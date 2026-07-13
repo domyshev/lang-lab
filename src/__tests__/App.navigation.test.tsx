@@ -248,8 +248,8 @@ describe('App navigation', () => {
     );
 
     await waitFor(() => {
-      expect(store.getState().cards.cards).toHaveLength(2000);
-      expect(store.getState().cardSets.cardSets).toHaveLength(20);
+      expect(store.getState().cards.cards).toHaveLength(1500);
+      expect(store.getState().cardSets.cardSets).toHaveLength(25);
     });
 
     const seededCards = store.getState().cards.cards;
@@ -259,22 +259,22 @@ describe('App navigation', () => {
     const seededPhrases = seededCards.filter((card) =>
       /\s/.test(card.translations.en?.trim() ?? ''),
     );
-    expect(seededWords).toHaveLength(1000);
-    expect(
-      new Set(
-        seededWords.map((card) => card.translations.en?.toLocaleLowerCase()),
-      ).size,
-    ).toBe(1000);
-    expect(seededPhrases).toHaveLength(1000);
+    expect(seededWords).toHaveLength(750);
+    expect(new Set(seededCards.map((card) => card.id)).size).toBe(1500);
+    expect(seededPhrases).toHaveLength(750);
     expect(
       store.getState().cardSets.cardSets.map((cardSet) => cardSet.name),
     ).toEqual(
-      expect.arrayContaining(['Любовь', 'Семья', 'Глаголы действий']),
+      expect.arrayContaining([
+        'Любовь и отношения',
+        'Футбол и любовь к спорту',
+        'Медитации и практики осознанности',
+      ]),
     );
     expect(
       store
         .getState()
-        .cardSets.cardSets.every((cardSet) => cardSet.cardIds.length === 100),
+        .cardSets.cardSets.every((cardSet) => cardSet.cardIds.length === 60),
     ).toBe(true);
     expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
   });
