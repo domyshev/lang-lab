@@ -214,7 +214,7 @@ describe('CardSetLibraryPicker', () => {
     ).toHaveTextContent('1 карточка');
   });
 
-  it('renders a purple AI Assistant wand beside the title with an exact 10px gap', async () => {
+  it('uses stadium-blue AI Assistant styling beside the title with an exact 10px gap', async () => {
     const user = userEvent.setup();
     const onOpenAiAssistant = vi.fn();
     render(
@@ -234,7 +234,8 @@ describe('CardSetLibraryPicker', () => {
     });
     const wand = screen.getByTestId('card_set_library__ai_assistant_button');
     expect(wand).toHaveAttribute('aria-label', 'Открыть AI помощника');
-    expect(getComputedStyle(wand).color).toBe('rgb(111, 75, 216)');
+    expect(getComputedStyle(wand).color).toBe('rgb(24, 119, 201)');
+    expect(getComputedStyle(wand).color).not.toBe('rgb(111, 75, 216)');
 
     await user.hover(wand);
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
@@ -246,6 +247,58 @@ describe('CardSetLibraryPicker', () => {
     expect(
       screen.queryByTestId('card_set_library_dialog__root'),
     ).not.toBeInTheDocument();
+  });
+
+  it('assigns stable football country palettes to visible card set chips', () => {
+    const { rerender } = render(
+      <CardSetLibraryPicker
+        cards={cards}
+        cardSets={cardSets}
+        interfaceLanguage="ru"
+        targetLanguage="ru"
+        selectedCardSetId="all-cards"
+        onOpenAiAssistant={vi.fn()}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId('card_set_library__chip_select__all-cards')).toHaveAttribute(
+      'data-football-country',
+      'spain',
+    );
+
+    rerender(
+      <CardSetLibraryPicker
+        cards={cards}
+        cardSets={cardSets}
+        interfaceLanguage="ru"
+        targetLanguage="ru"
+        selectedCardSetId="work-set"
+        onOpenAiAssistant={vi.fn()}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    const firstCountry = screen
+      .getByTestId('card_set_library__chip_select__work-set')
+      .getAttribute('data-football-country');
+
+    rerender(
+      <CardSetLibraryPicker
+        cards={cards}
+        cardSets={cardSets}
+        interfaceLanguage="en"
+        targetLanguage="en"
+        selectedCardSetId="work-set"
+        onOpenAiAssistant={vi.fn()}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId('card_set_library__chip_select__work-set')).toHaveAttribute(
+      'data-football-country',
+      firstCountry ?? '',
+    );
   });
 
   it.each([
