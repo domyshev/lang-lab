@@ -20,6 +20,15 @@ Core accent tokens:
 
 Purple should not remain as a visible primary/secondary accent in normal light-theme UI. If any purple-like decoration remains in a very local illustration, it must not read as the app accent.
 
+## Result Colors
+
+Correct and incorrect answer colors should also move into the football theme while preserving their existing meaning.
+
+- Correct answers use a football-grass green: rich enough to read as success, but still soft in cell backgrounds and chips.
+- Incorrect answers use Spain red: it should feel like a match warning card / flag red rather than the old pink UI.
+- Light success/error backgrounds remain gentle enough for letter cells, crossword cells, answer options, and statistics chips.
+- Outlined chips and filled cells should share the same semantic palette so "correct" and "incorrect" look consistent across games, card details, and statistics.
+
 ## Game Tiles
 
 The four game tiles each use the flag colors of a major football country. The tile art remains custom SVG/DOM art, not external images, so the app stays offline-friendly and testable.
@@ -128,6 +137,7 @@ Add or update tests before implementation:
 - Card-set library tests assert at least 30 football palettes exist and palette assignment is stable for the same id.
 - Card-set library tests assert selected outlines and AI assistant button no longer use the old purple accent.
 - App shell/navigation tests assert the active tab style uses the new readable color and the Chat tab uses the new football-AI icon.
+- Result color tests assert correct states use football-grass green and incorrect states use Spain red across representative game and statistics surfaces.
 
 ## Out Of Scope
 
