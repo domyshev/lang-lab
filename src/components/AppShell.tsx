@@ -170,7 +170,7 @@ export function AppShell({
                 },
               },
               '& .MuiTabs-flexContainer': {
-                gap: '10px',
+                gap: '15px',
               },
               '& .Mui-selected': {
                 color: '#203015',

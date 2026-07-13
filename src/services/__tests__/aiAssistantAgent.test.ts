@@ -162,11 +162,11 @@ describe('runAiAssistant', () => {
   });
 
   it('sends recent chat history before the current user message', async () => {
-    sendChatMock.mockResolvedValueOnce(success('I created the follow-up set.'));
+    sendChatMock.mockResolvedValueOnce(success('I kept the follow-up context.'));
 
     await runAiAssistant({
       apiKey: 'key',
-      userMessage: 'Use these cards to create a new set.',
+      userMessage: 'Review these cards.',
       chatHistory: [
         {
           role: 'user',
@@ -190,7 +190,7 @@ describe('runAiAssistant', () => {
         role: 'assistant',
         content: 'I picked soulmate, longing, cherish, blush, and flirt.',
       },
-      { role: 'user', content: 'Use these cards to create a new set.' },
+      { role: 'user', content: 'Review these cards.' },
     ]);
   });
 
@@ -299,6 +299,173 @@ describe('runAiAssistant', () => {
           message:
             'Use propose_library_operation for writes and read tools for inspection.',
         }),
+      },
+    ]);
+  });
+
+  it('reprompts the model when it asks for typed approval instead of staging a preview', async () => {
+    const proposalCall = toolCall('proposal-after-typed-confirmation', 'propose_library_operation', {
+      title: 'Love sparks',
+      summary: 'Create a set from the selected love cards.',
+      cardSetChanges: [
+        {
+          type: 'create',
+          clientRef: 'love-sparks-set',
+          names: { en: 'Love sparks', ru: 'Искры любви', es: 'Chispas de amor' },
+          cardRefs: ['existing-airport'],
+        },
+      ],
+    });
+    sendChatMock
+      .mockResolvedValueOnce(
+        success('Подтвердите словами, если хотите применить изменения.'),
+      )
+      .mockResolvedValueOnce(success(null, [proposalCall]))
+      .mockResolvedValueOnce(success('I staged the love sparks preview.'));
+
+    const result = await runAiAssistant({
+      apiKey: 'key',
+      userMessage: 'Create a new set from those cards.',
+      chatHistory: [
+        {
+          role: 'assistant',
+          content: 'I selected soulmate, longing, cherish, blush, and flirt.',
+        },
+      ],
+      snapshot,
+      now: () => now,
+      idFactory: (prefix) => `${prefix}-fixed`,
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.content).toBe('I staged the love sparks preview.');
+    expect(result.stagedOperation?.title).toBe('Love sparks');
+    expect(sendChatMock).toHaveBeenCalledTimes(3);
+    expect(sendChatMock.mock.calls[1][0].messages.slice(-2)).toEqual([
+      {
+        role: 'assistant',
+        content: 'Подтвердите словами, если хотите применить изменения.',
+      },
+      {
+        role: 'user',
+        content: expect.stringContaining('call propose_library_operation'),
+      },
+    ]);
+  });
+
+  it('reprompts when the model says an operation is waiting for chat confirmation', async () => {
+    const proposalCall = toolCall('proposal-after-operation-waiting', 'propose_library_operation', {
+      title: 'The Catcher in the Rye',
+      summary: 'Create a card set about The Catcher in the Rye.',
+      cards: [
+        {
+          clientRef: 'holden',
+          translations: {
+            en: 'Holden Caulfield',
+            ru: 'Холден Колфилд',
+            es: 'Holden Caulfield',
+          },
+        },
+      ],
+      cardSetChanges: [
+        {
+          type: 'create',
+          clientRef: 'catcher-set',
+          names: {
+            en: 'The Catcher in the Rye',
+            ru: 'Над пропастью во ржи',
+            es: 'El guardian entre el centeno',
+          },
+          cardRefs: ['holden'],
+        },
+      ],
+    });
+    const verbalPreview = [
+      'В библиотеке ничего нет по этой теме — создадим карточки новыми!',
+      '',
+      '✅ **Операция создана и ожидает вашего подтверждения!**',
+      '',
+      '👉 **Подтверждаете создание набора?**',
+    ].join('\n');
+    sendChatMock
+      .mockResolvedValueOnce(success(verbalPreview))
+      .mockResolvedValueOnce(success(null, [proposalCall]))
+      .mockResolvedValueOnce(success('I staged the catcher preview.'));
+
+    const result = await runAiAssistant({
+      apiKey: 'key',
+      userMessage: 'Создай 10 карточек по теме Над пропастью во ржи.',
+      snapshot,
+      now: () => now,
+      idFactory: (prefix) => `${prefix}-fixed`,
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.content).toBe('I staged the catcher preview.');
+    expect(result.stagedOperation?.title).toBe('The Catcher in the Rye');
+    expect(sendChatMock).toHaveBeenCalledTimes(3);
+    expect(sendChatMock.mock.calls[1][0].messages.slice(-2)).toEqual([
+      { role: 'assistant', content: verbalPreview },
+      {
+        role: 'user',
+        content: expect.stringContaining('call propose_library_operation'),
+      },
+    ]);
+  });
+
+  it('reprompts when the model claims changes were saved without a staged operation', async () => {
+    const proposalCall = toolCall('proposal-after-fake-save', 'propose_library_operation', {
+      title: 'The Catcher in the Rye',
+      summary: 'Create the approved card set preview.',
+      cardSetChanges: [
+        {
+          type: 'create',
+          clientRef: 'catcher-set',
+          names: {
+            en: 'The Catcher in the Rye',
+            ru: 'Над пропастью во ржи',
+            es: 'El guardian entre el centeno',
+          },
+          cardRefs: ['existing-airport'],
+        },
+      ],
+    });
+    const previousVerbalPreview =
+      '✅ **Операция создана и ожидает вашего подтверждения!**\n👉 **Подтверждаете создание набора?**';
+    sendChatMock
+      .mockResolvedValueOnce(
+        success(
+          'Изменения записаны. Набор «Над пропастью во ржи» создан! 🎉\n\nЕсть ли что-то ещё, чем я могу помочь?',
+        ),
+      )
+      .mockResolvedValueOnce(success(null, [proposalCall]))
+      .mockResolvedValueOnce(success('I staged the catcher preview.'));
+
+    const result = await runAiAssistant({
+      apiKey: 'key',
+      userMessage: 'да',
+      chatHistory: [{ role: 'assistant', content: previousVerbalPreview }],
+      snapshot,
+      now: () => now,
+      idFactory: (prefix) => `${prefix}-fixed`,
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.content).toBe('I staged the catcher preview.');
+    expect(result.stagedOperation?.title).toBe('The Catcher in the Rye');
+    expect(sendChatMock).toHaveBeenCalledTimes(3);
+    expect(sendChatMock.mock.calls[1][0].messages.slice(-2)).toEqual([
+      {
+        role: 'assistant',
+        content:
+          'Изменения записаны. Набор «Над пропастью во ржи» создан! 🎉\n\nЕсть ли что-то ещё, чем я могу помочь?',
+      },
+      {
+        role: 'user',
+        content: expect.stringContaining('call propose_library_operation'),
       },
     ]);
   });

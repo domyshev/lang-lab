@@ -447,18 +447,18 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     next: 'Next',
     exit: 'Exit',
     finish: 'Finish',
-    finishExercise: 'Finish exercise',
+    finishExercise: 'Finish game',
     forgetAndExit: 'Forget and exit',
     forgetExerciseTooltip:
       'This game will not be included in statistics if you press this button.',
     finishExerciseAnytimeBenefit:
       'You can make hypersonic jumps between cards.',
     finishExerciseAnytimeTooltip:
-      'You can finish the exercise at any moment - completed answers will still count.',
+      'You can finish the game at any moment - completed answers will still count.',
     finishExerciseHypersonicJumpTooltip:
       'A hypersonic jump moves you through space and bends the flow of time: the next card will be the one immediately after the card you choose.',
     finishExerciseNotice:
-      'Exercise results will be counted and the exercise will end.',
+      'Game results will be counted and the game will end.',
     exerciseJumps: 'Jumps',
     exerciseJumpsTooltip:
       'Do you like jumps through space? We have them too: jump to any card without losing your completed result.',
@@ -510,7 +510,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctAnswers: 'Correct answers',
     question: 'Question',
     incorrectAnswer: 'Incorrect answer',
-    exerciseDetails: 'Exercise details',
+    exerciseDetails: 'Game details',
     userAnswer: 'Your answer',
     noAnswer: 'No answer',
     resultsTitle: 'Results',
@@ -522,7 +522,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     phraseStats: 'Phrase statistics',
     wordLabel: 'Word',
     phraseLabel: 'Phrase',
-    noMoreCardsInExercise: 'No more cards in this exercise.',
+    noMoreCardsInExercise: 'No more cards in this game.',
     correctResult: 'Correct!',
     memorizeResult: 'Remember!',
     correct: 'Correct',
@@ -560,7 +560,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
       'Missing letters needs single-word cards, but this set does not have any.',
     missingWordNeedsPhrases:
       'Missing word needs phrase cards, but this set does not have any.',
-    totalAnsweredTooltip: 'Total number of answered questions in this exercise.',
+    totalAnsweredTooltip: 'Total number of answered questions in this game.',
     correctAnsweredTooltip: 'Number of questions answered correctly.',
     incorrectAnsweredTooltip: 'Number of questions answered incorrectly.',
     targetAnsweredCardsTooltip: 'Total cards answered across all games.',
@@ -760,18 +760,18 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     next: 'Следующий',
     exit: 'Выйти',
     finish: 'Закончить',
-    finishExercise: 'Закончить упражнение',
+    finishExercise: 'Закончить игру',
     forgetAndExit: 'Забыть и выйти',
     forgetExerciseTooltip:
       'Эта игра не будет включена в статистику, если нажать эту кнопку.',
     finishExerciseAnytimeBenefit:
       'Можно делать гиперзвуковые прыжки между карточками.',
     finishExerciseAnytimeTooltip:
-      'Можно закончить упражнение в любой момент - уже достигнутый результат будет зачтен.',
+      'Можно закончить игру в любой момент - уже достигнутый результат будет зачтен.',
     finishExerciseHypersonicJumpTooltip:
       'Гиперзвуковой прыжок переносит тебя в пространстве и меняет ход времени: следующей карточкой станет та, которая идет сразу после выбранной.',
     finishExerciseNotice:
-      'Результаты упражнения будут зачтены, а упражнение закончено.',
+      'Результаты игры будут зачтены, а игра закончена.',
     exerciseJumps: 'Прыжки',
     exerciseJumpsTooltip:
       'Любишь прыжки в пространстве? Вот и у нас есть: прыгай к любой карточке, а уже выполненный результат не потеряется.',
@@ -824,7 +824,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctAnswers: 'Правильные ответы',
     question: 'Вопрос',
     incorrectAnswer: 'Неверный ответ',
-    exerciseDetails: 'Детали упражнения',
+    exerciseDetails: 'Детали игры',
     userAnswer: 'Ваш ответ',
     noAnswer: 'Нет ответа',
     resultsTitle: 'Результаты',
@@ -836,7 +836,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     phraseStats: 'Статистика по фразе',
     wordLabel: 'Слово',
     phraseLabel: 'Фраза',
-    noMoreCardsInExercise: 'Карточки для этого упражнения закончились.',
+    noMoreCardsInExercise: 'Карточки для этой игры закончились.',
     correctResult: 'Правильно!',
     memorizeResult: 'Запомнить!',
     correct: 'Верно',
@@ -874,10 +874,10 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
       'Для игры с пропущенными буквами в наборе должны быть карточки со словами',
     missingWordNeedsPhrases:
       'Для игры с пропущенным словом в наборе должны быть карточки с фразами',
-    totalAnsweredTooltip: 'Общее количество отвеченных вопросов в упражнении.',
+    totalAnsweredTooltip: 'Общее количество отвеченных вопросов в игре.',
     correctAnsweredTooltip: 'Количество вопросов, отвеченных верно.',
     incorrectAnsweredTooltip: 'Количество вопросов, отвеченных неверно.',
-    targetAnsweredCardsTooltip: 'всего отвечено карточек во всех упражнениях',
+    targetAnsweredCardsTooltip: 'всего отвечено карточек во всех играх',
     targetCorrectCardsTooltip: 'количество карточек отвеченных верно',
     targetIncorrectCardsTooltip: 'количество карточек отвеченных неверно',
     correctInputTooltip: 'Ввод был выполнен верно.',
@@ -1075,18 +1075,18 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     next: 'Siguiente',
     exit: 'Salir',
     finish: 'Terminar',
-    finishExercise: 'Terminar ejercicio',
+    finishExercise: 'Terminar juego',
     forgetAndExit: 'Olvidar y salir',
     forgetExerciseTooltip:
       'Este juego no se incluira en las estadisticas si pulsas este boton.',
     finishExerciseAnytimeBenefit:
       'Puedes hacer saltos hipersonicos entre tarjetas.',
     finishExerciseAnytimeTooltip:
-      'Puedes terminar el ejercicio en cualquier momento: las respuestas completadas contaran.',
+      'Puedes terminar el juego en cualquier momento: las respuestas completadas contaran.',
     finishExerciseHypersonicJumpTooltip:
       'Un salto hipersonico te mueve por el espacio y cambia el curso del tiempo: la siguiente tarjeta sera la que va justo despues de la elegida.',
     finishExerciseNotice:
-      'Los resultados del ejercicio se guardaran y el ejercicio terminara.',
+      'Los resultados del juego se guardaran y el juego terminara.',
     exerciseJumps: 'Saltos',
     exerciseJumpsTooltip:
       'Te gustan los saltos por el espacio? Aqui tambien hay: salta a cualquier tarjeta sin perder lo ya completado.',
@@ -1138,7 +1138,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     correctAnswers: 'Respuestas correctas',
     question: 'Pregunta',
     incorrectAnswer: 'Respuesta incorrecta',
-    exerciseDetails: 'Detalles del ejercicio',
+    exerciseDetails: 'Detalles del juego',
     userAnswer: 'Tu respuesta',
     noAnswer: 'Sin respuesta',
     resultsTitle: 'Resultados',
@@ -1150,7 +1150,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
     phraseStats: 'Estadisticas de la frase',
     wordLabel: 'Palabra',
     phraseLabel: 'Frase',
-    noMoreCardsInExercise: 'No quedan tarjetas en este ejercicio.',
+    noMoreCardsInExercise: 'No quedan tarjetas en este juego.',
     correctResult: 'Correcto!',
     memorizeResult: 'Memorizar!',
     correct: 'Correctas',
@@ -1188,7 +1188,7 @@ const messages: Record<SupportedLanguage, Record<I18nKey, string>> = {
       'Letras que faltan necesita tarjetas de una sola palabra, pero este conjunto no tiene ninguna.',
     missingWordNeedsPhrases:
       'Palabra que falta necesita tarjetas con frases, pero este conjunto no tiene ninguna.',
-    totalAnsweredTooltip: 'Numero total de preguntas respondidas en este ejercicio.',
+    totalAnsweredTooltip: 'Numero total de preguntas respondidas en este juego.',
     correctAnsweredTooltip: 'Numero de preguntas respondidas correctamente.',
     incorrectAnsweredTooltip: 'Numero de preguntas respondidas incorrectamente.',
     targetAnsweredCardsTooltip: 'Total de tarjetas respondidas en todos los juegos.',

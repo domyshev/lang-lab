@@ -985,7 +985,7 @@ describe('App navigation', () => {
       screen.getByTestId('exercise_finish_action__finish_button_tip_anchor'),
     );
     expect(
-      await screen.findByText(/Можно закончить упражнение в любой момент/),
+      await screen.findByText(/Можно закончить игру в любой момент/),
     ).toBeInTheDocument();
     expect(
       screen.getByTestId('exercise_finish_action__finish_button_tip_tooltip_arrow'),
@@ -1385,7 +1385,7 @@ describe('App navigation', () => {
       screen.getByLabelText('Результаты: Верно 0, Неверно 4'),
     ).toBeInTheDocument();
     expect(screen.queryByText('Статистика по слову')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Закончить упражнение' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Закончить игру' })).not.toBeInTheDocument();
     const exitButton = screen.getByRole('button', { name: 'Выйти' });
     expect(exitButton).toBeInTheDocument();
     expect(exitButton).toHaveFocus();
@@ -1547,7 +1547,7 @@ describe('App navigation', () => {
     renderApp();
 
     await startExercise(user, 'Пропущенные буквы');
-    await user.click(screen.getByRole('button', { name: 'Закончить упражнение' }));
+    await user.click(screen.getByRole('button', { name: 'Закончить игру' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Играть' })).toBeEnabled();
@@ -1563,11 +1563,11 @@ describe('App navigation', () => {
     const toolbar = screen.getByTestId('app__exercise_toolbar');
     expect(within(toolbar).getByLabelText('Мысль персонажа')).toBeInTheDocument();
     expect(
-      within(toolbar).queryByRole('button', { name: 'Закончить упражнение' }),
+      within(toolbar).queryByRole('button', { name: 'Закончить игру' }),
     ).not.toBeInTheDocument();
     const exerciseHeader = getByDataTestPrefix('missing_letters_exercise__header__')[0];
     expect(
-      within(exerciseHeader).getByRole('button', { name: 'Закончить упражнение' }),
+      within(exerciseHeader).getByRole('button', { name: 'Закончить игру' }),
     ).toBeInTheDocument();
     expect(
       within(exerciseHeader).getByTestId('exercise_finish_action__note'),
@@ -1579,11 +1579,11 @@ describe('App navigation', () => {
     ).not.toBeInTheDocument();
 
     await user.click(
-      within(exerciseHeader).getByRole('button', { name: 'Закончить упражнение' }),
+      within(exerciseHeader).getByRole('button', { name: 'Закончить игру' }),
     );
 
     expect(
-      screen.getByText('Результаты упражнения будут зачтены, а упражнение закончено.'),
+      screen.getByText('Результаты игры будут зачтены, а игра закончена.'),
     ).toBeInTheDocument();
     expect(screen.getByText('Отвечено слов: 1')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Отмена' })).toBeInTheDocument();
@@ -1594,7 +1594,7 @@ describe('App navigation', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
 
-    await user.click(screen.getByRole('button', { name: 'Закончить упражнение' }));
+    await user.click(screen.getByRole('button', { name: 'Закончить игру' }));
     await user.click(screen.getByRole('button', { name: 'Подтвердить' }));
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
@@ -1615,7 +1615,7 @@ describe('App navigation', () => {
 
     const exerciseHeader = getByDataTestPrefix('missing_letters_exercise__header__')[0];
     await user.click(
-      within(exerciseHeader).getByRole('button', { name: 'Закончить упражнение' }),
+      within(exerciseHeader).getByRole('button', { name: 'Закончить игру' }),
     );
 
     const forgetButton = screen.getByRole('button', { name: 'Забыть и выйти' });
@@ -1651,10 +1651,10 @@ describe('App navigation', () => {
 
     const exerciseHeader = getByDataTestPrefix('missing_letters_exercise__header__')[0];
     await user.click(
-      within(exerciseHeader).getByRole('button', { name: 'Закончить упражнение' }),
+      within(exerciseHeader).getByRole('button', { name: 'Закончить игру' }),
     );
 
-    expect(screen.getByRole('dialog', { name: 'Закончить упражнение' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Закончить игру' })).toBeInTheDocument();
     expect(screen.getByText('Отвечено слов: 0')).toBeInTheDocument();
   });
 
@@ -1669,10 +1669,10 @@ describe('App navigation', () => {
 
     const exerciseHeader = getByDataTestPrefix('missing_word_exercise__header__')[0];
     await user.click(
-      within(exerciseHeader).getByRole('button', { name: 'Закончить упражнение' }),
+      within(exerciseHeader).getByRole('button', { name: 'Закончить игру' }),
     );
 
-    expect(screen.getByRole('dialog', { name: 'Закончить упражнение' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Закончить игру' })).toBeInTheDocument();
     expect(screen.getByText('Отвечено слов: 0')).toBeInTheDocument();
   });
 
@@ -1686,7 +1686,7 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('tab', { name: 'Играть' }));
 
     expect(
-      screen.getByText('Результаты упражнения будут зачтены, а упражнение закончено.'),
+      screen.getByText('Результаты игры будут зачтены, а игра закончена.'),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Отмена' }));
@@ -1716,13 +1716,13 @@ describe('App navigation', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Карточки' }));
 
-    expect(screen.getByRole('dialog', { name: 'Закончить упражнение' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Закончить игру' })).toBeInTheDocument();
     expect(screen.getByText('Отвечено слов: 1')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Отмена' }));
     await waitFor(() =>
       expect(
-        screen.queryByRole('dialog', { name: 'Закончить упражнение' }),
+        screen.queryByRole('dialog', { name: 'Закончить игру' }),
       ).not.toBeInTheDocument(),
     );
     expect(screen.getByRole('heading', { name: 'Игра: Пропущенные буквы' })).toBeInTheDocument();
@@ -1742,7 +1742,7 @@ describe('App navigation', () => {
     await startExercise(user, 'Пропущенное слово');
     await user.click(screen.getByRole('tab', { name: 'Карточки' }));
 
-    expect(screen.queryByRole('dialog', { name: 'Закончить упражнение' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Закончить игру' })).not.toBeInTheDocument();
     await waitFor(() =>
       expect(getByDataTestPrefix('card_set_detail__panel__')[0]).toBeInTheDocument(),
     );
@@ -1767,7 +1767,7 @@ describe('App navigation', () => {
         name: /Пропущенные буквы/,
       }),
     );
-    expect(screen.getByText('Детали упражнения')).toBeInTheDocument();
+    expect(screen.getByText('Детали игры')).toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: 'Играть' }));
 
@@ -1850,7 +1850,7 @@ describe('App navigation', () => {
     );
     await user.hover(screen.getByTestId('target_stats__answered_formula__total_value'));
     expect(
-      await screen.findByText('всего отвечено карточек во всех упражнениях'),
+      await screen.findByText('всего отвечено карточек во всех играх'),
     ).toBeInTheDocument();
     await user.unhover(screen.getByTestId('target_stats__answered_formula__total_value'));
     await user.hover(screen.getByTestId('target_stats__answered_formula__incorrect_chip'));
@@ -1902,7 +1902,7 @@ describe('App navigation', () => {
       }),
     );
 
-    expect(screen.getByText('Детали упражнения')).toBeInTheDocument();
+    expect(screen.getByText('Детали игры')).toBeInTheDocument();
     expect(screen.queryByText('Ваш ответ:')).not.toBeInTheDocument();
   });
 
@@ -1951,7 +1951,7 @@ describe('App navigation', () => {
     await startExercise(user, 'Кроссворд');
     await user.type(screen.getAllByLabelText(/Crossword cell/)[0], 'x');
 
-    await user.click(screen.getByRole('button', { name: 'Закончить упражнение' }));
+    await user.click(screen.getByRole('button', { name: 'Закончить игру' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByTestId('card_set_library__panel')).toBeInTheDocument();
@@ -1974,7 +1974,7 @@ describe('App navigation', () => {
     );
     expect(
       within(finishActionSlot).getByRole('button', {
-        name: 'Закончить упражнение',
+        name: 'Закончить игру',
       }),
     ).toBeInTheDocument();
     expect(
@@ -2002,7 +2002,7 @@ describe('App navigation', () => {
     await startExercise(user, 'Кроссворд');
     await fillCrosswordCellsUntilProgress(user, '1 пройдено');
     await user.click(screen.getByRole('button', { name: 'Отправить кроссворд' }));
-    await user.click(screen.getByRole('button', { name: 'Закончить упражнение' }));
+    await user.click(screen.getByRole('button', { name: 'Закончить игру' }));
 
     expect(screen.getByText('Отвечено слов: 1')).toBeInTheDocument();
 
@@ -2029,7 +2029,7 @@ describe('App navigation', () => {
 
     await startExercise(user, 'Кроссворд');
     await fillAllCrosswordCells(user, 'x');
-    await user.click(screen.getByRole('button', { name: 'Закончить упражнение' }));
+    await user.click(screen.getByRole('button', { name: 'Закончить игру' }));
 
     expect(screen.getByText(/Отвечено слов: [1-9]/)).toBeInTheDocument();
     expect(
@@ -2287,7 +2287,7 @@ describe('App navigation', () => {
     expect(screen.getByTestId('exercise_complete__panel')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Выйти' })).toHaveFocus();
     expect(
-      screen.queryByText('Карточки для этого упражнения закончились.'),
+      screen.queryByText('Карточки для этой игры закончились.'),
     ).not.toBeInTheDocument();
   });
 
@@ -2341,7 +2341,7 @@ describe('App navigation', () => {
     expect(screen.getByTestId('exercise_complete__panel')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Выйти' })).toHaveFocus();
     expect(
-      screen.queryByText('Карточки для этого упражнения закончились.'),
+      screen.queryByText('Карточки для этой игры закончились.'),
     ).not.toBeInTheDocument();
   });
 });

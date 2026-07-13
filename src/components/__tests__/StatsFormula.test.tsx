@@ -192,7 +192,7 @@ describe('StatsFormula', () => {
     await user.hover(screen.getByTestId('stats_formula_tooltip__total_chip'));
 
     expect(
-      await screen.findByText('Общее количество отвеченных вопросов в упражнении.'),
+      await screen.findByText('Общее количество отвеченных вопросов в игре.'),
     ).toHaveStyle({
       backgroundColor: 'rgb(255, 255, 255)',
       color: 'rgb(32, 48, 21)',
@@ -218,7 +218,7 @@ describe('StatsFormula', () => {
         interfaceLanguage="ru"
         total={2}
         totalLabel="Всего отвечено карточек"
-        totalTooltip="всего отвечено карточек во всех упражнениях"
+        totalTooltip="всего отвечено карточек во всех играх"
       />,
     );
 
@@ -228,7 +228,7 @@ describe('StatsFormula', () => {
 
     fireEvent.mouseOver(totalChip, { clientX: 100, clientY: 80 });
     expect(
-      await screen.findByText('всего отвечено карточек во всех упражнениях'),
+      await screen.findByText('всего отвечено карточек во всех играх'),
     ).toBeInTheDocument();
 
     fireEvent.mouseLeave(totalChip);
@@ -311,7 +311,7 @@ describe('StatsFormula', () => {
     fireEvent.mouseOver(totalChip, { clientX: 100, clientY: 80 });
 
     expect(
-      await screen.findByText('Общее количество отвеченных вопросов в упражнении.'),
+      await screen.findByText('Общее количество отвеченных вопросов в игре.'),
     ).toBeInTheDocument();
 
     fireEvent.mouseLeave(totalChip);
@@ -322,7 +322,7 @@ describe('StatsFormula', () => {
     ).toBeInTheDocument();
     await waitFor(() =>
       expect(
-        screen.queryByText('Общее количество отвеченных вопросов в упражнении.'),
+        screen.queryByText('Общее количество отвеченных вопросов в игре.'),
       ).not.toBeInTheDocument(),
     );
     expect(screen.getAllByRole('tooltip')).toHaveLength(1);

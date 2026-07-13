@@ -242,7 +242,7 @@ describe('AppShell', () => {
       .getByTestId('app_shell__main_tabs')
       .querySelector('.MuiTabs-flexContainer');
     expect(tabsFlexContainer).toHaveStyle({
-      gap: '10px',
+      gap: '15px',
     });
     const selectorsSlot = screen.getByTestId('app_shell__selectors_slot');
     expect(selectorsSlot).toHaveStyle({ flexShrink: '0' });

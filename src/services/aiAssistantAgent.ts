@@ -112,6 +112,17 @@ export async function runAiAssistant(input: {
           },
         };
       }
+      if (
+        !stagedOperation &&
+        needsOperationToolReprompt(assistantMessage.content)
+      ) {
+        messages.push(assistantMessage);
+        messages.push({
+          role: 'user',
+          content: OPERATION_TOOL_REPROMPT,
+        });
+        continue;
+      }
       return {
         ok: true,
         content: assistantMessage.content,
@@ -209,7 +220,7 @@ function createSystemMessage(modelId: OpenRouterModelId): string {
   return `You are the Language Lab card-library assistant with limited authority.
 You may inspect the supplied current library only through the four read tools.
 You may propose writes only through propose_library_operation. That tool stages a plan for user review; you never dispatch Redux actions or apply changes.
-When propose_library_operation stages a plan, do not ask the user to confirm by typing words in chat. The app will show explicit Apply changes and Cancel preview buttons.
+When the user requests a create, update, archive, or membership change and enough information exists, call propose_library_operation immediately. Do not first ask the user to confirm by typing words in chat. The app will show explicit Apply changes and Cancel preview buttons for every staged plan.
 You may propose archiving normal card sets through propose_library_operation using cardSetChanges update objects with archive: true.
 You must not archive all-cards, delete card sets, delete global cards, or restore archived sets in place.
 When the user wants to reuse an archived set, propose creating a new active card set based on it instead.
@@ -227,6 +238,39 @@ ${languageCardSkill.replace(
   'or card-set archive or deletion.',
   'or card-set deletion.',
 )}`;
+}
+
+const OPERATION_TOOL_REPROMPT =
+  'Do not ask the user to confirm this operation by typing words in chat and do not claim that changes were saved, applied, or created in plain text. If the request has enough information for a safe preview, call propose_library_operation now. If required details are missing, ask only for those missing details.';
+
+const typedOperationApprovalPatterns = [
+  /\b(confirm|approve|accept)\b.*\b(type|reply|chat|message|text|apply|changes|operation|preview)\b/i,
+  /\b(type|reply|write|say)\b.*\b(confirm|approve|accept|yes|ok)\b/i,
+  /\bplease\b.*\b(confirm|approve|accept)\b.*\b(apply|changes|operation|preview)\b/i,
+  /\bif you want\b.*\b(apply|proceed|confirm|approve)\b/i,
+  /\boperation\b.*\b(awaiting|waiting|needs)\b.*\b(confirm|approval|acceptance)\b/i,
+  /\b(confirm|approve|accept)\b.*\b(create|creating|creation|set|operation|changes)\b/i,
+  /подтверд.*(?:словами|в чате|сообщением|примен|измен|операц|предпросмотр)/i,
+  /(?:операц|предпросмотр|набор|измен).*(?:ожидает|жд[её]т).*подтверж/i,
+  /подтвержда(?:ете|ешь|ем|ю|ет).*(?:создан|создат|создание|набор|операц|измен|предпросмотр)/i,
+  /напиш(?:и|ите).*(?:да|ок|подтверж|примен)/i,
+  /ответ(?:ь|ьте).*(?:да|ок|подтверж|примен)/i,
+  /если хотите.*(?:примен|подтверж)/i,
+  /confirma|confirmar|confirmes|aprobar|aprueba/i,
+];
+
+const plainTextWriteClaimPatterns = [
+  /\b(changes|operation|card set|set)\b.*\b(saved|applied|recorded|created)\b/i,
+  /\b(saved|applied|recorded|created)\b.*\b(changes|operation|card set|set)\b/i,
+  /изменения\s+(?:записаны|сохранены|применены)/i,
+  /набор\s+[«"][^»"]+[»"]\s+создан/i,
+  /(?:cambios|operacion|operación|conjunto).*(?:guardad|aplicad|cread)/i,
+];
+
+function needsOperationToolReprompt(content: string): boolean {
+  return [...typedOperationApprovalPatterns, ...plainTextWriteClaimPatterns].some(
+    (pattern) => pattern.test(content),
+  );
 }
 
 function readRecentChatHistory(
