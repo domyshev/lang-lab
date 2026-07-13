@@ -310,6 +310,42 @@ describe('AppShell', () => {
     });
   });
 
+  it('uses a readable stadium-blue active tab and a football AI chat icon', () => {
+    const store = configureStore({
+      reducer: {
+        app: appReducer,
+      },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          playerProfile: {
+            avatarSeed: 'supporter:spain:test',
+            displayName: 'Илья',
+            isAnonymous: false,
+          },
+        },
+      },
+    });
+
+    render(
+      <Provider store={store}>
+        <AppShell activeSection="chat">
+          <div>Content</div>
+        </AppShell>
+      </Provider>,
+    );
+
+    expect(screen.getByTestId('app_shell__tab__chat')).toHaveStyle({
+      color: '#123c69',
+    });
+    expect(
+      screen.getByTestId('app_shell__tab_icon__chat_football_ai_ball'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId('app_shell__tab_icon__chat_robot'),
+    ).not.toBeInTheDocument();
+  });
+
   it('resets the shell scroll root only when the active section changes', () => {
     const store = configureStore({
       reducer: {

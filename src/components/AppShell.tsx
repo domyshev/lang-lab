@@ -7,7 +7,6 @@ import MilitaryTechOutlinedIcon from '@mui/icons-material/MilitaryTechOutlined';
 import PsychologyOutlinedIcon from '@mui/icons-material/PsychologyOutlined';
 import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
-import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
 import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
 import {
   AppBar,
@@ -27,6 +26,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
+import { stadiumAccent } from '../domain/footballTheme';
 import { t } from '../domain/i18n';
 import { setPlayerProfile } from '../store/appSlice';
 import { AppDispatch, RootState } from '../store/store';
@@ -176,10 +176,10 @@ export function AppShell({
                 gap: '15px',
               },
               '& .Mui-selected': {
-                color: '#203015',
+                color: stadiumAccent.dark,
               },
               '& .MuiTabs-indicator': {
-                bgcolor: '#203015',
+                bgcolor: stadiumAccent.dark,
                 height: 3,
               },
             }}
@@ -212,15 +212,13 @@ export function AppShell({
             <Tab
               data-test="app_shell__tab__chat"
               value="chat"
-              icon={<SmartToyOutlinedIcon data-test="app_shell__tab_icon__chat" />}
+              icon={<FootballAiChatIcon />}
               iconPosition="start"
               label={t(interfaceLanguage, 'aiChatTitle')}
               sx={{
-                color: '#3a285f',
+                color: stadiumAccent.dark,
                 minWidth: '0 !important',
-                '& .MuiSvgIcon-root': {
-                  fontSize: 19,
-                },
+                '&.Mui-selected': { color: stadiumAccent.dark },
               }}
             />
             <Tab
@@ -317,6 +315,47 @@ export function AppShell({
           )
         }
       />
+    </Box>
+  );
+}
+
+function FootballAiChatIcon() {
+  return (
+    <Box
+      component="svg"
+      aria-hidden="true"
+      data-test="app_shell__tab_icon__chat_football_ai_ball"
+      viewBox="0 0 40 40"
+      sx={{ height: 24, width: 24 }}
+    >
+      <circle
+        cx="20"
+        cy="20"
+        r="15"
+        fill="#fffdf4"
+        stroke={stadiumAccent.dark}
+        strokeWidth="2"
+      />
+      <path
+        d="M20 8v24M8 20h24M12 12l16 16M28 12 12 28"
+        stroke={stadiumAccent.main}
+        strokeWidth="1.4"
+        opacity="0.62"
+      />
+      <path
+        d="M15 16h10l3 4-3 4H15l-3-4Z"
+        fill="#fff3bd"
+        stroke="#c60b1e"
+        strokeWidth="1.4"
+      />
+      <circle cx="30" cy="9" r="3" fill="#ffc400" />
+      <path
+        d="M30 2v4M30 12v4M23 9h4M33 9h4"
+        stroke="#c60b1e"
+        strokeLinecap="round"
+        strokeWidth="1.5"
+      />
+      <circle cx="12" cy="31" r="2" fill={stadiumAccent.main} />
     </Box>
   );
 }
