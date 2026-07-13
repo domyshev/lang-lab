@@ -575,14 +575,7 @@ function WorldLabel({
       alignItems="center"
       sx={{ minWidth: 0 }}
     >
-      <Box
-        component="span"
-        aria-hidden="true"
-        data-test={`${dataTestPrefix}__icon`}
-        sx={{ fontSize: 18, lineHeight: 1 }}
-      >
-        {getWorldIcon(world)}
-      </Box>
+      <WorldIcon dataTest={`${dataTestPrefix}__icon`} world={world} />
       <Typography
         component="span"
         data-test={`${dataTestPrefix}__name`}
@@ -595,6 +588,54 @@ function WorldLabel({
   );
 }
 
-function getWorldIcon(world: WorldId): string {
-  return world === 'football' ? '⚽' : '🍃';
+function WorldIcon({
+  dataTest,
+  world,
+}: {
+  dataTest: string;
+  world: WorldId;
+}) {
+  if (world === 'forest') {
+    return (
+      <Box
+        component="span"
+        aria-hidden="true"
+        data-test={dataTest}
+        sx={{ fontSize: 18, lineHeight: 1 }}
+      >
+        🍃
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      component="span"
+      aria-hidden="true"
+      data-test={dataTest}
+      sx={{
+        bgcolor: '#ffc400',
+        background:
+          'linear-gradient(180deg, #c60b1e 0 28%, #ffc400 28% 72%, #c60b1e 72% 100%)',
+        border: '1px solid rgba(109, 18, 22, 0.46)',
+        borderRadius: '50%',
+        boxShadow:
+          'inset -3px -3px 0 rgba(109, 18, 22, 0.20), inset 2px 2px 0 rgba(255, 255, 255, 0.46), 0 1px 3px rgba(95, 28, 22, 0.20)',
+        display: 'inline-flex',
+        flex: '0 0 auto',
+        height: 20,
+        overflow: 'hidden',
+        position: 'relative',
+        width: 20,
+        '&::before': {
+          background:
+            'radial-gradient(circle at center, transparent 0 36%, rgba(255,255,255,0.72) 37% 43%, transparent 44%), linear-gradient(40deg, transparent 0 45%, rgba(255,255,255,0.58) 46% 50%, transparent 51%), linear-gradient(-40deg, transparent 0 45%, rgba(255,255,255,0.48) 46% 50%, transparent 51%)',
+          content: '""',
+          inset: 3,
+          opacity: 0.78,
+          position: 'absolute',
+        },
+      }}
+    />
+  );
 }

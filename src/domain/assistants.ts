@@ -654,7 +654,7 @@ export const visibleAssistantIds: AssistantId[] = [
 
 const visibleAssistantIdsByWorld: Record<WorldId, AssistantId[]> = {
   football: visibleAssistantIds,
-  forest: ['studyTroll', 'greenPower', 'webRunner', 'forestElf', 'unicorn'],
+  forest: ['studyTroll', 'forestElf', 'unicorn'],
 };
 
 export const visibleAssistantCharacters = getVisibleAssistantCharacters('football');

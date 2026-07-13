@@ -133,7 +133,14 @@ describe('LanguageSelectors', () => {
     const worldSelect = screen.getByRole('combobox', {
       name: 'Игровой мир',
     });
-    expect(worldSelect).toHaveTextContent('⚽');
+    expect(worldSelect).not.toHaveTextContent('⚽');
+    expect(
+      screen.getByTestId('language_selectors__world_selected__icon'),
+    ).toHaveStyle({
+      borderRadius: '50%',
+      height: '20px',
+      width: '20px',
+    });
     expect(worldSelect).toHaveTextContent('Футбол');
 
     await user.click(worldSelect);

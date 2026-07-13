@@ -60,8 +60,6 @@ describe('assistantCharacters', () => {
 
     expect(forestAssistants.map((assistant) => assistant.id)).toEqual([
       'studyTroll',
-      'greenPower',
-      'webRunner',
       'forestElf',
       'unicorn',
     ]);
@@ -71,10 +69,8 @@ describe('assistantCharacters', () => {
       ),
     ).toEqual({
       forestElf: 'Лесной эльф',
-      greenPower: 'Халк запоминания',
       studyTroll: 'Веселый листочек',
       unicorn: 'Серебряный единорог',
-      webRunner: 'Мудрый паучок',
     });
   });
 
@@ -82,5 +78,7 @@ describe('assistantCharacters', () => {
     expect(resolveAssistantId('trollMama')).toBe(defaultAssistantId);
     expect(resolveAssistantId('trollMama', 'forest')).toBe(defaultAssistantId);
     expect(resolveAssistantId('capeChampion', 'forest')).toBe(defaultAssistantId);
+    expect(resolveAssistantId('greenPower', 'forest')).toBe(defaultAssistantId);
+    expect(resolveAssistantId('webRunner', 'forest')).toBe(defaultAssistantId);
   });
 });
