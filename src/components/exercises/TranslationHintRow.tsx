@@ -59,7 +59,7 @@ export function TranslationHintRow({
               data-test={`${hintPartDataTest}__primary_language_code`}
               sx={languageCodeStyles}
             >
-              {primaryHint.language}:
+              {formatHintLanguageCode(primaryHint.language)}:
             </Box>{' '}
             {primaryHint.value}
           </Box>
@@ -86,7 +86,7 @@ export function TranslationHintRow({
                 data-test={`${hintPartDataTest}__secondary_language_code__${hint.language}`}
                 sx={secondaryLanguageCodeStyles}
               >
-                {hint.language}:
+                {formatHintLanguageCode(hint.language)}:
               </Box>{' '}
               {hint.value}
             </Box>
@@ -102,6 +102,10 @@ const fallbackHintStyles = {
   fontSize: 18,
   lineHeight: 1.35,
 };
+
+function formatHintLanguageCode(language: SupportedLanguage): string {
+  return language === 'uk' ? 'ukr' : language;
+}
 
 const primaryTranslationHintStyles = {
   bgcolor: '#f2f7df',

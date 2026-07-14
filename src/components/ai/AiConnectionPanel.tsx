@@ -310,7 +310,7 @@ export function AiConnectionPanel({
                   color: (theme) =>
                     theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
                   fontSize: '14px',
-                  fontWeight: 600,
+                  fontWeight: 500,
                   lineHeight: 1.38,
                   maxWidth: 320,
                   px: 1.75,
@@ -320,17 +320,32 @@ export function AiConnectionPanel({
             }}
             title={
               <Stack spacing={0.75}>
-                <Typography sx={{ fontSize: '14px', fontWeight: 700, lineHeight: 1.35 }}>
-                  {getOpenRouterInfoText(language)}
-                </Typography>
-                <Link
-                  href="https://openrouter.ai/"
-                  rel="noreferrer"
-                  target="_blank"
-                  sx={{ color: '#1877c9', fontSize: '14px', fontWeight: 850 }}
+                <Typography
+                  data-test="ai_connection__openrouter_info_title"
+                  sx={{ fontSize: '14px', fontWeight: 850, lineHeight: 1.3 }}
                 >
                   OpenRouter
-                </Link>
+                </Typography>
+                <Typography
+                  data-test="ai_connection__openrouter_info_body"
+                  sx={{ fontSize: '14px', fontWeight: 500, lineHeight: 1.35 }}
+                >
+                  {getOpenRouterInfoText(language)}
+                </Typography>
+                <Typography
+                  data-test="ai_connection__openrouter_info_link_line"
+                  sx={{ fontSize: '14px', fontWeight: 500, lineHeight: 1.35, mt: 0.5 }}
+                >
+                  {getOpenRouterOpenSitePrefix(language)}{' '}
+                  <Link
+                    href="https://openrouter.ai/"
+                    rel="noreferrer"
+                    target="_blank"
+                    sx={{ color: '#1877c9', fontSize: '14px', fontWeight: 850 }}
+                  >
+                    OpenRouter
+                  </Link>
+                </Typography>
               </Stack>
             }
           >
@@ -501,4 +516,15 @@ function getOpenRouterInfoText(language: SupportedLanguage): string {
   };
 
   return texts[language];
+}
+
+function getOpenRouterOpenSitePrefix(language: SupportedLanguage): string {
+  const labels: Record<SupportedLanguage, string> = {
+    en: 'Open site',
+    es: 'Abrir sitio',
+    ru: 'Открыть сайт',
+    uk: 'Відкрити сайт',
+  };
+
+  return labels[language];
 }

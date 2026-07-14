@@ -75,6 +75,25 @@ describe('MultipleChoiceExercise', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('renders Ukrainian hints as ukr in games', () => {
+    render(
+      <MultipleChoiceExercise
+        complementaryLanguages={['uk']}
+        interfaceLanguage="ru"
+        prompt={{
+          ...prompt,
+          translationHints: [{ language: 'uk' as const, value: 'аеропорт' }],
+        }}
+        onAnswer={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByTestId('multiple_choice_exercise__prompt_hint__airport__primary'),
+    ).toHaveTextContent('ukr: аеропорт');
+  });
+
   it('shows white answer options and marks the selected result before next', async () => {
     const user = userEvent.setup();
     const onAnswer = vi.fn();
@@ -85,11 +104,17 @@ describe('MultipleChoiceExercise', () => {
       <MultipleChoiceExercise
         interfaceLanguage="ru"
         prompt={prompt}
+        promptStatsAction={<button data-test="multiple_choice_stats_action">stats</button>}
         onAnswer={onAnswer}
         onKnownChange={onKnownChange}
         onNext={onNext}
       />,
     );
+
+    const primaryPromptRow = screen.getByTestId(
+      'multiple_choice_exercise__prompt_hint__airport__primary_row',
+    );
+    expect(within(primaryPromptRow).getByTestId('multiple_choice_stats_action')).toBeInTheDocument();
 
     const options = screen.getByTestId('multiple_choice_exercise__options__airport');
     expect(options).toHaveStyle({ flexDirection: 'column' });
@@ -115,6 +140,13 @@ describe('MultipleChoiceExercise', () => {
       'multiple_choice_exercise__known_button__airport',
     );
     expect(knownButton).toHaveAttribute('aria-pressed', 'false');
+    expect(within(primaryPromptRow).getByTestId('multiple_choice_exercise__known_button__airport')).toBe(
+      knownButton,
+    );
+    expect(
+      screen.getByTestId('multiple_choice_stats_action').compareDocumentPosition(knownButton) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 
     await user.hover(knownButton);
     expect(

@@ -33,6 +33,7 @@ type I18nKey =
   | 'playerGreetingPrefix'
   | 'playerAnonymousName'
   | 'practiceSettings'
+  | 'repeatManagementTitle'
   | 'complementaryLanguage'
   | 'moveCompanionLanguageUp'
   | 'moveCompanionLanguageDown'
@@ -329,6 +330,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     playerGreetingPrefix: 'Hello',
     playerAnonymousName: 'wanderer',
     practiceSettings: 'Game settings',
+    repeatManagementTitle: 'Repeat management',
     complementaryLanguage: 'Companion languages',
     moveCompanionLanguageUp: 'Move up',
     moveCompanionLanguageDown: 'Move down',
@@ -675,6 +677,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     playerGreetingPrefix: 'Привет',
     playerAnonymousName: 'странник',
     practiceSettings: 'Настройки игр',
+    repeatManagementTitle: 'Управление повторениями',
     complementaryLanguage: 'Сопутствующие языки',
     moveCompanionLanguageUp: 'Выше',
     moveCompanionLanguageDown: 'Ниже',
@@ -1023,6 +1026,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     playerGreetingPrefix: 'Hola',
     playerAnonymousName: 'viajero',
     practiceSettings: 'Ajustes de juegos',
+    repeatManagementTitle: 'Gestion de repeticiones',
     complementaryLanguage: 'Idiomas acompanantes',
     moveCompanionLanguageUp: 'Subir',
     moveCompanionLanguageDown: 'Bajar',
@@ -1399,6 +1403,7 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   moveCompanionLanguageDown: 'Нижче',
   noCardStatsYet: 'статистики поки немає',
   practiceSettings: 'Налаштування ігор',
+  repeatManagementTitle: 'Керування повтореннями',
   cardTypePrefix: 'Тип',
   resultsTitle: 'Результати',
   savePlayerName: 'Налаштувати',

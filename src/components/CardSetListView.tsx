@@ -412,17 +412,21 @@ function getCardSetListActionSx(worldId: WorldId) {
   return {
     background:
       'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)',
-    border: '1px solid rgba(47, 77, 36, 0.18)',
+    backgroundImage:
+      'linear-gradient(180deg, #fbffe8 0%, #9ed54c 54%, #5b9636 100%)',
+    border: '1px solid rgba(125, 174, 72, 0.38)',
     boxShadow:
-      '0 10px 20px rgba(63, 91, 38, 0.18), inset 0 1px 0 rgba(255,255,255,0.76), inset 0 -3px 0 rgba(36, 74, 28, 0.16)',
+      '0 10px 20px rgba(63, 91, 38, 0.18), inset 0 2px 0 rgba(255,255,255,0.82), inset 0 -3px 0 rgba(36, 74, 28, 0.14)',
     color: '#183813',
     fontWeight: 900,
     textTransform: 'none',
     '&:hover': {
       background:
         'linear-gradient(180deg, #fbffe8 0%, #9ed54c 50%, #5b9636 100%)',
+      backgroundImage:
+        'linear-gradient(180deg, #ffffef 0%, #a9dc5c 52%, #629c3c 100%)',
       boxShadow:
-        '0 12px 24px rgba(63, 91, 38, 0.22), inset 0 1px 0 rgba(255,255,255,0.82), inset 0 -3px 0 rgba(36, 74, 28, 0.15)',
+        '0 12px 24px rgba(63, 91, 38, 0.22), inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(36, 74, 28, 0.14)',
     },
   };
 }

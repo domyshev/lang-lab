@@ -236,15 +236,29 @@ describe('AiAssistantView connection', () => {
     await user.hover(screen.getByTestId('ai_connection__openrouter_info_button'));
 
     const tooltip = await screen.findByTestId('ai_connection__openrouter_info_tooltip');
-    expect(tooltip).toHaveTextContent(
+    expect(within(tooltip).getByTestId('ai_connection__openrouter_info_title')).toHaveTextContent(
+      'OpenRouter',
+    );
+    expect(within(tooltip).getByTestId('ai_connection__openrouter_info_title')).toHaveStyle({
+      fontWeight: '850',
+    });
+    expect(within(tooltip).getByTestId('ai_connection__openrouter_info_body')).toHaveTextContent(
       'OpenRouter is the gateway Language Lab uses to send chat requests to the selected model.',
     );
+    expect(within(tooltip).getByTestId('ai_connection__openrouter_info_body')).toHaveStyle({
+      fontWeight: '500',
+    });
     expect(tooltip).toHaveStyle({
       backgroundColor: 'rgba(255, 255, 255, 0.98)',
       fontSize: '14px',
     });
+    expect(within(tooltip).getByTestId('ai_connection__openrouter_info_link_line')).toHaveTextContent(
+      'Open site OpenRouter',
+    );
+    const link = within(tooltip).getByRole('link', { name: 'OpenRouter' });
+    expect(link).toHaveAttribute('target', '_blank');
     expect(
-      within(tooltip).getByRole('link', { name: 'OpenRouter' }),
+      link,
     ).toHaveAttribute('href', 'https://openrouter.ai/');
   });
 
@@ -463,7 +477,7 @@ describe('AiAssistantView chat', () => {
 
     expect(sendButton).toHaveStyle({
       background:
-        'linear-gradient(135deg, rgba(24, 119, 201, 0.96) 0%, rgba(73, 167, 232, 0.92) 48%, rgba(47, 143, 58, 0.9) 100%)',
+        'linear-gradient(135deg, rgba(198, 11, 30, 0.96) 0%, rgba(255, 196, 0, 0.94) 52%, rgba(233, 111, 18, 0.94) 100%)',
       color: '#fffdf7',
     });
 
@@ -1441,18 +1455,18 @@ describe('AiAssistantView localization and manual import', () => {
     expect(within(dialog).getByText('Travel vocabulary')).toBeInTheDocument();
   });
 
-  it('uses a forest-friendly green and lilac chat palette in the forest world', () => {
+  it('uses a forest-friendly green chat palette in the forest world', () => {
     renderView({ worldId: 'forest', showManualImport: false });
 
     expect(screen.getByTestId('ai_chat__panel')).toHaveStyle({
       background:
-        'linear-gradient(145deg, rgba(246, 255, 235, 0.96) 0%, rgba(250, 240, 255, 0.94) 55%, rgba(238, 250, 229, 0.94) 100%)',
-      borderColor: 'rgba(169, 137, 223, 0.30)',
+        'linear-gradient(145deg, rgba(246, 255, 235, 0.96) 0%, rgba(239, 251, 228, 0.94) 55%, rgba(232, 247, 221, 0.94) 100%)',
+      borderColor: 'rgba(91, 150, 54, 0.26)',
     });
     expect(screen.getByTestId('ai_chat__messages')).toHaveStyle({
       background:
-        'linear-gradient(180deg, rgba(255, 255, 255, 0.68) 0%, rgba(247, 239, 255, 0.46) 100%)',
-      border: '1px solid rgba(169, 137, 223, 0.16)',
+        'linear-gradient(180deg, rgba(255, 255, 255, 0.70) 0%, rgba(239, 251, 228, 0.52) 100%)',
+      border: '1px solid rgba(91, 150, 54, 0.16)',
     });
   });
 

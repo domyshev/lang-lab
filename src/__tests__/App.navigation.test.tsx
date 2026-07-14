@@ -2341,7 +2341,7 @@ describe('App navigation', () => {
 
     expect(jumpOptions).toHaveLength(2);
     expect(jumpOptions[0]).toHaveStyle({ backgroundColor: 'rgb(255, 255, 255)' });
-    expect(jumpOptions[1]).toHaveStyle({ backgroundColor: 'rgb(250, 246, 255)' });
+    expect(jumpOptions[1]).toHaveStyle({ backgroundColor: 'rgb(255, 240, 200)' });
     expect(jumpOptions.map((option) => option.textContent)).toEqual(
       expect.arrayContaining([
         expect.stringContaining('оно того стоит'),
@@ -2575,10 +2575,14 @@ describe('App navigation', () => {
     await startExercise(user, 'Вопрос с 3 вариантами');
     await user.click(getByDataTestPrefix('multiple_choice_exercise__option__')[0]);
 
-    expect(screen.getByText('Статистика по слову')).toBeInTheDocument();
-    expect(
-      screen.getByLabelText(/Статистика по слову: Верно \d, Неверно \d/),
-    ).toBeInTheDocument();
+    expect(screen.queryByText('Статистика по слову')).not.toBeInTheDocument();
+    const statsButton = screen.getByLabelText(
+      /Статистика по слову: Верно \d, Неверно \d/,
+    );
+    expect(statsButton).toHaveAttribute(
+      'data-test',
+      expect.stringMatching(/^current_prompt_stats__icon_button__/),
+    );
   });
 
   it('generates a new multiple choice triple after each answered card', async () => {

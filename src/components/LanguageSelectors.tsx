@@ -431,7 +431,7 @@ export function LanguageSelectors() {
             data-test="language_selectors__world_control"
             size="small"
             fullWidth
-            sx={{ mb: '10px' }}
+            sx={{ mb: '20px' }}
           >
             <InputLabel
               data-test="language_selectors__world_label"
@@ -468,6 +468,18 @@ export function LanguageSelectors() {
               ))}
             </Select>
           </FormControl>
+          <Typography
+            data-test="language_selectors__repeat_management_title"
+            sx={{
+              color: '#5c6f4a',
+              fontSize: '0.88rem',
+              fontWeight: 850,
+              lineHeight: 1.2,
+              mt: -0.25,
+            }}
+          >
+            {t(interfaceLanguage, 'repeatManagementTitle')}
+          </Typography>
           {cooldownFields.map((field) => (
             <SettingsFieldRow
               infoKey={field.key}
@@ -603,7 +615,7 @@ const readableTooltipSlotProps = {
       color: (theme: any) =>
         theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
       fontSize: '14px',
-      fontWeight: 600,
+      fontWeight: 500,
       lineHeight: 1.38,
       maxWidth: 320,
       px: 1.75,
@@ -630,7 +642,7 @@ function SelectorInfoIcon({
   return (
     <Box
       data-test={`language_selectors__${selectorInfoDataKey[kind]}_info_wrapper`}
-      sx={{ mr: '5px' }}
+      sx={{ ml: '5px' }}
     >
       <Tooltip
         arrow
@@ -646,10 +658,16 @@ function SelectorInfoIcon({
         }}
         title={
           <Stack spacing={0.65}>
+            <Typography
+              data-test={`language_selectors__${selectorInfoDataKey[kind]}_info_tooltip_title`}
+              sx={{ fontSize: '14px', fontWeight: 850, lineHeight: 1.3 }}
+            >
+              {getSelectorInfoTitle(interfaceLanguage, kind)}
+            </Typography>
             {getSelectorInfoText(interfaceLanguage, kind).map((line) => (
               <Typography
                 key={line}
-                sx={{ fontSize: '14px', fontWeight: 600, lineHeight: 1.35 }}
+                sx={{ fontSize: '14px', fontWeight: 500, lineHeight: 1.35 }}
               >
                 {line}
               </Typography>
@@ -686,7 +704,7 @@ function SettingsFieldRow({
       data-test={`language_selectors__settings_field_row__${infoKey}`}
       direction="row"
       spacing={0.75}
-      sx={{ alignItems: 'flex-start' }}
+      sx={{ alignItems: 'center' }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
       <SettingsInfoIcon
@@ -720,13 +738,25 @@ function SettingsInfoIcon({
           } as Record<string, string>),
         },
       }}
-      title={getSettingsInfoText(interfaceLanguage, infoKey)}
+      title={
+        <Stack spacing={0.65}>
+          <Typography
+            data-test={`language_selectors__settings_info_tooltip_title__${infoKey}`}
+            sx={{ fontSize: '14px', fontWeight: 850, lineHeight: 1.3 }}
+          >
+            {getSettingsInfoTitle(interfaceLanguage, infoKey)}
+          </Typography>
+          <Typography sx={{ fontSize: '14px', fontWeight: 500, lineHeight: 1.35 }}>
+            {getSettingsInfoText(interfaceLanguage, infoKey)}
+          </Typography>
+        </Stack>
+      }
     >
       <IconButton
         aria-label={getSettingsInfoLabel(interfaceLanguage, infoKey)}
         data-test={`language_selectors__settings_info_button__${infoKey}`}
         size="small"
-        sx={{ ...getInfoButtonSx(worldId), mt: 0.25 }}
+        sx={getInfoButtonSx(worldId)}
       >
         <InfoOutlinedIcon fontSize="inherit" />
       </IconButton>
@@ -794,6 +824,19 @@ function getSelectorInfoLabel(
   };
 
   return labels[language][kind];
+}
+
+function getSelectorInfoTitle(
+  language: SupportedLanguage,
+  kind: SelectorInfoKind,
+): string {
+  const titles: Record<SelectorInfoKind, string> = {
+    companion: t(language, 'complementaryLanguage'),
+    interface: t(language, 'interfaceLanguage'),
+    target: t(language, 'targetLearningLanguage'),
+  };
+
+  return titles[kind];
 }
 
 function getSelectorInfoText(
@@ -878,6 +921,21 @@ function getSettingsInfoLabel(
   };
 
   return `${prefix[language]}: ${infoKey}`;
+}
+
+function getSettingsInfoTitle(
+  language: SupportedLanguage,
+  infoKey: SettingsInfoKey,
+): string {
+  const titles: Record<SettingsInfoKey, string> = {
+    fivePlus: t(language, 'correctStreakCooldownFivePlus'),
+    four: t(language, 'correctStreakCooldownFour'),
+    three: t(language, 'correctStreakCooldownThree'),
+    mistake_repeat_frequency: t(language, 'recentMistakeRepeatFrequency'),
+    new_card_mix_frequency: t(language, 'newCardMixFrequency'),
+  };
+
+  return titles[infoKey];
 }
 
 function getSettingsInfoText(

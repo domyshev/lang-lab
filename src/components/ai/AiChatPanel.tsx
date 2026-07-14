@@ -115,13 +115,14 @@ export function AiChatPanel({
       variant="outlined"
       sx={{
         background: isForestWorld
-          ? 'linear-gradient(145deg, rgba(246, 255, 235, 0.96) 0%, rgba(250, 240, 255, 0.94) 55%, rgba(238, 250, 229, 0.94) 100%)'
-          : 'linear-gradient(145deg, rgba(232, 244, 255, 0.96) 0%, rgba(245, 255, 247, 0.94) 54%, rgba(226, 241, 252, 0.94) 100%)',
+          ? 'linear-gradient(145deg, rgba(246, 255, 235, 0.96) 0%, rgba(239, 251, 228, 0.94) 55%, rgba(232, 247, 221, 0.94) 100%)'
+          : 'linear-gradient(145deg, rgba(255, 248, 217, 0.98) 0%, rgba(255, 232, 194, 0.95) 48%, rgba(255, 239, 211, 0.94) 100%)',
         borderColor: isForestWorld
-          ? 'rgba(169, 137, 223, 0.30)'
-          : 'rgba(24, 119, 201, 0.22)',
-        boxShadow:
-          '0 18px 42px rgba(18, 60, 105, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.72)',
+          ? 'rgba(91, 150, 54, 0.26)'
+          : 'rgba(198, 11, 30, 0.22)',
+        boxShadow: isForestWorld
+          ? '0 18px 42px rgba(58, 89, 40, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.72)'
+          : '0 18px 42px rgba(126, 55, 12, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.76)',
         display: 'flex',
         height,
         minHeight: 0,
@@ -161,11 +162,11 @@ export function AiChatPanel({
           spacing={1}
           sx={{
             background: isForestWorld
-              ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.68) 0%, rgba(247, 239, 255, 0.46) 100%)'
-              : 'linear-gradient(180deg, rgba(255, 255, 255, 0.64) 0%, rgba(232, 244, 255, 0.42) 100%)',
+              ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.70) 0%, rgba(239, 251, 228, 0.52) 100%)'
+              : 'linear-gradient(180deg, rgba(255, 255, 255, 0.68) 0%, rgba(255, 236, 188, 0.48) 100%)',
             border: isForestWorld
-              ? '1px solid rgba(169, 137, 223, 0.16)'
-              : '1px solid rgba(24, 119, 201, 0.12)',
+              ? '1px solid rgba(91, 150, 54, 0.16)'
+              : '1px solid rgba(198, 11, 30, 0.14)',
             borderRadius: 2,
             flex: 1,
             minHeight: 220,
@@ -191,18 +192,18 @@ export function AiChatPanel({
                   variant="outlined"
                   sx={{
                     borderColor: isForestWorld
-                      ? 'rgba(169, 137, 223, 0.42)'
-                      : 'rgba(24, 119, 201, 0.42)',
+                      ? 'rgba(91, 150, 54, 0.42)'
+                      : 'rgba(198, 11, 30, 0.36)',
                     borderRadius: 999,
                     color: worldAccent.dark,
                     textTransform: 'none',
                     '&:hover': {
                       bgcolor: isForestWorld
-                        ? 'rgba(169, 137, 223, 0.10)'
-                        : 'rgba(24, 119, 201, 0.08)',
+                        ? 'rgba(91, 150, 54, 0.10)'
+                        : 'rgba(255, 196, 0, 0.16)',
                       borderColor: isForestWorld
-                        ? '#a989df'
-                        : worldAccent.main,
+                        ? worldAccent.main
+                        : '#c60b1e',
                     },
                   }}
                 >
@@ -221,24 +222,30 @@ export function AiChatPanel({
                   ? '#fff1f1'
                   : message.role === 'user'
                     ? isForestWorld
-                      ? '#f7efff'
-                      : '#dff1ff'
-                    : '#eef9f2',
+                      ? '#edf9e8'
+                      : '#fff0c8'
+                    : isForestWorld
+                      ? '#eef9f2'
+                      : '#fff8e2',
                 border: '1px solid',
                 borderColor: message.isError
                   ? '#e3a2a2'
                   : message.role === 'user'
                     ? isForestWorld
-                      ? 'rgba(169, 137, 223, 0.34)'
-                      : 'rgba(24, 119, 201, 0.34)'
-                    : 'rgba(47, 143, 58, 0.24)',
+                      ? 'rgba(91, 150, 54, 0.34)'
+                      : 'rgba(198, 11, 30, 0.30)'
+                    : isForestWorld
+                      ? 'rgba(47, 143, 58, 0.24)'
+                      : 'rgba(233, 111, 18, 0.24)',
                 borderRadius: 2,
                 boxShadow:
                   message.role === 'user'
                     ? isForestWorld
-                      ? '0 8px 18px rgba(52, 34, 79, 0.08)'
-                      : '0 8px 18px rgba(18, 60, 105, 0.08)'
-                    : '0 8px 18px rgba(47, 143, 58, 0.07)',
+                      ? '0 8px 18px rgba(58, 89, 40, 0.08)'
+                      : '0 8px 18px rgba(126, 55, 12, 0.10)'
+                    : isForestWorld
+                      ? '0 8px 18px rgba(47, 143, 58, 0.07)'
+                      : '0 8px 18px rgba(233, 111, 18, 0.08)',
                 maxWidth: '88%',
                 overflowWrap: 'anywhere',
                 px: 1.5,
@@ -416,12 +423,14 @@ function ShortcutKey({
     <Box
       component="span"
       sx={{
-        bgcolor: isForest ? 'rgba(169, 137, 223, 0.12)' : 'rgba(24, 119, 201, 0.10)',
+        bgcolor: isForest ? 'rgba(91, 150, 54, 0.12)' : 'rgba(255, 196, 0, 0.16)',
         border: isForest
-          ? '1px solid rgba(169, 137, 223, 0.24)'
-          : '1px solid rgba(24, 119, 201, 0.22)',
+          ? '1px solid rgba(91, 150, 54, 0.26)'
+          : '1px solid rgba(198, 11, 30, 0.24)',
         borderRadius: 1.25,
-        boxShadow: '0 2px 0 rgba(18, 60, 105, 0.16)',
+        boxShadow: isForest
+          ? '0 2px 0 rgba(58, 89, 40, 0.16)'
+          : '0 2px 0 rgba(126, 55, 12, 0.16)',
         color: accent.dark,
         fontSize: 13,
         fontWeight: 900,
@@ -439,10 +448,10 @@ function ShortcutKey({
 
 const aiSendButtonStyles = {
   background:
-    'linear-gradient(135deg, rgba(24, 119, 201, 0.96) 0%, rgba(73, 167, 232, 0.92) 48%, rgba(47, 143, 58, 0.9) 100%)',
+    'linear-gradient(135deg, rgba(198, 11, 30, 0.96) 0%, rgba(255, 196, 0, 0.94) 52%, rgba(233, 111, 18, 0.94) 100%)',
   border: '1px solid rgba(255, 255, 255, 0.48)',
   boxShadow:
-    '0 13px 26px rgba(18, 60, 105, 0.26), 0 5px 12px rgba(47, 143, 58, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.46)',
+    '0 13px 26px rgba(126, 55, 12, 0.24), 0 5px 12px rgba(198, 11, 30, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.46)',
   color: '#fffdf7',
   height: 48,
   transition:
@@ -450,15 +459,15 @@ const aiSendButtonStyles = {
   width: 48,
   '&:hover': {
     background:
-      'linear-gradient(135deg, rgba(18, 96, 168, 0.98) 0%, rgba(86, 180, 242, 0.96) 46%, rgba(61, 158, 73, 0.96) 100%)',
+      'linear-gradient(135deg, rgba(178, 9, 27, 0.98) 0%, rgba(255, 206, 42, 0.96) 46%, rgba(239, 126, 26, 0.96) 100%)',
     boxShadow:
-      '0 16px 30px rgba(18, 60, 105, 0.32), 0 7px 16px rgba(47, 143, 58, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.55)',
+      '0 16px 30px rgba(126, 55, 12, 0.30), 0 7px 16px rgba(198, 11, 30, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.55)',
     filter: 'saturate(1.08)',
     transform: 'translateY(-1px)',
   },
   '&.Mui-disabled': {
     background:
-      'linear-gradient(135deg, rgba(126, 155, 178, 0.48) 0%, rgba(198, 223, 237, 0.44) 55%, rgba(190, 222, 197, 0.48) 100%)',
+      'linear-gradient(135deg, rgba(178, 126, 111, 0.44) 0%, rgba(237, 216, 159, 0.44) 55%, rgba(220, 177, 138, 0.48) 100%)',
     boxShadow: 'none',
     color: 'rgba(255, 255, 255, 0.62)',
   },
@@ -466,10 +475,10 @@ const aiSendButtonStyles = {
 
 const forestAiSendButtonStyles = {
   background:
-    'linear-gradient(135deg, rgba(169, 137, 223, 0.96) 0%, rgba(205, 181, 244, 0.92) 48%, rgba(117, 168, 67, 0.92) 100%)',
+    'linear-gradient(135deg, rgba(91, 150, 54, 0.96) 0%, rgba(151, 204, 78, 0.92) 48%, rgba(59, 116, 46, 0.92) 100%)',
   border: '1px solid rgba(255, 255, 255, 0.52)',
   boxShadow:
-    '0 13px 26px rgba(52, 34, 79, 0.20), 0 5px 12px rgba(75, 122, 44, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.50)',
+    '0 13px 26px rgba(58, 89, 40, 0.20), 0 5px 12px rgba(75, 122, 44, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.50)',
   color: '#fffdf7',
   height: 48,
   transition:
@@ -477,15 +486,15 @@ const forestAiSendButtonStyles = {
   width: 48,
   '&:hover': {
     background:
-      'linear-gradient(135deg, rgba(150, 115, 208, 0.98) 0%, rgba(213, 190, 250, 0.96) 46%, rgba(128, 183, 72, 0.96) 100%)',
+      'linear-gradient(135deg, rgba(79, 135, 48, 0.98) 0%, rgba(161, 212, 84, 0.96) 46%, rgba(69, 133, 50, 0.96) 100%)',
     boxShadow:
-      '0 16px 30px rgba(52, 34, 79, 0.24), 0 7px 16px rgba(75, 122, 44, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.58)',
+      '0 16px 30px rgba(58, 89, 40, 0.24), 0 7px 16px rgba(75, 122, 44, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.58)',
     filter: 'saturate(1.08)',
     transform: 'translateY(-1px)',
   },
   '&.Mui-disabled': {
     background:
-      'linear-gradient(135deg, rgba(169, 137, 223, 0.34) 0%, rgba(219, 210, 232, 0.42) 55%, rgba(159, 196, 124, 0.40) 100%)',
+      'linear-gradient(135deg, rgba(91, 150, 54, 0.34) 0%, rgba(203, 224, 176, 0.42) 55%, rgba(159, 196, 124, 0.40) 100%)',
     boxShadow: 'none',
     color: 'rgba(255, 255, 255, 0.64)',
   },

@@ -33,6 +33,7 @@ export function MultipleChoiceExercise({
   onAnswer,
   onKnownChange,
   onNext,
+  promptStatsAction,
   cardSetName,
   finishAction,
   targetLanguage = 'en',
@@ -46,6 +47,7 @@ export function MultipleChoiceExercise({
   onAnswer: (answer: string) => void;
   onKnownChange?: (isKnown: boolean) => void;
   onNext: () => void;
+  promptStatsAction?: ReactNode;
   progressCompletedCount?: number;
   progressTotalCount?: number;
   cardSetName?: string;
@@ -55,6 +57,25 @@ export function MultipleChoiceExercise({
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const isSubmitted = selectedAnswer !== null;
   const isCorrect = selectedAnswer === prompt.expectedAnswer;
+  const promptActions =
+    promptStatsAction || (isSubmitted && onKnownChange) ? (
+      <Stack
+        data-test={`multiple_choice_exercise__prompt_actions__${prompt.cardId}`}
+        direction="row"
+        spacing={0.75}
+        sx={{ alignItems: 'center', ml: '5px' }}
+      >
+        {promptStatsAction}
+        {isSubmitted && onKnownChange && (
+          <KnownCardToggleButton
+            checked={isKnown}
+            dataTest={`multiple_choice_exercise__known_button__${prompt.cardId}`}
+            interfaceLanguage={interfaceLanguage}
+            onChange={onKnownChange}
+          />
+        )}
+      </Stack>
+    ) : undefined;
 
   useEffect(() => {
     setSelectedAnswer(null);
@@ -128,6 +149,7 @@ export function MultipleChoiceExercise({
           dataTest={`multiple_choice_exercise__prompt__${prompt.cardId}`}
           fallbackPrompt={prompt.prompt}
           hints={prompt.translationHints}
+          trailingAction={promptActions}
         />
         {prompt.definitionHint && (
           <Typography data-test={`multiple_choice_exercise__definition_hint__${prompt.cardId}`}>
@@ -210,14 +232,6 @@ export function MultipleChoiceExercise({
                 ? t(interfaceLanguage, 'correctResult')
                 : t(interfaceLanguage, 'incorrect')}
             </Button>
-            {onKnownChange && (
-              <KnownCardToggleButton
-                checked={isKnown}
-                dataTest={`multiple_choice_exercise__known_button__${prompt.cardId}`}
-                interfaceLanguage={interfaceLanguage}
-                onChange={onKnownChange}
-              />
-            )}
           </Stack>
         )}
       </Stack>

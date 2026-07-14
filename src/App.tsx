@@ -1083,7 +1083,7 @@ export function App() {
 
   function getCurrentPromptStats():
     | {
-        exerciseType: 'missingLetters' | 'missingWord';
+        exerciseType: 'missingLetters' | 'missingWord' | 'multipleChoice';
         prompt: ExercisePrompt;
       }
     | null {
@@ -1105,11 +1105,18 @@ export function App() {
       };
     }
 
+    if (exercisePreview.type === 'multipleChoice' && exercisePreview.prompt) {
+      return {
+        exerciseType: 'multipleChoice',
+        prompt: exercisePreview.prompt,
+      };
+    }
+
     return null;
   }
 
   function renderCurrentPromptStatsAction(
-    exerciseType: 'missingLetters' | 'missingWord',
+    exerciseType: 'missingLetters' | 'missingWord' | 'multipleChoice',
     prompt: ExercisePrompt,
   ) {
     if (completedExerciseSummary) {
@@ -1552,6 +1559,10 @@ export function App() {
           complementaryLanguages={complementaryLanguagesForTarget}
           interfaceLanguage={interfaceLanguage}
           prompt={exercisePreview.prompt}
+          promptStatsAction={renderCurrentPromptStatsAction(
+            'multipleChoice',
+            exercisePreview.prompt,
+          )}
           resultColors={worldResultColors}
           targetLanguage={targetLanguage}
           isKnown={isCardKnownForTarget(
@@ -2280,7 +2291,7 @@ function CurrentPromptStatsButton({
   targetLanguage,
 }: {
   attempts: RootState['attempts']['attempts'];
-  exerciseType: 'missingLetters' | 'missingWord';
+  exerciseType: 'missingLetters' | 'missingWord' | 'multipleChoice';
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   prompt: ExercisePrompt;
   resultColors: ReturnType<typeof getWorldResultColors>;
@@ -2444,6 +2455,7 @@ function FinishExerciseAction({
     worldId === 'forest'
       ? 'finishExerciseJumpTooltipForest'
       : 'finishExerciseJumpTooltipFootball';
+  const jumpVisualTheme = getJumpVisualTheme(worldId);
 
   useEffect(() => {
     if (!jumpSelector || jumpSelector.options.length < 2) {
@@ -2513,17 +2525,20 @@ function FinishExerciseAction({
           }}
         >
           {jumpSelector && (
-            <HotkeyShortcutTooltip interfaceLanguage={interfaceLanguage} />
+            <HotkeyShortcutTooltip
+              interfaceLanguage={interfaceLanguage}
+              worldId={worldId}
+            />
           )}
           <Box
             data-test="exercise_finish_action__thought_bubble"
             sx={{
               alignItems: 'flex-start',
-              bgcolor: 'rgba(250, 246, 255, 0.96)',
-              border: '1px solid rgba(113, 82, 188, 0.24)',
+              bgcolor: jumpVisualTheme.bubbleBg,
+              border: `1px solid ${jumpVisualTheme.bubbleBorder}`,
               borderRadius: '18px 18px 6px 18px',
-              boxShadow: '0 12px 28px rgba(73, 48, 124, 0.10)',
-              color: '#4b3a70',
+              boxShadow: jumpVisualTheme.bubbleShadow,
+              color: jumpVisualTheme.text,
               display: 'grid',
               flex: '1 1 auto',
               gap: 1,
@@ -2534,8 +2549,8 @@ function FinishExerciseAction({
               p: 1.25,
               position: 'relative',
               '&::before': {
-                bgcolor: 'rgba(250, 246, 255, 0.96)',
-                border: '1px solid rgba(113, 82, 188, 0.22)',
+                bgcolor: jumpVisualTheme.bubbleBg,
+                border: `1px solid ${jumpVisualTheme.bubbleBorder}`,
                 borderRadius: '999px',
                 bottom: -8,
                 content: '""',
@@ -2545,8 +2560,8 @@ function FinishExerciseAction({
                 width: 12,
               },
               '&::after': {
-                bgcolor: 'rgba(250, 246, 255, 0.96)',
-                border: '1px solid rgba(113, 82, 188, 0.20)',
+                bgcolor: jumpVisualTheme.bubbleBg,
+                border: `1px solid ${jumpVisualTheme.bubbleBorder}`,
                 borderRadius: '999px',
                 bottom: -16,
                 content: '""',
@@ -2584,12 +2599,12 @@ function FinishExerciseAction({
                   ? 'none'
                   : lampPulseAnimation,
                 background:
-                  'radial-gradient(circle at 45% 35%, #fff7b8 0%, #ffe27a 44%, #b99cff 100%)',
-                border: '1px solid rgba(123, 95, 196, 0.32)',
+                  jumpVisualTheme.lampGradient,
+                border: `1px solid ${jumpVisualTheme.lampBorder}`,
                 borderRadius: '999px',
                 boxShadow:
-                  '0 0 0 3px rgba(255, 226, 122, 0.22), 0 10px 22px rgba(123, 95, 196, 0.20)',
-                color: '#7b5fc4',
+                  jumpVisualTheme.lampShadow,
+                color: jumpVisualTheme.icon,
                 display: 'inline-flex',
                 height: 34,
                 justifyContent: 'center',
@@ -2600,18 +2615,18 @@ function FinishExerciseAction({
                 '&:hover': {
                   animation: 'none',
                   boxShadow:
-                    '0 0 0 4px rgba(255, 226, 122, 0.32), 0 12px 26px rgba(123, 95, 196, 0.26)',
+                    jumpVisualTheme.lampHoverShadow,
                   transform: 'translateY(-1px) scale(1.04)',
                 },
                 '@keyframes hypersonicJumpLampPulse': {
                   '0%, 100%': {
                     boxShadow:
-                      '0 0 0 3px rgba(255, 226, 122, 0.22), 0 10px 22px rgba(123, 95, 196, 0.20)',
+                      jumpVisualTheme.lampShadow,
                     filter: 'brightness(1)',
                   },
                   '50%': {
                     boxShadow:
-                      '0 0 0 5px rgba(255, 226, 122, 0.34), 0 14px 30px rgba(123, 95, 196, 0.28)',
+                      jumpVisualTheme.lampPulseShadow,
                     filter: 'brightness(1.12)',
                   },
                 },
@@ -2633,7 +2648,7 @@ function FinishExerciseAction({
               <Typography
                 data-test="exercise_finish_action__note"
                 sx={{
-                  color: '#4b3a70',
+                  color: jumpVisualTheme.text,
                   fontFamily:
                     '"Trebuchet MS", "Verdana", "Arial", sans-serif',
                   fontSize: 13.5,
@@ -2682,7 +2697,7 @@ function FinishExerciseAction({
                   >
                     {jumpSelector.options.map((option, index) => {
                       const zebraColor =
-                        index % 2 === 0 ? '#ffffff' : '#faf6ff';
+                        index % 2 === 0 ? '#ffffff' : jumpVisualTheme.optionStripe;
 
                       return (
                         <MenuItem
@@ -2703,7 +2718,9 @@ function FinishExerciseAction({
                             },
                             '&.Mui-selected:hover, &:hover': {
                               bgcolor:
-                                index % 2 === 0 ? '#f5f7ef' : '#f1eafe',
+                                index % 2 === 0
+                                  ? jumpVisualTheme.optionHover
+                                  : jumpVisualTheme.optionStripeHover,
                             },
                           }}
                         >
@@ -2805,9 +2822,13 @@ function FinishExerciseAction({
 
 function HotkeyShortcutTooltip({
   interfaceLanguage,
+  worldId,
 }: {
   interfaceLanguage: RootState['app']['interfaceLanguage'];
+  worldId: WorldId;
 }) {
+  const jumpVisualTheme = getJumpVisualTheme(worldId);
+
   return (
     <CursorAnchoredTooltip
       anchorOrigin="triggerTopLeft"
@@ -2840,13 +2861,11 @@ function HotkeyShortcutTooltip({
           data-test="exercise_finish_action__hotkeys_key"
           sx={{
             alignItems: 'center',
-            background:
-              'linear-gradient(145deg, #ffffff 0%, #f7f3ff 38%, #d8ccff 72%, #b8a6f5 100%)',
-            border: '1px solid rgba(105, 78, 190, 0.34)',
+            background: jumpVisualTheme.hotkeyGradient,
+            border: `1px solid ${jumpVisualTheme.hotkeyBorder}`,
             borderRadius: '14px',
-            boxShadow:
-              'inset 0 2px 0 rgba(255,255,255,0.96), inset 4px 0 0 rgba(255,255,255,0.32), inset -3px 0 0 rgba(84, 59, 166, 0.10), inset 0 -6px 0 rgba(84, 59, 166, 0.20), 0 8px 14px rgba(73, 48, 124, 0.16)',
-            color: '#5d41b2',
+            boxShadow: jumpVisualTheme.hotkeyShadow,
+            color: jumpVisualTheme.hotkeyText,
             cursor: 'default',
             display: 'inline-flex',
             height: { xs: 40, sm: 44 },
@@ -2868,8 +2887,7 @@ function HotkeyShortcutTooltip({
               top: 4,
             },
             '&::after': {
-              background:
-                'linear-gradient(180deg, rgba(143, 119, 222, 0.34), rgba(84, 59, 166, 0.18))',
+              background: jumpVisualTheme.hotkeyBottomGradient,
               borderRadius: '0 0 12px 12px',
               bottom: -2,
               content: '""',
@@ -2881,8 +2899,7 @@ function HotkeyShortcutTooltip({
               zIndex: -1,
             },
             '&:hover': {
-              boxShadow:
-                'inset 0 2px 0 rgba(255,255,255,0.98), inset 4px 0 0 rgba(255,255,255,0.36), inset -3px 0 0 rgba(84, 59, 166, 0.12), inset 0 -6px 0 rgba(84, 59, 166, 0.22), 0 10px 18px rgba(73, 48, 124, 0.20)',
+              boxShadow: jumpVisualTheme.hotkeyHoverShadow,
               transform: 'rotateX(7deg) rotateY(-5deg) translateY(-1px)',
             },
           }}
@@ -2944,6 +2961,70 @@ function JumpInfoTooltip({
       </IconButton>
     </CursorAnchoredTooltip>
   );
+}
+
+function getJumpVisualTheme(worldId: WorldId) {
+  if (worldId === 'forest') {
+    return {
+      bubbleBg: 'rgba(246, 255, 235, 0.96)',
+      bubbleBorder: 'rgba(91, 150, 54, 0.26)',
+      bubbleShadow: '0 12px 28px rgba(58, 89, 40, 0.12)',
+      hotkeyBorder: 'rgba(91, 150, 54, 0.36)',
+      hotkeyBottomGradient:
+        'linear-gradient(180deg, rgba(91, 150, 54, 0.30), rgba(49, 96, 38, 0.20))',
+      hotkeyGradient:
+        'linear-gradient(145deg, #ffffff 0%, #f3ffe8 38%, #cbeea4 72%, #8fca62 100%)',
+      hotkeyHoverShadow:
+        'inset 0 2px 0 rgba(255,255,255,0.98), inset 4px 0 0 rgba(255,255,255,0.36), inset -3px 0 0 rgba(49, 96, 38, 0.12), inset 0 -6px 0 rgba(49, 96, 38, 0.22), 0 10px 18px rgba(58, 89, 40, 0.20)',
+      hotkeyShadow:
+        'inset 0 2px 0 rgba(255,255,255,0.96), inset 4px 0 0 rgba(255,255,255,0.32), inset -3px 0 0 rgba(49, 96, 38, 0.10), inset 0 -6px 0 rgba(49, 96, 38, 0.20), 0 8px 14px rgba(58, 89, 40, 0.16)',
+      hotkeyText: '#386f2d',
+      icon: '#386f2d',
+      lampBorder: 'rgba(91, 150, 54, 0.34)',
+      lampGradient:
+        'radial-gradient(circle at 45% 35%, #fff9c7 0%, #bfe879 44%, #5b9636 100%)',
+      lampHoverShadow:
+        '0 0 0 4px rgba(191, 232, 121, 0.32), 0 12px 26px rgba(58, 89, 40, 0.26)',
+      lampPulseShadow:
+        '0 0 0 5px rgba(191, 232, 121, 0.34), 0 14px 30px rgba(58, 89, 40, 0.28)',
+      lampShadow:
+        '0 0 0 3px rgba(191, 232, 121, 0.22), 0 10px 22px rgba(58, 89, 40, 0.20)',
+      optionHover: '#f4faee',
+      optionStripe: '#f1fae7',
+      optionStripeHover: '#e7f5dc',
+      text: '#2f4d24',
+    };
+  }
+
+  return {
+    bubbleBg: 'rgba(255, 248, 217, 0.96)',
+    bubbleBorder: 'rgba(198, 11, 30, 0.24)',
+    bubbleShadow: '0 12px 28px rgba(126, 55, 12, 0.12)',
+    hotkeyBorder: 'rgba(198, 11, 30, 0.34)',
+    hotkeyBottomGradient:
+      'linear-gradient(180deg, rgba(198, 11, 30, 0.30), rgba(126, 55, 12, 0.18))',
+    hotkeyGradient:
+      'linear-gradient(145deg, #ffffff 0%, #fff5c5 38%, #ffd15f 72%, #e96f12 100%)',
+    hotkeyHoverShadow:
+      'inset 0 2px 0 rgba(255,255,255,0.98), inset 4px 0 0 rgba(255,255,255,0.36), inset -3px 0 0 rgba(198, 11, 30, 0.12), inset 0 -6px 0 rgba(198, 11, 30, 0.22), 0 10px 18px rgba(126, 55, 12, 0.20)',
+    hotkeyShadow:
+      'inset 0 2px 0 rgba(255,255,255,0.96), inset 4px 0 0 rgba(255,255,255,0.32), inset -3px 0 0 rgba(198, 11, 30, 0.10), inset 0 -6px 0 rgba(198, 11, 30, 0.20), 0 8px 14px rgba(126, 55, 12, 0.16)',
+    hotkeyText: '#8c171b',
+    icon: '#a45112',
+    lampBorder: 'rgba(198, 11, 30, 0.34)',
+    lampGradient:
+      'radial-gradient(circle at 45% 35%, #fff8b7 0%, #ffc400 44%, #c60b1e 100%)',
+    lampHoverShadow:
+      '0 0 0 4px rgba(255, 196, 0, 0.32), 0 12px 26px rgba(198, 11, 30, 0.24)',
+    lampPulseShadow:
+      '0 0 0 5px rgba(255, 196, 0, 0.34), 0 14px 30px rgba(198, 11, 30, 0.26)',
+    lampShadow:
+      '0 0 0 3px rgba(255, 196, 0, 0.22), 0 10px 22px rgba(198, 11, 30, 0.20)',
+    optionHover: '#fff7dc',
+    optionStripe: '#fff0c8',
+    optionStripeHover: '#ffe4a8',
+    text: '#743016',
+  };
 }
 
 const lampPulseAnimation = 'hypersonicJumpLampPulse 1100ms ease-in-out infinite';

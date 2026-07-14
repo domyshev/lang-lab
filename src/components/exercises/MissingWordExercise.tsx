@@ -112,6 +112,25 @@ export function MissingWordExercise({
   const isMemorize = submissionOutcome === 'memorize';
   const resultTone = submissionOutcome;
   const sentenceParts = splitSentenceWithGap(prompt.sentenceWithGap);
+  const promptActions =
+    promptStatsAction || (isSubmitted && onKnownChange) ? (
+      <Stack
+        data-test={`missing_word_exercise__prompt_actions__${prompt.cardId}`}
+        direction="row"
+        spacing={0.75}
+        sx={{ alignItems: 'center', ml: '5px' }}
+      >
+        {promptStatsAction}
+        {isSubmitted && onKnownChange && (
+          <KnownCardToggleButton
+            checked={isKnown}
+            dataTest={`missing_word_exercise__known_button__${prompt.cardId}`}
+            interfaceLanguage={interfaceLanguage}
+            onChange={onKnownChange}
+          />
+        )}
+      </Stack>
+    ) : undefined;
 
   useEffect(() => {
     setLetters({});
@@ -260,7 +279,7 @@ export function MissingWordExercise({
             dataTest={`missing_word_exercise__prompt__${prompt.cardId}`}
             fallbackPrompt={prompt.prompt}
             hints={prompt.translationHints}
-            trailingAction={promptStatsAction}
+            trailingAction={promptActions}
           />
           {isRepeatedPrompt && (
             <ExerciseRepeatChip
@@ -420,14 +439,6 @@ export function MissingWordExercise({
                   ? t(interfaceLanguage, 'memorizeResult')
                   : t(interfaceLanguage, 'incorrect')}
           </Button>
-          {isSubmitted && onKnownChange && (
-            <KnownCardToggleButton
-              checked={isKnown}
-              dataTest={`missing_word_exercise__known_button__${prompt.cardId}`}
-              interfaceLanguage={interfaceLanguage}
-              onChange={onKnownChange}
-            />
-          )}
         </Stack>
       </Stack>
     </Paper>

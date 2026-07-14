@@ -238,7 +238,7 @@ describe('LanguageSelectors', () => {
 
     expect(
       screen.getByTestId('language_selectors__interface_language_info_wrapper'),
-    ).toHaveStyle({ marginRight: '5px' });
+    ).toHaveStyle({ marginLeft: '5px' });
     expect(
       screen.getByTestId('language_selectors__interface_language_info_button'),
     ).toHaveStyle({
@@ -249,6 +249,11 @@ describe('LanguageSelectors', () => {
 
     await user.hover(screen.getByTestId('language_selectors__interface_language_info_button'));
     let tooltip = await screen.findByTestId('language_selectors__interface_language_info_tooltip');
+    expect(
+      within(tooltip).getByTestId(
+        'language_selectors__interface_language_info_tooltip_title',
+      ),
+    ).toHaveTextContent('Язык интерфейса');
     expect(tooltip).toHaveTextContent(
       'Язык интерфейса меняет подписи, меню и подсказки приложения.',
     );
@@ -260,6 +265,11 @@ describe('LanguageSelectors', () => {
     await user.unhover(screen.getByTestId('language_selectors__interface_language_info_button'));
     await user.hover(screen.getByTestId('language_selectors__target_language_info_button'));
     tooltip = await screen.findByTestId('language_selectors__target_language_info_tooltip');
+    expect(
+      within(tooltip).getByTestId(
+        'language_selectors__target_language_info_tooltip_title',
+      ),
+    ).toHaveTextContent('Язык - цель изучения');
     expect(tooltip).toHaveTextContent(
       'Это язык, который вы тренируете и на котором вводите ответы в играх.',
     );
@@ -267,6 +277,11 @@ describe('LanguageSelectors', () => {
     await user.unhover(screen.getByTestId('language_selectors__target_language_info_button'));
     await user.hover(screen.getByTestId('language_selectors__companion_languages_info_button'));
     tooltip = await screen.findByTestId('language_selectors__companion_languages_info_tooltip');
+    expect(
+      within(tooltip).getByTestId(
+        'language_selectors__companion_languages_info_tooltip_title',
+      ),
+    ).toHaveTextContent('Сопутствующие языки');
     expect(tooltip).toHaveTextContent(
       'Сопутствующие языки показываются как переводы-подсказки в играх.',
     );
@@ -294,6 +309,16 @@ describe('LanguageSelectors', () => {
     });
 
     await user.click(screen.getByRole('button', { name: 'Настройки игр' }));
+
+    expect(screen.getByTestId('language_selectors__world_control')).toHaveStyle({
+      marginBottom: '20px',
+    });
+    expect(screen.getByTestId('language_selectors__repeat_management_title')).toHaveTextContent(
+      'Управление повторениями',
+    );
+    expect(
+      screen.getByTestId('language_selectors__settings_field_row__mistake_repeat_frequency'),
+    ).toHaveStyle({ alignItems: 'center' });
     const settingsInfoButton = screen.getByTestId(
       'language_selectors__settings_info_button__mistake_repeat_frequency',
     );
@@ -307,6 +332,11 @@ describe('LanguageSelectors', () => {
     const tooltip = await screen.findByTestId(
       'language_selectors__settings_info_tooltip__mistake_repeat_frequency',
     );
+    expect(
+      within(tooltip).getByTestId(
+        'language_selectors__settings_info_tooltip_title__mistake_repeat_frequency',
+      ),
+    ).toHaveTextContent('Частота повторов ошибок');
     expect(tooltip).toHaveStyle({
       backgroundColor: 'rgba(255, 255, 255, 0.98)',
       fontSize: '14px',
@@ -337,6 +367,14 @@ describe('LanguageSelectors', () => {
     for (const [key, text] of expectedTooltips) {
       const button = screen.getByTestId(`language_selectors__settings_info_button__${key}`);
       await user.hover(button);
+      const tooltip = await screen.findByTestId(
+        `language_selectors__settings_info_tooltip__${key}`,
+      );
+      expect(
+        within(tooltip).getByTestId(
+          `language_selectors__settings_info_tooltip_title__${key}`,
+        ),
+      ).toBeInTheDocument();
       expect(
         await screen.findByTestId(`language_selectors__settings_info_tooltip__${key}`),
       ).toHaveTextContent(text);
