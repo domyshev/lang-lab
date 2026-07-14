@@ -4,6 +4,9 @@ import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
+import KeyboardArrowUpRoundedIcon from '@mui/icons-material/KeyboardArrowUpRounded';
 import MilitaryTechOutlinedIcon from '@mui/icons-material/MilitaryTechOutlined';
 import PsychologyOutlinedIcon from '@mui/icons-material/PsychologyOutlined';
 import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
@@ -14,6 +17,7 @@ import {
   AppBar,
   Box,
   Button,
+  Checkbox,
   Container,
   Dialog,
   DialogActions,
@@ -51,7 +55,9 @@ import {
   worldIds,
 } from '../domain/worlds';
 import {
+  getComplementaryLanguagesForTarget,
   setAssistantId,
+  setComplementaryLanguagesForTarget,
   setInterfaceLanguage,
   setPlayerProfile,
   setTargetLanguage,
@@ -150,6 +156,9 @@ export function AppShell({
   const assistantId = useSelector((state: RootState) => state.app.assistantId);
   const targetLanguage = useSelector(
     (state: RootState) => state.app.targetLanguage,
+  );
+  const storedComplementaryLanguages = useSelector(
+    (state: RootState) => state.app.complementaryLanguages,
   );
   const worldId = useSelector((state: RootState) =>
     resolveWorldId(state.app.worldId),
@@ -405,12 +414,14 @@ export function AppShell({
 
       <PlayerOnboardingDialog
         assistantId={assistantId}
+        complementaryLanguages={storedComplementaryLanguages}
         interfaceLanguage={interfaceLanguage}
         open={!playerProfile}
         targetLanguage={targetLanguage}
         worldId={worldId}
         onComplete={({
           assistantId,
+          complementaryLanguages,
           interfaceLanguage,
           name,
           targetLanguage,
@@ -421,6 +432,12 @@ export function AppShell({
           dispatch(setAssistantId(assistantId));
           dispatch(setInterfaceLanguage(interfaceLanguage));
           dispatch(setTargetLanguage(targetLanguage));
+          dispatch(
+            setComplementaryLanguagesForTarget({
+              complementaryLanguages,
+              targetLanguage,
+            }),
+          );
           dispatch(
             setPlayerProfile({
               avatarSeed: createPlayerAvatarSeed(
@@ -573,14 +590,14 @@ function PlayerGreeting({
         }}
       >
         {visibleAssistants.map((assistant) => {
-          const tooltip = getAssistantTooltip(
+          const tooltipLabel = getAssistantTooltip(
             assistant.id,
             interfaceLanguage,
             worldId,
           );
           return (
             <MenuItem
-              aria-label={tooltip}
+              aria-label={tooltipLabel}
               data-test={`player_greeting__assistant_option__${assistant.id}`}
               key={assistant.id}
               value={assistant.id}
@@ -591,7 +608,30 @@ function PlayerGreeting({
                 componentsProps={readableTooltipComponentsProps}
                 placement="left"
                 slotProps={readableTooltipSlotProps}
-                title={tooltip}
+                title={
+                  <Stack spacing={0.55}>
+                    <Typography
+                      data-test={`player_greeting__assistant_option_tooltip_title__${assistant.id}`}
+                      sx={{
+                        fontSize: '14px',
+                        fontWeight: 850,
+                        lineHeight: 1.25,
+                      }}
+                    >
+                      {assistant.name[interfaceLanguage]}
+                    </Typography>
+                    <Typography
+                      data-test={`player_greeting__assistant_option_tooltip_body__${assistant.id}`}
+                      sx={{
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        lineHeight: 1.35,
+                      }}
+                    >
+                      {assistant.description[interfaceLanguage]}
+                    </Typography>
+                  </Stack>
+                }
               >
                 <Box
                   component="span"
@@ -599,7 +639,7 @@ function PlayerGreeting({
                   sx={{ display: 'inline-flex' }}
                 >
                   <AssistantStickerIcon
-                    ariaLabel={tooltip}
+                    ariaLabel={tooltipLabel}
                     assistantId={assistant.id}
                     dataTest={`player_greeting__assistant_option_sticker__${assistant.id}`}
                     size={36}
@@ -1163,6 +1203,7 @@ function PlayerLevelIcon({ index }: { index: number }) {
 
 function PlayerOnboardingDialog({
   assistantId,
+  complementaryLanguages,
   interfaceLanguage,
   onComplete,
   open,
@@ -1170,9 +1211,11 @@ function PlayerOnboardingDialog({
   worldId,
 }: {
   assistantId: AssistantId;
+  complementaryLanguages: RootState['app']['complementaryLanguages'];
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   onComplete: (value: {
     assistantId: AssistantId;
+    complementaryLanguages: SupportedLanguage[];
     interfaceLanguage: SupportedLanguage;
     name: string;
     targetLanguage: SupportedLanguage;
@@ -1185,6 +1228,7 @@ function PlayerOnboardingDialog({
   const titleId = useId();
   const interfaceLabelId = useId();
   const targetLabelId = useId();
+  const hintLanguagesLabelId = useId();
   const [name, setName] = useState('');
   const [selectedAssistantId, setSelectedAssistantId] =
     useState<AssistantId | ''>('');
@@ -1195,17 +1239,40 @@ function PlayerOnboardingDialog({
   const [selectedTargetLanguage, setSelectedTargetLanguage] = useState<
     SupportedLanguage | ''
   >('');
+  const [selectedHintLanguages, setSelectedHintLanguages] = useState<
+    SupportedLanguage[]
+  >(() =>
+    getComplementaryLanguagesForTarget(
+      complementaryLanguages,
+      targetLanguage,
+      interfaceLanguage,
+    ),
+  );
   const trimmedName = name.trim();
   const resolvedSelectedWorldId = selectedWorldId || worldId;
   const copyLanguage = selectedInterfaceLanguage || 'en';
+  const resolvedHintTargetLanguage = selectedTargetLanguage || targetLanguage;
   const visibleAssistants = getVisibleAssistantCharacters(resolvedSelectedWorldId);
+  const hintLanguageOptions = supportedLanguages.filter(
+    (language) => language !== resolvedHintTargetLanguage,
+  );
+  const selectedHintLanguageSet = new Set(selectedHintLanguages);
+  const orderedHintLanguageOptions = [
+    ...selectedHintLanguages.filter((language) =>
+      hintLanguageOptions.includes(language),
+    ),
+    ...hintLanguageOptions.filter(
+      (language) => !selectedHintLanguageSet.has(language),
+    ),
+  ];
   const isReady = Boolean(
     selectedWorldId &&
       selectedAssistantId &&
       selectedInterfaceLanguage &&
-      selectedTargetLanguage,
+      selectedTargetLanguage &&
+      selectedHintLanguages.length > 0,
   );
-  const missingOnboardingMessages = [
+  const missingOnboardingFieldLabels = [
     !selectedWorldId ? t(copyLanguage, 'appWorld') : undefined,
     !selectedAssistantId ? t(copyLanguage, 'assistant') : undefined,
     !selectedInterfaceLanguage
@@ -1214,14 +1281,79 @@ function PlayerOnboardingDialog({
     !selectedTargetLanguage
       ? t(copyLanguage, 'targetLearningLanguage')
       : undefined,
+    selectedHintLanguages.length === 0
+      ? t(copyLanguage, 'complementaryLanguage')
+      : undefined,
     !trimmedName ? t(copyLanguage, 'playerNameLabel') : undefined,
   ].filter((message): message is string => Boolean(message));
+  const missingOnboardingMessages = missingOnboardingFieldLabels.map((label) =>
+    formatOnboardingMissingFieldMessage(copyLanguage, label),
+  );
+  const handleTargetLanguageChange = (language: SupportedLanguage) => {
+    setSelectedTargetLanguage(language);
+    setSelectedHintLanguages(
+      getComplementaryLanguagesForTarget(
+        complementaryLanguages,
+        language,
+        selectedInterfaceLanguage || interfaceLanguage,
+      ),
+    );
+  };
+  const handleHintLanguagesChange = (
+    event: SelectChangeEvent<typeof selectedHintLanguages>,
+  ) => {
+    const rawValue = event.target.value;
+    const nextLanguages = typeof rawValue === 'string' ? rawValue.split(',') : rawValue;
+    const sanitizedLanguages = (nextLanguages as SupportedLanguage[]).filter(
+      (language) =>
+        supportedLanguages.includes(language) &&
+        language !== resolvedHintTargetLanguage,
+    );
+
+    if (sanitizedLanguages.length === 0) {
+      return;
+    }
+
+    const nextLanguageSet = new Set(sanitizedLanguages);
+    setSelectedHintLanguages((currentLanguages) => [
+      ...currentLanguages.filter((language) => nextLanguageSet.has(language)),
+      ...hintLanguageOptions.filter(
+        (language) =>
+          nextLanguageSet.has(language) && !currentLanguages.includes(language),
+      ),
+    ]);
+  };
+  const moveHintLanguage = (
+    language: SupportedLanguage,
+    direction: -1 | 1,
+  ) => {
+    setSelectedHintLanguages((currentLanguages) => {
+      const currentIndex = currentLanguages.indexOf(language);
+      const nextIndex = currentIndex + direction;
+
+      if (
+        currentIndex < 0 ||
+        nextIndex < 0 ||
+        nextIndex >= currentLanguages.length
+      ) {
+        return currentLanguages;
+      }
+
+      const nextLanguages = [...currentLanguages];
+      [nextLanguages[currentIndex], nextLanguages[nextIndex]] = [
+        nextLanguages[nextIndex],
+        nextLanguages[currentIndex],
+      ];
+      return nextLanguages;
+    });
+  };
   const complete = (nextName: string) => {
     if (!isReady) {
       return;
     }
     onComplete({
       assistantId: selectedAssistantId || assistantId,
+      complementaryLanguages: selectedHintLanguages,
       interfaceLanguage: selectedInterfaceLanguage || interfaceLanguage,
       name: nextName,
       targetLanguage: selectedTargetLanguage || targetLanguage,
@@ -1286,7 +1418,7 @@ function PlayerOnboardingDialog({
             useFlexGap
           >
             {visibleAssistants.map((assistant) => {
-              const tooltip = getAssistantTooltip(
+              const tooltipLabel = getAssistantTooltip(
                 assistant.id,
                 copyLanguage,
                 resolvedSelectedWorldId,
@@ -1299,7 +1431,30 @@ function PlayerOnboardingDialog({
                   componentsProps={readableTooltipComponentsProps}
                   key={assistant.id}
                   slotProps={readableTooltipSlotProps}
-                  title={tooltip}
+                  title={
+                    <Stack spacing={0.55}>
+                      <Typography
+                        data-test={`player_onboarding__assistant_tooltip_title__${assistant.id}`}
+                        sx={{
+                          fontSize: '14px',
+                          fontWeight: 850,
+                          lineHeight: 1.25,
+                        }}
+                      >
+                        {assistant.name[copyLanguage]}
+                      </Typography>
+                      <Typography
+                        data-test={`player_onboarding__assistant_tooltip_body__${assistant.id}`}
+                        sx={{
+                          fontSize: '14px',
+                          fontWeight: 500,
+                          lineHeight: 1.35,
+                        }}
+                      >
+                        {assistant.description[copyLanguage]}
+                      </Typography>
+                    </Stack>
+                  }
                 >
                   <Button
                     aria-label={assistant.name[copyLanguage]}
@@ -1318,7 +1473,7 @@ function PlayerOnboardingDialog({
                     }}
                   >
                     <AssistantStickerIcon
-                      ariaLabel={tooltip}
+                      ariaLabel={tooltipLabel}
                       assistantId={assistant.id}
                       dataTest={`player_onboarding__assistant_sticker__${assistant.id}`}
                       size={48}
@@ -1329,62 +1484,203 @@ function PlayerOnboardingDialog({
               );
             })}
           </Stack>
-          <FormControl
-            data-test="player_onboarding__interface_language_control"
-            fullWidth
+          <Stack
+            data-test="player_onboarding__interface_language_row"
+            direction="row"
+            spacing={0.75}
+            sx={{ alignItems: 'center' }}
           >
-            <InputLabel id={interfaceLabelId}>
-              {t(copyLanguage, 'interfaceLanguage')}
-            </InputLabel>
-            <Select
-              data-test="player_onboarding__interface_language_select"
-              label={t(copyLanguage, 'interfaceLanguage')}
-              labelId={interfaceLabelId}
-              value={selectedInterfaceLanguage}
-              onChange={(event: SelectChangeEvent<SupportedLanguage | ''>) =>
-                setSelectedInterfaceLanguage(
-                  event.target.value as SupportedLanguage,
-                )
-              }
+            <FormControl
+              data-test="player_onboarding__interface_language_control"
+              fullWidth
+              sx={{ flex: 1 }}
             >
-              {supportedLanguages.map((language) => (
-                <MenuItem
-                  aria-label={languageLabels[language]}
-                  key={language}
-                  value={language}
-                >
-                  {languageFlags[language]} {languageLabels[language]}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl
-            data-test="player_onboarding__target_language_control"
-            fullWidth
+              <InputLabel id={interfaceLabelId}>
+                {t(copyLanguage, 'interfaceLanguage')}
+              </InputLabel>
+              <Select
+                data-test="player_onboarding__interface_language_select"
+                label={t(copyLanguage, 'interfaceLanguage')}
+                labelId={interfaceLabelId}
+                value={selectedInterfaceLanguage}
+                onChange={(event: SelectChangeEvent<SupportedLanguage | ''>) =>
+                  setSelectedInterfaceLanguage(
+                    event.target.value as SupportedLanguage,
+                  )
+                }
+              >
+                {supportedLanguages.map((language) => (
+                  <MenuItem
+                    aria-label={languageLabels[language]}
+                    key={language}
+                    value={language}
+                  >
+                    {languageFlags[language]} {languageLabels[language]}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <OnboardingSelectorInfoIcon
+              kind="interface"
+              language={copyLanguage}
+            />
+          </Stack>
+          <Stack
+            data-test="player_onboarding__target_language_row"
+            direction="row"
+            spacing={0.75}
+            sx={{ alignItems: 'center' }}
           >
-            <InputLabel id={targetLabelId}>
-              {t(copyLanguage, 'targetLearningLanguage')}
-            </InputLabel>
-            <Select
-              data-test="player_onboarding__target_language_select"
-              label={t(copyLanguage, 'targetLearningLanguage')}
-              labelId={targetLabelId}
-              value={selectedTargetLanguage}
-              onChange={(event: SelectChangeEvent<SupportedLanguage | ''>) =>
-                setSelectedTargetLanguage(event.target.value as SupportedLanguage)
-              }
+            <FormControl
+              data-test="player_onboarding__target_language_control"
+              fullWidth
+              sx={{ flex: 1 }}
             >
-              {supportedLanguages.map((language) => (
-                <MenuItem
-                  aria-label={languageLabels[language]}
-                  key={language}
-                  value={language}
-                >
-                  {languageFlags[language]} {languageLabels[language]}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <InputLabel id={targetLabelId}>
+                {t(copyLanguage, 'targetLearningLanguage')}
+              </InputLabel>
+              <Select
+                data-test="player_onboarding__target_language_select"
+                label={t(copyLanguage, 'targetLearningLanguage')}
+                labelId={targetLabelId}
+                value={selectedTargetLanguage}
+                onChange={(event: SelectChangeEvent<SupportedLanguage | ''>) =>
+                  handleTargetLanguageChange(event.target.value as SupportedLanguage)
+                }
+              >
+                {supportedLanguages.map((language) => (
+                  <MenuItem
+                    aria-label={languageLabels[language]}
+                    key={language}
+                    value={language}
+                  >
+                    {languageFlags[language]} {languageLabels[language]}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <OnboardingSelectorInfoIcon kind="target" language={copyLanguage} />
+          </Stack>
+          <Stack
+            data-test="player_onboarding__hint_languages_row"
+            direction="row"
+            spacing={0.75}
+            sx={{ alignItems: 'center' }}
+          >
+            <FormControl
+              data-test="player_onboarding__hint_languages_control"
+              fullWidth
+              sx={{ flex: 1 }}
+            >
+              <InputLabel id={hintLanguagesLabelId}>
+                {t(copyLanguage, 'complementaryLanguage')}
+              </InputLabel>
+              <Select
+                data-test="player_onboarding__hint_languages_select"
+                label={t(copyLanguage, 'complementaryLanguage')}
+                labelId={hintLanguagesLabelId}
+                multiple
+                value={selectedHintLanguages}
+                onChange={handleHintLanguagesChange}
+                renderValue={(value) => (
+                  <Stack
+                    component="span"
+                    direction="row"
+                    spacing={0.75}
+                    sx={{ alignItems: 'center', overflow: 'hidden' }}
+                  >
+                    {(value as SupportedLanguage[]).map((language) => (
+                      <Typography
+                        component="span"
+                        key={language}
+                        sx={{
+                          display: 'inline-flex',
+                          fontSize: 15,
+                          fontWeight: 850,
+                          gap: 0.5,
+                          minWidth: 0,
+                        }}
+                      >
+                        <Box component="span" aria-hidden="true">
+                          {languageFlags[language]}
+                        </Box>
+                        <Box component="span">{languageLabels[language]}</Box>
+                      </Typography>
+                    ))}
+                  </Stack>
+                )}
+              >
+                {orderedHintLanguageOptions.map((language) => {
+                  const isSelected = selectedHintLanguageSet.has(language);
+                  const selectedIndex = selectedHintLanguages.indexOf(language);
+                  return (
+                    <MenuItem
+                      aria-label={languageLabels[language]}
+                      data-test={`player_onboarding__hint_languages_option__${language}`}
+                      key={language}
+                      value={language}
+                      sx={{ gap: 0.75, minWidth: 260 }}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        data-test={`player_onboarding__hint_languages_option_checkbox__${language}`}
+                        size="small"
+                        sx={{ p: 0.25 }}
+                      />
+                      <Stack
+                        component="span"
+                        direction="row"
+                        spacing={0.75}
+                        sx={{ alignItems: 'center' }}
+                      >
+                        <Box component="span" aria-hidden="true">
+                          {languageFlags[language]}
+                        </Box>
+                        <Box component="span">{languageLabels[language]}</Box>
+                      </Stack>
+                      <Stack
+                        data-test={`player_onboarding__hint_languages_order_controls__${language}`}
+                        direction="row"
+                        spacing={0.25}
+                        sx={{ ml: 'auto' }}
+                      >
+                        <IconButton
+                          aria-label={`${t(copyLanguage, 'moveCompanionLanguageUp')}: ${languageLabels[language]}`}
+                          data-test={`player_onboarding__hint_languages_move_up__${language}`}
+                          disabled={!isSelected || selectedIndex <= 0}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            moveHintLanguage(language, -1);
+                          }}
+                          onMouseDown={(event) => event.preventDefault()}
+                          size="small"
+                        >
+                          <KeyboardArrowUpRoundedIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          aria-label={`${t(copyLanguage, 'moveCompanionLanguageDown')}: ${languageLabels[language]}`}
+                          data-test={`player_onboarding__hint_languages_move_down__${language}`}
+                          disabled={
+                            !isSelected ||
+                            selectedIndex === selectedHintLanguages.length - 1
+                          }
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            moveHintLanguage(language, 1);
+                          }}
+                          onMouseDown={(event) => event.preventDefault()}
+                          size="small"
+                        >
+                          <KeyboardArrowDownRoundedIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
+            <OnboardingSelectorInfoIcon kind="hint" language={copyLanguage} />
+          </Stack>
           <TextField
             data-test="player_onboarding__name_input"
             fullWidth
@@ -1443,6 +1739,218 @@ function PlayerOnboardingDialog({
       </DialogActions>
     </Dialog>
   );
+}
+
+function formatOnboardingMissingFieldMessage(
+  language: SupportedLanguage,
+  fieldLabel: string,
+): string {
+  const choosePrefix: Record<SupportedLanguage, string> = {
+    en: 'Choose',
+    es: 'Elige',
+    ru: 'Выберите',
+    uk: 'Оберіть',
+  };
+
+  return `${choosePrefix[language]} ${lowercaseFirstLetter(fieldLabel, language)}`;
+}
+
+function lowercaseFirstLetter(value: string, language: SupportedLanguage): string {
+  if (!value) {
+    return value;
+  }
+
+  return `${value.slice(0, 1).toLocaleLowerCase(language)}${value.slice(1)}`;
+}
+
+type OnboardingSelectorInfoKind = 'interface' | 'target' | 'hint';
+
+function OnboardingSelectorInfoIcon({
+  kind,
+  language,
+}: {
+  kind: OnboardingSelectorInfoKind;
+  language: SupportedLanguage;
+}) {
+  const dataKey = onboardingSelectorInfoDataKey[kind];
+
+  return (
+    <Tooltip
+      arrow
+      placement="right"
+      slotProps={{
+        ...readableTooltipSlotProps,
+        tooltip: {
+          ...readableTooltipSlotProps.tooltip,
+          ...({
+            'data-test': `player_onboarding__${dataKey}_info_tooltip`,
+          } as Record<string, string>),
+        },
+      }}
+      title={
+        <Stack spacing={0.65}>
+          <Typography
+            data-test={`player_onboarding__${dataKey}_info_tooltip_title`}
+            sx={{ fontSize: '14px', fontWeight: 850, lineHeight: 1.3 }}
+          >
+            {getOnboardingSelectorInfoTitle(language, kind)}
+          </Typography>
+          {getOnboardingSelectorInfoText(language, kind).map((line) => (
+            <Typography
+              key={line}
+              sx={{ fontSize: '14px', fontWeight: 500, lineHeight: 1.35 }}
+            >
+              {line}
+            </Typography>
+          ))}
+        </Stack>
+      }
+    >
+      <IconButton
+        aria-label={getOnboardingSelectorInfoLabel(language, kind)}
+        data-test={`player_onboarding__${dataKey}_info_button`}
+        size="small"
+        sx={{
+          bgcolor: 'rgba(246, 255, 230, 0.76)',
+          border: '1px solid rgba(91, 150, 54, 0.34)',
+          color: '#386f2d',
+          flexShrink: 0,
+          height: 28,
+          width: 28,
+          '&:hover': {
+            bgcolor: 'rgba(246, 255, 230, 0.96)',
+          },
+        }}
+      >
+        <InfoOutlinedIcon fontSize="inherit" />
+      </IconButton>
+    </Tooltip>
+  );
+}
+
+const onboardingSelectorInfoDataKey: Record<OnboardingSelectorInfoKind, string> = {
+  hint: 'hint_languages',
+  interface: 'interface_language',
+  target: 'target_language',
+};
+
+function getOnboardingSelectorInfoLabel(
+  language: SupportedLanguage,
+  kind: OnboardingSelectorInfoKind,
+): string {
+  const labels: Record<
+    SupportedLanguage,
+    Record<OnboardingSelectorInfoKind, string>
+  > = {
+    en: {
+      hint: 'About hint languages',
+      interface: 'About interface language',
+      target: 'About target learning language',
+    },
+    es: {
+      hint: 'Sobre los idiomas de pistas',
+      interface: 'Sobre el idioma de interfaz',
+      target: 'Sobre el idioma objetivo',
+    },
+    ru: {
+      hint: 'О языках подсказок',
+      interface: 'О языке интерфейса',
+      target: 'О языке - цели изучения',
+    },
+    uk: {
+      hint: 'Про мови підказок',
+      interface: 'Про мову інтерфейсу',
+      target: 'Про мову - ціль вивчення',
+    },
+  };
+
+  return labels[language][kind];
+}
+
+function getOnboardingSelectorInfoTitle(
+  language: SupportedLanguage,
+  kind: OnboardingSelectorInfoKind,
+): string {
+  const titles: Record<OnboardingSelectorInfoKind, string> = {
+    hint: t(language, 'complementaryLanguage'),
+    interface: t(language, 'interfaceLanguage'),
+    target: t(language, 'targetLearningLanguage'),
+  };
+
+  return titles[kind];
+}
+
+function getOnboardingSelectorInfoText(
+  language: SupportedLanguage,
+  kind: OnboardingSelectorInfoKind,
+): string[] {
+  const texts: Record<
+    SupportedLanguage,
+    Record<OnboardingSelectorInfoKind, string[]>
+  > = {
+    en: {
+      hint: [
+        'Hint languages are shown as translations under the card prompt.',
+        'At least one hint language stays selected.',
+        'Defaults follow the target language: every language except the target is selected.',
+      ],
+      interface: [
+        'Interface language changes app labels, menus, and helper text.',
+        'It does not decide which language you practice in games.',
+      ],
+      target: [
+        'Target learning language is the language you train and type answers in.',
+        'Statistics are tracked separately for every target language.',
+      ],
+    },
+    es: {
+      hint: [
+        'Los idiomas de pistas aparecen como traducciones bajo la tarjeta.',
+        'Al menos un idioma de pista queda seleccionado.',
+        'Por defecto se eligen todos los idiomas excepto el objetivo.',
+      ],
+      interface: [
+        'El idioma de interfaz cambia textos, menus y ayuda.',
+        'No decide que idioma practicas en los juegos.',
+      ],
+      target: [
+        'El idioma objetivo es el idioma que entrenas y usas para responder.',
+        'La estadistica se guarda por separado para cada idioma objetivo.',
+      ],
+    },
+    ru: {
+      hint: [
+        'Языки подсказок отображаются как переводы под карточкой.',
+        'Как минимум один язык подсказок всегда остается выбранным.',
+        'По умолчанию выбираются все языки, кроме языка - цели изучения.',
+      ],
+      interface: [
+        'Язык интерфейса меняет подписи, меню и подсказки приложения.',
+        'Он не выбирает язык, который вы тренируете в играх.',
+      ],
+      target: [
+        'Язык - цель изучения это язык, который вы тренируете и используете для ответов.',
+        'Статистика ведется отдельно для каждого языка - цели изучения.',
+      ],
+    },
+    uk: {
+      hint: [
+        'Мови підказок показуються як переклади під карткою.',
+        'Принаймні одна мова підказок завжди лишається вибраною.',
+        'За замовчуванням вибираються всі мови, крім мови - цілі вивчення.',
+      ],
+      interface: [
+        'Мова інтерфейсу змінює підписи, меню та підказки застосунку.',
+        'Вона не визначає мову, яку ви тренуєте в іграх.',
+      ],
+      target: [
+        'Мова - ціль вивчення це мова, яку ви тренуєте й використовуєте для відповідей.',
+        'Статистика ведеться окремо для кожної мови - цілі вивчення.',
+      ],
+    },
+  };
+
+  return texts[language][kind];
 }
 
 function WorldChoiceIcon({
@@ -1665,11 +2173,31 @@ function getPlayerSupporterCountry(
   assistantId: AssistantId | string | undefined,
 ): SupporterCountry {
   if (worldId === 'mortalKombat') {
-    return 'mortal-kombat';
+    switch (assistantId) {
+      case 'greenPower':
+        return 'mk-ice-guardian';
+      case 'webRunner':
+        return 'mk-shadow-queen';
+      case 'capeChampion':
+        return 'mk-thunder-monk';
+      case 'studyTroll':
+      default:
+        return 'mk-flame-ninja';
+    }
   }
 
   if (worldId === 'starTrek') {
-    return 'starfleet';
+    switch (assistantId) {
+      case 'greenPower':
+        return 'trek-science-officer';
+      case 'webRunner':
+        return 'trek-chief-engineer';
+      case 'capeChampion':
+        return 'trek-helm-pilot';
+      case 'studyTroll':
+      default:
+        return 'trek-star-captain';
+    }
   }
 
   if (worldId !== 'forest') {

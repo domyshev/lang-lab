@@ -1741,7 +1741,7 @@ describe('App navigation', () => {
     );
 
     const saveCardsInSetButton = screen.getByRole('button', {
-      name: 'Сохранить карточки',
+      name: 'Сохранить',
     });
     expect(saveCardsInSetButton).toBeEnabled();
     expect(saveCardsInSetButton).toHaveClass('MuiButton-outlined');
@@ -1753,12 +1753,12 @@ describe('App navigation', () => {
     expect(createdCardSet?.cardIds).toEqual(
       expect.arrayContaining(['card-airport', 'card-impede']),
     );
-    expect(screen.getByRole('button', { name: 'Редактировать карточки' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Редактировать набор' })).toBeEnabled();
 
-    await user.click(screen.getByRole('button', { name: 'Редактировать карточки' }));
+    await user.click(screen.getByRole('button', { name: 'Редактировать набор' }));
     await user.click(screen.getByTestId('card_set_detail__card_select_checkbox__card-airport'));
     await user.click(screen.getByTestId('card_set_detail__card_select_checkbox__card-vehicle'));
-    await user.click(screen.getByRole('button', { name: 'Сохранить карточки' }));
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }));
 
     expect(
       store

@@ -197,7 +197,7 @@ describe('LanguageSelectors', () => {
     );
 
     const companionSelect = screen.getByRole('combobox', {
-      name: 'Сопутствующие языки',
+      name: 'Языки подсказок',
     });
     expect(companionSelect).toHaveTextContent('Español');
     expect(companionSelect).toHaveTextContent('Українська');
@@ -227,6 +227,12 @@ describe('LanguageSelectors', () => {
     await user.click(screen.getByRole('option', { name: /Русский/ }));
 
     expect(store.getState().app.complementaryLanguages.en).toEqual(['uk', 'es']);
+
+    await user.click(screen.getByRole('option', { name: /Українська/ }));
+    expect(store.getState().app.complementaryLanguages.en).toEqual(['es']);
+
+    await user.click(screen.getByRole('option', { name: /Español/ }));
+    expect(store.getState().app.complementaryLanguages.en).toEqual(['es']);
   });
 
   it('explains the header language selectors with readable info tooltips', async () => {
@@ -283,16 +289,47 @@ describe('LanguageSelectors', () => {
       within(tooltip).getByTestId(
         'language_selectors__companion_languages_info_tooltip_title',
       ),
-    ).toHaveTextContent('Сопутствующие языки');
-    expect(tooltip).toHaveTextContent(
-      'Сопутствующие языки показываются как переводы-подсказки в играх.',
-    );
-    expect(tooltip).toHaveTextContent(
-      'Порядок и выбор запоминаются отдельно для каждого языка-цели.',
-    );
-    expect(tooltip).toHaveTextContent(
-      'По умолчанию: English -> Русский, Español, Українська.',
-    );
+    ).toHaveTextContent('Языки подсказок');
+    expect(
+      within(tooltip).getByTestId(
+        'language_selectors__companion_languages_info_tooltip_line__0',
+      ),
+    ).toHaveTextContent('Языки подсказок показываются как переводы-подсказки в играх.');
+    expect(
+      within(tooltip).getByTestId(
+        'language_selectors__companion_languages_info_tooltip_line__2',
+      ),
+    ).toHaveTextContent('По умолчанию:');
+    expect(
+      within(tooltip).getByTestId(
+        'language_selectors__companion_languages_info_tooltip_line__3',
+      ),
+    ).toHaveTextContent('English -> Русский, Español, Українська');
+    expect(
+      within(tooltip).getByTestId(
+        'language_selectors__companion_languages_info_tooltip_line_source__3',
+      ),
+    ).toHaveStyle({ fontWeight: '850' });
+    expect(
+      within(tooltip).getByTestId(
+        'language_selectors__companion_languages_info_tooltip_line_source__4',
+      ),
+    ).toHaveTextContent('Русский');
+    expect(
+      within(tooltip).getByTestId(
+        'language_selectors__companion_languages_info_tooltip_line_source__5',
+      ),
+    ).toHaveTextContent('Español');
+    expect(
+      within(tooltip).getByTestId(
+        'language_selectors__companion_languages_info_tooltip_line__6',
+      ),
+    ).toHaveTextContent('Українська -> Русский, English, Español');
+    expect(
+      within(tooltip).getByTestId(
+        'language_selectors__companion_languages_info_tooltip_line_source__6',
+      ),
+    ).toHaveTextContent('Українська');
   });
 
   it('uses the forest palette for selector and settings info icons in the forest world', async () => {
@@ -319,7 +356,7 @@ describe('LanguageSelectors', () => {
       'Управление повторениями',
     );
     expect(screen.getByTestId('language_selectors__repeat_management_title')).toHaveStyle({
-      marginTop: '5px',
+      marginTop: '15px',
     });
     expect(
       screen.getByTestId('language_selectors__settings_field_row__mistake_repeat_frequency'),

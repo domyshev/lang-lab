@@ -18,7 +18,15 @@ export type SupporterCountry =
   | 'unicorn'
   | 'ladybug'
   | 'mortal-kombat'
-  | 'starfleet';
+  | 'mk-flame-ninja'
+  | 'mk-ice-guardian'
+  | 'mk-shadow-queen'
+  | 'mk-thunder-monk'
+  | 'starfleet'
+  | 'trek-chief-engineer'
+  | 'trek-helm-pilot'
+  | 'trek-science-officer'
+  | 'trek-star-captain';
 
 export function PlayerPixelAvatar({
   ariaLabel,
@@ -105,6 +113,203 @@ function SupporterFlag({
   dataTest: string;
 }) {
   switch (country) {
+    case 'trek-star-captain':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__trek_star_captain_space`}
+            fill="#101b4d"
+            height="38"
+            width="54"
+          />
+          <rect fill="#f3b833" height="15" width="54" y="23" />
+          <path
+            data-test={`${dataTest}__trek_star_captain_delta`}
+            d="M28 5 40 31 28 25 16 31Z"
+            fill="#fff8dc"
+            stroke="#101b4d"
+            strokeLinejoin="round"
+            strokeWidth="1.35"
+          />
+          <circle cx="9" cy="9" fill="#f7fbff" r="1.2" />
+          <circle cx="44" cy="13" fill="#f7fbff" r="1.35" />
+        </>
+      );
+    case 'trek-science-officer':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__trek_science_officer_nebula`}
+            fill="#102a5f"
+            height="38"
+            width="54"
+          />
+          <path
+            d="M0 28c10-9 22-8 32-3 8 4 14 2 22-5v18H0Z"
+            fill="#5cc8ff"
+            opacity="0.78"
+          />
+          <circle
+            data-test={`${dataTest}__trek_science_officer_orbit`}
+            cx="28"
+            cy="19"
+            fill="#dff8ff"
+            r="7"
+            stroke="#101b4d"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M13 19c8-7 22-7 30 0M13 19c8 7 22 7 30 0"
+            fill="none"
+            stroke="#f3b833"
+            strokeLinecap="round"
+            strokeWidth="1.5"
+          />
+        </>
+      );
+    case 'trek-chief-engineer':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__trek_chief_engineer_engine`}
+            fill="#231022"
+            height="38"
+            width="54"
+          />
+          <rect fill="#d6423a" height="16" width="54" y="22" />
+          <path
+            data-test={`${dataTest}__trek_chief_engineer_core`}
+            d="M15 9h24v20H15Z"
+            fill="#f3b833"
+            stroke="#fff8dc"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M20 14h14M20 20h14M27 9v20"
+            stroke="#231022"
+            strokeLinecap="round"
+            strokeWidth="1.7"
+          />
+        </>
+      );
+    case 'trek-helm-pilot':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__trek_helm_pilot_course`}
+            fill="#0d2433"
+            height="38"
+            width="54"
+          />
+          <path
+            d="M5 30C18 10 33 7 49 16"
+            fill="none"
+            stroke="#5cc8ff"
+            strokeLinecap="round"
+            strokeWidth="4"
+          />
+          <path
+            d="M11 27 27 14l-2 11 14 3Z"
+            fill="#f3b833"
+            stroke="#f7fbff"
+            strokeLinejoin="round"
+            strokeWidth="1.1"
+          />
+        </>
+      );
+    case 'mk-flame-ninja':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__mk_flame_ninja_arena`}
+            fill="#260909"
+            height="38"
+            width="54"
+          />
+          <rect fill="#d43f24" height="16" width="54" y="22" />
+          <path
+            data-test={`${dataTest}__mk_flame_ninja_fire`}
+            d="M28 31c-9-5-8-13-1-24 1 7 8 8 7 15 4-3 6-7 5-12 8 11 3 21-11 21Z"
+            fill="#ffb03a"
+            stroke="#fff1d6"
+            strokeLinejoin="round"
+            strokeWidth="1.1"
+          />
+        </>
+      );
+    case 'mk-ice-guardian':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__mk_ice_guardian_frost`}
+            fill="#0d2347"
+            height="38"
+            width="54"
+          />
+          <rect fill="#76d7ff" height="15" width="54" y="23" />
+          <path
+            data-test={`${dataTest}__mk_ice_guardian_crystal`}
+            d="M27 5 39 17 33 32H21L15 17Z"
+            fill="#e7fbff"
+            stroke="#1f6f9f"
+            strokeLinejoin="round"
+            strokeWidth="1.3"
+          />
+          <path
+            d="M27 5v27M15 17h24"
+            stroke="#76d7ff"
+            strokeLinecap="round"
+            strokeWidth="1.2"
+          />
+        </>
+      );
+    case 'mk-shadow-queen':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__mk_shadow_queen_void`}
+            fill="#17091e"
+            height="38"
+            width="54"
+          />
+          <rect fill="#6b1d72" height="15" width="54" y="23" />
+          <path
+            data-test={`${dataTest}__mk_shadow_queen_moon`}
+            d="M33 7c-8 1-14 7-14 14s6 12 14 13c-4-4-6-8-6-13s2-10 6-14Z"
+            fill="#f4d7ff"
+            stroke="#ffb03a"
+            strokeLinejoin="round"
+            strokeWidth="1.1"
+          />
+          <path
+            d="M12 28c9-10 20-13 31-9"
+            fill="none"
+            stroke="#ffb03a"
+            strokeLinecap="round"
+            strokeWidth="1.6"
+          />
+        </>
+      );
+    case 'mk-thunder-monk':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__mk_thunder_monk_storm`}
+            fill="#24113d"
+            height="38"
+            width="54"
+          />
+          <rect fill="#d43f24" height="14" width="54" y="24" />
+          <path
+            data-test={`${dataTest}__mk_thunder_monk_bolt`}
+            d="M31 4 17 22h10l-4 13 16-20H28Z"
+            fill="#ffdf64"
+            stroke="#fff1d6"
+            strokeLinejoin="round"
+            strokeWidth="1.1"
+          />
+        </>
+      );
     case 'starfleet':
       return (
         <>

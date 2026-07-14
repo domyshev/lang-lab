@@ -475,7 +475,7 @@ export function LanguageSelectors() {
               fontSize: '0.88rem',
               fontWeight: 850,
               lineHeight: 1.2,
-              mt: '5px',
+              mt: '15px',
             }}
           >
             {t(interfaceLanguage, 'repeatManagementTitle')}
@@ -664,12 +664,16 @@ function SelectorInfoIcon({
             >
               {getSelectorInfoTitle(interfaceLanguage, kind)}
             </Typography>
-            {getSelectorInfoText(interfaceLanguage, kind).map((line) => (
+            {getSelectorInfoText(interfaceLanguage, kind).map((line, index) => (
               <Typography
+                data-test={`language_selectors__${selectorInfoDataKey[kind]}_info_tooltip_line__${index}`}
                 key={line}
                 sx={{ fontSize: '14px', fontWeight: 500, lineHeight: 1.35 }}
               >
-                {line}
+                {renderSelectorInfoLine(
+                  line,
+                  `language_selectors__${selectorInfoDataKey[kind]}_info_tooltip_line_source__${index}`,
+                )}
               </Typography>
             ))}
           </Stack>
@@ -685,6 +689,31 @@ function SelectorInfoIcon({
         </IconButton>
       </Tooltip>
     </Box>
+  );
+}
+
+function renderSelectorInfoLine(
+  line: string,
+  sourceDataTest: string,
+): ReactNode {
+  const separator = ' -> ';
+  const separatorIndex = line.indexOf(separator);
+
+  if (separatorIndex < 0) {
+    return line;
+  }
+
+  return (
+    <>
+      <Box
+        component="span"
+        data-test={sourceDataTest}
+        sx={{ fontWeight: 850 }}
+      >
+        {line.slice(0, separatorIndex)}
+      </Box>
+      {line.slice(separatorIndex)}
+    </>
   );
 }
 
@@ -825,22 +854,22 @@ function getSelectorInfoLabel(
 ): string {
   const labels: Record<SupportedLanguage, Record<SelectorInfoKind, string>> = {
     en: {
-      companion: 'About companion languages',
+      companion: 'About hint languages',
       interface: 'About interface language',
       target: 'About target learning language',
     },
     es: {
-      companion: 'Sobre los idiomas acompanantes',
+      companion: 'Sobre los idiomas de pistas',
       interface: 'Sobre el idioma de interfaz',
       target: 'Sobre el idioma objetivo',
     },
     ru: {
-      companion: 'О сопутствующих языках',
+      companion: 'О языках подсказок',
       interface: 'О языке интерфейса',
       target: 'О языке - цели изучения',
     },
     uk: {
-      companion: 'Про супутні мови',
+      companion: 'Про мови підказок',
       interface: 'Про мову інтерфейсу',
       target: 'Про мову - ціль вивчення',
     },
@@ -877,9 +906,13 @@ function getSelectorInfoText(
         'Game statistics are tracked separately for every target language.',
       ],
       companion: [
-        'Companion languages are shown as translation hints in games.',
+        'Hint languages are shown as translation hints in games.',
         'Their order and selection are remembered separately for each target language.',
-        'Defaults: English -> Русский, Español, Українська. Русский -> English, Español, Українська. Español -> Русский, English, Українська. Українська -> Русский, English, Español.',
+        'Defaults:',
+        'English -> Русский, Español, Українська',
+        'Русский -> English, Español, Українська',
+        'Español -> Русский, English, Українська',
+        'Українська -> Русский, English, Español',
       ],
     },
     es: {
@@ -892,9 +925,13 @@ function getSelectorInfoText(
         'La estadistica se guarda por separado para cada idioma objetivo.',
       ],
       companion: [
-        'Los idiomas acompanantes aparecen como traducciones de ayuda en los juegos.',
+        'Los idiomas de pistas aparecen como traducciones de ayuda en los juegos.',
         'El orden y la seleccion se recuerdan por separado para cada idioma objetivo.',
-        'Por defecto: English -> Русский, Español, Українська. Русский -> English, Español, Українська. Español -> Русский, English, Українська. Українська -> Русский, English, Español.',
+        'Por defecto:',
+        'English -> Русский, Español, Українська',
+        'Русский -> English, Español, Українська',
+        'Español -> Русский, English, Українська',
+        'Українська -> Русский, English, Español',
       ],
     },
     ru: {
@@ -907,9 +944,13 @@ function getSelectorInfoText(
         'Статистика игр ведется отдельно для каждого языка-цели.',
       ],
       companion: [
-        'Сопутствующие языки показываются как переводы-подсказки в играх.',
+        'Языки подсказок показываются как переводы-подсказки в играх.',
         'Порядок и выбор запоминаются отдельно для каждого языка-цели.',
-        'По умолчанию: English -> Русский, Español, Українська. Русский -> English, Español, Українська. Español -> Русский, English, Українська. Українська -> Русский, English, Español.',
+        'По умолчанию:',
+        'English -> Русский, Español, Українська',
+        'Русский -> English, Español, Українська',
+        'Español -> Русский, English, Українська',
+        'Українська -> Русский, English, Español',
       ],
     },
     uk: {
@@ -922,9 +963,13 @@ function getSelectorInfoText(
         'Статистика ігор ведеться окремо для кожної мови-цілі.',
       ],
       companion: [
-        'Супутні мови показуються як переклади-підказки в іграх.',
+        'Мови підказок показуються як переклади-підказки в іграх.',
         'Порядок і вибір запамʼятовуються окремо для кожної мови-цілі.',
-        'За замовчуванням: English -> Русский, Español, Українська. Русский -> English, Español, Українська. Español -> Русский, English, Українська. Українська -> Русский, English, Español.',
+        'За замовчуванням:',
+        'English -> Русский, Español, Українська',
+        'Русский -> English, Español, Українська',
+        'Español -> Русский, English, Українська',
+        'Українська -> Русский, English, Español',
       ],
     },
   };

@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BlockedAiPreview } from '../../domain/aiBlockedPreview';
 import type { AppliedAiOperation, PlannedAiOperation } from '../../domain/aiOperations';
 import type { SupportedLanguage } from '../../domain/languages';
+import type { WorldId } from '../../domain/worlds';
 import { AiAgentResult, runAiAssistant } from '../../services/aiAssistantAgent';
 import {
   DEFAULT_OPENROUTER_MODEL_ID,
@@ -115,7 +116,7 @@ function renderView({
   operationError,
 }: {
   language?: SupportedLanguage;
-  worldId?: 'football' | 'forest';
+  worldId?: WorldId;
   embedded?: boolean;
   showManualImport?: boolean;
   messages?: ReturnType<typeof rootReducer>['aiAssistant']['messages'];
@@ -1474,6 +1475,28 @@ describe('AiAssistantView localization and manual import', () => {
       background:
         'linear-gradient(180deg, rgba(255, 255, 255, 0.70) 0%, rgba(239, 251, 228, 0.52) 100%)',
       border: '1px solid rgba(91, 150, 54, 0.16)',
+    });
+  });
+
+  it('uses an LCARS-inspired Star Trek chat palette in the Star Trek world', async () => {
+    const user = userEvent.setup();
+    renderView({ worldId: 'starTrek', showManualImport: false });
+
+    expect(screen.getByTestId('ai_chat__panel')).toHaveStyle({
+      background:
+        'linear-gradient(145deg, rgba(236, 246, 255, 0.98) 0%, rgba(218, 232, 255, 0.95) 46%, rgba(255, 232, 194, 0.90) 100%)',
+      borderColor: 'rgba(63, 136, 255, 0.30)',
+    });
+    expect(screen.getByTestId('ai_chat__messages')).toHaveStyle({
+      background:
+        'linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(226, 239, 255, 0.58) 100%)',
+      border: '1px solid rgba(63, 136, 255, 0.18)',
+    });
+    await user.type(screen.getByLabelText('Message the AI assistant'), 'Scan cards');
+    expect(screen.getByTestId('ai_chat__send_button')).toHaveStyle({
+      background:
+        'linear-gradient(135deg, rgba(16, 27, 77, 0.96) 0%, rgba(63, 136, 255, 0.94) 48%, rgba(243, 184, 51, 0.94) 100%)',
+      color: '#f7fbff',
     });
   });
 

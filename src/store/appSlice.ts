@@ -113,16 +113,23 @@ const appSlice = createSlice({
       }>,
     ) {
       const { complementaryLanguages, targetLanguage } = action.payload;
+      const nextComplementaryLanguages = sanitizeComplementaryLanguages(
+        complementaryLanguages,
+        {
+          targetLanguage,
+        },
+        { fallbackToDefault: false },
+      );
+
+      if (nextComplementaryLanguages.length === 0) {
+        return;
+      }
+
       state.complementaryLanguages = {
         ...getComplementaryLanguages(state.complementaryLanguages, {
           targetLanguage: state.targetLanguage,
         }),
-        [targetLanguage]: sanitizeComplementaryLanguages(
-          complementaryLanguages,
-          {
-            targetLanguage,
-          },
-        ),
+        [targetLanguage]: nextComplementaryLanguages,
       };
     },
     setInterfaceLanguage(state, action: PayloadAction<SupportedLanguage>) {
@@ -249,11 +256,14 @@ function sanitizeComplementaryLanguages(
   exclusions: {
     targetLanguage: SupportedLanguage;
   },
+  options: {
+    fallbackToDefault?: boolean;
+  } = {},
 ): SupportedLanguage[] {
   const values = Array.isArray(value) ? value : value ? [value] : [];
   const seen = new Set<SupportedLanguage>();
 
-  return values
+  const sanitized = values
     .filter((language): language is SupportedLanguage =>
       typeof language === 'string' && isSupportedLanguage(language),
     )
@@ -265,6 +275,12 @@ function sanitizeComplementaryLanguages(
       seen.add(language);
       return true;
     });
+
+  if (sanitized.length > 0 || options.fallbackToDefault === false) {
+    return sanitized;
+  }
+
+  return [...defaultComplementaryLanguages[exclusions.targetLanguage]];
 }
 
 function sanitizeMonths(value: number): number {

@@ -208,7 +208,7 @@ describe('CardSetDetailView', () => {
     expect(screen.getByText('airport')).toBeInTheDocument();
     expect(screen.getByText('worth it')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Редактировать карточки' }));
+    await user.click(screen.getByRole('button', { name: 'Редактировать набор' }));
 
     expect(screen.getByText('impede')).toBeInTheDocument();
     expect(
@@ -217,18 +217,23 @@ describe('CardSetDetailView', () => {
     expect(
       screen.getByTestId('card_set_detail__card_select_checkbox__card-impede'),
     ).not.toBeChecked();
-    expect(screen.getByRole('button', { name: 'Сохранить карточки' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Редактировать набор' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Сохранить' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Отменить' })).toBeInTheDocument();
 
-    await user.click(
-      screen.getByTestId('card_set_detail__card_select_checkbox__card-airport'),
-    );
+    await user.click(screen.getByTestId('card_set_detail__card_select_checkbox__card-airport'));
+    await user.click(screen.getByTestId('card_set_detail__card_select_checkbox__card-worth-it'));
+
+    expect(screen.getByRole('button', { name: 'Сохранить' })).toBeDisabled();
+
+    await user.click(screen.getByTestId('card_set_detail__card_select_checkbox__card-worth-it'));
     await user.click(
       screen.getByTestId('card_set_detail__card_select_checkbox__card-impede'),
     );
 
-    expect(screen.getByRole('button', { name: 'Сохранить карточки' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Сохранить' })).toBeEnabled();
 
-    await user.click(screen.getByRole('button', { name: 'Сохранить карточки' }));
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }));
 
     expect(
       store
@@ -238,6 +243,66 @@ describe('CardSetDetailView', () => {
     ).toEqual(['card-worth-it', 'card-impede']);
     expect(screen.queryByText('airport')).not.toBeInTheDocument();
     expect(screen.getByText('impede')).toBeInTheDocument();
+  });
+
+  it('asks for confirmation before canceling card set editing', async () => {
+    const user = userEvent.setup();
+    const store = createStore({
+      selectedCardSetId: 'card-set-road',
+      cardSets: [
+        {
+          id: 'card-set-road',
+          name: 'Road',
+          cardIds: ['card-airport', 'card-worth-it'],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    });
+
+    render(
+      <Provider store={store}>
+        <CardSetDetailView />
+      </Provider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Редактировать набор' }));
+    await user.click(screen.getByTestId('card_set_detail__card_select_checkbox__card-impede'));
+    await user.click(screen.getByRole('button', { name: 'Отменить' }));
+
+    const dialog = screen.getByRole('dialog', {
+      name: 'Отменить редактирование набора?',
+    });
+    expect(dialog).toHaveTextContent(
+      'Выбранные изменения набора не будут сохранены.',
+    );
+
+    await user.click(within(dialog).getByRole('button', { name: 'Отмена' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('button', { name: 'Сохранить' })).toBeEnabled();
+
+    await user.click(screen.getByRole('button', { name: 'Отменить' }));
+    await user.click(
+      within(
+        screen.getByRole('dialog', {
+          name: 'Отменить редактирование набора?',
+        }),
+      ).getByRole('button', { name: 'Подтвердить' }),
+    );
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('button', { name: 'Редактировать набор' })).toBeInTheDocument();
+    expect(screen.queryByText('impede')).not.toBeInTheDocument();
+    expect(
+      store
+        .getState()
+        .cardSets.cardSets.find((cardSet) => cardSet.id === 'card-set-road')
+        ?.cardIds,
+    ).toEqual(['card-airport', 'card-worth-it']);
   });
 
   it('uses the forest lilac accent for selected card frames in the forest world', () => {
@@ -410,7 +475,7 @@ describe('CardSetDetailView', () => {
       screen.getByTestId('card_set_detail__archived_chip__card-set-archived'),
     ).toHaveTextContent('Заархивировано');
     expect(
-      screen.queryByRole('button', { name: 'Редактировать карточки' }),
+      screen.queryByRole('button', { name: 'Редактировать набор' }),
     ).not.toBeInTheDocument();
     expect(screen.getByText('airport')).toBeInTheDocument();
     expect(screen.getByText('worth it')).toBeInTheDocument();

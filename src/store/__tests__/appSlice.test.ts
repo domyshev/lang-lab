@@ -61,4 +61,28 @@ describe('appSlice language preferences', () => {
     expect(getComplementaryLanguages().en).toEqual(['ru', 'es', 'uk']);
     expect(getComplementaryLanguages().ru).toEqual(['en', 'es', 'uk']);
   });
+
+  it('does not allow removing every hint language for a target language', () => {
+    const withOneHint = appReducer(
+      undefined,
+      setComplementaryLanguagesForTarget({
+        complementaryLanguages: ['es'],
+        targetLanguage: 'en',
+      }),
+    );
+    const withEmptyAttempt = appReducer(
+      withOneHint,
+      setComplementaryLanguagesForTarget({
+        complementaryLanguages: [],
+        targetLanguage: 'en',
+      }),
+    );
+
+    expect(withEmptyAttempt.complementaryLanguages.en).toEqual(['es']);
+    expect(getComplementaryLanguages({ en: [] }).en).toEqual([
+      'ru',
+      'es',
+      'uk',
+    ]);
+  });
 });

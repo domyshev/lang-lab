@@ -1,4 +1,4 @@
-import { type ReactElement, useMemo, useRef, useState } from 'react';
+import { type ReactElement, useId, useMemo, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import AddIcon from '@mui/icons-material/Add';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
@@ -10,6 +10,10 @@ import {
   Checkbox,
   Chip,
   Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
   InputAdornment,
   Paper,
@@ -68,8 +72,10 @@ import { SplitWordStatsChip } from './SplitWordStatsChip';
 export function CardSetDetailView() {
   const dispatch = useDispatch<AppDispatch>();
   const [isEditingCards, setIsEditingCards] = useState(false);
+  const [isCancelEditDialogOpen, setIsCancelEditDialogOpen] = useState(false);
   const [draftCardIds, setDraftCardIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const cancelEditDialogTitleId = useId();
   const worldId = useSelector((state: RootState) =>
     resolveWorldId(state.app.worldId),
   );
@@ -165,6 +171,7 @@ export function CardSetDetailView() {
   const hasDraftChanges = isEditingCards
     ? !areCardIdSetsEqual(draftCardIds, selectedCardSet.cardIds)
     : false;
+  const canSaveCardSetDraft = hasDraftChanges && draftCardIds.length > 0;
   const editButtonLabelKey = isEditingCards
     ? 'saveCardsInSet'
     : cardSetCards.length === 0
@@ -207,18 +214,17 @@ export function CardSetDetailView() {
         }))
       : virtualCardRows;
 
-  const handleEditButtonClick = () => {
+  const startEditingCards = () => {
     if (!canEditSelectedCardSet) {
       return;
     }
 
-    if (!isEditingCards) {
-      setDraftCardIds(selectedCardSet.cardIds);
-      setIsEditingCards(true);
-      return;
-    }
+    setDraftCardIds(selectedCardSet.cardIds);
+    setIsEditingCards(true);
+  };
 
-    if (!hasDraftChanges) {
+  const saveEditedCards = () => {
+    if (!canEditSelectedCardSet || !canSaveCardSetDraft) {
       return;
     }
 
@@ -231,6 +237,12 @@ export function CardSetDetailView() {
         now: new Date().toISOString(),
       }),
     );
+    setIsEditingCards(false);
+    setDraftCardIds([]);
+  };
+
+  const discardEditedCards = () => {
+    setIsCancelEditDialogOpen(false);
     setIsEditingCards(false);
     setDraftCardIds([]);
   };
@@ -440,16 +452,17 @@ export function CardSetDetailView() {
   };
 
   return (
-    <Paper
-      data-test={`card_set_detail__panel__${selectedCardSet.id}`}
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        maxHeight: { md: 'calc(100vh - 118px)' },
-        minHeight: 0,
-        p: { xs: 2, md: 3 },
-      }}
-    >
+    <>
+      <Paper
+        data-test={`card_set_detail__panel__${selectedCardSet.id}`}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: { md: 'calc(100vh - 118px)' },
+          minHeight: 0,
+          p: { xs: 2, md: 3 },
+        }}
+      >
       <Stack
         data-test={`card_set_detail__content__${selectedCardSet.id}`}
         spacing={2.5}
@@ -518,14 +531,11 @@ export function CardSetDetailView() {
                 {t(interfaceLanguage, 'createActiveCopy')}
               </Button>
             )}
-            {canEditSelectedCardSet && (
+            {canEditSelectedCardSet && !isEditingCards && (
               <Button
                 data-test={`card_set_detail__edit_cards_button__${selectedCardSet.id}`}
-                disabled={isEditingCards && !hasDraftChanges}
-                onClick={handleEditButtonClick}
-                startIcon={
-                  isEditingCards ? <CheckCircleRoundedIcon /> : <AddIcon />
-                }
+                onClick={startEditingCards}
+                startIcon={<AddIcon />}
                 variant="outlined"
                 sx={{
                   borderColor: cardSetAccentMain,
@@ -539,6 +549,48 @@ export function CardSetDetailView() {
               >
                 {t(interfaceLanguage, editButtonLabelKey)}
               </Button>
+            )}
+            {canEditSelectedCardSet && isEditingCards && (
+              <Stack
+                data-test={`card_set_detail__edit_actions__${selectedCardSet.id}`}
+                direction="row"
+                spacing={1}
+                sx={{ alignItems: 'center', mr: { sm: 3.75 } }}
+              >
+                <Button
+                  data-test={`card_set_detail__save_cards_button__${selectedCardSet.id}`}
+                  disabled={!canSaveCardSetDraft}
+                  onClick={saveEditedCards}
+                  startIcon={<CheckCircleRoundedIcon />}
+                  variant="outlined"
+                  sx={{
+                    borderColor: cardSetAccentMain,
+                    color: worldAccent.dark,
+                    '&:hover': {
+                      bgcolor: cardSetAccentHover,
+                      borderColor: worldAccent.dark,
+                    },
+                  }}
+                >
+                  {t(interfaceLanguage, 'save')}
+                </Button>
+                <Button
+                  data-test={`card_set_detail__cancel_edit_cards_button__${selectedCardSet.id}`}
+                  onClick={() => setIsCancelEditDialogOpen(true)}
+                  startIcon={<ClearRoundedIcon />}
+                  variant="outlined"
+                  sx={{
+                    borderColor: 'rgba(32, 48, 21, 0.24)',
+                    color: 'text.secondary',
+                    '&:hover': {
+                      bgcolor: 'rgba(32, 48, 21, 0.05)',
+                      borderColor: 'rgba(32, 48, 21, 0.42)',
+                    },
+                  }}
+                >
+                  {t(interfaceLanguage, 'cancelCardSetEdit')}
+                </Button>
+              </Stack>
             )}
             <Chip
               data-test={`card_set_detail__card_count_chip__${selectedCardSet.id}`}
@@ -661,7 +713,41 @@ export function CardSetDetailView() {
           </Box>
         )}
       </Stack>
-    </Paper>
+      </Paper>
+      <Dialog
+        aria-labelledby={cancelEditDialogTitleId}
+        data-test={`card_set_detail__cancel_edit_dialog__${selectedCardSet.id}`}
+        open={isCancelEditDialogOpen}
+        onClose={() => setIsCancelEditDialogOpen(false)}
+      >
+        <DialogTitle
+          data-test={`card_set_detail__cancel_edit_dialog_title__${selectedCardSet.id}`}
+          id={cancelEditDialogTitleId}
+          sx={{ fontWeight: 850 }}
+        >
+          {t(interfaceLanguage, 'cancelCardSetEditTitle')}
+        </DialogTitle>
+        <DialogContent
+          data-test={`card_set_detail__cancel_edit_dialog_body__${selectedCardSet.id}`}
+        >
+          <Typography>
+            {t(interfaceLanguage, 'cancelCardSetEditBody')}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setIsCancelEditDialogOpen(false)}>
+            {t(interfaceLanguage, 'cancel')}
+          </Button>
+          <Button
+            data-test={`card_set_detail__confirm_cancel_edit_button__${selectedCardSet.id}`}
+            onClick={discardEditedCards}
+            variant="contained"
+          >
+            {t(interfaceLanguage, 'confirm')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }
 

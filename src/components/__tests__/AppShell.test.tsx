@@ -105,16 +105,39 @@ describe('AppShell', () => {
       within(dialog).getByTestId('player_onboarding__save_warning_anchor'),
     ).toBeInTheDocument();
     await user.hover(
+      within(dialog).getByTestId('player_onboarding__save_warning_anchor'),
+    );
+    const saveWarningTooltip = await screen.findByTestId(
+      'player_onboarding__save_warning_tooltip_icon__messages',
+    );
+    expect(saveWarningTooltip).toHaveTextContent('Choose character');
+    expect(saveWarningTooltip).toHaveTextContent('Choose interface language');
+    expect(saveWarningTooltip).toHaveTextContent('Choose target learning language');
+    expect(saveWarningTooltip).toHaveTextContent('Choose player name');
+    expect(saveWarningTooltip).not.toHaveTextContent(/^assistant$/i);
+    await user.unhover(
+      within(dialog).getByTestId('player_onboarding__save_warning_anchor'),
+    );
+    await user.hover(
       within(dialog).getByTestId('player_onboarding__assistant_figure__ladybug'),
     );
-    const ladybugTooltipText = await screen.findByText(
-      /Brave Ladybug: Makes difficult cards feel small enough to try again\./,
+    const ladybugTooltipTitle = await screen.findByTestId(
+      'player_onboarding__assistant_tooltip_title__ladybug',
     );
-    expect(ladybugTooltipText.closest('.MuiTooltip-tooltip')).toHaveStyle({
+    const ladybugTooltipBody = screen.getByTestId(
+      'player_onboarding__assistant_tooltip_body__ladybug',
+    );
+    expect(ladybugTooltipTitle).toHaveTextContent('Brave Ladybug');
+    expect(ladybugTooltipTitle).toHaveStyle({ fontWeight: '850' });
+    expect(ladybugTooltipBody).toHaveTextContent(
+      'A tiny forest teammate with a surprisingly steady heart.',
+    );
+    expect(ladybugTooltipBody).toHaveStyle({ fontWeight: '500' });
+    expect(ladybugTooltipTitle.closest('.MuiTooltip-tooltip')).toHaveStyle({
       backgroundColor: 'rgba(255, 255, 255, 0.98)',
       fontSize: '14px',
     });
-    expect(ladybugTooltipText.closest('[data-popper-placement]')).toHaveAttribute(
+    expect(ladybugTooltipTitle.closest('[data-popper-placement]')).toHaveAttribute(
       'data-popper-placement',
       expect.stringMatching(/^top|^left|^right|^bottom/),
     );
@@ -123,6 +146,33 @@ describe('AppShell', () => {
     );
     expect(within(dialog).getByRole('combobox', { name: 'Interface language' })).toBeInTheDocument();
     expect(within(dialog).getByRole('combobox', { name: 'Target learning language' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('combobox', { name: 'Hint languages' })).toBeInTheDocument();
+    expect(
+      within(dialog).getByTestId('player_onboarding__interface_language_info_button'),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByTestId('player_onboarding__target_language_info_button'),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByTestId('player_onboarding__hint_languages_info_button'),
+    ).toBeInTheDocument();
+    await user.hover(
+      within(dialog).getByTestId('player_onboarding__hint_languages_info_button'),
+    );
+    const hintInfoTooltip = await screen.findByTestId(
+      'player_onboarding__hint_languages_info_tooltip',
+    );
+    expect(
+      within(hintInfoTooltip).getByTestId(
+        'player_onboarding__hint_languages_info_tooltip_title',
+      ),
+    ).toHaveTextContent('Hint languages');
+    expect(hintInfoTooltip).toHaveTextContent(
+      'At least one hint language stays selected.',
+    );
+    await user.unhover(
+      within(dialog).getByTestId('player_onboarding__hint_languages_info_button'),
+    );
     expect(
       within(dialog).queryByRole('button', { name: 'I forgot who I am' }),
     ).not.toBeInTheDocument();
@@ -140,6 +190,11 @@ describe('AppShell', () => {
     );
     await selectOnboardingOption(user, dialog, 'Interface language', 'English');
     await selectOnboardingOption(user, dialog, 'Target learning language', 'Español');
+    await user.click(within(dialog).getByRole('combobox', { name: 'Hint languages' }));
+    await user.click(
+      await screen.findByTestId('player_onboarding__hint_languages_move_down__ru'),
+    );
+    await user.keyboard('{Escape}');
     await user.type(within(dialog).getByLabelText('Player name'), 'Alex');
     await user.click(within(dialog).getByRole('button', { name: 'Configure' }));
 
@@ -165,6 +220,11 @@ describe('AppShell', () => {
     expect(store.getState().app.interfaceLanguage).toBe('en');
     expect(store.getState().app.targetLanguage).toBe('es');
     expect(store.getState().app.worldId).toBe('football');
+    expect(store.getState().app.complementaryLanguages.es).toEqual([
+      'en',
+      'ru',
+      'uk',
+    ]);
     expect(store.getState().app.playerProfile?.avatarSeed).toEqual(
       expect.stringContaining('supporter:portugal'),
     );
@@ -282,6 +342,93 @@ describe('AppShell', () => {
     expect(
       screen.queryByTestId('player_greeting__avatar__forest_leaf'),
     ).not.toBeInTheDocument();
+  });
+
+  it('changes Mortal Kombat and Star Trek flags with the selected assistant in the top bar', async () => {
+    const user = userEvent.setup();
+    const mortalKombatStore = configureStore({
+      reducer: {
+        app: appReducer,
+      },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          assistantId: 'studyTroll' as const,
+          playerProfile: {
+            avatarSeed: 'supporter:mortal-kombat:test',
+            displayName: 'Liu',
+            isAnonymous: false,
+          },
+          worldId: 'mortalKombat' as const,
+        },
+      },
+    });
+
+    const { unmount } = render(
+      <Provider store={mortalKombatStore}>
+        <AppShell>
+          <div>Content</div>
+        </AppShell>
+      </Provider>,
+    );
+
+    expect(
+      screen.getByTestId('player_greeting__avatar__mk_flame_ninja_fire'),
+    ).toBeInTheDocument();
+    await user.click(
+      within(screen.getByTestId('player_greeting__assistant_slot')).getByRole(
+        'combobox',
+      ),
+    );
+    await user.click(
+      await screen.findByTestId('player_greeting__assistant_option__greenPower'),
+    );
+    expect(
+      screen.getByTestId('player_greeting__avatar__mk_ice_guardian_crystal'),
+    ).toBeInTheDocument();
+
+    unmount();
+
+    const starTrekStore = configureStore({
+      reducer: {
+        app: appReducer,
+      },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          assistantId: 'studyTroll' as const,
+          playerProfile: {
+            avatarSeed: 'supporter:starfleet:test',
+            displayName: 'Jean',
+            isAnonymous: false,
+          },
+          worldId: 'starTrek' as const,
+        },
+      },
+    });
+
+    render(
+      <Provider store={starTrekStore}>
+        <AppShell>
+          <div>Content</div>
+        </AppShell>
+      </Provider>,
+    );
+
+    expect(
+      screen.getByTestId('player_greeting__avatar__trek_star_captain_delta'),
+    ).toBeInTheDocument();
+    await user.click(
+      within(screen.getByTestId('player_greeting__assistant_slot')).getByRole(
+        'combobox',
+      ),
+    );
+    await user.click(
+      await screen.findByTestId('player_greeting__assistant_option__greenPower'),
+    );
+    expect(
+      screen.getByTestId('player_greeting__avatar__trek_science_officer_orbit'),
+    ).toBeInTheDocument();
   });
 
   it('edits the player name from the player tooltip', async () => {
@@ -631,14 +778,24 @@ describe('AppShell', () => {
     );
     await user.hover(optionIcon);
 
-    const optionTooltipText = await screen.findByText(
-      /Испанский вингер: Взрывает фланг/,
+    const optionTooltipTitle = await screen.findByTestId(
+      'player_greeting__assistant_option_tooltip_title__studyTroll',
     );
-    expect(optionTooltipText.closest('.MuiTooltip-tooltip')).toHaveStyle({
+    const optionTooltipBody = screen.getByTestId(
+      'player_greeting__assistant_option_tooltip_body__studyTroll',
+    );
+
+    expect(optionTooltipTitle).toHaveTextContent('Испанский вингер');
+    expect(optionTooltipTitle).toHaveStyle({ fontWeight: '850' });
+    expect(optionTooltipBody).toHaveTextContent(
+      'Бесстрашный фланговый вундеркинд',
+    );
+    expect(optionTooltipBody).toHaveStyle({ fontWeight: '500' });
+    expect(optionTooltipTitle.closest('.MuiTooltip-tooltip')).toHaveStyle({
       backgroundColor: 'rgba(255, 255, 255, 0.98)',
       fontSize: '14px',
     });
-    expect(optionTooltipText.closest('[data-popper-placement]')).toHaveAttribute(
+    expect(optionTooltipTitle.closest('[data-popper-placement]')).toHaveAttribute(
       'data-popper-placement',
       expect.stringMatching(/^left/),
     );
