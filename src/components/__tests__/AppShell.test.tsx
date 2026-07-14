@@ -2,11 +2,12 @@ import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { ExerciseAttempt } from '../../domain/exercises';
 import { appReducer } from '../../store/appSlice';
 import { attemptsReducer } from '../../store/attemptsSlice';
 import { AppShell } from '../AppShell';
+import { ServerSyncContext, type ServerSyncContextValue } from '../ServerDataGate';
 
 describe('AppShell', () => {
   it('prevents header rubber-band overscroll on Mac trackpads', () => {
@@ -275,6 +276,46 @@ describe('AppShell', () => {
     expect(store.getState().app.worldId).toBe('forest');
   });
 
+  it('localizes the existing-token onboarding tab for Russian setup', async () => {
+    const user = userEvent.setup();
+    const store = configureStore({
+      reducer: {
+        app: appReducer,
+      },
+    });
+
+    render(
+      <Provider store={store}>
+        <AppShell>
+          <div>Content</div>
+        </AppShell>
+      </Provider>,
+    );
+
+    const dialog = screen.getByRole('dialog', {
+      name: 'Game world setup',
+    });
+    await selectOnboardingOption(user, dialog, 'Interface language', 'Русский');
+    await user.click(within(dialog).getByRole('tab', { name: 'Войти по токену' }));
+
+    expect(within(dialog).getByText('Войти по существующему токену')).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        'Вставьте сохраненный токен, чтобы загрузить с сервера те же карточки, настройки и историю игр.',
+      ),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('Токен доступа')).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: 'Загрузить пользователя' }),
+    ).toBeInTheDocument();
+    expect(within(dialog).queryByText('Use an existing token')).not.toBeInTheDocument();
+    expect(
+      within(dialog).queryByText(
+        'Paste a saved token to load the same cards, settings, and game history from the backend.',
+      ),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows the player flag for the selected assistant country in the top bar', () => {
     const store = configureStore({
       reducer: {
@@ -485,6 +526,138 @@ describe('AppShell', () => {
     expect(store.getState().app.playerProfile?.avatarSeed).toEqual(
       expect.stringContaining('supporter:spain'),
     );
+  });
+
+  it('shows the saved server token in the player tooltip and copies it', async () => {
+    const user = userEvent.setup();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+    const store = configureStore({
+      reducer: {
+        app: appReducer,
+        attempts: attemptsReducer,
+      },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          playerProfile: {
+            avatarSeed: 'supporter:spain:test',
+            displayName: 'Илья',
+            isAnonymous: false,
+          },
+        },
+        attempts: {
+          attempts: [],
+        },
+      },
+    });
+    const serverSync: ServerSyncContextValue = {
+      apiToken: 'generated-token-123',
+      clearNewToken: vi.fn(),
+      createUser: vi.fn(),
+      endpoint: 'http://127.0.0.1:8090',
+      lastCreatedToken: '',
+      loginWithToken: vi.fn(),
+      status: 'ready',
+    };
+
+    render(
+      <Provider store={store}>
+        <ServerSyncContext.Provider value={serverSync}>
+          <AppShell>
+            <div>Content</div>
+          </AppShell>
+        </ServerSyncContext.Provider>
+      </Provider>,
+    );
+
+    await user.hover(screen.getByTestId('player_greeting__root'));
+    const tooltip = await screen.findByTestId('player_greeting__tooltip');
+    const tokenInput = within(tooltip).getByTestId('player_greeting__api_token_input');
+
+    expect(tokenInput).toHaveAttribute('type', 'password');
+    expect(tokenInput).toHaveValue('generated-token-123');
+
+    await user.click(within(tooltip).getByRole('button', { name: 'Copy token' }));
+
+    expect(writeText).toHaveBeenCalledWith('generated-token-123');
+  });
+
+  it('localizes the server token tooltip and keeps level copy inside the level frame', async () => {
+    const user = userEvent.setup();
+    const store = configureStore({
+      reducer: {
+        app: appReducer,
+        attempts: attemptsReducer,
+      },
+      preloadedState: {
+        app: {
+          ...appReducer(undefined, { type: 'test/init' }),
+          interfaceLanguage: 'ru' as const,
+          playerProfile: {
+            avatarSeed: 'supporter:spain:test',
+            displayName: 'Илья',
+            isAnonymous: false,
+          },
+        },
+        attempts: {
+          attempts: [],
+        },
+      },
+    });
+    const serverSync: ServerSyncContextValue = {
+      apiToken: 'generated-token-123',
+      clearNewToken: vi.fn(),
+      createUser: vi.fn(),
+      endpoint: 'http://127.0.0.1:8090',
+      lastCreatedToken: '',
+      loginWithToken: vi.fn(),
+      status: 'ready',
+    };
+
+    render(
+      <Provider store={store}>
+        <ServerSyncContext.Provider value={serverSync}>
+          <AppShell>
+            <div>Content</div>
+          </AppShell>
+        </ServerSyncContext.Provider>
+      </Provider>,
+    );
+
+    await user.hover(screen.getByTestId('player_greeting__root'));
+    const tooltip = await screen.findByTestId('player_greeting__tooltip');
+    const nameRow = within(tooltip).getByTestId('player_greeting__name_row');
+    const levelSummary = within(tooltip).getByTestId(
+      'player_greeting__level_summary',
+    );
+    const tokenSection = within(tooltip).getByTestId(
+      'player_greeting__api_token_section',
+    );
+
+    expect(tooltip.firstElementChild?.firstElementChild).toBe(levelSummary);
+    expect(levelSummary.nextElementSibling).toBe(nameRow);
+    expect(nameRow.nextElementSibling).toBe(tokenSection);
+    expect(
+      within(levelSummary).getByTestId('player_greeting__level_explanation'),
+    ).toHaveTextContent(
+      'Игровой уровень начинается здесь: сыграй еще несколько игр, и лаборатория начнет видеть твой ритм обучения.',
+    );
+
+    await user.hover(
+      within(tokenSection).getByTestId('player_greeting__api_token_info_button'),
+    );
+
+    expect(await screen.findByText('Токен доступа к серверу')).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        'Сохраните этот токен, чтобы открыть те же карточки, настройки и историю игр на другом устройстве.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Server access token')).not.toBeInTheDocument();
   });
 
   it('keeps the player greeting compact, centered, and shows the player level tooltip', async () => {

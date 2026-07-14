@@ -1,5 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined';
@@ -12,8 +13,10 @@ import PsychologyOutlinedIcon from '@mui/icons-material/PsychologyOutlined';
 import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
 import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
 import {
+  Alert,
   AppBar,
   Box,
   Button,
@@ -37,7 +40,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import {
   AssistantId,
   getAssistantTooltip,
@@ -46,6 +49,9 @@ import {
   resolveAssistantId,
 } from '../domain/assistants';
 import { t } from '../domain/i18n';
+import {
+  getPracticeSettings,
+} from '../domain/practiceOrdering';
 import {
   WorldId,
   getDefaultAssistantIdForWorld,
@@ -79,6 +85,8 @@ import {
   supportedLanguages,
 } from '../domain/languages';
 import { GameWarningIcon, GameWarningTooltip } from './GameWarningTooltip';
+import { useServerSync } from './ServerDataGate';
+import type { ServerStatePayload } from '../services/serverSyncClient';
 
 export type AppShellSection =
   | 'game'
@@ -174,12 +182,84 @@ export function AppShell({
   const tabValue = visibleTabSections.includes(activeSection)
     ? activeSection
     : false;
+  const reduxStore = useStore<RootState>();
+  const serverSync = useServerSync();
+  const [isOnboardingSubmitting, setIsOnboardingSubmitting] = useState(false);
+  const [onboardingError, setOnboardingError] = useState('');
+  const [isTokenDialogOpen, setIsTokenDialogOpen] = useState(false);
 
   useLayoutEffect(() => {
     if (scrollRootRef.current) {
       scrollRootRef.current.scrollTop = 0;
     }
   }, [activeSection]);
+
+  useEffect(() => {
+    if (serverSync.lastCreatedToken) {
+      setIsTokenDialogOpen(true);
+    }
+  }, [serverSync.lastCreatedToken]);
+
+  const handleOnboardingComplete = async ({
+    assistantId,
+    complementaryLanguages,
+    interfaceLanguage,
+    name,
+    targetLanguage,
+    worldId,
+  }: PlayerOnboardingCompleteValue) => {
+    const trimmedName = name.trim();
+    const playerProfile = {
+      avatarSeed: createPlayerAvatarSeed(
+        trimmedName,
+        getPlayerSupporterCountry(worldId, assistantId),
+      ),
+      displayName: trimmedName || undefined,
+      isAnonymous: !trimmedName,
+    };
+    const stateToCreate = buildInitialServerState(reduxStore.getState(), {
+      complementaryLanguages,
+      interfaceLanguage,
+      playerProfile: {
+        displayName: playerProfile.displayName,
+        isAnonymous: playerProfile.isAnonymous,
+      },
+      targetLanguage,
+    });
+
+    setIsOnboardingSubmitting(true);
+    setOnboardingError('');
+    try {
+      await serverSync.createUser(stateToCreate);
+      dispatch(setWorldId(worldId));
+      dispatch(setAssistantId(assistantId));
+      dispatch(setInterfaceLanguage(interfaceLanguage));
+      dispatch(setTargetLanguage(targetLanguage));
+      dispatch(
+        setComplementaryLanguagesForTarget({
+          complementaryLanguages,
+          targetLanguage,
+        }),
+      );
+      dispatch(setPlayerProfile(playerProfile));
+    } catch (caught) {
+      setOnboardingError(getUserFacingServerError(caught));
+    } finally {
+      setIsOnboardingSubmitting(false);
+    }
+  };
+
+  const handleTokenLogin = async (token: string) => {
+    setIsOnboardingSubmitting(true);
+    setOnboardingError('');
+    try {
+      await serverSync.loginWithToken(token);
+    } catch (caught) {
+      setOnboardingError(getUserFacingServerError(caught));
+    } finally {
+      setIsOnboardingSubmitting(false);
+    }
+  };
 
   return (
     <Box
@@ -354,6 +434,7 @@ export function AppShell({
                     ? t(interfaceLanguage, 'playerAnonymousName')
                     : (playerProfile.displayName ?? t(interfaceLanguage, 'playerAnonymousName'))
                 }
+                apiToken={serverSync.apiToken}
                 onNameChange={(name) => {
                   const trimmedName = name.trim();
                   dispatch(
@@ -416,42 +497,203 @@ export function AppShell({
         assistantId={assistantId}
         complementaryLanguages={storedComplementaryLanguages}
         interfaceLanguage={interfaceLanguage}
+        isSubmitting={isOnboardingSubmitting}
+        error={onboardingError || serverSync.error || ''}
         open={!playerProfile}
         targetLanguage={targetLanguage}
         worldId={worldId}
-        onComplete={({
-          assistantId,
-          complementaryLanguages,
-          interfaceLanguage,
-          name,
-          targetLanguage,
-          worldId,
-        }) => {
-          const trimmedName = name.trim();
-          dispatch(setWorldId(worldId));
-          dispatch(setAssistantId(assistantId));
-          dispatch(setInterfaceLanguage(interfaceLanguage));
-          dispatch(setTargetLanguage(targetLanguage));
-          dispatch(
-            setComplementaryLanguagesForTarget({
-              complementaryLanguages,
-              targetLanguage,
-            }),
-          );
-          dispatch(
-            setPlayerProfile({
-              avatarSeed: createPlayerAvatarSeed(
-                trimmedName,
-                getPlayerSupporterCountry(worldId, assistantId),
-              ),
-              displayName: trimmedName || undefined,
-              isAnonymous: !trimmedName,
-            }),
-          );
+        onComplete={handleOnboardingComplete}
+        onTokenLogin={handleTokenLogin}
+      />
+
+      <ServerTokenCreatedDialog
+        apiToken={serverSync.lastCreatedToken}
+        interfaceLanguage={interfaceLanguage}
+        open={Boolean(serverSync.lastCreatedToken) && isTokenDialogOpen}
+        onClose={() => {
+          setIsTokenDialogOpen(false);
+          serverSync.clearNewToken();
         }}
       />
     </Box>
   );
+}
+
+interface PlayerOnboardingCompleteValue {
+  assistantId: AssistantId;
+  complementaryLanguages: SupportedLanguage[];
+  interfaceLanguage: SupportedLanguage;
+  name: string;
+  targetLanguage: SupportedLanguage;
+  worldId: WorldId;
+}
+
+function buildInitialServerState(
+  state: RootState,
+  input: {
+    complementaryLanguages: SupportedLanguage[];
+    interfaceLanguage: SupportedLanguage;
+    playerProfile: {
+      displayName?: string;
+      isAnonymous: boolean;
+    };
+    targetLanguage: SupportedLanguage;
+  },
+): ServerStatePayload {
+  const optionalState = state as Partial<RootState> & { app: RootState['app'] };
+  const complementaryLanguages = {
+    ...optionalState.app.complementaryLanguages,
+    [input.targetLanguage]: input.complementaryLanguages,
+  };
+
+  return {
+    attempts: optionalState.attempts?.attempts ?? [],
+    cards: optionalState.cards?.cards ?? [],
+    cardSets: optionalState.cardSets?.cardSets ?? [],
+    settings: {
+      complementaryLanguages,
+      interfaceLanguage: input.interfaceLanguage,
+      playerProfile: input.playerProfile,
+      practiceSettings: getPracticeSettings(optionalState.app.practiceSettings),
+      selectedCardSetId: optionalState.cardSets?.selectedCardSetId,
+      targetLanguage: input.targetLanguage,
+    },
+    stats: optionalState.stats?.cardStats ?? [],
+  };
+}
+
+function getUserFacingServerError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return 'Unable to connect to the server.';
+}
+
+function ServerTokenCreatedDialog({
+  apiToken,
+  interfaceLanguage,
+  onClose,
+  open,
+}: {
+  apiToken: string;
+  interfaceLanguage: SupportedLanguage;
+  onClose: () => void;
+  open: boolean;
+}) {
+  const copy = getServerTokenDialogCopy(interfaceLanguage);
+
+  return (
+    <Dialog
+      data-test="server_token_dialog__dialog"
+      fullWidth
+      maxWidth="xs"
+      onClose={onClose}
+      open={open}
+    >
+      <DialogTitle sx={{ fontWeight: 950, pb: 1 }}>
+        {copy.title}
+      </DialogTitle>
+      <DialogContent>
+        <Stack spacing={1.75} sx={{ pt: 0.5 }}>
+          <Typography sx={{ color: '#53604b', fontSize: 14, lineHeight: 1.45 }}>
+            {copy.body}
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <TextField
+              fullWidth
+              hiddenLabel
+              size="small"
+              type="password"
+              value={apiToken}
+              inputProps={{
+                'aria-label': copy.tokenLabel,
+                'data-test': 'server_token_dialog__token_input',
+                readOnly: true,
+              }}
+            />
+            <IconButton
+              aria-label="Copy token"
+              data-test="server_token_dialog__copy_button"
+              onClick={() => void copyText(apiToken)}
+              sx={{
+                bgcolor: 'rgba(95, 155, 62, 0.16)',
+                border: '1px solid rgba(64, 120, 44, 0.32)',
+                color: '#315f2c',
+                height: 40,
+                width: 40,
+                '&:hover': {
+                  bgcolor: 'rgba(95, 155, 62, 0.25)',
+                },
+              }}
+            >
+              <ContentCopyOutlinedIcon />
+            </IconButton>
+          </Stack>
+        </Stack>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2.5 }}>
+        <Button
+          data-test="server_token_dialog__close_button"
+          onClick={onClose}
+          variant="contained"
+          sx={{
+            bgcolor: '#315f2c',
+            fontWeight: 900,
+            textTransform: 'none',
+            '&:hover': { bgcolor: '#244b20' },
+          }}
+        >
+          {copy.closeLabel}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function getServerTokenDialogCopy(language: SupportedLanguage) {
+  const copy: Record<
+    SupportedLanguage,
+    {
+      body: string;
+      closeLabel: string;
+      title: string;
+      tokenLabel: string;
+    }
+  > = {
+    en: {
+      body: 'This token opens your cards, settings, and game history on another device. You can copy it later from the player menu in the top bar.',
+      closeLabel: 'Continue',
+      title: 'Save your access token',
+      tokenLabel: 'Generated API token',
+    },
+    es: {
+      body: 'Este token abre tus tarjetas, ajustes e historial de juegos en otro dispositivo. Podras copiarlo despues desde el menu del jugador en la barra superior.',
+      closeLabel: 'Continuar',
+      title: 'Guarda tu token de acceso',
+      tokenLabel: 'Token API generado',
+    },
+    ru: {
+      body: 'Этот токен открывает ваши карточки, настройки и историю игр на другом устройстве. Позже его можно скопировать из меню пользователя в верхней панели.',
+      closeLabel: 'Продолжить',
+      title: 'Сохраните токен доступа',
+      tokenLabel: 'Сгенерированный API-токен',
+    },
+    uk: {
+      body: 'Цей токен відкриває ваші картки, налаштування та історію ігор на іншому пристрої. Пізніше його можна скопіювати з меню користувача у верхній панелі.',
+      closeLabel: 'Продовжити',
+      title: 'Збережіть токен доступу',
+      tokenLabel: 'Згенерований API-токен',
+    },
+  };
+
+  return copy[language];
+}
+
+async function copyText(value: string) {
+  if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
+    return;
+  }
+  await navigator.clipboard.writeText(value);
 }
 
 function FootballAiChatIcon({ accent }: { accent: ReturnType<typeof getWorldAccent> }) {
@@ -496,6 +738,7 @@ function FootballAiChatIcon({ accent }: { accent: ReturnType<typeof getWorldAcce
 }
 
 function PlayerGreeting({
+  apiToken = '',
   assistantId,
   avatarCountry,
   avatarSeed,
@@ -506,6 +749,7 @@ function PlayerGreeting({
   onNameChange,
   worldId,
 }: {
+  apiToken?: string;
   assistantId: AssistantId;
   avatarCountry: SupporterCountry;
   avatarSeed: string;
@@ -519,6 +763,8 @@ function PlayerGreeting({
   const playerLevel = getPlayerLevel(completedGameCount, interfaceLanguage);
   const resolvedAssistantId = resolveAssistantId(assistantId, worldId);
   const visibleAssistants = getVisibleAssistantCharacters(worldId);
+  const worldAccent = getWorldAccent(worldId);
+  const tokenTooltipCopy = getPlayerTokenTooltipCopy(interfaceLanguage);
   const [draftName, setDraftName] = useState(name);
   const [isEditingName, setIsEditingName] = useState(false);
 
@@ -689,64 +935,77 @@ function PlayerGreeting({
           <Stack spacing={1.1}>
             <Stack
               data-test="player_greeting__level_summary"
-              direction="row"
-              spacing={1}
+              spacing={0.95}
               sx={{
-                alignItems: 'center',
                 background:
                   'linear-gradient(135deg, rgba(255, 239, 164, 0.72), rgba(232, 246, 251, 0.92))',
                 border: `1px solid ${playerLevel.color}55`,
                 borderRadius: 2,
-                p: 1,
+                p: 1.15,
               }}
             >
-              <Box
-                aria-hidden="true"
-                data-test="player_greeting__level_icon"
+              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                <Box
+                  aria-hidden="true"
+                  data-test="player_greeting__level_icon"
+                  sx={{
+                    alignItems: 'center',
+                    bgcolor: playerLevel.bg,
+                    border: `1px solid ${playerLevel.color}66`,
+                    borderRadius: '50%',
+                    color: playerLevel.color,
+                    display: 'inline-flex',
+                    flexShrink: 0,
+                    height: 34,
+                    justifyContent: 'center',
+                    width: 34,
+                    '& .MuiSvgIcon-root': {
+                      fontSize: 20,
+                    },
+                  }}
+                >
+                  <PlayerLevelIcon index={playerLevel.index} />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    data-test="player_greeting__level_title"
+                    sx={{
+                      color: '#203015',
+                      fontSize: 15,
+                      fontWeight: 950,
+                      lineHeight: 1.15,
+                    }}
+                  >
+                    {playerLevel.title}
+                  </Typography>
+                  <Typography
+                    data-test="player_greeting__level_count"
+                    sx={{
+                      color: '#5e6657',
+                      fontSize: 13,
+                      fontWeight: 850,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {formatCompletedGames(completedGameCount, interfaceLanguage)}
+                  </Typography>
+                </Box>
+              </Stack>
+              <Typography
+                data-test="player_greeting__level_explanation"
                 sx={{
-                  alignItems: 'center',
-                  bgcolor: playerLevel.bg,
-                  border: `1px solid ${playerLevel.color}66`,
-                  borderRadius: '50%',
-                  color: playerLevel.color,
-                  display: 'inline-flex',
-                  flexShrink: 0,
-                  height: 34,
-                  justifyContent: 'center',
-                  width: 34,
-                  '& .MuiSvgIcon-root': {
-                    fontSize: 20,
-                  },
+                  borderTop: `1px solid ${playerLevel.color}33`,
+                  color: '#53604b',
+                  fontSize: 14,
+                  lineHeight: 1.35,
+                  pt: 0.95,
                 }}
               >
-                <PlayerLevelIcon index={playerLevel.index} />
-              </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography
-                  data-test="player_greeting__level_title"
-                  sx={{
-                    color: '#203015',
-                    fontSize: 15,
-                    fontWeight: 950,
-                    lineHeight: 1.15,
-                  }}
-                >
-                  {playerLevel.title}
-                </Typography>
-                <Typography
-                  data-test="player_greeting__level_count"
-                  sx={{
-                    color: '#5e6657',
-                    fontSize: 13,
-                    fontWeight: 850,
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {formatCompletedGames(completedGameCount, interfaceLanguage)}
-                </Typography>
-              </Box>
+                {playerLevel.description}
+              </Typography>
             </Stack>
             <Stack
+              data-test="player_greeting__name_row"
               direction="row"
               sx={{
                 alignItems: 'center',
@@ -855,17 +1114,149 @@ function PlayerGreeting({
                 )}
               </IconButton>
             </Stack>
-            <Typography
-              data-test="player_greeting__level_explanation"
-              sx={{
-                color: (theme) =>
-                  theme.palette.mode === 'dark' ? '#ded4f8' : '#53604b',
-                fontSize: 14,
-                lineHeight: 1.35,
-              }}
-            >
-              {playerLevel.description}
-            </Typography>
+            {apiToken && (
+              <Stack
+                data-test="player_greeting__api_token_section"
+                spacing={0.85}
+                sx={{
+                  borderTop: '1px solid rgba(32, 48, 21, 0.12)',
+                  pt: 1,
+                }}
+              >
+                <Stack
+                  direction="row"
+                  spacing={0.75}
+                  sx={{ alignItems: 'center', minWidth: 0 }}
+                >
+                  <Box
+                    aria-hidden="true"
+                    sx={{
+                      alignItems: 'center',
+                      bgcolor: `${worldAccent.main}22`,
+                      border: `1px solid ${worldAccent.dark}33`,
+                      borderRadius: '50%',
+                      color: worldAccent.dark,
+                      display: 'inline-flex',
+                      flexShrink: 0,
+                      height: 26,
+                      justifyContent: 'center',
+                      width: 26,
+                    }}
+                  >
+                    <VpnKeyOutlinedIcon sx={{ fontSize: 16 }} />
+                  </Box>
+                  <Typography
+                    sx={{
+                      color: (theme) =>
+                        theme.palette.mode === 'dark' ? '#f6f0ff' : '#203015',
+                      fontSize: 14,
+                      fontWeight: 950,
+                      lineHeight: 1.2,
+                      minWidth: 0,
+                    }}
+                  >
+                    API token
+                  </Typography>
+                  <Tooltip
+                    arrow
+                    placement="top"
+                    slotProps={readableTooltipSlotProps}
+                    title={
+                      <Stack spacing={0.55}>
+                        <Typography
+                          sx={{
+                            fontSize: '14px',
+                            fontWeight: 850,
+                            lineHeight: 1.25,
+                          }}
+                        >
+                          {tokenTooltipCopy.title}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: '14px',
+                            fontWeight: 500,
+                            lineHeight: 1.35,
+                          }}
+                        >
+                          {tokenTooltipCopy.body}
+                        </Typography>
+                      </Stack>
+                    }
+                  >
+                    <IconButton
+                      aria-label="About API token"
+                      data-test="player_greeting__api_token_info_button"
+                      size="small"
+                      sx={{
+                        bgcolor: `${worldAccent.main}1f`,
+                        border: `1px solid ${worldAccent.dark}33`,
+                        color: worldAccent.dark,
+                        height: 24,
+                        ml: 'auto',
+                        width: 24,
+                        '&:hover': {
+                          bgcolor: `${worldAccent.main}33`,
+                        },
+                      }}
+                    >
+                      <InfoOutlinedIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
+                  <TextField
+                    hiddenLabel
+                    size="small"
+                    type="password"
+                    value={apiToken}
+                    inputProps={{
+                      'aria-label': 'Server API token',
+                      'data-test': 'player_greeting__api_token_input',
+                      readOnly: true,
+                    }}
+                    onClick={(event) => event.stopPropagation()}
+                    sx={{
+                      minWidth: 0,
+                      width: 214,
+                      '& .MuiInputBase-root': {
+                        bgcolor: 'rgba(245, 249, 235, 0.92)',
+                        borderRadius: 1.5,
+                        fontSize: 13,
+                        fontWeight: 850,
+                        height: 32,
+                      },
+                      '& .MuiInputBase-input': {
+                        py: 0.3,
+                      },
+                    }}
+                  />
+                  <IconButton
+                    aria-label="Copy token"
+                    data-test="player_greeting__copy_api_token_button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void copyText(apiToken);
+                    }}
+                    onMouseDown={(event) => event.preventDefault()}
+                    size="small"
+                    sx={{
+                      bgcolor: `${worldAccent.main}22`,
+                      border: `1px solid ${worldAccent.dark}33`,
+                      color: worldAccent.dark,
+                      flexShrink: 0,
+                      height: 32,
+                      width: 32,
+                      '&:hover': {
+                        bgcolor: `${worldAccent.main}38`,
+                      },
+                    }}
+                  >
+                    <ContentCopyOutlinedIcon fontSize="inherit" />
+                  </IconButton>
+                </Stack>
+              </Stack>
+            )}
           </Stack>
         </Box>
         }
@@ -971,6 +1362,29 @@ function PlayerGreeting({
   );
 }
 
+function getPlayerTokenTooltipCopy(language: SupportedLanguage) {
+  const copy: Record<SupportedLanguage, { body: string; title: string }> = {
+    en: {
+      body: 'Save this token to open the same cards, settings, and game history on another device.',
+      title: 'Server access token',
+    },
+    es: {
+      body: 'Guarda este token para abrir las mismas tarjetas, ajustes e historial de juegos en otro dispositivo.',
+      title: 'Token de acceso al servidor',
+    },
+    ru: {
+      body: 'Сохраните этот токен, чтобы открыть те же карточки, настройки и историю игр на другом устройстве.',
+      title: 'Токен доступа к серверу',
+    },
+    uk: {
+      body: 'Збережіть цей токен, щоб відкрити ті самі картки, налаштування та історію ігор на іншому пристрої.',
+      title: 'Токен доступу до сервера',
+    },
+  };
+
+  return copy[language];
+}
+
 interface PlayerLevelView {
   bg: string;
   color: string;
@@ -978,6 +1392,7 @@ interface PlayerLevelView {
   index: number;
   title: string;
 }
+
 
 const PLAYER_LEVEL_THRESHOLDS = [0, 30, 60, 100, 160, 250, 400] as const;
 
@@ -1204,23 +1619,22 @@ function PlayerLevelIcon({ index }: { index: number }) {
 function PlayerOnboardingDialog({
   assistantId,
   complementaryLanguages,
+  error,
   interfaceLanguage,
+  isSubmitting = false,
   onComplete,
+  onTokenLogin,
   open,
   targetLanguage,
   worldId,
 }: {
   assistantId: AssistantId;
   complementaryLanguages: RootState['app']['complementaryLanguages'];
+  error?: string;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
-  onComplete: (value: {
-    assistantId: AssistantId;
-    complementaryLanguages: SupportedLanguage[];
-    interfaceLanguage: SupportedLanguage;
-    name: string;
-    targetLanguage: SupportedLanguage;
-    worldId: WorldId;
-  }) => void;
+  isSubmitting?: boolean;
+  onComplete: (value: PlayerOnboardingCompleteValue) => void | Promise<void>;
+  onTokenLogin: (token: string) => void | Promise<void>;
   open: boolean;
   targetLanguage: SupportedLanguage;
   worldId: WorldId;
@@ -1229,7 +1643,9 @@ function PlayerOnboardingDialog({
   const interfaceLabelId = useId();
   const targetLabelId = useId();
   const hintLanguagesLabelId = useId();
+  const [activeMode, setActiveMode] = useState<'create' | 'token'>('create');
   const [name, setName] = useState('');
+  const [token, setToken] = useState('');
   const [selectedAssistantId, setSelectedAssistantId] =
     useState<AssistantId | ''>('');
   const [selectedWorldId, setSelectedWorldId] = useState<WorldId>('forest');
@@ -1289,6 +1705,7 @@ function PlayerOnboardingDialog({
   const missingOnboardingMessages = missingOnboardingFieldLabels.map((label) =>
     formatOnboardingMissingFieldMessage(copyLanguage, label),
   );
+  const tokenLoginCopy = getOnboardingTokenLoginCopy(copyLanguage);
   const handleTargetLanguageChange = (language: SupportedLanguage) => {
     setSelectedTargetLanguage(language);
     setSelectedHintLanguages(
@@ -1348,10 +1765,10 @@ function PlayerOnboardingDialog({
     });
   };
   const complete = (nextName: string) => {
-    if (!isReady) {
+    if (!isReady || isSubmitting) {
       return;
     }
-    onComplete({
+    void onComplete({
       assistantId: selectedAssistantId || assistantId,
       complementaryLanguages: selectedHintLanguages,
       interfaceLanguage: selectedInterfaceLanguage || interfaceLanguage,
@@ -1359,6 +1776,12 @@ function PlayerOnboardingDialog({
       targetLanguage: selectedTargetLanguage || targetLanguage,
       worldId: selectedWorldId || worldId,
     });
+  };
+  const submitTokenLogin = () => {
+    if (!token.trim() || isSubmitting) {
+      return;
+    }
+    void onTokenLogin(token.trim());
   };
 
   return (
@@ -1378,112 +1801,142 @@ function PlayerOnboardingDialog({
       </DialogTitle>
       <DialogContent data-test="player_onboarding__content">
         <Stack spacing={2} sx={{ pt: 0.5 }}>
-          <Stack
-            data-test="player_onboarding__world_choice"
+          <Tabs
+            aria-label="User setup mode"
+            value={activeMode}
+            onChange={(_, value: 'create' | 'token') => setActiveMode(value)}
             sx={{
-              gap: '8px',
-              overflow: 'visible',
+              minHeight: 40,
+              '& .MuiTab-root': {
+                minHeight: 40,
+                textTransform: 'none',
+                fontWeight: 900,
+              },
+              '& .MuiTabs-indicator': {
+                bgcolor: getWorldAccent(resolvedSelectedWorldId).dark,
+              },
             }}
           >
-            {worldIds.map((world) => (
-              <Button
-                aria-pressed={selectedWorldId === world}
-                data-test={`player_onboarding__world_button__${world}`}
-                fullWidth
-                key={world}
-                onClick={() => {
-                  setSelectedWorldId(world);
-                  setSelectedAssistantId('');
+            <Tab label={getOnboardingModeLabel(copyLanguage, 'create')} value="create" />
+            <Tab label={getOnboardingModeLabel(copyLanguage, 'token')} value="token" />
+          </Tabs>
+          {error && (
+            <Alert data-test="player_onboarding__server_error" severity="error">
+              {error}
+            </Alert>
+          )}
+          {activeMode === 'create' ? (
+            <>
+              <Stack
+                data-test="player_onboarding__world_choice"
+                sx={{
+                  gap: '8px',
+                  overflow: 'visible',
                 }}
-                sx={getWorldChoiceButtonSx(world, selectedWorldId === world)}
               >
-                <WorldChoiceIcon
-                  dataTest={`player_onboarding__world_icon__${world}`}
-                  world={world}
-                />
-                <Typography
-                  component="span"
-                  sx={{ fontSize: 17, fontWeight: 950, lineHeight: 1.1 }}
-                >
-                  {worldDefinitions[world].label[copyLanguage]}
-                </Typography>
-              </Button>
-            ))}
-          </Stack>
-          <Stack
-            data-test="player_onboarding__assistant_figures"
-            direction="row"
-            spacing={1}
-            sx={{ flexWrap: 'wrap' }}
-            useFlexGap
-          >
-            {visibleAssistants.map((assistant) => {
-              const tooltipLabel = getAssistantTooltip(
-                assistant.id,
-                copyLanguage,
-                resolvedSelectedWorldId,
-              );
-              const isSelected = selectedAssistantId === assistant.id;
-
-              return (
-                <Tooltip
-                  arrow
-                  componentsProps={readableTooltipComponentsProps}
-                  key={assistant.id}
-                  slotProps={readableTooltipSlotProps}
-                  title={
-                    <Stack spacing={0.55}>
-                      <Typography
-                        data-test={`player_onboarding__assistant_tooltip_title__${assistant.id}`}
-                        sx={{
-                          fontSize: '14px',
-                          fontWeight: 850,
-                          lineHeight: 1.25,
-                        }}
-                      >
-                        {assistant.name[copyLanguage]}
-                      </Typography>
-                      <Typography
-                        data-test={`player_onboarding__assistant_tooltip_body__${assistant.id}`}
-                        sx={{
-                          fontSize: '14px',
-                          fontWeight: 500,
-                          lineHeight: 1.35,
-                        }}
-                      >
-                        {assistant.description[copyLanguage]}
-                      </Typography>
-                    </Stack>
-                  }
-                >
+                {worldIds.map((world) => (
                   <Button
-                    aria-label={assistant.name[copyLanguage]}
-                    aria-pressed={isSelected}
-                    data-test={`player_onboarding__assistant_figure__${assistant.id}`}
-                    onClick={() => setSelectedAssistantId(assistant.id)}
-                    sx={{
-                      border: '2px solid',
-                      borderColor: isSelected ? '#123c69' : 'rgba(32, 48, 21, 0.14)',
-                      borderRadius: 3,
-                      minWidth: 64,
-                      p: 0.75,
-                      bgcolor: isSelected
-                        ? 'rgba(255, 246, 196, 0.92)'
-                        : 'rgba(255,255,255,0.72)',
+                    aria-pressed={selectedWorldId === world}
+                    data-test={`player_onboarding__world_button__${world}`}
+                    disabled={isSubmitting}
+                    fullWidth
+                    key={world}
+                    onClick={() => {
+                      setSelectedWorldId(world);
+                      setSelectedAssistantId('');
                     }}
+                    sx={getWorldChoiceButtonSx(world, selectedWorldId === world)}
                   >
-                    <AssistantStickerIcon
-                      ariaLabel={tooltipLabel}
-                      assistantId={assistant.id}
-                      dataTest={`player_onboarding__assistant_sticker__${assistant.id}`}
-                      size={48}
-                      worldId={resolvedSelectedWorldId}
+                    <WorldChoiceIcon
+                      dataTest={`player_onboarding__world_icon__${world}`}
+                      world={world}
                     />
+                    <Typography
+                      component="span"
+                      sx={{ fontSize: 17, fontWeight: 950, lineHeight: 1.1 }}
+                    >
+                      {worldDefinitions[world].label[copyLanguage]}
+                    </Typography>
                   </Button>
-                </Tooltip>
-              );
-            })}
-          </Stack>
+                ))}
+              </Stack>
+              <Stack
+                data-test="player_onboarding__assistant_figures"
+                direction="row"
+                spacing={1}
+                sx={{ flexWrap: 'wrap' }}
+                useFlexGap
+              >
+                {visibleAssistants.map((assistant) => {
+                  const tooltipLabel = getAssistantTooltip(
+                    assistant.id,
+                    copyLanguage,
+                    resolvedSelectedWorldId,
+                  );
+                  const isSelected = selectedAssistantId === assistant.id;
+
+                  return (
+                    <Tooltip
+                      arrow
+                      componentsProps={readableTooltipComponentsProps}
+                      key={assistant.id}
+                      slotProps={readableTooltipSlotProps}
+                      title={
+                        <Stack spacing={0.55}>
+                          <Typography
+                            data-test={`player_onboarding__assistant_tooltip_title__${assistant.id}`}
+                            sx={{
+                              fontSize: '14px',
+                              fontWeight: 850,
+                              lineHeight: 1.25,
+                            }}
+                          >
+                            {assistant.name[copyLanguage]}
+                          </Typography>
+                          <Typography
+                            data-test={`player_onboarding__assistant_tooltip_body__${assistant.id}`}
+                            sx={{
+                              fontSize: '14px',
+                              fontWeight: 500,
+                              lineHeight: 1.35,
+                            }}
+                          >
+                            {assistant.description[copyLanguage]}
+                          </Typography>
+                        </Stack>
+                      }
+                    >
+                      <Button
+                        aria-label={assistant.name[copyLanguage]}
+                        aria-pressed={isSelected}
+                        data-test={`player_onboarding__assistant_figure__${assistant.id}`}
+                        disabled={isSubmitting}
+                        onClick={() => setSelectedAssistantId(assistant.id)}
+                        sx={{
+                          border: '2px solid',
+                          borderColor: isSelected
+                            ? '#123c69'
+                            : 'rgba(32, 48, 21, 0.14)',
+                          borderRadius: 3,
+                          minWidth: 64,
+                          p: 0.75,
+                          bgcolor: isSelected
+                            ? 'rgba(255, 246, 196, 0.92)'
+                            : 'rgba(255,255,255,0.72)',
+                        }}
+                      >
+                        <AssistantStickerIcon
+                          ariaLabel={tooltipLabel}
+                          assistantId={assistant.id}
+                          dataTest={`player_onboarding__assistant_sticker__${assistant.id}`}
+                          size={48}
+                          worldId={resolvedSelectedWorldId}
+                        />
+                      </Button>
+                    </Tooltip>
+                  );
+                })}
+              </Stack>
           <Stack
             data-test="player_onboarding__interface_language_row"
             direction="row"
@@ -1683,6 +2136,7 @@ function PlayerOnboardingDialog({
           </Stack>
           <TextField
             data-test="player_onboarding__name_input"
+            disabled={isSubmitting}
             fullWidth
             label={t(copyLanguage, 'playerNameLabel')}
             value={name}
@@ -1693,6 +2147,54 @@ function PlayerOnboardingDialog({
               }
             }}
           />
+            </>
+          ) : (
+            <Stack
+              data-test="player_onboarding__token_login_panel"
+              spacing={1.5}
+              sx={{
+                bgcolor: 'rgba(245, 249, 235, 0.78)',
+                border: '1px solid rgba(91, 150, 54, 0.22)',
+                borderRadius: 2,
+                p: 2,
+              }}
+            >
+              <Typography
+                sx={{
+                  color: '#203015',
+                  fontSize: 16,
+                  fontWeight: 950,
+                  lineHeight: 1.25,
+                }}
+              >
+                {tokenLoginCopy.title}
+              </Typography>
+              <Typography
+                sx={{
+                  color: '#53604b',
+                  fontSize: 14,
+                  lineHeight: 1.4,
+                }}
+              >
+                {tokenLoginCopy.description}
+              </Typography>
+              <TextField
+                data-test="player_onboarding__token_input"
+                disabled={isSubmitting}
+                fullWidth
+                label={tokenLoginCopy.tokenLabel}
+                onChange={(event) => setToken(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    submitTokenLogin();
+                  }
+                }}
+                type="password"
+                value={token}
+              />
+            </Stack>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions
@@ -1705,37 +2207,59 @@ function PlayerOnboardingDialog({
           pb: 2.5,
         }}
       >
-        {(!trimmedName || !isReady) && missingOnboardingMessages.length > 0 && (
-          <GameWarningTooltip
-            anchorDataTest="player_onboarding__save_warning_anchor"
-            arrowDataTest="player_onboarding__save_warning_tooltip_arrow"
-            iconDataTest="player_onboarding__save_warning_tooltip_icon"
-            messages={missingOnboardingMessages}
+        {activeMode === 'create' ? (
+          <>
+            {(!trimmedName || !isReady) &&
+              missingOnboardingMessages.length > 0 && (
+                <GameWarningTooltip
+                  anchorDataTest="player_onboarding__save_warning_anchor"
+                  arrowDataTest="player_onboarding__save_warning_tooltip_arrow"
+                  iconDataTest="player_onboarding__save_warning_tooltip_icon"
+                  messages={missingOnboardingMessages}
+                >
+                  <GameWarningIcon dataTest="player_onboarding__save_warning_icon" />
+                </GameWarningTooltip>
+              )}
+            <Button
+              data-test="player_onboarding__save_button"
+              disabled={!trimmedName || !isReady || isSubmitting}
+              variant="contained"
+              onClick={() => complete(trimmedName)}
+              sx={{
+                background:
+                  'linear-gradient(135deg, #f9f871 0%, #9be667 46%, #61d4ff 100%)',
+                border: '1px solid rgba(32, 48, 21, 0.18)',
+                boxShadow: '0 10px 20px rgba(32, 48, 21, 0.18)',
+                color: '#203015',
+                fontWeight: 950,
+                textTransform: 'none',
+                '&:hover': {
+                  background:
+                    'linear-gradient(135deg, #fff176 0%, #a8ec72 48%, #7ddcff 100%)',
+                },
+              }}
+            >
+              {isSubmitting
+                ? getOnboardingCreateProgressLabel(copyLanguage)
+                : t(copyLanguage, 'savePlayerName')}
+            </Button>
+          </>
+        ) : (
+          <Button
+            data-test="player_onboarding__token_login_button"
+            disabled={!token.trim() || isSubmitting}
+            onClick={submitTokenLogin}
+            variant="contained"
+            sx={{
+              bgcolor: '#315f2c',
+              fontWeight: 900,
+              textTransform: 'none',
+              '&:hover': { bgcolor: '#244b20' },
+            }}
           >
-            <GameWarningIcon dataTest="player_onboarding__save_warning_icon" />
-          </GameWarningTooltip>
+            {isSubmitting ? tokenLoginCopy.loadingLabel : tokenLoginCopy.loadLabel}
+          </Button>
         )}
-        <Button
-          data-test="player_onboarding__save_button"
-          disabled={!trimmedName || !isReady}
-          variant="contained"
-          onClick={() => complete(trimmedName)}
-          sx={{
-            background:
-              'linear-gradient(135deg, #f9f871 0%, #9be667 46%, #61d4ff 100%)',
-            border: '1px solid rgba(32, 48, 21, 0.18)',
-            boxShadow: '0 10px 20px rgba(32, 48, 21, 0.18)',
-            color: '#203015',
-            fontWeight: 950,
-            textTransform: 'none',
-            '&:hover': {
-              background:
-                'linear-gradient(135deg, #fff176 0%, #a8ec72 48%, #7ddcff 100%)',
-            },
-          }}
-        >
-          {t(copyLanguage, 'savePlayerName')}
-        </Button>
       </DialogActions>
     </Dialog>
   );
@@ -1753,6 +2277,91 @@ function formatOnboardingMissingFieldMessage(
   };
 
   return `${choosePrefix[language]} ${lowercaseFirstLetter(fieldLabel, language)}`;
+}
+
+function getOnboardingModeLabel(
+  language: SupportedLanguage,
+  mode: 'create' | 'token',
+): string {
+  const labels: Record<SupportedLanguage, Record<'create' | 'token', string>> = {
+    en: {
+      create: 'Create user',
+      token: 'Use existing token',
+    },
+    es: {
+      create: 'Crear usuario',
+      token: 'Usar token existente',
+    },
+    ru: {
+      create: 'Создать пользователя',
+      token: 'Войти по токену',
+    },
+    uk: {
+      create: 'Створити користувача',
+      token: 'Увійти за токеном',
+    },
+  };
+
+  return labels[language][mode];
+}
+
+function getOnboardingCreateProgressLabel(language: SupportedLanguage): string {
+  const labels: Record<SupportedLanguage, string> = {
+    en: 'Creating...',
+    es: 'Creando...',
+    ru: 'Создаем...',
+    uk: 'Створюємо...',
+  };
+
+  return labels[language];
+}
+
+function getOnboardingTokenLoginCopy(language: SupportedLanguage) {
+  const copy: Record<
+    SupportedLanguage,
+    {
+      description: string;
+      loadLabel: string;
+      loadingLabel: string;
+      title: string;
+      tokenLabel: string;
+    }
+  > = {
+    en: {
+      description:
+        'Paste a saved token to load the same cards, settings, and game history from the backend.',
+      loadLabel: 'Load user',
+      loadingLabel: 'Loading...',
+      title: 'Use an existing token',
+      tokenLabel: 'Access token',
+    },
+    es: {
+      description:
+        'Pega un token guardado para cargar desde el backend las mismas tarjetas, ajustes e historial de juegos.',
+      loadLabel: 'Cargar usuario',
+      loadingLabel: 'Cargando...',
+      title: 'Usar un token existente',
+      tokenLabel: 'Token de acceso',
+    },
+    ru: {
+      description:
+        'Вставьте сохраненный токен, чтобы загрузить с сервера те же карточки, настройки и историю игр.',
+      loadLabel: 'Загрузить пользователя',
+      loadingLabel: 'Загружаем...',
+      title: 'Войти по существующему токену',
+      tokenLabel: 'Токен доступа',
+    },
+    uk: {
+      description:
+        'Вставте збережений токен, щоб завантажити з backend ті самі картки, налаштування та історію ігор.',
+      loadLabel: 'Завантажити користувача',
+      loadingLabel: 'Завантажуємо...',
+      title: 'Увійти за наявним токеном',
+      tokenLabel: 'Токен доступу',
+    },
+  };
+
+  return copy[language];
 }
 
 function lowercaseFirstLetter(value: string, language: SupportedLanguage): string {

@@ -16,7 +16,8 @@ func TestStateRoundTripPersistsNormalizedSQLiteEntities(t *testing.T) {
 	server, dbPath := newTestHTTPServer(t)
 	defer server.Close()
 
-	initial := requestJSON(t, server, http.MethodGet, "/api/state", "alpha-key", nil, http.StatusOK)
+	apiKey := createTestUser(t, server)
+	initial := requestJSON(t, server, http.MethodGet, "/api/state", apiKey, nil, http.StatusOK)
 	initialRevision := intFromJSONNumber(t, initial["revision"])
 
 	state := sampleState()
@@ -25,7 +26,7 @@ func TestStateRoundTripPersistsNormalizedSQLiteEntities(t *testing.T) {
 		server,
 		http.MethodPut,
 		"/api/state",
-		"alpha-key",
+		apiKey,
 		map[string]any{
 			"baseRevision": initialRevision,
 			"state":        state,
@@ -36,7 +37,7 @@ func TestStateRoundTripPersistsNormalizedSQLiteEntities(t *testing.T) {
 		t.Fatalf("expected save to advance revision from %d to %d, got %v", initialRevision, initialRevision+1, saveResponse["revision"])
 	}
 
-	loaded := requestJSON(t, server, http.MethodGet, "/api/state", "alpha-key", nil, http.StatusOK)
+	loaded := requestJSON(t, server, http.MethodGet, "/api/state", apiKey, nil, http.StatusOK)
 	assertJSONEqual(t, loaded["state"], state)
 
 	db, err := sql.Open("sqlite", dbPath)
@@ -72,6 +73,7 @@ func TestStateRequiresApiKey(t *testing.T) {
 	defer server.Close()
 
 	requestJSON(t, server, http.MethodGet, "/api/state", "", nil, http.StatusUnauthorized)
+	requestJSON(t, server, http.MethodGet, "/api/state", "unknown-token", nil, http.StatusUnauthorized)
 	requestJSON(
 		t,
 		server,
@@ -87,7 +89,8 @@ func TestStateRejectsStaleRevision(t *testing.T) {
 	server, _ := newTestHTTPServer(t)
 	defer server.Close()
 
-	initial := requestJSON(t, server, http.MethodGet, "/api/state", "alpha-key", nil, http.StatusOK)
+	apiKey := createTestUser(t, server)
+	initial := requestJSON(t, server, http.MethodGet, "/api/state", apiKey, nil, http.StatusOK)
 	initialRevision := intFromJSONNumber(t, initial["revision"])
 
 	requestJSON(
@@ -95,7 +98,7 @@ func TestStateRejectsStaleRevision(t *testing.T) {
 		server,
 		http.MethodPut,
 		"/api/state",
-		"alpha-key",
+		apiKey,
 		map[string]any{"baseRevision": initialRevision, "state": sampleState()},
 		http.StatusOK,
 	)
@@ -105,12 +108,53 @@ func TestStateRejectsStaleRevision(t *testing.T) {
 		server,
 		http.MethodPut,
 		"/api/state",
-		"alpha-key",
+		apiKey,
 		map[string]any{"baseRevision": initialRevision, "state": sampleState()},
 		http.StatusConflict,
 	)
 	if intFromJSONNumber(t, conflict["currentRevision"]) != initialRevision+1 {
 		t.Fatalf("expected current revision %d in conflict response, got %v", initialRevision+1, conflict["currentRevision"])
+	}
+}
+
+func TestCreateUserReturnsTokenAndStoresInitialState(t *testing.T) {
+	server, dbPath := newTestHTTPServer(t)
+	defer server.Close()
+
+	initialState := sampleState()
+	created := requestJSON(
+		t,
+		server,
+		http.MethodPost,
+		"/api/users",
+		"",
+		map[string]any{"state": initialState},
+		http.StatusCreated,
+	)
+	apiKey, ok := created["apiKey"].(string)
+	if !ok || len(apiKey) < 32 {
+		t.Fatalf("expected generated api key in response, got %v", created["apiKey"])
+	}
+	if intFromJSONNumber(t, created["revision"]) != 0 {
+		t.Fatalf("expected new user revision 0, got %v", created["revision"])
+	}
+
+	loaded := requestJSON(t, server, http.MethodGet, "/api/state", apiKey, nil, http.StatusOK)
+	assertJSONEqual(t, loaded["state"], initialState)
+
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatalf("open sqlite db: %v", err)
+	}
+	defer db.Close()
+	assertTableCount(t, db, "users", 1)
+
+	var cleartextMatches int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM users WHERE api_key_hash = ?`, apiKey).Scan(&cleartextMatches); err != nil {
+		t.Fatalf("count cleartext api key matches: %v", err)
+	}
+	if cleartextMatches != 0 {
+		t.Fatalf("api key was stored in clear text")
 	}
 }
 
@@ -123,6 +167,25 @@ func newTestHTTPServer(t *testing.T) (*httptest.Server, string) {
 		t.Fatalf("create handler: %v", err)
 	}
 	return httptest.NewServer(handler), dbPath
+}
+
+func createTestUser(t *testing.T, server *httptest.Server) string {
+	t.Helper()
+
+	created := requestJSON(
+		t,
+		server,
+		http.MethodPost,
+		"/api/users",
+		"",
+		map[string]any{"state": sampleState()},
+		http.StatusCreated,
+	)
+	apiKey, ok := created["apiKey"].(string)
+	if !ok || apiKey == "" {
+		t.Fatalf("expected created api key, got %v", created["apiKey"])
+	}
+	return apiKey
 }
 
 func requestJSON(
