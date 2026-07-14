@@ -548,10 +548,6 @@ test.describe('golden base visual snapshots', () => {
 });
 
 async function openGoldenApp(page: Page) {
-  const apiKey = `golden-${Date.now()}-${Math.random()
-    .toString(36)
-    .slice(2)}`;
-
   await page.addInitScript(() => {
     localStorage.clear();
     sessionStorage.clear();
@@ -561,14 +557,8 @@ async function openGoldenApp(page: Page) {
   });
 
   await page.goto('/');
-  await expect(
-    page.getByRole('heading', { name: 'Server connection required' }),
-  ).toBeVisible();
-  await expectNoHorizontalOverflow(page);
-  await page.getByLabel('Server endpoint').fill('http://127.0.0.1:8090');
-  await page.getByLabel('API key').fill(apiKey);
-  await page.getByTestId('server_data_gate__connect_button').click();
   await expect(page.getByTestId('player_onboarding__dialog')).toBeVisible();
+  await expectNoHorizontalOverflow(page);
   await page.getByTestId('player_onboarding__assistant_figure__forestElf').click();
   await page.getByTestId('player_onboarding__interface_language_select').click();
   await page.getByRole('option', { name: 'Русский' }).click();
@@ -578,8 +568,18 @@ async function openGoldenApp(page: Page) {
     .getByTestId('player_onboarding__name_input')
     .getByRole('textbox')
     .fill('Golden User');
+  const createUserResponse = page.waitForResponse(
+    (response) =>
+      response.url() === 'http://127.0.0.1:8090/api/users' &&
+      response.request().method() === 'POST' &&
+      response.status() === 201,
+  );
   await page.getByTestId('player_onboarding__save_button').click();
+  await createUserResponse;
   await expect(page.getByTestId('player_onboarding__dialog')).toBeHidden();
+  await expect(page.getByTestId('server_token_dialog__dialog')).toBeVisible();
+  await page.getByTestId('server_token_dialog__close_button').click();
+  await expect(page.getByTestId('server_token_dialog__dialog')).toBeHidden();
   await page.addStyleTag({
     content: `
       *, *::before, *::after {

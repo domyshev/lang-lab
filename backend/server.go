@@ -47,6 +47,16 @@ type SaveStateRequest struct {
 	State        AppStatePayload `json:"state"`
 }
 
+type CreateUserRequest struct {
+	State AppStatePayload `json:"state"`
+}
+
+type CreateUserResponse struct {
+	APIKey   string     `json:"apiKey"`
+	Revision int64      `json:"revision"`
+	User     UserRecord `json:"user"`
+}
+
 type AppStatePayload struct {
 	Attempts []ExerciseAttemptPayload `json:"attempts"`
 	Cards    []LanguageCardPayload    `json:"cards"`
@@ -208,6 +218,7 @@ func NewHandler(config Config) (http.Handler, error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", server.handleHealth)
 	mux.HandleFunc("/api/state", server.handleState)
+	mux.HandleFunc("/api/users", server.handleUsers)
 	return server.withCORS(mux), nil
 }
 
@@ -230,7 +241,7 @@ func (server *Server) withCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		response.Header().Set("Access-Control-Allow-Origin", "*")
 		response.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-API-Key")
-		response.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
+		response.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
 		if request.Method == http.MethodOptions {
 			response.WriteHeader(http.StatusNoContent)
 			return
@@ -250,7 +261,11 @@ func (server *Server) handleState(response http.ResponseWriter, request *http.Re
 		return
 	}
 
-	user, err := server.ensureUser(apiKey)
+	user, err := server.findUser(apiKey)
+	if errors.Is(err, sql.ErrNoRows) {
+		writeJSON(response, http.StatusUnauthorized, map[string]any{"error": "api key was not found"})
+		return
+	}
 	if err != nil {
 		writeJSON(response, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 		return
@@ -295,6 +310,30 @@ func (server *Server) handleState(response http.ResponseWriter, request *http.Re
 	default:
 		writeJSON(response, http.StatusMethodNotAllowed, map[string]any{"error": "method not allowed"})
 	}
+}
+
+func (server *Server) handleUsers(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodPost {
+		writeJSON(response, http.StatusMethodNotAllowed, map[string]any{"error": "method not allowed"})
+		return
+	}
+
+	var input CreateUserRequest
+	if err := json.NewDecoder(request.Body).Decode(&input); err != nil {
+		writeJSON(response, http.StatusBadRequest, map[string]any{"error": "invalid json body"})
+		return
+	}
+
+	apiKey, user, err := server.createUser(input.State)
+	if err != nil {
+		writeJSON(response, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
+	}
+	writeJSON(response, http.StatusCreated, CreateUserResponse{
+		APIKey:   apiKey,
+		Revision: user.Revision,
+		User:     user,
+	})
 }
 
 var errRevisionConflict = errors.New("revision conflict")
@@ -504,45 +543,79 @@ func (server *Server) migrate() error {
 	return nil
 }
 
-func (server *Server) ensureUser(apiKey string) (UserRecord, error) {
+func (server *Server) findUser(apiKey string) (UserRecord, error) {
 	apiKeyHash := hashAPIKey(apiKey)
 	var user UserRecord
 	err := server.db.QueryRow(
 		`SELECT id, user_uid, user_reg_datetime, revision FROM users WHERE api_key_hash = ?`,
 		apiKeyHash,
 	).Scan(&user.ID, &user.UID, &user.RegisteredAtUTC, &user.Revision)
-	if err == nil {
-		return user, nil
-	}
-	if !errors.Is(err, sql.ErrNoRows) {
-		return UserRecord{}, err
-	}
+	return user, err
+}
 
+func (server *Server) createUser(state AppStatePayload) (string, UserRecord, error) {
+	if state.Settings.InterfaceLanguage == "" {
+		state.Settings = defaultState.Settings
+	}
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	uid, err := randomUID("user")
 	if err != nil {
-		return UserRecord{}, err
+		return "", UserRecord{}, err
 	}
-	result, err := server.db.Exec(
+	apiKey, err := randomAPIKey()
+	if err != nil {
+		return "", UserRecord{}, err
+	}
+
+	tx, err := server.db.Begin()
+	if err != nil {
+		return "", UserRecord{}, err
+	}
+	defer tx.Rollback()
+
+	result, err := tx.Exec(
 		`INSERT INTO users (api_key_hash, user_uid, user_reg_datetime, revision, created_at, updated_at)
 		 VALUES (?, ?, ?, 0, ?, ?)`,
-		apiKeyHash,
+		hashAPIKey(apiKey),
 		uid,
 		now,
 		now,
 		now,
 	)
 	if err != nil {
-		return UserRecord{}, err
+		return "", UserRecord{}, err
 	}
 	userID, err := result.LastInsertId()
 	if err != nil {
-		return UserRecord{}, err
+		return "", UserRecord{}, err
 	}
-	if err := server.insertSettings(server.db, userID, defaultState.Settings); err != nil {
-		return UserRecord{}, err
+	if err := insertSettings(tx, userID, state.Settings); err != nil {
+		return "", UserRecord{}, err
 	}
-	return UserRecord{ID: userID, UID: uid, RegisteredAtUTC: now, Revision: 0}, nil
+	for position, card := range state.Cards {
+		if err := insertCard(tx, userID, position, card); err != nil {
+			return "", UserRecord{}, err
+		}
+	}
+	for position, cardSet := range state.CardSets {
+		if err := insertCardSet(tx, userID, position, cardSet); err != nil {
+			return "", UserRecord{}, err
+		}
+	}
+	for position, attempt := range state.Attempts {
+		if err := insertAttempt(tx, userID, position, attempt); err != nil {
+			return "", UserRecord{}, err
+		}
+	}
+	for position, stats := range state.Stats {
+		if err := insertStats(tx, userID, position, stats); err != nil {
+			return "", UserRecord{}, err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return "", UserRecord{}, err
+	}
+	return apiKey, UserRecord{ID: userID, UID: uid, RegisteredAtUTC: now, Revision: 0}, nil
 }
 
 func (server *Server) currentRevision(userID int64) (int64, error) {
@@ -1494,6 +1567,10 @@ func randomUID(prefix string) (string, error) {
 		return "", err
 	}
 	return prefix + "-" + hex.EncodeToString(bytes[:]), nil
+}
+
+func randomAPIKey() (string, error) {
+	return randomUID("ll")
 }
 
 func nullString(value string) any {

@@ -1,24 +1,25 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  Alert,
-  Box,
-  Button,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { Box, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import { useDispatch, useStore } from 'react-redux';
 import {
   DEFAULT_SERVER_ENDPOINT,
   SERVER_API_KEY_STORAGE_KEY,
-  SERVER_ENDPOINT_STORAGE_KEY,
   ServerSyncError,
+  createServerUser,
   loadServerCredentials,
   loadServerState,
-  normalizeEndpoint,
   saveServerCredentials,
   saveServerState,
+  type ServerStatePayload,
 } from '../services/serverSyncClient';
 import {
   applyServerState,
@@ -27,80 +28,132 @@ import {
 } from '../store/serverState';
 import type { AppDispatch, RootState } from '../store/store';
 
-export {
-  SERVER_API_KEY_STORAGE_KEY,
-  SERVER_ENDPOINT_STORAGE_KEY,
-} from '../services/serverSyncClient';
+export { SERVER_API_KEY_STORAGE_KEY } from '../services/serverSyncClient';
 
 const SAVE_DEBOUNCE_MS = 600;
 
-type ConnectionStatus = 'editing' | 'loading' | 'ready' | 'saving-error';
+export type ServerSyncStatus =
+  | 'anonymous'
+  | 'error'
+  | 'loading'
+  | 'ready'
+  | 'registering';
+
+export interface ServerSyncContextValue {
+  apiToken: string;
+  clearNewToken: () => void;
+  createUser: (state: ServerStatePayload) => Promise<string>;
+  endpoint: string;
+  error?: string;
+  lastCreatedToken: string;
+  loginWithToken: (token: string) => Promise<void>;
+  status: ServerSyncStatus;
+}
+
+const detachedServerSyncContext: ServerSyncContextValue = {
+  apiToken: '',
+  clearNewToken: () => {},
+  createUser: async () => '',
+  endpoint: DEFAULT_SERVER_ENDPOINT,
+  lastCreatedToken: '',
+  loginWithToken: async () => {},
+  status: 'anonymous',
+};
+
+export const ServerSyncContext =
+  createContext<ServerSyncContextValue>(detachedServerSyncContext);
+
+export function useServerSync() {
+  return useContext(ServerSyncContext);
+}
 
 export function ServerDataGate({ children }: { children: ReactNode }) {
   const dispatch = useDispatch<AppDispatch>();
   const reduxStore = useStore<RootState>();
   const initialCredentials = useRef(loadServerCredentials());
-  const [endpoint, setEndpoint] = useState(
-    initialCredentials.current.endpoint || DEFAULT_SERVER_ENDPOINT,
-  );
-  const [apiKey, setApiKey] = useState(initialCredentials.current.apiKey);
+  const endpoint = initialCredentials.current.endpoint || DEFAULT_SERVER_ENDPOINT;
+  const [apiToken, setApiToken] = useState(initialCredentials.current.apiKey);
+  const [lastCreatedToken, setLastCreatedToken] = useState('');
   const [error, setError] = useState('');
-  const [status, setStatus] = useState<ConnectionStatus>(
-    initialCredentials.current.apiKey ? 'loading' : 'editing',
+  const [status, setStatus] = useState<ServerSyncStatus>(
+    initialCredentials.current.apiKey ? 'loading' : 'anonymous',
   );
-  const [connection, setConnection] = useState<{
-    apiKey: string;
-    endpoint: string;
-  } | null>(null);
   const revisionRef = useRef(0);
   const lastSavedSnapshotRef = useRef('');
 
-  const connect = useCallback(
-    async (nextCredentials: { apiKey: string; endpoint: string }) => {
-      const normalizedEndpoint = normalizeEndpoint(nextCredentials.endpoint);
-      const trimmedApiKey = nextCredentials.apiKey.trim();
-      if (!normalizedEndpoint || !trimmedApiKey) {
-        setError('Server endpoint and API key are required.');
-        setStatus('editing');
-        return;
+  const markLoaded = useCallback(
+    (nextApiToken: string, revision: number, state: ServerStatePayload) => {
+      revisionRef.current = revision;
+      lastSavedSnapshotRef.current = stableServerStateString(state);
+      setApiToken(nextApiToken);
+      setStatus('ready');
+      setError('');
+    },
+    [],
+  );
+
+  const loginWithToken = useCallback(
+    async (token: string) => {
+      const trimmedToken = token.trim();
+      if (!trimmedToken) {
+        throw new ServerSyncError('API token is required.', 401);
       }
 
       setStatus('loading');
       setError('');
       try {
         const response = await loadServerState({
-          apiKey: trimmedApiKey,
-          endpoint: normalizedEndpoint,
+          apiKey: trimmedToken,
+          endpoint,
         });
-        saveServerCredentials({
-          apiKey: trimmedApiKey,
-          endpoint: normalizedEndpoint,
-        });
+        saveServerCredentials({ apiKey: trimmedToken });
         applyServerState(dispatch, response.state);
-        revisionRef.current = response.revision;
-        lastSavedSnapshotRef.current = stableServerStateString(response.state);
-        setEndpoint(normalizedEndpoint);
-        setApiKey(trimmedApiKey);
-        setConnection({ apiKey: trimmedApiKey, endpoint: normalizedEndpoint });
-        setStatus('ready');
+        setLastCreatedToken('');
+        markLoaded(trimmedToken, response.revision, response.state);
       } catch (caught) {
-        setConnection(null);
-        setError(getConnectionError(caught));
-        setStatus('editing');
+        const message = getConnectionError(caught);
+        setApiToken('');
+        setError(message);
+        setStatus('error');
+        throw new ServerSyncError(message, getErrorStatus(caught));
       }
     },
-    [dispatch],
+    [dispatch, endpoint, markLoaded],
   );
+
+  const createUser = useCallback(
+    async (state: ServerStatePayload) => {
+      setStatus('registering');
+      setError('');
+      try {
+        const response = await createServerUser({ endpoint, state });
+        saveServerCredentials({ apiKey: response.apiKey });
+        setLastCreatedToken(response.apiKey);
+        markLoaded(response.apiKey, response.revision, state);
+        return response.apiKey;
+      } catch (caught) {
+        const message = getConnectionError(caught);
+        setError(message);
+        setStatus(apiToken ? 'ready' : 'anonymous');
+        throw new ServerSyncError(message, getErrorStatus(caught));
+      }
+    },
+    [apiToken, endpoint, markLoaded],
+  );
+
+  const clearNewToken = useCallback(() => {
+    setLastCreatedToken('');
+  }, []);
 
   useEffect(() => {
     if (!initialCredentials.current.apiKey) {
       return;
     }
-    void connect(initialCredentials.current);
-  }, [connect]);
+    void loginWithToken(initialCredentials.current.apiKey);
+  }, [loginWithToken]);
 
   useEffect(() => {
-    if (status !== 'ready' || !connection) {
+    if (status !== 'ready' || !apiToken) {
       return;
     }
 
@@ -127,9 +180,9 @@ export function ServerDataGate({ children }: { children: ReactNode }) {
         try {
           const stateToSave = selectServerState(reduxStore.getState());
           const saved = await saveServerState({
-            apiKey: connection.apiKey,
+            apiKey: apiToken,
             baseRevision: revisionRef.current,
-            endpoint: connection.endpoint,
+            endpoint,
             state: stateToSave,
           });
           revisionRef.current = saved.revision;
@@ -139,8 +192,7 @@ export function ServerDataGate({ children }: { children: ReactNode }) {
           }
         } catch (caught) {
           setError(getConnectionError(caught));
-          setStatus('saving-error');
-          setConnection(null);
+          setStatus('error');
         } finally {
           isSaving = false;
         }
@@ -156,14 +208,43 @@ export function ServerDataGate({ children }: { children: ReactNode }) {
         window.clearTimeout(saveTimer);
       }
     };
-  }, [connection, reduxStore, status]);
+  }, [apiToken, endpoint, reduxStore, status]);
 
-  if (status === 'ready') {
-    return <>{children}</>;
-  }
+  const contextValue = useMemo<ServerSyncContextValue>(
+    () => ({
+      apiToken,
+      clearNewToken,
+      createUser,
+      endpoint,
+      error,
+      lastCreatedToken,
+      loginWithToken,
+      status,
+    }),
+    [
+      apiToken,
+      clearNewToken,
+      createUser,
+      endpoint,
+      error,
+      lastCreatedToken,
+      loginWithToken,
+      status,
+    ],
+  );
 
-  const isLoading = status === 'loading';
+  return (
+    <ServerSyncContext.Provider value={contextValue}>
+      {status === 'loading' && apiToken ? (
+        <LoadingServerState />
+      ) : (
+        children
+      )}
+    </ServerSyncContext.Provider>
+  );
+}
 
+function LoadingServerState() {
   return (
     <Box
       data-test="server_data_gate__root"
@@ -183,66 +264,26 @@ export function ServerDataGate({ children }: { children: ReactNode }) {
           border: '1px solid rgba(32, 48, 21, 0.16)',
           borderRadius: 2,
           boxShadow: '0 18px 42px rgba(32, 48, 21, 0.16)',
-          maxWidth: 520,
+          maxWidth: 420,
           mx: 'auto',
           p: { xs: 2.5, sm: 3 },
           width: '100%',
         }}
       >
-        <Stack spacing={2}>
-          <Stack spacing={0.75}>
-            <Typography
-              component="h1"
-              data-test="server_data_gate__title"
-              sx={{ color: '#203015', fontSize: 26, fontWeight: 950 }}
-            >
-              Server connection required
-            </Typography>
-            <Typography
-              data-test="server_data_gate__subtitle"
-              sx={{ color: 'rgba(32, 48, 21, 0.72)', fontWeight: 650 }}
-            >
-              Language Lab stores cards, settings, and game history in the Go
-              backend. Connect to continue.
-            </Typography>
-          </Stack>
-          {error && (
-            <Alert data-test="server_data_gate__error" severity="error">
-              {error}
-            </Alert>
-          )}
-          <TextField
-            data-test="server_data_gate__endpoint_input"
-            disabled={isLoading}
-            fullWidth
-            label="Server endpoint"
-            onChange={(event) => setEndpoint(event.target.value)}
-            value={endpoint}
-          />
-          <TextField
-            data-test="server_data_gate__api_key_input"
-            disabled={isLoading}
-            fullWidth
-            label="API key"
-            onChange={(event) => setApiKey(event.target.value)}
-            type="password"
-            value={apiKey}
-          />
-          <Button
-            data-test="server_data_gate__connect_button"
-            disabled={isLoading}
-            onClick={() => void connect({ apiKey, endpoint })}
-            variant="contained"
-            sx={{
-              alignSelf: 'flex-start',
-              bgcolor: '#315f2c',
-              fontWeight: 900,
-              textTransform: 'none',
-              '&:hover': { bgcolor: '#244b20' },
-            }}
+        <Stack spacing={1.5} sx={{ alignItems: 'center', textAlign: 'center' }}>
+          <CircularProgress data-test="server_data_gate__loading_spinner" />
+          <Typography
+            data-test="server_data_gate__title"
+            sx={{ color: '#203015', fontSize: 22, fontWeight: 950 }}
           >
-            {isLoading ? 'Connecting...' : 'Connect'}
-          </Button>
+            Loading server data
+          </Typography>
+          <Typography
+            data-test="server_data_gate__subtitle"
+            sx={{ color: 'rgba(32, 48, 21, 0.72)', fontWeight: 650 }}
+          >
+            Restoring your cards, settings, and game history from SQLite.
+          </Typography>
         </Stack>
       </Paper>
     </Box>
@@ -260,4 +301,11 @@ function getConnectionError(error: unknown): string {
     return error.message;
   }
   return 'Unable to connect to the server.';
+}
+
+function getErrorStatus(error: unknown): number {
+  if (error instanceof ServerSyncError) {
+    return error.status;
+  }
+  return 0;
 }

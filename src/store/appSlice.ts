@@ -200,17 +200,18 @@ const appSlice = createSlice({
         action.payload.practiceSettings,
       );
       state.targetLanguage = action.payload.targetLanguage;
-      state.playerProfile = action.payload.playerProfile
-        ? {
-            avatarSeed:
-              state.playerProfile?.avatarSeed ||
-              action.payload.playerProfile.displayName ||
-              'server-player',
-            displayName:
-              action.payload.playerProfile.displayName?.trim() || undefined,
-            isAnonymous: action.payload.playerProfile.isAnonymous,
-          }
-        : undefined;
+      const playerProfile = action.payload.playerProfile ?? {
+        displayName: undefined,
+        isAnonymous: true,
+      };
+      state.playerProfile = {
+        avatarSeed:
+          state.playerProfile?.avatarSeed ||
+          playerProfile.displayName ||
+          'server-player',
+        displayName: playerProfile.displayName?.trim() || undefined,
+        isAnonymous: playerProfile.isAnonymous,
+      };
     },
   },
 });

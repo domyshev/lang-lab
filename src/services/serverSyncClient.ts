@@ -6,8 +6,6 @@ import type { PracticeSettings } from '../domain/practiceOrdering';
 import type { CardStats } from '../domain/stats';
 import type { ComplementaryLanguages } from '../store/appSlice';
 
-export const SERVER_ENDPOINT_STORAGE_KEY =
-  'language-crossword-lab:server-endpoint';
 export const SERVER_API_KEY_STORAGE_KEY = 'language-crossword-lab:server-api-key';
 export const DEFAULT_SERVER_ENDPOINT =
   import.meta.env.VITE_LANG_LAB_API_ENDPOINT ?? 'http://127.0.0.1:8090';
@@ -48,6 +46,12 @@ export interface SaveServerStateResponse {
   revision: number;
 }
 
+export interface CreateServerUserResponse {
+  apiKey: string;
+  revision: number;
+  user: ServerUserPayload;
+}
+
 export class ServerSyncError extends Error {
   status: number;
   currentRevision?: number;
@@ -63,17 +67,15 @@ export class ServerSyncError extends Error {
 export function loadServerCredentials(storage: Storage = window.localStorage) {
   return {
     apiKey: storage.getItem(SERVER_API_KEY_STORAGE_KEY) ?? '',
-    endpoint:
-      storage.getItem(SERVER_ENDPOINT_STORAGE_KEY) ?? DEFAULT_SERVER_ENDPOINT,
+    endpoint: DEFAULT_SERVER_ENDPOINT,
   };
 }
 
 export function saveServerCredentials(
-  input: { apiKey: string; endpoint: string },
+  input: { apiKey: string },
   storage: Storage = window.localStorage,
 ) {
   storage.setItem(SERVER_API_KEY_STORAGE_KEY, input.apiKey);
-  storage.setItem(SERVER_ENDPOINT_STORAGE_KEY, normalizeEndpoint(input.endpoint));
 }
 
 export async function loadServerState(input: {
@@ -107,6 +109,22 @@ export async function saveServerState(input: {
     method: 'PUT',
   });
   return decodeResponse<SaveServerStateResponse>(response);
+}
+
+export async function createServerUser(input: {
+  endpoint: string;
+  state: ServerStatePayload;
+}): Promise<CreateServerUserResponse> {
+  const response = await fetch(`${normalizeEndpoint(input.endpoint)}/api/users`, {
+    body: JSON.stringify({
+      state: input.state,
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  });
+  return decodeResponse<CreateServerUserResponse>(response);
 }
 
 export function normalizeEndpoint(endpoint: string): string {
