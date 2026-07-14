@@ -152,6 +152,14 @@ const cardSetsSlice = createSlice({
       cardSet.cardIds = Array.from(new Set(action.payload.cardIds));
       cardSet.updatedAt = action.payload.now;
     },
+    replaceCardSetsState(state, action: PayloadAction<CardSetsState>) {
+      state.cardSets = action.payload.cardSets.map((cardSet) => ({
+        ...cardSet,
+        cardIds: [...cardSet.cardIds],
+        names: cardSet.names ? { ...cardSet.names } : undefined,
+      }));
+      state.selectedCardSetId = action.payload.selectedCardSetId;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -200,6 +208,7 @@ export const {
   selectCardSet,
   addCardToCardSet,
   mergeCardSetMetadata,
+  replaceCardSetsState,
   seedDefaultCardSets,
   setCardSetCards,
 } =

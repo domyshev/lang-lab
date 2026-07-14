@@ -16,7 +16,7 @@ import {
 } from 'redux-persist';
 import type { PersistConfig } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
-import { AppState, appReducer } from './appSlice';
+import { AppState, appReducer, initialAppState } from './appSlice';
 import { attemptsReducer } from './attemptsSlice';
 import { cardsReducer } from './cardsSlice';
 import { statsReducer } from './statsSlice';
@@ -187,21 +187,32 @@ function stableStringify(value: unknown): string {
 
 export function stripSessionOnlyAppStateForPersist(appState: AppState): AppState {
   return {
-    ...appState,
+    ...initialAppState,
+    assistantId: appState.assistantId,
     hasAgentsIntroCoachmarkBeenShown: false,
+    worldId: appState.worldId,
   };
 }
 
 export function stripSessionOnlyPersistedState(state: RootState): RootState {
+  const initialState = rootReducer(undefined, { type: '@@INIT' });
   return {
-    ...state,
+    ...initialState,
     app: stripSessionOnlyAppStateForPersist(state.app),
   };
 }
 
-const sessionOnlyAppStateTransform = createTransform<AppState, AppState, RootState>(
+const sessionOnlyAppStateTransform = createTransform<
+  AppState,
+  Partial<AppState>,
+  RootState
+>(
   (inboundState) => stripSessionOnlyAppStateForPersist(inboundState),
-  (outboundState) => stripSessionOnlyAppStateForPersist(outboundState),
+  (outboundState) =>
+    stripSessionOnlyAppStateForPersist({
+      ...initialAppState,
+      ...outboundState,
+    }),
   { whitelist: ['app'] },
 );
 
@@ -210,6 +221,7 @@ const persistConfig: PersistConfig<RootState> = {
   version: 1,
   storage,
   transforms: [sessionOnlyAppStateTransform],
+  whitelist: ['app'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

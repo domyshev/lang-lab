@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { appTheme } from './theme';
 import { App } from './App';
+import { ServerDataGate } from './components/ServerDataGate';
 import { persistor, store } from './store/store';
 import './styles.css';
 
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <PersistGate loading={null} persistor={persistor}>
         <ThemeProvider theme={appTheme}>
           <CssBaseline />
-          <App />
+          <ServerDataGate>
+            <App />
+          </ServerDataGate>
         </ThemeProvider>
       </PersistGate>
     </Provider>

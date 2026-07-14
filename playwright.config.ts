@@ -29,10 +29,19 @@ export default defineConfig({
     testIdAttribute: 'data-test',
     trace: 'on-first-retry',
   },
-  webServer: {
-    command: 'npm run dev -- --host 127.0.0.1 --port 4173',
-    reuseExistingServer: !process.env.CI,
-    url: 'http://127.0.0.1:4173',
-  },
+  webServer: [
+    {
+      command:
+        'mkdir -p .playwright && cd backend && LANG_LAB_ADDR=127.0.0.1:8090 LANG_LAB_DB_PATH=../.playwright/language-lab-e2e.sqlite go run .',
+      reuseExistingServer: false,
+      timeout: 120_000,
+      url: 'http://127.0.0.1:8090/healthz',
+    },
+    {
+      command: 'npm run dev -- --host 127.0.0.1 --port 4173',
+      reuseExistingServer: !process.env.CI,
+      url: 'http://127.0.0.1:4173',
+    },
+  ],
   workers: 1,
 });

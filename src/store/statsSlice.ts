@@ -26,8 +26,12 @@ const statsSlice = createSlice({
         [] as CardStats[],
       );
     },
+    replaceStatsState(state, action: PayloadAction<StatsState>) {
+      state.cardStats = action.payload.cardStats.map((stats) => ({ ...stats }));
+    },
   },
 });
 
-export const { rebuildStatsFromAttempts, recordAttemptStats } = statsSlice.actions;
+export const { rebuildStatsFromAttempts, recordAttemptStats, replaceStatsState } =
+  statsSlice.actions;
 export const statsReducer = statsSlice.reducer;

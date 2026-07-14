@@ -80,6 +80,30 @@ const cardsSlice = createSlice({
       card.knownTargetLanguages = [...languages];
       card.updatedAt = action.payload.now;
     },
+    replaceCardsState(state, action: PayloadAction<CardsState>) {
+      state.cards = action.payload.cards.map((card) => ({
+        ...card,
+        translations: { ...card.translations },
+        definitions: card.definitions ? { ...card.definitions } : undefined,
+        examples: card.examples
+          ? Object.fromEntries(
+              Object.entries(card.examples).map(([language, examples]) => [
+                language,
+                examples.map((example) => ({ ...example })),
+              ]),
+            )
+          : undefined,
+        tags: card.tags ? [...card.tags] : undefined,
+        knownTargetLanguages: card.knownTargetLanguages
+          ? [...card.knownTargetLanguages]
+          : undefined,
+      }));
+      state.duplicateProcessingHistory =
+        action.payload.duplicateProcessingHistory.map((entry) => ({ ...entry }));
+      state.pendingDuplicates = action.payload.pendingDuplicates.map((entry) => ({
+        ...entry,
+      }));
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -122,6 +146,6 @@ const cardsSlice = createSlice({
   },
 });
 
-export const { applyImportResult, seedDefaultCards, setCardKnown } =
+export const { applyImportResult, replaceCardsState, seedDefaultCards, setCardKnown } =
   cardsSlice.actions;
 export const cardsReducer = cardsSlice.reducer;

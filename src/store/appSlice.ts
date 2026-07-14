@@ -46,7 +46,7 @@ export const defaultComplementaryLanguages: ComplementaryLanguages = {
   uk: ['ru', 'en', 'es'],
 };
 
-const initialState: AppState = {
+export const initialAppState: AppState = {
   assistantId: defaultAssistantId,
   complementaryLanguages: defaultComplementaryLanguages,
   hasFinishExerciseLampBeenShown: false,
@@ -60,9 +60,17 @@ const initialState: AppState = {
   worldId: defaultWorldId,
 };
 
+export interface BackendAppSettings {
+  complementaryLanguages: ComplementaryLanguages;
+  interfaceLanguage: SupportedLanguage;
+  playerProfile?: Pick<PlayerProfile, 'displayName' | 'isAnonymous'>;
+  practiceSettings: PracticeSettings;
+  targetLanguage: SupportedLanguage;
+}
+
 const appSlice = createSlice({
   name: 'app',
-  initialState,
+  initialState: initialAppState,
   reducers: {
     acknowledgeGameHelp(state) {
       state.isGameHelpCollapsed = true;
@@ -180,6 +188,30 @@ const appSlice = createSlice({
       );
       state.practiceSettings = settings;
     },
+    replaceBackendAppSettings(state, action: PayloadAction<BackendAppSettings>) {
+      state.complementaryLanguages = getComplementaryLanguages(
+        action.payload.complementaryLanguages,
+        {
+          targetLanguage: action.payload.targetLanguage,
+        },
+      );
+      state.interfaceLanguage = action.payload.interfaceLanguage;
+      state.practiceSettings = getPracticeSettings(
+        action.payload.practiceSettings,
+      );
+      state.targetLanguage = action.payload.targetLanguage;
+      state.playerProfile = action.payload.playerProfile
+        ? {
+            avatarSeed:
+              state.playerProfile?.avatarSeed ||
+              action.payload.playerProfile.displayName ||
+              'server-player',
+            displayName:
+              action.payload.playerProfile.displayName?.trim() || undefined,
+            isAnonymous: action.payload.playerProfile.isAnonymous,
+          }
+        : undefined;
+    },
   },
 });
 
@@ -199,6 +231,7 @@ export const {
   setRecentMistakeRepeatFrequencyPercent,
   setTargetLanguage,
   setWorldId,
+  replaceBackendAppSettings,
 } = appSlice.actions;
 export const appReducer = appSlice.reducer;
 

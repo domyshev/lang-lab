@@ -49,6 +49,9 @@ const aiAssistantSlice = createSlice({
     clearAiChat(state) {
       state.messages = [];
     },
+    resetAiAssistantState() {
+      return initialState;
+    },
     stageAiOperation(state, action: PayloadAction<PlannedAiOperation>) {
       state.stagedOperation = action.payload;
       state.blockedPreview = undefined;
@@ -159,6 +162,7 @@ export const {
   cancelStagedAiOperation,
   clearAiChat,
   clearAiOperationError,
+  resetAiAssistantState,
   stageBlockedAiPreview,
   stageBlockedAiPreviewMessage,
   stageAiOperation,

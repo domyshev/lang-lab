@@ -21,8 +21,29 @@ const attemptsSlice = createSlice({
         (attempt) => attempt.exerciseSessionId !== action.payload,
       );
     },
+    replaceAttemptsState(state, action: PayloadAction<AttemptsState>) {
+      state.attempts = action.payload.attempts.map((attempt) => ({
+        ...attempt,
+        answers: { ...attempt.answers },
+        cardSnapshots: attempt.cardSnapshots.map((snapshot) => ({
+          ...snapshot,
+          definitions: snapshot.definitions
+            ? { ...snapshot.definitions }
+            : undefined,
+          tags: snapshot.tags ? [...snapshot.tags] : undefined,
+          translations: { ...snapshot.translations },
+        })),
+        correctness: { ...attempt.correctness },
+        hintsUsed: { ...attempt.hintsUsed },
+        prompts: attempt.prompts.map((prompt) => ({
+          ...prompt,
+          translationHints: prompt.translationHints.map((hint) => ({ ...hint })),
+        })),
+      }));
+    },
   },
 });
 
-export const { forgetExerciseSession, saveAttempt } = attemptsSlice.actions;
+export const { forgetExerciseSession, replaceAttemptsState, saveAttempt } =
+  attemptsSlice.actions;
 export const attemptsReducer = attemptsSlice.reducer;
