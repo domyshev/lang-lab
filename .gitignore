@@ -2,6 +2,7 @@
 .worktrees/
 dist/
 node_modules/
+data/
 playwright-report/
 test-results/
 .playwright/
