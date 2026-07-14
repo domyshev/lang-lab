@@ -164,19 +164,28 @@ export function LanguageSelectors() {
       spacing={1}
       useFlexGap
       sx={{
-        alignItems: 'center',
+        alignItems: { xs: 'stretch', sm: 'center' },
         width: { xs: '100%', md: 'auto' },
       }}
     >
       <Stack
         data-test="language_selectors__interface_language_group"
         direction="row"
-        sx={{ alignItems: 'center', minWidth: 0 }}
+        sx={{
+          alignItems: 'center',
+          flex: { xs: '1 1 100%', sm: '0 1 auto' },
+          minWidth: 0,
+          width: { xs: '100%', sm: 'auto' },
+        }}
       >
         <FormControl
           data-test="language_selectors__interface_language_control"
           size="small"
-          sx={{ minWidth: { xs: 138, sm: 150 } }}
+          sx={{
+            flex: { xs: '1 1 auto', sm: '0 0 auto' },
+            minWidth: 0,
+            width: { xs: 'auto', sm: 150 },
+          }}
         >
           <InputLabel
             data-test="language_selectors__interface_language_label"
@@ -224,17 +233,31 @@ export function LanguageSelectors() {
         direction="row"
         spacing={1}
         alignItems="center"
-        sx={{ flexShrink: 0 }}
+        sx={{
+          flex: { xs: '1 1 100%', sm: '1 1 auto', md: '0 0 auto' },
+          flexShrink: 1,
+          flexWrap: 'wrap',
+          minWidth: 0,
+          width: { xs: '100%', md: 'auto' },
+        }}
       >
         <Stack
           data-test="language_selectors__target_language_group"
           direction="row"
-          sx={{ alignItems: 'center', minWidth: 0 }}
+          sx={{
+            alignItems: 'center',
+            flex: { xs: '1 1 100%', sm: '1 1 268px', md: '0 0 auto' },
+            minWidth: 0,
+          }}
         >
           <FormControl
             data-test="language_selectors__target_language_control"
             size="small"
-            sx={{ width: 224 }}
+            sx={{
+              flex: { xs: '1 1 auto', md: '0 0 auto' },
+              minWidth: 0,
+              width: { xs: 'auto', md: 224 },
+            }}
           >
             <InputLabel
               data-test="language_selectors__target_language_label"
@@ -280,12 +303,21 @@ export function LanguageSelectors() {
         <Stack
           data-test="language_selectors__companion_languages_group"
           direction="row"
-          sx={{ alignItems: 'center', minWidth: 0 }}
+          sx={{
+            alignItems: 'center',
+            flex: { xs: '1 1 100%', sm: '1 1 268px', md: '0 0 auto' },
+            minWidth: 0,
+          }}
         >
           <FormControl
             data-test="language_selectors__companion_languages_control"
             size="small"
-            sx={{ maxWidth: 224, width: 224 }}
+            sx={{
+              flex: { xs: '1 1 auto', md: '0 0 auto' },
+              maxWidth: { xs: 'none', md: 224 },
+              minWidth: 0,
+              width: { xs: 'auto', md: 224 },
+            }}
           >
             <InputLabel
               data-test="language_selectors__companion_languages_label"
@@ -400,8 +432,9 @@ export function LanguageSelectors() {
             border: '1px solid rgba(32, 48, 21, 0.22)',
             borderRadius: 1,
             color: '#203015',
+            flexShrink: 0,
             height: 34,
-            ml: '10px',
+            ml: { xs: 0, md: '10px' },
             width: 34,
           }}
         >
@@ -419,7 +452,7 @@ export function LanguageSelectors() {
         <Stack
           data-test="language_selectors__practice_settings_panel"
           spacing={1.5}
-          sx={{ minWidth: 280, p: 2 }}
+          sx={{ maxWidth: 'calc(100vw - 32px)', minWidth: 280, p: 2 }}
         >
           <Typography
             data-test="language_selectors__practice_settings_title"

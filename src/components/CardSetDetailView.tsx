@@ -458,157 +458,160 @@ export function CardSetDetailView() {
         sx={{
           display: 'flex',
           flexDirection: 'column',
+          maxWidth: '100%',
           maxHeight: { md: 'calc(100vh - 118px)' },
           minHeight: 0,
+          minWidth: 0,
           p: { xs: 2, md: 3 },
+          width: '100%',
         }}
       >
-      <Stack
-        data-test={`card_set_detail__content__${selectedCardSet.id}`}
-        spacing={2.5}
-        sx={{ flex: 1, minHeight: 0 }}
-      >
         <Stack
-          data-test={`card_set_detail__header__${selectedCardSet.id}`}
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={1.5}
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
-          justifyContent="space-between"
+          data-test={`card_set_detail__content__${selectedCardSet.id}`}
+          spacing={2.5}
+          sx={{ flex: 1, minHeight: 0, minWidth: 0 }}
         >
-          <Box data-test={`card_set_detail__header_text__${selectedCardSet.id}`}>
-            <Typography
-              data-test={`card_set_detail__title__${selectedCardSet.id}`}
-              variant="h5"
-              component="h2"
-              sx={{ fontWeight: 800 }}
-            >
-              {selectedCardSetName}
-            </Typography>
-            <Typography
-              color="text.secondary"
-              data-test={`card_set_detail__target_answer__${selectedCardSet.id}`}
-              sx={{ mt: 0.5 }}
-            >
-              {t(interfaceLanguage, 'targetAnswerLabel')}:{' '}
-              {languageFlags[targetLanguage]}{' '}
-              {getLanguageDisplayName(interfaceLanguage, targetLanguage)}
-            </Typography>
-          </Box>
           <Stack
-            data-test={`card_set_detail__header_actions__${selectedCardSet.id}`}
-            direction="row"
-            spacing={1}
-            sx={{ alignItems: 'center', flexWrap: 'wrap' }}
-            useFlexGap
+            data-test={`card_set_detail__header__${selectedCardSet.id}`}
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1.5}
+            alignItems={{ xs: 'flex-start', sm: 'center' }}
+            justifyContent="space-between"
           >
-            {isArchivedSelectedCardSet && (
-              <Chip
-                data-test={`card_set_detail__archived_chip__${selectedCardSet.id}`}
-                label={t(interfaceLanguage, 'archived')}
-                variant="outlined"
-                sx={{
-                  borderColor: cardSetAccentBorder,
-                  color: worldAccent.dark,
-                  fontWeight: 850,
-                }}
-              />
-            )}
-            {isArchivedSelectedCardSet && (
-              <Button
-                data-test={`card_set_detail__copy_archived_button__${selectedCardSet.id}`}
-                startIcon={<AddIcon />}
-                variant="outlined"
-                onClick={() =>
-                  dispatch(
-                    copyArchivedCardSet({
-                      sourceCardSetId: selectedCardSet.id,
-                      newCardSetId: createCardSetId(),
-                      now: new Date().toISOString(),
-                    }),
-                  )
-                }
+            <Box data-test={`card_set_detail__header_text__${selectedCardSet.id}`}>
+              <Typography
+                data-test={`card_set_detail__title__${selectedCardSet.id}`}
+                variant="h5"
+                component="h2"
+                sx={{ fontWeight: 800 }}
               >
-                {t(interfaceLanguage, 'createActiveCopy')}
-              </Button>
-            )}
-            {canEditSelectedCardSet && !isEditingCards && (
-              <Button
-                data-test={`card_set_detail__edit_cards_button__${selectedCardSet.id}`}
-                onClick={startEditingCards}
-                startIcon={<AddIcon />}
-                variant="outlined"
-                sx={{
-                  borderColor: cardSetAccentMain,
-                  color: worldAccent.dark,
-                  mr: { sm: 3.75 },
-                  '&:hover': {
-                    bgcolor: cardSetAccentHover,
-                    borderColor: worldAccent.dark,
-                  },
-                }}
+                {selectedCardSetName}
+              </Typography>
+              <Typography
+                color="text.secondary"
+                data-test={`card_set_detail__target_answer__${selectedCardSet.id}`}
+                sx={{ mt: 0.5 }}
               >
-                {t(interfaceLanguage, editButtonLabelKey)}
-              </Button>
-            )}
-            {canEditSelectedCardSet && isEditingCards && (
-              <Stack
-                data-test={`card_set_detail__edit_actions__${selectedCardSet.id}`}
-                direction="row"
-                spacing={1}
-                sx={{ alignItems: 'center', mr: { sm: 3.75 } }}
-              >
+                {t(interfaceLanguage, 'targetAnswerLabel')}:{' '}
+                {languageFlags[targetLanguage]}{' '}
+                {getLanguageDisplayName(interfaceLanguage, targetLanguage)}
+              </Typography>
+            </Box>
+            <Stack
+              data-test={`card_set_detail__header_actions__${selectedCardSet.id}`}
+              direction="row"
+              spacing={1}
+              sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+              useFlexGap
+            >
+              {isArchivedSelectedCardSet && (
+                <Chip
+                  data-test={`card_set_detail__archived_chip__${selectedCardSet.id}`}
+                  label={t(interfaceLanguage, 'archived')}
+                  variant="outlined"
+                  sx={{
+                    borderColor: cardSetAccentBorder,
+                    color: worldAccent.dark,
+                    fontWeight: 850,
+                  }}
+                />
+              )}
+              {isArchivedSelectedCardSet && (
                 <Button
-                  data-test={`card_set_detail__save_cards_button__${selectedCardSet.id}`}
-                  disabled={!canSaveCardSetDraft}
-                  onClick={saveEditedCards}
-                  startIcon={<CheckCircleRoundedIcon />}
+                  data-test={`card_set_detail__copy_archived_button__${selectedCardSet.id}`}
+                  startIcon={<AddIcon />}
+                  variant="outlined"
+                  onClick={() =>
+                    dispatch(
+                      copyArchivedCardSet({
+                        sourceCardSetId: selectedCardSet.id,
+                        newCardSetId: createCardSetId(),
+                        now: new Date().toISOString(),
+                      }),
+                    )
+                  }
+                >
+                  {t(interfaceLanguage, 'createActiveCopy')}
+                </Button>
+              )}
+              {canEditSelectedCardSet && !isEditingCards && (
+                <Button
+                  data-test={`card_set_detail__edit_cards_button__${selectedCardSet.id}`}
+                  onClick={startEditingCards}
+                  startIcon={<AddIcon />}
                   variant="outlined"
                   sx={{
                     borderColor: cardSetAccentMain,
                     color: worldAccent.dark,
+                    mr: { sm: 3.75 },
                     '&:hover': {
                       bgcolor: cardSetAccentHover,
                       borderColor: worldAccent.dark,
                     },
                   }}
                 >
-                  {t(interfaceLanguage, 'save')}
+                  {t(interfaceLanguage, editButtonLabelKey)}
                 </Button>
-                <Button
-                  data-test={`card_set_detail__cancel_edit_cards_button__${selectedCardSet.id}`}
-                  onClick={() => setIsCancelEditDialogOpen(true)}
-                  startIcon={<ClearRoundedIcon />}
-                  variant="outlined"
-                  sx={{
-                    borderColor: 'rgba(32, 48, 21, 0.24)',
-                    color: 'text.secondary',
-                    '&:hover': {
-                      bgcolor: 'rgba(32, 48, 21, 0.05)',
-                      borderColor: 'rgba(32, 48, 21, 0.42)',
-                    },
-                  }}
+              )}
+              {canEditSelectedCardSet && isEditingCards && (
+                <Stack
+                  data-test={`card_set_detail__edit_actions__${selectedCardSet.id}`}
+                  direction="row"
+                  spacing={1}
+                  sx={{ alignItems: 'center', mr: { sm: 3.75 } }}
                 >
-                  {t(interfaceLanguage, 'cancelCardSetEdit')}
-                </Button>
-              </Stack>
-            )}
-            <Chip
-              data-test={`card_set_detail__card_count_chip__${selectedCardSet.id}`}
-              label={formatCardCount(interfaceLanguage, cardSetCards.length)}
-              color={isAllCardsSelected ? 'primary' : 'default'}
-              variant="outlined"
-              sx={
-                isAllCardsSelected
-                  ? undefined
-                  : {
-                  borderColor: cardSetAccentMain,
+                  <Button
+                    data-test={`card_set_detail__save_cards_button__${selectedCardSet.id}`}
+                    disabled={!canSaveCardSetDraft}
+                    onClick={saveEditedCards}
+                    startIcon={<CheckCircleRoundedIcon />}
+                    variant="outlined"
+                    sx={{
+                      borderColor: cardSetAccentMain,
                       color: worldAccent.dark,
-                      fontWeight: 750,
-                    }
-              }
-            />
+                      '&:hover': {
+                        bgcolor: cardSetAccentHover,
+                        borderColor: worldAccent.dark,
+                      },
+                    }}
+                  >
+                    {t(interfaceLanguage, 'save')}
+                  </Button>
+                  <Button
+                    data-test={`card_set_detail__cancel_edit_cards_button__${selectedCardSet.id}`}
+                    onClick={() => setIsCancelEditDialogOpen(true)}
+                    startIcon={<ClearRoundedIcon />}
+                    variant="outlined"
+                    sx={{
+                      borderColor: 'rgba(32, 48, 21, 0.24)',
+                      color: 'text.secondary',
+                      '&:hover': {
+                        bgcolor: 'rgba(32, 48, 21, 0.05)',
+                        borderColor: 'rgba(32, 48, 21, 0.42)',
+                      },
+                    }}
+                  >
+                    {t(interfaceLanguage, 'cancelCardSetEdit')}
+                  </Button>
+                </Stack>
+              )}
+              <Chip
+                data-test={`card_set_detail__card_count_chip__${selectedCardSet.id}`}
+                label={formatCardCount(interfaceLanguage, cardSetCards.length)}
+                color={isAllCardsSelected ? 'primary' : 'default'}
+                variant="outlined"
+                sx={
+                  isAllCardsSelected
+                    ? undefined
+                    : {
+                        borderColor: cardSetAccentMain,
+                        color: worldAccent.dark,
+                        fontWeight: 750,
+                      }
+                }
+              />
+            </Stack>
           </Stack>
-        </Stack>
 
         {cards.length > 0 && (
           <TextField

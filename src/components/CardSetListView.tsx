@@ -120,9 +120,12 @@ export function CardSetListView({
       sx={{
         display: 'flex',
         flexDirection: 'column',
+        maxWidth: '100%',
         maxHeight: 'calc(100vh - 118px)',
         minHeight: 0,
+        minWidth: 0,
         p: { xs: 2, md: 3 },
+        width: '100%',
         '@media (max-width: 899.95px)': {
           maxHeight: 'none',
         },
@@ -246,6 +249,7 @@ export function CardSetListView({
           sx={{
             flex: 1,
             minHeight: 0,
+            minWidth: 0,
             overflowY: 'auto',
             pr: 0.5,
           }}
@@ -336,10 +340,12 @@ function CardSetTile({
       sx={{
         borderColor: selected ? selectedBorderColor : 'divider',
         flexShrink: 0,
+        maxWidth: '100%',
+        minWidth: 0,
         overflow: 'hidden',
       }}
     >
-      <Stack direction="row" alignItems="center">
+      <Stack direction="row" alignItems="center" sx={{ minWidth: 0 }}>
         <Box
           data-test={`card_set_list__tile_select_area__${id}`}
           role="button"
@@ -380,7 +386,7 @@ function CardSetTile({
               aria-label={`В архив: ${name}`}
               data-test={`card_set_list__tile_archive_button__${id}`}
               onClick={onArchive}
-              sx={{ mx: 1 }}
+              sx={{ flexShrink: 0, mx: 1 }}
             >
               <ArchiveIcon />
             </IconButton>
@@ -393,7 +399,7 @@ function CardSetTile({
               aria-label={`${t(interfaceLanguage, 'createActiveCopy')}: ${name}`}
               data-test={`card_set_list__tile_copy_button__${id}`}
               onClick={onCopyArchived}
-              sx={{ mx: 1 }}
+              sx={{ flexShrink: 0, mx: 1 }}
             >
               <ContentCopyIcon />
             </IconButton>

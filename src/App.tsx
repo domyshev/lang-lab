@@ -994,9 +994,14 @@ export function App() {
             height: 'calc(100vh - 118px)',
             minHeight: 0,
             overflow: 'hidden',
+            minWidth: 0,
+            width: '100%',
+            '& > *': {
+              minWidth: 0,
+            },
             '@media (max-width: 899.95px)': {
               height: 'auto',
-              overflow: 'visible',
+              overflow: 'hidden',
             },
           }}
         >

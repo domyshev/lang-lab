@@ -32,14 +32,14 @@ export default defineConfig({
   webServer: [
     {
       command:
-        'mkdir -p .playwright && cd backend && LANG_LAB_ADDR=127.0.0.1:8090 LANG_LAB_DB_PATH=../.playwright/language-lab-e2e.sqlite go run .',
+        'mkdir -p .playwright && cd backend && go build -o ../.playwright/language-lab-backend-e2e . && LANG_LAB_ADDR=127.0.0.1:8090 LANG_LAB_DB_PATH=../.playwright/language-lab-e2e.sqlite exec ../.playwright/language-lab-backend-e2e',
       reuseExistingServer: false,
       timeout: 120_000,
       url: 'http://127.0.0.1:8090/healthz',
     },
     {
       command: 'npm run dev -- --host 127.0.0.1 --port 4173',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       url: 'http://127.0.0.1:4173',
     },
   ],

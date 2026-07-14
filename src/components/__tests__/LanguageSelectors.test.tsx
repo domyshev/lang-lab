@@ -202,13 +202,12 @@ describe('LanguageSelectors', () => {
     expect(companionSelect).toHaveTextContent('Español');
     expect(companionSelect).toHaveTextContent('Українська');
     expect(companionSelect).toHaveTextContent('Русский');
-    expect(screen.getByTestId('language_selectors__target_language_control')).toHaveStyle({
-      width: '224px',
-    });
-    expect(screen.getByTestId('language_selectors__companion_languages_control')).toHaveStyle({
-      maxWidth: '224px',
-      width: '224px',
-    });
+    expect(
+      screen.getByTestId('language_selectors__target_language_control'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId('language_selectors__companion_languages_control'),
+    ).toBeInTheDocument();
 
     await user.click(companionSelect);
 

@@ -4,6 +4,8 @@ import {
   OPENROUTER_TRIAL_KEY,
 } from '../src/services/openRouterKeyStorage';
 
+const iphone15ProMaxViewport = { height: 932, width: 430 };
+
 test.describe('golden base visual snapshots', () => {
   test('runs the mocked golden AI Assistant workflow', async ({ page }) => {
     const fakeKey = 'task-8-fake-key';
@@ -98,9 +100,12 @@ test.describe('golden base visual snapshots', () => {
     await openGoldenApp(page);
 
     await page.getByTestId('card_set_library__ai_assistant_button').click();
-    await expect(page.getByTestId('ai_assistant__page')).toBeVisible();
+    await expect(page.getByTestId('app_chat__assistant')).toBeVisible();
+    await openAiConnectionSettings(page);
     await page.getByTestId('ai_connection__key_input').fill(fakeKey);
     await page.getByTestId('ai_connection__save_button').click();
+    await page.getByTestId('ai_connection__close_settings_button').click();
+    await expect(page.getByTestId('ai_connection__settings_dialog')).toBeHidden();
     await page
       .getByTestId('ai_chat__composer_field')
       .getByRole('textbox')
@@ -238,7 +243,7 @@ test.describe('golden base visual snapshots', () => {
       }),
     ).toBeVisible();
 
-    await page.getByTestId('app_shell__tab__agents').click();
+    await page.getByTestId('app_shell__tab__chat').click();
     const historyItem = page
       .locator('[data-test^="ai_operation_history__item__"]')
       .filter({ hasText: 'Rail essentials' });
@@ -281,6 +286,34 @@ test.describe('golden base visual snapshots', () => {
     await captureGolden(page, 'games-home-mobile');
   });
 
+  test('key surfaces fit iPhone 15 Pro Max without horizontal overflow', async ({
+    page,
+  }) => {
+    await page.setViewportSize(iphone15ProMaxViewport);
+    await openGoldenApp(page);
+
+    await expectNoHorizontalOverflow(page);
+
+    await page.getByTestId('app_shell__tab__cards').click();
+    await expect(page.getByTestId('card_set_detail__panel__all-cards')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+
+    await page.getByTestId('app_shell__tab__statistics').click();
+    await expect(page.getByTestId('target_stats__panel')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+
+    await page.getByTestId('app_shell__tab__chat').click();
+    await expect(page.getByTestId('app_chat__assistant')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+
+    await page.getByTestId('app_shell__tab__game').click();
+    await startExercise(page, 'Пропущенные буквы');
+    await expect(
+      page.locator('[data-test^="missing_letters_exercise__panel__"]'),
+    ).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+
   test('card set library modal', async ({ page }) => {
     await openGoldenApp(page);
 
@@ -310,11 +343,14 @@ test.describe('golden base visual snapshots', () => {
     await page.setViewportSize({ height: 1400, width: 1440 });
     await openGoldenApp(page);
 
-    await page.getByTestId('app_shell__tab__agents').click();
-    await expect(page.getByTestId('ai_assistant__page')).toBeVisible();
+    await page.getByTestId('app_shell__tab__chat').click();
+    await expect(page.getByTestId('app_chat__assistant')).toBeVisible();
+    await openAiConnectionSettings(page);
     await expect(page.getByTestId('ai_connection__key_input')).toHaveValue(
       OPENROUTER_TRIAL_KEY,
     );
+    await page.getByTestId('ai_connection__close_settings_button').click();
+    await expect(page.getByTestId('ai_connection__settings_dialog')).toBeHidden();
     await expectNoHorizontalOverflow(page);
     await captureGolden(page, 'ai-assistant-workspace');
   });
@@ -323,11 +359,14 @@ test.describe('golden base visual snapshots', () => {
     await page.setViewportSize({ height: 2200, width: 390 });
     await openGoldenApp(page);
 
-    await page.getByTestId('app_shell__tab__agents').click();
-    await expect(page.getByTestId('ai_assistant__page')).toBeVisible();
+    await page.getByTestId('app_shell__tab__chat').click();
+    await expect(page.getByTestId('app_chat__assistant')).toBeVisible();
+    await openAiConnectionSettings(page);
     await expect(page.getByTestId('ai_connection__key_input')).toHaveValue(
       OPENROUTER_TRIAL_KEY,
     );
+    await page.getByTestId('ai_connection__close_settings_button').click();
+    await expect(page.getByTestId('ai_connection__settings_dialog')).toBeHidden();
     await expectNoHorizontalOverflow(page);
     await captureGolden(page, 'ai-assistant-workspace-narrow');
   });
@@ -509,6 +548,10 @@ test.describe('golden base visual snapshots', () => {
 });
 
 async function openGoldenApp(page: Page) {
+  const apiKey = `golden-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2)}`;
+
   await page.addInitScript(() => {
     localStorage.clear();
     sessionStorage.clear();
@@ -518,8 +561,24 @@ async function openGoldenApp(page: Page) {
   });
 
   await page.goto('/');
+  await expect(
+    page.getByRole('heading', { name: 'Server connection required' }),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await page.getByLabel('Server endpoint').fill('http://127.0.0.1:8090');
+  await page.getByLabel('API key').fill(apiKey);
+  await page.getByTestId('server_data_gate__connect_button').click();
   await expect(page.getByTestId('player_onboarding__dialog')).toBeVisible();
-  await page.getByTestId('player_onboarding__anonymous_button').click();
+  await page.getByTestId('player_onboarding__assistant_figure__forestElf').click();
+  await page.getByTestId('player_onboarding__interface_language_select').click();
+  await page.getByRole('option', { name: 'Русский' }).click();
+  await page.getByTestId('player_onboarding__target_language_select').click();
+  await page.getByRole('option', { name: 'English' }).click();
+  await page
+    .getByTestId('player_onboarding__name_input')
+    .getByRole('textbox')
+    .fill('Golden User');
+  await page.getByTestId('player_onboarding__save_button').click();
   await expect(page.getByTestId('player_onboarding__dialog')).toBeHidden();
   await page.addStyleTag({
     content: `
@@ -537,18 +596,24 @@ async function openGoldenApp(page: Page) {
 
 async function startExercise(page: Page, exerciseName: string) {
   await page
-    .getByTestId('card_set_library__chip_select__default-set-love')
+    .getByTestId('card_set_library__chip_select__default-set-love-relationships')
     .click();
   await expect(page.getByTestId('card_set_library__selected_name')).toHaveText(
-    'Love',
+    'Love and relationships',
   );
   await page.waitForTimeout(50);
   await page.getByRole('button', { name: exerciseName }).click();
   await expect(page.getByTestId('card_set_library__selected_name')).toHaveText(
-    'Love',
+    'Love and relationships',
   );
   await page.getByTestId('game_setup__start_button').click();
   await expect(page.getByTestId('app__active_exercise_section')).toBeVisible();
+}
+
+async function openAiConnectionSettings(page: Page) {
+  await page.getByTestId('ai_connection__model_select').click();
+  await page.getByTestId('ai_connection__settings_option').click();
+  await expect(page.getByTestId('ai_connection__settings_dialog')).toBeVisible();
 }
 
 async function captureGolden(page: Page, name: string) {
