@@ -316,9 +316,12 @@ describe('LanguageSelectors', () => {
     expect(screen.getByTestId('language_selectors__repeat_management_title')).toHaveTextContent(
       'Управление повторениями',
     );
+    expect(screen.getByTestId('language_selectors__repeat_management_title')).toHaveStyle({
+      marginTop: '5px',
+    });
     expect(
       screen.getByTestId('language_selectors__settings_field_row__mistake_repeat_frequency'),
-    ).toHaveStyle({ alignItems: 'center' });
+    ).toHaveStyle({ alignItems: 'flex-start' });
     const settingsInfoButton = screen.getByTestId(
       'language_selectors__settings_info_button__mistake_repeat_frequency',
     );
@@ -326,6 +329,7 @@ describe('LanguageSelectors', () => {
       backgroundColor: 'rgba(246, 255, 230, 0.76)',
       borderColor: 'rgba(91, 150, 54, 0.34)',
       color: '#386f2d',
+      marginTop: '8px',
     });
 
     await user.hover(settingsInfoButton);

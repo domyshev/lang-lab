@@ -73,6 +73,7 @@ export function AiConnectionPanel({
   onToggleVisibility,
 }: AiConnectionPanelProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isOpenRouterInfoOpen, setIsOpenRouterInfoOpen] = useState(false);
   const visibilityLabel = t(language, isKeyVisible ? 'aiHideKey' : 'aiShowKey');
 
   useEffect(() => {
@@ -283,6 +284,11 @@ export function AiConnectionPanel({
         <Box data-test="ai_connection__openrouter_info_wrapper" sx={{ ml: '5px' }}>
           <Tooltip
             arrow
+            disableInteractive={false}
+            leaveDelay={240}
+            onClose={() => setIsOpenRouterInfoOpen(false)}
+            onOpen={() => setIsOpenRouterInfoOpen(true)}
+            open={isOpenRouterInfoOpen}
             placement="bottom"
             slotProps={{
               arrow: {
@@ -291,6 +297,14 @@ export function AiConnectionPanel({
                     theme.palette.mode === 'dark'
                       ? 'rgba(29, 26, 43, 0.98)'
                       : 'rgba(255, 255, 255, 0.98)',
+                },
+              },
+              popper: {
+                ...({
+                  'data-test': 'ai_connection__openrouter_info_popper',
+                } as Record<string, string>),
+                sx: {
+                  pointerEvents: 'auto',
                 },
               },
               tooltip: {
@@ -313,13 +327,24 @@ export function AiConnectionPanel({
                   fontWeight: 500,
                   lineHeight: 1.38,
                   maxWidth: 320,
+                  pointerEvents: 'auto',
                   px: 1.75,
                   py: 1.2,
+                  userSelect: 'text',
                 },
               },
             }}
             title={
-              <Stack spacing={0.75}>
+              <Stack
+                spacing={0.75}
+                onClick={(event) => event.stopPropagation()}
+                onMouseDown={(event) => event.stopPropagation()}
+                onMouseEnter={() => setIsOpenRouterInfoOpen(true)}
+                sx={{
+                  cursor: 'text',
+                  userSelect: 'text',
+                }}
+              >
                 <Typography
                   data-test="ai_connection__openrouter_info_title"
                   sx={{ fontSize: '14px', fontWeight: 850, lineHeight: 1.3 }}
@@ -341,7 +366,13 @@ export function AiConnectionPanel({
                     href="https://openrouter.ai/"
                     rel="noreferrer"
                     target="_blank"
-                    sx={{ color: '#1877c9', fontSize: '14px', fontWeight: 850 }}
+                    sx={{
+                      color: '#1877c9',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 850,
+                      userSelect: 'text',
+                    }}
                   >
                     OpenRouter
                   </Link>

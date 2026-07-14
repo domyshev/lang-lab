@@ -475,7 +475,7 @@ export function LanguageSelectors() {
               fontSize: '0.88rem',
               fontWeight: 850,
               lineHeight: 1.2,
-              mt: -0.25,
+              mt: '5px',
             }}
           >
             {t(interfaceLanguage, 'repeatManagementTitle')}
@@ -704,7 +704,7 @@ function SettingsFieldRow({
       data-test={`language_selectors__settings_field_row__${infoKey}`}
       direction="row"
       spacing={0.75}
-      sx={{ alignItems: 'center' }}
+      sx={{ alignItems: 'flex-start' }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
       <SettingsInfoIcon
@@ -756,7 +756,7 @@ function SettingsInfoIcon({
         aria-label={getSettingsInfoLabel(interfaceLanguage, infoKey)}
         data-test={`language_selectors__settings_info_button__${infoKey}`}
         size="small"
-        sx={getInfoButtonSx(worldId)}
+        sx={{ ...getInfoButtonSx(worldId), mt: '8px' }}
       >
         <InfoOutlinedIcon fontSize="inherit" />
       </IconButton>

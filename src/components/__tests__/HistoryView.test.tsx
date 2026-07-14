@@ -55,6 +55,16 @@ describe('HistoryView', () => {
     const correctAirportRow = screen.getByTestId(
       'history_view__detail_row__attempt-missing-1%3Acard-airport',
     );
+    const correctAirportPromptRow = within(correctAirportRow).getByTestId(
+      'history_view__detail_prompt_row__attempt-missing-1%3Acard-airport',
+    );
+    expect(correctAirportPromptRow).toHaveTextContent('ru: аэропорт');
+    expect(correctAirportPromptRow).toHaveStyle({ marginBottom: '5px' });
+    expect(
+      within(correctAirportPromptRow).getByTestId(
+        'history_view__detail_answer__attempt-missing-1%3Acard-airport__recent_stats_chip',
+      ),
+    ).toBeInTheDocument();
     expect(within(correctAirportRow).queryByText('Верно')).not.toBeInTheDocument();
     expect(
       within(

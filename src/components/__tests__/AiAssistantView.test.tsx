@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -251,6 +251,10 @@ describe('AiAssistantView connection', () => {
     expect(tooltip).toHaveStyle({
       backgroundColor: 'rgba(255, 255, 255, 0.98)',
       fontSize: '14px',
+      userSelect: 'text',
+    });
+    expect(screen.getByTestId('ai_connection__openrouter_info_popper')).toHaveStyle({
+      pointerEvents: 'auto',
     });
     expect(within(tooltip).getByTestId('ai_connection__openrouter_info_link_line')).toHaveTextContent(
       'Open site OpenRouter',
@@ -260,6 +264,9 @@ describe('AiAssistantView connection', () => {
     expect(
       link,
     ).toHaveAttribute('href', 'https://openrouter.ai/');
+    fireEvent.mouseLeave(screen.getByTestId('ai_connection__openrouter_info_button'));
+    fireEvent.mouseOver(tooltip);
+    expect(screen.getByTestId('ai_connection__openrouter_info_tooltip')).toBeInTheDocument();
   });
 
   it('locks GPT behind a custom key when the built-in key is selected', async () => {

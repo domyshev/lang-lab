@@ -411,22 +411,24 @@ function getCardSetListActionSx(worldId: WorldId) {
 
   return {
     background:
-      'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)',
+      'linear-gradient(180deg, #ffffff 0%, #e9ffd1 22%, #9ed54c 58%, #67a13f 100%)',
     backgroundImage:
-      'linear-gradient(180deg, #fbffe8 0%, #9ed54c 54%, #5b9636 100%)',
+      'linear-gradient(180deg, #ffffff 0%, #e9ffd1 22%, #9ed54c 58%, #67a13f 100%)',
     border: '1px solid rgba(125, 174, 72, 0.38)',
+    borderTopColor: 'rgba(255, 255, 255, 0.92)',
     boxShadow:
-      '0 10px 20px rgba(63, 91, 38, 0.18), inset 0 2px 0 rgba(255,255,255,0.82), inset 0 -3px 0 rgba(36, 74, 28, 0.14)',
+      '0 10px 20px rgba(63, 91, 38, 0.16), inset 0 3px 0 rgba(255,255,255,0.94)',
     color: '#183813',
     fontWeight: 900,
     textTransform: 'none',
     '&:hover': {
       background:
-        'linear-gradient(180deg, #fbffe8 0%, #9ed54c 50%, #5b9636 100%)',
+        'linear-gradient(180deg, #ffffff 0%, #f0ffd8 20%, #a9dc5c 56%, #70ab45 100%)',
       backgroundImage:
-        'linear-gradient(180deg, #ffffef 0%, #a9dc5c 52%, #629c3c 100%)',
+        'linear-gradient(180deg, #ffffff 0%, #f0ffd8 20%, #a9dc5c 56%, #70ab45 100%)',
+      borderTopColor: 'rgba(255, 255, 255, 0.96)',
       boxShadow:
-        '0 12px 24px rgba(63, 91, 38, 0.22), inset 0 2px 0 rgba(255,255,255,0.88), inset 0 -3px 0 rgba(36, 74, 28, 0.14)',
+        '0 12px 24px rgba(63, 91, 38, 0.2), inset 0 3px 0 rgba(255,255,255,0.96)',
     },
   };
 }

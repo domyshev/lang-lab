@@ -224,13 +224,34 @@ function AttemptHistoryCard({
                     data-test={`history_view__detail_row_content__${rowDomKey}`}
                     spacing={0.75}
                   >
-                    <Typography
-                      color="text.secondary"
-                      data-test={`history_view__detail_prompt__${rowDomKey}`}
-                      variant="body2"
+                    <Stack
+                      data-test={`history_view__detail_prompt_row__${rowDomKey}`}
+                      direction="row"
+                      spacing={0.75}
+                      useFlexGap
+                      sx={{
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        mb: '5px',
+                      }}
                     >
-                      {row.prompt}
-                    </Typography>
+                      <Typography
+                        color="text.secondary"
+                        data-test={`history_view__detail_prompt__${rowDomKey}`}
+                        variant="body2"
+                      >
+                        {row.prompt}
+                      </Typography>
+                      {row.exerciseType !== 'crossword' && (
+                        <RecentAnswersChip
+                          dataTestPrefix={`history_view__detail_answer__${rowDomKey}`}
+                          interfaceLanguage={interfaceLanguage}
+                          recentResults={row.recentResults}
+                          resultColors={resultColors}
+                          subject={row.expectedAnswer}
+                        />
+                      )}
+                    </Stack>
                     <HistoryAnswer
                       answer={row.answer}
                       dataTestPrefix={`history_view__detail_answer__${rowDomKey}`}
@@ -238,7 +259,6 @@ function AttemptHistoryCard({
                       interfaceLanguage={interfaceLanguage}
                       isCorrect={row.isCorrect}
                       options={row.options}
-                      recentResults={row.recentResults}
                       resultColors={resultColors}
                       type={row.exerciseType}
                     />
@@ -304,7 +324,6 @@ function HistoryAnswer({
   interfaceLanguage,
   isCorrect,
   options,
-  recentResults,
   resultColors,
   type,
 }: {
@@ -314,7 +333,6 @@ function HistoryAnswer({
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   isCorrect: boolean;
   options: string[];
-  recentResults: RecentCardResult[];
   resultColors: WorldResultColors;
   type: ExerciseHistorySummary['exerciseType'];
 }) {
@@ -392,13 +410,6 @@ function HistoryAnswer({
   return (
     <Stack data-test={`${dataTestPrefix}__content`} spacing={0.9}>
       {answerContent}
-      <RecentAnswersChip
-      dataTestPrefix={dataTestPrefix}
-      interfaceLanguage={interfaceLanguage}
-      recentResults={recentResults}
-      resultColors={resultColors}
-      subject={expectedAnswer}
-      />
     </Stack>
   );
 }

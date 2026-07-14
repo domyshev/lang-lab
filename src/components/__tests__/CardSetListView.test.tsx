@@ -127,7 +127,8 @@ describe('CardSetListView archive browsing', () => {
     renderList({ worldId: 'forest' });
 
     expect(screen.getByTestId('card_set_list__add_button')).toHaveStyle({
-      background: 'linear-gradient(180deg, #f8ffe6 0%, #93cc46 50%, #4f8730 100%)',
+      background: 'linear-gradient(180deg, #ffffff 0%, #e9ffd1 22%, #9ed54c 58%, #67a13f 100%)',
+      borderTopColor: 'rgba(255, 255, 255, 0.92)',
       color: '#183813',
     });
     expect(screen.getByTestId('card_set_list__tile__all-cards')).toHaveStyle({
