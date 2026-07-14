@@ -13,7 +13,7 @@ import {
 import type { SupportedLanguage } from './languages';
 import type { AssistantId } from './assistants';
 
-export type WorldId = 'football' | 'forest';
+export type WorldId = 'football' | 'forest' | 'mortalKombat' | 'starTrek';
 
 export type WorldAccent = typeof stadiumAccent;
 export type WorldResultColors = typeof footballResultColors;
@@ -47,9 +47,34 @@ export const worldDefinitions: Record<WorldId, WorldDefinition> = {
       uk: 'Лісові ельфи',
     },
   },
+  mortalKombat: {
+    defaultAssistantId: 'studyTroll',
+    id: 'mortalKombat',
+    label: {
+      en: 'Mortal Kombat',
+      ru: 'Mortal Kombat',
+      es: 'Mortal Kombat',
+      uk: 'Mortal Kombat',
+    },
+  },
+  starTrek: {
+    defaultAssistantId: 'studyTroll',
+    id: 'starTrek',
+    label: {
+      en: 'Star Trek',
+      ru: 'Star Trek',
+      es: 'Star Trek',
+      uk: 'Star Trek',
+    },
+  },
 };
 
-export const worldIds: WorldId[] = ['forest', 'football'];
+export const worldIds: WorldId[] = [
+  'forest',
+  'football',
+  'mortalKombat',
+  'starTrek',
+];
 
 export const forestAccent: WorldAccent = {
   border: '#b6d38a',
@@ -101,10 +126,84 @@ const forestGameTileThemes: Record<ExerciseType, FootballGameTileTheme> = {
   missingWord: { ...forestPalettes[2], art: 'forestPhrase' },
 };
 
+export const mortalKombatAccent: WorldAccent = {
+  border: '#ffb03a',
+  dark: '#260909',
+  light: '#fff1d6',
+  main: '#d43f24',
+};
+
+export const mortalKombatResultColors: WorldResultColors = {
+  correct: {
+    border: '#73d8a5',
+    main: '#11a36a',
+    soft: '#e9fff4',
+    text: '#073b27',
+  },
+  incorrect: {
+    border: '#f0a07f',
+    main: '#d43f24',
+    soft: '#fff1eb',
+    text: '#5b1208',
+  },
+};
+
+export const starTrekAccent: WorldAccent = {
+  border: '#93d6ff',
+  dark: '#101b4d',
+  light: '#ecf6ff',
+  main: '#3f88ff',
+};
+
+export const starTrekResultColors: WorldResultColors = {
+  correct: {
+    border: '#91dcc1',
+    main: '#39b982',
+    soft: '#ebfff7',
+    text: '#103f31',
+  },
+  incorrect: {
+    border: '#f0a4b5',
+    main: '#d94a64',
+    soft: '#fff1f4',
+    text: '#591524',
+  },
+};
+
+const mortalKombatPalettes: FootballCountryPalette[] = [
+  makePalette('mk-shirai', 'Shirai Ryu', '#1a1010', '#d43f24', '#ffb03a', '#fff1d6'),
+  makePalette('mk-lin-kuei', 'Lin Kuei', '#071426', '#1f7ed0', '#7fe8ff', '#ecf8ff'),
+  makePalette('mk-thunder', 'Thunder Temple', '#1c1230', '#6f52d9', '#f1cf62', '#fff8db'),
+  makePalette('mk-outworld', 'Outworld Jade', '#102218', '#158060', '#d4b94b', '#f6ffe6'),
+  makePalette('mk-netherrealm', 'Netherrealm', '#19070c', '#821c35', '#ff6b35', '#fff0e4'),
+  makePalette('mk-edenia', 'Edenia', '#1a1230', '#8255c7', '#f4a9d8', '#fff7ff'),
+];
+
+const starTrekPalettes: FootballCountryPalette[] = [
+  makePalette('trek-command', 'Command Gold', '#101b4d', '#f3b833', '#3f88ff', '#f7fbff'),
+  makePalette('trek-science', 'Science Blue', '#071b35', '#2478c8', '#78d9ff', '#f2fbff'),
+  makePalette('trek-engineering', 'Engineering Red', '#230d18', '#c93a4d', '#f0a24a', '#fff5ee'),
+  makePalette('trek-voyager', 'Voyager', '#171a3a', '#6d78d8', '#9ee7ff', '#f4fbff'),
+  makePalette('trek-nebula', 'Nebula', '#1c1430', '#8a5bd8', '#54d8c4', '#f8f5ff'),
+  makePalette('trek-delta', 'Delta Silver', '#182233', '#8da2b8', '#f3c746', '#ffffff'),
+];
+
+const mortalKombatGameTileThemes: Record<ExerciseType, FootballGameTileTheme> = {
+  crossword: { ...mortalKombatPalettes[0], art: 'goal' },
+  multipleChoice: { ...mortalKombatPalettes[1], art: 'ball' },
+  missingLetters: { ...mortalKombatPalettes[2], art: 'worldCup2026' },
+  missingWord: { ...mortalKombatPalettes[3], art: 'goalkeeper' },
+};
+
+const starTrekGameTileThemes: Record<ExerciseType, FootballGameTileTheme> = {
+  crossword: { ...starTrekPalettes[0], art: 'goal' },
+  multipleChoice: { ...starTrekPalettes[1], art: 'ball' },
+  missingLetters: { ...starTrekPalettes[2], art: 'worldCup2026' },
+  missingWord: { ...starTrekPalettes[3], art: 'goalkeeper' },
+};
+
 export function resolveWorldId(value: unknown): WorldId {
-  return value === 'forest' || value === 'football'
-    ? value
-    : defaultWorldId;
+  return worldIds.includes(value as WorldId) ? (value as WorldId) : defaultWorldId;
 }
 
 export function getWorldDefinition(value: unknown): WorldDefinition {
@@ -112,21 +211,47 @@ export function getWorldDefinition(value: unknown): WorldDefinition {
 }
 
 export function getWorldAccent(value: unknown): WorldAccent {
-  return resolveWorldId(value) === 'forest' ? forestAccent : stadiumAccent;
+  switch (resolveWorldId(value)) {
+    case 'forest':
+      return forestAccent;
+    case 'mortalKombat':
+      return mortalKombatAccent;
+    case 'starTrek':
+      return starTrekAccent;
+    case 'football':
+    default:
+      return stadiumAccent;
+  }
 }
 
 export function getWorldResultColors(value: unknown): WorldResultColors {
-  return resolveWorldId(value) === 'forest'
-    ? forestResultColors
-    : footballResultColors;
+  switch (resolveWorldId(value)) {
+    case 'forest':
+      return forestResultColors;
+    case 'mortalKombat':
+      return mortalKombatResultColors;
+    case 'starTrek':
+      return starTrekResultColors;
+    case 'football':
+    default:
+      return footballResultColors;
+  }
 }
 
 export function getGameTileThemes(
   value: unknown,
 ): Record<ExerciseType, FootballGameTileTheme> {
-  return resolveWorldId(value) === 'forest'
-    ? forestGameTileThemes
-    : footballGameTileThemes;
+  switch (resolveWorldId(value)) {
+    case 'forest':
+      return forestGameTileThemes;
+    case 'mortalKombat':
+      return mortalKombatGameTileThemes;
+    case 'starTrek':
+      return starTrekGameTileThemes;
+    case 'football':
+    default:
+      return footballGameTileThemes;
+  }
 }
 
 export function getPaletteForCardSet(
@@ -134,11 +259,18 @@ export function getPaletteForCardSet(
   value: unknown,
   options: { isAllCards?: boolean } = {},
 ): FootballCountryPalette {
-  if (resolveWorldId(value) === 'forest') {
-    if (options.isAllCards) {
-      return forestPalettes[0];
-    }
-    return forestPalettes[stableHash(cardSetId) % forestPalettes.length];
+  const worldId = resolveWorldId(value);
+
+  if (worldId === 'forest') {
+    return getPaletteFromWorldPalettes(cardSetId, forestPalettes, options);
+  }
+
+  if (worldId === 'mortalKombat') {
+    return getPaletteFromWorldPalettes(cardSetId, mortalKombatPalettes, options);
+  }
+
+  if (worldId === 'starTrek') {
+    return getPaletteFromWorldPalettes(cardSetId, starTrekPalettes, options);
   }
 
   return getFootballPaletteForCardSet(cardSetId, options);
@@ -167,6 +299,18 @@ function makePalette(
     label,
     soft: secondary,
   };
+}
+
+function getPaletteFromWorldPalettes(
+  cardSetId: string,
+  palettes: FootballCountryPalette[],
+  options: { isAllCards?: boolean },
+): FootballCountryPalette {
+  if (options.isAllCards) {
+    return palettes[0];
+  }
+
+  return palettes[stableHash(cardSetId) % palettes.length];
 }
 
 function stableHash(value: string): number {

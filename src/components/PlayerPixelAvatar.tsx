@@ -16,7 +16,9 @@ export type SupporterCountry =
   | 'forest'
   | 'forest-elf'
   | 'unicorn'
-  | 'ladybug';
+  | 'ladybug'
+  | 'mortal-kombat'
+  | 'starfleet';
 
 export function PlayerPixelAvatar({
   ariaLabel,
@@ -103,6 +105,59 @@ function SupporterFlag({
   dataTest: string;
 }) {
   switch (country) {
+    case 'starfleet':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__starfleet_space`}
+            fill="#101b4d"
+            height="38"
+            width="54"
+          />
+          <path
+            d="M0 29c10-8 20-8 29-2 8 5 15 4 25-5v16H0Z"
+            fill="#3f88ff"
+            opacity="0.72"
+          />
+          <path
+            data-test={`${dataTest}__starfleet_delta`}
+            d="M28 6 39 30 28 24 17 30Z"
+            fill="#f3b833"
+            stroke="#f7fbff"
+            strokeLinejoin="round"
+            strokeWidth="1.3"
+          />
+          <circle cx="11" cy="9" fill="#f7fbff" r="1.5" />
+          <circle cx="44" cy="13" fill="#f7fbff" r="1.2" />
+        </>
+      );
+    case 'mortal-kombat':
+      return (
+        <>
+          <rect
+            data-test={`${dataTest}__mortal_kombat_arena`}
+            fill="#260909"
+            height="38"
+            width="54"
+          />
+          <rect fill="#d43f24" height="18" width="54" y="20" />
+          <path
+            data-test={`${dataTest}__mortal_kombat_dragon`}
+            d="M12 24c9-16 24-20 37-12-4 11-15 19-30 19 9-4 15-10 18-18-8 3-14 8-25 11Z"
+            fill="#ffb03a"
+            stroke="#fff1d6"
+            strokeLinejoin="round"
+            strokeWidth="1.1"
+          />
+          <path
+            d="M21 28c8-3 16-8 24-16"
+            fill="none"
+            stroke="#260909"
+            strokeLinecap="round"
+            strokeWidth="1.5"
+          />
+        </>
+      );
     case 'ladybug':
       return (
         <>
