@@ -187,9 +187,9 @@ export function LanguageSelectors() {
           data-test="language_selectors__interface_language_control"
           size="small"
           sx={{
-            flex: { xs: '1 1 auto', sm: '0 0 auto' },
+            flex: { xs: 1, sm: '0 0 auto' },
             minWidth: 0,
-            width: { xs: 'auto', sm: 150 },
+            width: { xs: '100%', sm: 150 },
           }}
         >
           <InputLabel
@@ -259,9 +259,9 @@ export function LanguageSelectors() {
             data-test="language_selectors__target_language_control"
             size="small"
             sx={{
-              flex: { xs: '1 1 auto', md: '0 0 auto' },
+              flex: { xs: 1, md: '0 0 auto' },
               minWidth: 0,
-              width: { xs: 'auto', md: 224 },
+              width: { xs: '100%', md: 224 },
             }}
           >
             <InputLabel
@@ -318,10 +318,10 @@ export function LanguageSelectors() {
             data-test="language_selectors__companion_languages_control"
             size="small"
             sx={{
-              flex: { xs: '1 1 auto', md: '0 0 auto' },
+              flex: { xs: 1, md: '0 0 auto' },
               maxWidth: { xs: 'none', md: 224 },
               minWidth: 0,
-              width: { xs: 'auto', md: 224 },
+              width: { xs: '100%', md: 224 },
             }}
           >
             <InputLabel
