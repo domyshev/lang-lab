@@ -21,8 +21,9 @@ import (
 )
 
 type Config struct {
-	Addr   string
-	DBPath string
+	Addr         string
+	DBPath       string
+	FrontendDir  string
 }
 
 type Server struct {
@@ -219,13 +220,19 @@ func NewHandler(config Config) (http.Handler, error) {
 	mux.HandleFunc("/healthz", server.handleHealth)
 	mux.HandleFunc("/api/state", server.handleState)
 	mux.HandleFunc("/api/users", server.handleUsers)
+
+	if frontendDir := config.FrontendDir; frontendDir != "" {
+		mux.Handle("/", frontendFileServer(frontendDir))
+	}
+
 	return server.withCORS(mux), nil
 }
 
 func main() {
 	config := Config{
-		Addr:   getenv("LANG_LAB_ADDR", "127.0.0.1:8090"),
-		DBPath: getenv("LANG_LAB_DB_PATH", filepath.Join("data", "language-lab.sqlite")),
+		Addr:        getenv("LANG_LAB_ADDR", "127.0.0.1:8090"),
+		DBPath:      getenv("LANG_LAB_DB_PATH", filepath.Join("data", "language-lab.sqlite")),
+		FrontendDir: getenv("LANG_LAB_FRONTEND_DIR", ""),
 	}
 	handler, err := NewHandler(config)
 	if err != nil {
@@ -235,6 +242,20 @@ func main() {
 	if err := http.ListenAndServe(config.Addr, handler); err != nil {
 		log.Fatalf("serve: %v", err)
 	}
+}
+
+// frontendFileServer serves the built frontend SPA.
+// For any non-file request, it falls back to index.html for client-side routing.
+func frontendFileServer(frontendDir string) http.Handler {
+	fs := http.FileServer(http.Dir(frontendDir))
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := filepath.Join(frontendDir, r.URL.Path)
+		if _, err := os.Stat(path); err == nil {
+			fs.ServeHTTP(w, r)
+			return
+		}
+		http.ServeFile(w, r, filepath.Join(frontendDir, "index.html"))
+	})
 }
 
 func (server *Server) withCORS(next http.Handler) http.Handler {

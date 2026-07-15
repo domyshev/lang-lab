@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.git/
+.gitignore
+Dockerfile
+docker-compose.yml
+.dockerignore
+.env
+
+playwright.config.ts
+e2e/
+agent_chat_history/
+scripts/
+.vscode/
+.idea/
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js
+.DS_Store
+# SQLite database files are created at runtime via volume mount
+# Keep the seed JSON files for the frontend build
+data/*.sqlite
+data/*.sqlite-*

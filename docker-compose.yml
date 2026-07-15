@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  lang-lab:
+    build:
+      context: .
+      args:
+        # Set API endpoint for production builds (empty = relative URLs = same origin)
+        VITE_LANG_LAB_API_ENDPOINT: ""
+    ports:
+      - "8090:8090"
+    volumes:
+      # Mount the data directory from the host to persist the SQLite database
+      - ./data:/app/data
+    environment:
+      - LANG_LAB_ADDR=0.0.0.0:8090
+      - LANG_LAB_DB_PATH=/app/data/language-lab.sqlite
+      - LANG_LAB_FRONTEND_DIR=/app/dist
+    restart: unless-stopped
