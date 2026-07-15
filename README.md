@@ -127,6 +127,8 @@ Minimal planned capture shape:
 
 ## Setup
 
+### Local development
+
 Install dependencies:
 
 ```bash
@@ -144,6 +146,48 @@ Build production assets:
 ```bash
 npm run build
 ```
+
+### Docker (production)
+
+The app can be run as a single Docker container that serves both the frontend and the backend API.
+The SQLite database is stored on the host filesystem via a volume mount and persists across restarts.
+
+**Prerequisites:** Docker and Docker Compose installed.
+
+#### Quick start with Docker Compose
+
+```bash
+docker compose up -d
+```
+
+Open http://localhost:8090 in a browser.
+The database file `language-lab.sqlite` is created in the `data/` directory.
+
+#### Manual Docker run
+
+```bash
+docker build -t lang-lab .
+docker run -d -p 8090:8090 -v $(pwd)/data:/app/data lang-lab
+```
+
+#### Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `LANG_LAB_ADDR` | `0.0.0.0:8090` | Backend listen address |
+| `LANG_LAB_DB_PATH` | `/app/data/language-lab.sqlite` | Path to the SQLite database file |
+| `LANG_LAB_FRONTEND_DIR` | `/app/dist` | Path to built frontend static files |
+
+#### Deploy with GitHub Actions (self-hosted runner)
+
+1. Install and register a [self-hosted GitHub Actions runner](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/adding-self-hosted-runners) on the target server.
+2. Ensure the runner user has Docker permissions (add to the `docker` group).
+3. Create the data directory on the server (default: `/opt/lang-lab/data`).
+4. Push to the `main` branch — the `.github/workflows/docker-deploy.yml` workflow will build and deploy automatically.
+
+Optional repository variables for customisation:
+- `DEPLOY_DATA_DIR` — path to the data directory on the server (default: `/opt/lang-lab/data`)
+- `DEPLOY_PORT` — host port to expose (default: `8090`)
 
 ## Testing
 
