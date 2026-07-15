@@ -8,7 +8,8 @@ WORKDIR /app
 # Copy dependency manifests and install
 COPY package.json package-lock.json ./
 RUN npm install -g npm@11
-RUN npm ci
+RUN npm config set fetch-retries 5 && npm config set fetch-retry-mintimeout 20000 && npm config set fetch-retry-maxtimeout 120000
+RUN npm ci --no-optional --no-fund --no-audit
 
 # Copy source files and build
 COPY tsconfig.json tsconfig.app.json tsconfig.node.json vite.config.ts ./
