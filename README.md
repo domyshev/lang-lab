@@ -2,11 +2,7 @@
 
 Language Lab is a local-first browser game for building and practicing a personal multilingual vocabulary library. The learner owns the content: they import or generate language cards, organize them into card sets, choose a target language, and play short games that produce per-card and per-game learning statistics.
 
-
-
 Current release: `0.1.0-alpha.4`
-
-
 
 ## What The App Does
 
