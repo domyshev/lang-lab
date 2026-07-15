@@ -7,6 +7,7 @@ import { useId, useState } from 'react';
 import {
   Box,
   Checkbox,
+  Collapse,
   FormControl,
   IconButton,
   InputLabel,
@@ -17,6 +18,7 @@ import {
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import { useDispatch, useSelector } from 'react-redux';
@@ -60,6 +62,8 @@ export function LanguageSelectors() {
   const [settingsAnchor, setSettingsAnchor] = useState<HTMLElement | null>(
     null,
   );
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
+  const isDesktop = useMediaQuery('(min-width: 1440px)');
   const worldId = useSelector((state: RootState) =>
     resolveWorldId(state.app.worldId),
   );
@@ -156,7 +160,7 @@ export function LanguageSelectors() {
     updateCompanionLanguages(nextLanguages as SupportedLanguage[]);
   };
 
-  return (
+  const selectorsContent = (
     <Stack
       data-test="language_selectors__root"
       direction="row"
@@ -165,6 +169,7 @@ export function LanguageSelectors() {
       useFlexGap
       sx={{
         alignItems: { xs: 'stretch', sm: 'center' },
+        pt: isDesktop ? 0 : 1.5,
         width: { xs: '100%', md: 'auto' },
       }}
     >
@@ -600,6 +605,99 @@ export function LanguageSelectors() {
         </Stack>
       </Menu>
     </Stack>
+  );
+
+  return (
+    <>
+      {!isDesktop && (
+        <Box sx={{ width: '100%' }}>
+          <Box
+            component="button"
+            data-test="language_selectors__mobile_toggle"
+            onClick={() => setIsMobilePanelOpen(!isMobilePanelOpen)}
+            type="button"
+            sx={{
+              alignItems: 'center',
+              appearance: 'none',
+              bgcolor: (theme: any) =>
+                theme.palette.mode === 'dark'
+                  ? 'rgba(246, 240, 255, 0.08)'
+                  : 'rgba(245, 249, 235, 0.88)',
+              border: '1px solid rgba(32, 48, 21, 0.18)',
+              borderRadius: 2,
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.64)',
+              cursor: 'pointer',
+              display: 'flex',
+              font: 'inherit',
+              gap: 1,
+              height: 36,
+              justifyContent: 'space-between',
+              lineHeight: 1,
+              m: 0,
+              minWidth: 0,
+              px: 1.5,
+              py: 0,
+              textAlign: 'left',
+              userSelect: 'none',
+              whiteSpace: 'nowrap',
+              width: '100%',
+              '&:hover': {
+                bgcolor: (theme: any) =>
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(246, 240, 255, 0.14)'
+                    : 'rgba(238, 248, 222, 0.96)',
+              },
+            }}
+          >
+            <Stack direction="row" spacing={0.75} alignItems="center">
+              <Typography
+                component="span"
+                sx={{ fontSize: 16, lineHeight: 1 }}
+              >
+                🌐
+              </Typography>
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: 14,
+                  fontWeight: 800,
+                  lineHeight: 1,
+                }}
+              >
+                {languageFlags[interfaceLanguage]}{' '}
+                {languageLabels[interfaceLanguage]}
+              </Typography>
+              <Typography
+                component="span"
+                sx={{ color: '#8a9980', fontSize: 14, lineHeight: 1 }}
+              >
+                →
+              </Typography>
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: 14,
+                  fontWeight: 800,
+                  lineHeight: 1,
+                }}
+              >
+                {languageFlags[targetLanguage]}{' '}
+                {languageLabels[targetLanguage]}
+              </Typography>
+            </Stack>
+            {isMobilePanelOpen ? (
+              <KeyboardArrowUpRoundedIcon sx={{ color: '#5e6657', fontSize: 20 }} />
+            ) : (
+              <KeyboardArrowDownRoundedIcon sx={{ color: '#5e6657', fontSize: 20 }} />
+            )}
+          </Box>
+          <Collapse in={isMobilePanelOpen}>
+            {selectorsContent}
+          </Collapse>
+        </Box>
+      )}
+      {isDesktop && selectorsContent}
+    </>
   );
 }
 

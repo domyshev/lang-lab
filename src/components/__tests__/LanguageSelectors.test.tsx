@@ -8,7 +8,15 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@mui/material', async () => {
+  const actual = await vi.importActual('@mui/material');
+  return {
+    ...actual,
+    useMediaQuery: () => true,
+  };
+});
 import { appReducer } from '../../store/appSlice';
 import type { ComplementaryLanguages } from '../../store/appSlice';
 import { attemptsReducer } from '../../store/attemptsSlice';

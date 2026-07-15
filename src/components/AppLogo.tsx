@@ -82,7 +82,7 @@ export function AppLogo({
         data-test="app_logo__text"
         sx={{
           color: '#203015',
-          fontSize: { xs: 22, md: 24 },
+          fontSize: { xs: 18, sm: 22, md: 24 },
           fontWeight: 950,
           letterSpacing: 0,
           position: 'relative',
@@ -217,10 +217,10 @@ function logoMarkSx(filter: string) {
     display: 'block',
     flexShrink: 0,
     filter,
-    height: 40,
+    height: { xs: 32, sm: 40 },
     position: 'relative',
     transform: 'rotate(-2deg)',
-    width: 42,
+    width: { xs: 34, sm: 42 },
     zIndex: 1,
   };
 }

@@ -310,6 +310,9 @@ export function AppShell({
               flexBasis: '100%',
               justifyContent: 'flex-start',
               minWidth: 250,
+              '@media (max-width: 1199px)': {
+                minWidth: 180,
+              },
               '@media (min-width: 1440px)': {
                 flexBasis: 'auto',
               },
