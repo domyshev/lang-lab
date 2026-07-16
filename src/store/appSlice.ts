@@ -23,6 +23,7 @@ export interface AppState {
   hasHypersonicJumpLampBeenShown?: boolean;
   interfaceLanguage: SupportedLanguage;
   isGameHelpCollapsed?: boolean;
+  openRouterApiKey?: string;
   playerProfile?: PlayerProfile;
   practiceSettings?: PracticeSettings;
   targetLanguage: SupportedLanguage;
@@ -57,17 +58,21 @@ export const initialAppState: AppState = {
   hasHypersonicJumpLampBeenShown: false,
   interfaceLanguage: 'en',
   isGameHelpCollapsed: false,
+  openRouterApiKey: undefined,
   practiceSettings: defaultPracticeSettings,
   targetLanguage: 'en',
   worldId: defaultWorldId,
 };
 
 export interface BackendAppSettings {
+  assistantId?: string;
   complementaryLanguages: ComplementaryLanguages;
   interfaceLanguage: SupportedLanguage;
+  openRouterApiKey?: string;
   playerProfile?: Pick<PlayerProfile, 'displayName' | 'isAnonymous'>;
   practiceSettings: PracticeSettings;
   targetLanguage: SupportedLanguage;
+  worldId?: string;
 }
 
 const appSlice = createSlice({
@@ -163,6 +168,9 @@ const appSlice = createSlice({
     setDisableAdditionalHints(state, action: PayloadAction<boolean>) {
       state.disableAdditionalHints = action.payload;
     },
+    setOpenRouterApiKey(state, action: PayloadAction<string | undefined>) {
+      state.openRouterApiKey = action.payload || undefined;
+    },
     setWorldId(state, action: PayloadAction<WorldId>) {
       state.worldId = resolveWorldId(action.payload);
     },
@@ -205,6 +213,10 @@ const appSlice = createSlice({
         action.payload.practiceSettings,
       );
       state.targetLanguage = action.payload.targetLanguage;
+      state.worldId = resolveWorldId(action.payload.worldId);
+      if (action.payload.assistantId) {
+        state.assistantId = action.payload.assistantId as AssistantId;
+      }
       const playerProfile = action.payload.playerProfile ?? {
         displayName: undefined,
         isAnonymous: true,
@@ -234,6 +246,7 @@ export const {
   setDisableAdditionalHints,
   setInterfaceLanguage,
   setNewCardMixFrequencyPercent,
+  setOpenRouterApiKey,
   setPlayerProfile,
   setRecentMistakeRepeatFrequencyPercent,
   setTargetLanguage,

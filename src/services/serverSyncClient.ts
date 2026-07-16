@@ -20,8 +20,10 @@ export interface ServerStatePayload {
 }
 
 export interface ServerSettingsPayload {
+  assistantId?: string;
   complementaryLanguages: ComplementaryLanguages;
   interfaceLanguage: SupportedLanguage;
+  openRouterApiKey?: string;
   playerProfile?: {
     displayName?: string;
     isAnonymous: boolean;
@@ -29,6 +31,7 @@ export interface ServerSettingsPayload {
   practiceSettings: PracticeSettings;
   selectedCardSetId?: string;
   targetLanguage: SupportedLanguage;
+  worldId?: string;
 }
 
 export interface ServerUserPayload {

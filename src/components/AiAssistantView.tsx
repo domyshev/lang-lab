@@ -48,6 +48,7 @@ import {
   stageBlockedAiPreviewMessage,
   stageAiOperationMessage,
 } from '../store/aiAssistantSlice';
+import { setOpenRouterApiKey } from '../store/appSlice';
 import {
   loadServerCredentials,
   loadChatMessages,
@@ -82,12 +83,17 @@ export function AiAssistantView({
   const attempts = useSelector((state: RootState) => state.attempts.attempts);
   const cardStats = useSelector((state: RootState) => state.stats.cardStats);
   const interfaceLanguage = useSelector((state: RootState) => state.app.interfaceLanguage);
+  const openRouterApiKey = useSelector(
+    (state: RootState) => state.app.openRouterApiKey,
+  );
   const { blockedPreview, messages, operationError, operations, stagedOperation } = useSelector(
     (state: RootState) => state.aiAssistant,
   );
-  const [apiKey, setApiKey] = useState(() => loadOpenRouterKey(keyStorageRef.current));
+  const [apiKey, setApiKey] = useState(() =>
+    openRouterApiKey ?? loadOpenRouterKey(keyStorageRef.current),
+  );
   const [savedApiKey, setSavedApiKey] = useState(() =>
-    loadOpenRouterKey(keyStorageRef.current),
+    openRouterApiKey ?? loadOpenRouterKey(keyStorageRef.current),
   );
   const [modelId, setModelId] = useState(() => loadOpenRouterModel(keyStorageRef.current));
   const [draft, setDraft] = useState('');
@@ -499,6 +505,7 @@ export function AiAssistantView({
                 }}
                 onDelete={() => {
                   removeOpenRouterKey(keyStorageRef.current);
+                  dispatch(setOpenRouterApiKey(undefined));
                   setApiKey('');
                   setSavedApiKey('');
                   setIsKeyVisible(false);
@@ -519,6 +526,7 @@ export function AiAssistantView({
                 }}
                 onSave={() => {
                   saveOpenRouterKey(apiKey, keyStorageRef.current);
+                  dispatch(setOpenRouterApiKey(apiKey));
                   const storedKey = loadOpenRouterKey(keyStorageRef.current);
                   setApiKey(storedKey);
                   setSavedApiKey(storedKey);
@@ -675,6 +683,7 @@ export function AiAssistantView({
                   }}
                   onDelete={() => {
                     removeOpenRouterKey(keyStorageRef.current);
+                    dispatch(setOpenRouterApiKey(undefined));
                     setApiKey('');
                     setSavedApiKey('');
                     setIsKeyVisible(false);
@@ -695,6 +704,7 @@ export function AiAssistantView({
                   }}
                   onSave={() => {
                     saveOpenRouterKey(apiKey, keyStorageRef.current);
+                    dispatch(setOpenRouterApiKey(apiKey));
                     const storedKey = loadOpenRouterKey(keyStorageRef.current);
                     setApiKey(storedKey);
                     setSavedApiKey(storedKey);

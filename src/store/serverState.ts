@@ -57,8 +57,10 @@ export function selectServerState(state: RootState): ServerStatePayload {
 
 function selectBackendSettings(state: RootState): BackendAppSettings {
   return {
+    assistantId: state.app.assistantId,
     complementaryLanguages: state.app.complementaryLanguages,
     interfaceLanguage: state.app.interfaceLanguage,
+    openRouterApiKey: state.app.openRouterApiKey,
     playerProfile: state.app.playerProfile
       ? {
           displayName: state.app.playerProfile.displayName,
@@ -67,6 +69,7 @@ function selectBackendSettings(state: RootState): BackendAppSettings {
       : undefined,
     practiceSettings: getPracticeSettings(state.app.practiceSettings),
     targetLanguage: state.app.targetLanguage,
+    worldId: state.app.worldId,
   };
 }
 

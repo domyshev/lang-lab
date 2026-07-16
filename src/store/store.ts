@@ -191,6 +191,7 @@ export function stripSessionOnlyAppStateForPersist(appState: AppState): AppState
     assistantId: appState.assistantId,
     disableAdditionalHints: appState.disableAdditionalHints ?? false,
     hasAgentsIntroCoachmarkBeenShown: false,
+    openRouterApiKey: appState.openRouterApiKey,
     worldId: appState.worldId,
   };
 }

@@ -67,12 +67,15 @@ type AppStatePayload struct {
 }
 
 type SettingsPayload struct {
+	AssistantID            string                  `json:"assistantId,omitempty"`
 	ComplementaryLanguages map[string][]string     `json:"complementaryLanguages,omitempty"`
 	InterfaceLanguage      string                  `json:"interfaceLanguage"`
+	OpenRouterAPIKey       string                  `json:"openRouterApiKey,omitempty"`
 	PlayerProfile          *PlayerProfilePayload   `json:"playerProfile,omitempty"`
 	PracticeSettings       PracticeSettingsPayload `json:"practiceSettings"`
 	SelectedCardSetID      string                  `json:"selectedCardSetId,omitempty"`
 	TargetLanguage         string                  `json:"targetLanguage"`
+	WorldID                string                  `json:"worldId,omitempty"`
 }
 
 type PlayerProfilePayload struct {
@@ -627,6 +630,15 @@ func (server *Server) migrate() error {
 			return fmt.Errorf("migrate: %w", err)
 		}
 	}
+
+	migrationStatements := []string{
+		`ALTER TABLE app_settings ADD COLUMN assistant_id TEXT DEFAULT ''`,
+		`ALTER TABLE app_settings ADD COLUMN open_router_api_key TEXT DEFAULT ''`,
+		`ALTER TABLE app_settings ADD COLUMN world_id TEXT DEFAULT ''`,
+	}
+	for _, statement := range migrationStatements {
+		server.db.Exec(statement)
+	}
 	return nil
 }
 
@@ -832,8 +844,9 @@ func insertSettings(runner dbRunner, userID int64, settings SettingsPayload) err
 		`INSERT INTO app_settings (
 			user_id, interface_language, target_language, selected_card_set_id,
 			display_name, is_anonymous, cooldown_three, cooldown_four, cooldown_five_plus,
-			new_card_mix_frequency_percent, recent_mistake_repeat_frequency_percent
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			new_card_mix_frequency_percent, recent_mistake_repeat_frequency_percent,
+			assistant_id, open_router_api_key, world_id
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		userID,
 		settings.InterfaceLanguage,
 		settings.TargetLanguage,
@@ -845,6 +858,9 @@ func insertSettings(runner dbRunner, userID int64, settings SettingsPayload) err
 		settings.PracticeSettings.CorrectStreakCooldownMonths["fivePlus"],
 		settings.PracticeSettings.NewCardMixFrequencyPercent,
 		settings.PracticeSettings.RecentMistakeRepeatFrequencyPercent,
+		nullString(settings.AssistantID),
+		nullString(settings.OpenRouterAPIKey),
+		nullString(settings.WorldID),
 	)
 	if err != nil {
 		return err
@@ -1169,10 +1185,12 @@ func loadSettings(runner dbRunner, userID int64) (SettingsPayload, error) {
 	var displayName sql.NullString
 	var isAnonymous int
 	var cooldownThree, cooldownFour, cooldownFivePlus float64
+	var assistantID, openRouterAPIKey, worldID sql.NullString
 	err := runner.QueryRow(
 		`SELECT interface_language, target_language, selected_card_set_id, display_name, is_anonymous,
 			cooldown_three, cooldown_four, cooldown_five_plus,
-			new_card_mix_frequency_percent, recent_mistake_repeat_frequency_percent
+			new_card_mix_frequency_percent, recent_mistake_repeat_frequency_percent,
+			assistant_id, open_router_api_key, world_id
 		 FROM app_settings WHERE user_id = ?`,
 		userID,
 	).Scan(
@@ -1186,6 +1204,9 @@ func loadSettings(runner dbRunner, userID int64) (SettingsPayload, error) {
 		&cooldownFivePlus,
 		&settings.PracticeSettings.NewCardMixFrequencyPercent,
 		&settings.PracticeSettings.RecentMistakeRepeatFrequencyPercent,
+		&assistantID,
+		&openRouterAPIKey,
+		&worldID,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return settings, nil
@@ -1194,6 +1215,9 @@ func loadSettings(runner dbRunner, userID int64) (SettingsPayload, error) {
 		return SettingsPayload{}, err
 	}
 	settings.SelectedCardSetID = selectedCardSetID.String
+	settings.AssistantID = assistantID.String
+	settings.OpenRouterAPIKey = openRouterAPIKey.String
+	settings.WorldID = worldID.String
 	settings.PracticeSettings.CorrectStreakCooldownMonths = map[string]float64{
 		"three":    cooldownThree,
 		"four":     cooldownFour,
