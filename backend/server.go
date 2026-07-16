@@ -153,6 +153,21 @@ type ExerciseAttemptPayload struct {
 	WeightedScore       *float64                `json:"weightedScore,omitempty"`
 }
 
+type ChatMessagePayload struct {
+	ID        string `json:"id"`
+	Role      string `json:"role"`
+	Content   string `json:"content"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type ChatMessagesResponse struct {
+	Messages []ChatMessagePayload `json:"messages"`
+}
+
+type SaveChatMessagesRequest struct {
+	Messages []ChatMessagePayload `json:"messages"`
+}
+
 type CardStatsPayload struct {
 	Accuracy        float64 `json:"accuracy"`
 	Attempts        int     `json:"attempts"`
@@ -220,6 +235,7 @@ func NewHandler(config Config) (http.Handler, error) {
 	mux.HandleFunc("/healthz", server.handleHealth)
 	mux.HandleFunc("/api/state", server.handleState)
 	mux.HandleFunc("/api/users", server.handleUsers)
+	mux.HandleFunc("/api/chat", server.handleChat)
 
 	if frontendDir := config.FrontendDir; frontendDir != "" {
 		mux.Handle("/", frontendFileServer(frontendDir))
@@ -355,6 +371,47 @@ func (server *Server) handleUsers(response http.ResponseWriter, request *http.Re
 		Revision: user.Revision,
 		User:     user,
 	})
+}
+
+func (server *Server) handleChat(response http.ResponseWriter, request *http.Request) {
+	apiKey := apiKeyFromRequest(request)
+	if apiKey == "" {
+		writeJSON(response, http.StatusUnauthorized, map[string]any{"error": "api key is required"})
+		return
+	}
+
+	user, err := server.findUser(apiKey)
+	if errors.Is(err, sql.ErrNoRows) {
+		writeJSON(response, http.StatusUnauthorized, map[string]any{"error": "api key was not found"})
+		return
+	}
+	if err != nil {
+		writeJSON(response, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
+	}
+
+	switch request.Method {
+	case http.MethodGet:
+		messages, err := server.loadChatMessages(user.ID)
+		if err != nil {
+			writeJSON(response, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+			return
+		}
+		writeJSON(response, http.StatusOK, ChatMessagesResponse{Messages: messages})
+	case http.MethodPut:
+		var input SaveChatMessagesRequest
+		if err := json.NewDecoder(request.Body).Decode(&input); err != nil {
+			writeJSON(response, http.StatusBadRequest, map[string]any{"error": "invalid json body"})
+			return
+		}
+		if err := server.saveChatMessages(user.ID, input.Messages); err != nil {
+			writeJSON(response, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+			return
+		}
+		writeJSON(response, http.StatusOK, map[string]any{"ok": true})
+	default:
+		writeJSON(response, http.StatusMethodNotAllowed, map[string]any{"error": "method not allowed"})
+	}
 }
 
 var errRevisionConflict = errors.New("revision conflict")
@@ -553,6 +610,15 @@ func (server *Server) migrate() error {
 			last_practiced_at TEXT NOT NULL,
 			stability TEXT NOT NULL,
 			PRIMARY KEY (user_id, card_id, target_language)
+		)`,
+		`CREATE TABLE IF NOT EXISTS chat_messages (
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			id TEXT NOT NULL,
+			position INTEGER NOT NULL,
+			role TEXT NOT NULL,
+			content TEXT NOT NULL,
+			created_at TEXT NOT NULL,
+			PRIMARY KEY (user_id, id)
 		)`,
 	}
 
@@ -1320,6 +1386,52 @@ func loadAttempts(runner dbRunner, userID int64) ([]ExerciseAttemptPayload, erro
 		attempts = append(attempts, attempt)
 	}
 	return attempts, rows.Err()
+}
+
+func (server *Server) loadChatMessages(userID int64) ([]ChatMessagePayload, error) {
+	rows, err := server.db.Query(
+		`SELECT id, role, content, created_at FROM chat_messages
+		 WHERE user_id = ? ORDER BY position, id`,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	messages := []ChatMessagePayload{}
+	for rows.Next() {
+		var msg ChatMessagePayload
+		if err := rows.Scan(&msg.ID, &msg.Role, &msg.Content, &msg.CreatedAt); err != nil {
+			return nil, err
+		}
+		messages = append(messages, msg)
+	}
+	return messages, rows.Err()
+}
+
+func (server *Server) saveChatMessages(userID int64, messages []ChatMessagePayload) error {
+	tx, err := server.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec("DELETE FROM chat_messages WHERE user_id = ?", userID); err != nil {
+		return err
+	}
+
+	for position, msg := range messages {
+		if _, err := tx.Exec(
+			`INSERT INTO chat_messages (user_id, id, position, role, content, created_at)
+			 VALUES (?, ?, ?, ?, ?, ?)`,
+			userID, msg.ID, position, msg.Role, msg.Content, msg.CreatedAt,
+		); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func loadStats(runner dbRunner, userID int64) ([]CardStatsPayload, error) {

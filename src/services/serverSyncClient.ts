@@ -5,6 +5,7 @@ import type { SupportedLanguage } from '../domain/languages';
 import type { PracticeSettings } from '../domain/practiceOrdering';
 import type { CardStats } from '../domain/stats';
 import type { ComplementaryLanguages } from '../store/appSlice';
+import type { AiAssistantMessage } from '../store/aiAssistantSlice';
 
 export const SERVER_API_KEY_STORAGE_KEY = 'language-crossword-lab:server-api-key';
 export const DEFAULT_SERVER_ENDPOINT =
@@ -109,6 +110,36 @@ export async function saveServerState(input: {
     method: 'PUT',
   });
   return decodeResponse<SaveServerStateResponse>(response);
+}
+
+export async function loadChatMessages(input: {
+  apiKey: string;
+  endpoint: string;
+}): Promise<AiAssistantMessage[]> {
+  const response = await fetch(`${normalizeEndpoint(input.endpoint)}/api/chat`, {
+    headers: {
+      'X-API-Key': input.apiKey,
+    },
+    method: 'GET',
+  });
+  const data = await decodeResponse<{ messages: AiAssistantMessage[] }>(response);
+  return data.messages;
+}
+
+export async function saveChatMessages(input: {
+  apiKey: string;
+  endpoint: string;
+  messages: AiAssistantMessage[];
+}): Promise<void> {
+  const response = await fetch(`${normalizeEndpoint(input.endpoint)}/api/chat`, {
+    body: JSON.stringify({ messages: input.messages }),
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': input.apiKey,
+    },
+    method: 'PUT',
+  });
+  await decodeResponse<{ ok: boolean }>(response);
 }
 
 export async function createServerUser(input: {

@@ -1,7 +1,9 @@
-import { Box, Stack, Typography } from '@mui/material';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { orderTranslationHints, TranslationHint } from '../../domain/cards';
-import { SupportedLanguage } from '../../domain/languages';
+import { orderTranslationHints, type TranslationHint } from '../../domain/cards';
+import { type SupportedLanguage } from '../../domain/languages';
 
 export function TranslationHintRow({
   complementaryLanguage,
@@ -33,8 +35,31 @@ export function TranslationHintRow({
     ? hints.filter((hint) => complementaryLanguages.includes(hint.language))
     : hints;
   const orderedHints = orderTranslationHints(visibleHints, preferredLanguages);
-  const [primaryHint, ...secondaryHints] = orderedHints;
   const hintPartDataTest = dataTest.replace('__prompt__', '__prompt_hint__');
+
+  const [activeHintIndex, setActiveHintIndex] = useState(0);
+  const hintsKeyRef = useRef('');
+  const hintsKey = orderedHints.map((h) => `${h.language}:${h.value}`).join('|');
+
+  useEffect(() => {
+    if (hintsKey !== hintsKeyRef.current) {
+      hintsKeyRef.current = hintsKey;
+      setActiveHintIndex(0);
+    }
+  }, [hintsKey]);
+
+  const currentPrimaryHint =
+    orderedHints.length > 0
+      ? orderedHints[activeHintIndex % orderedHints.length]
+      : undefined;
+
+  const handleSwitchHint = useCallback(() => {
+    setActiveHintIndex((prev) => (prev + 1) % orderedHints.length);
+  }, [orderedHints.length]);
+
+  const secondaryHints = orderedHints.filter(
+    (_, i) => i !== activeHintIndex % orderedHints.length,
+  );
 
   return (
     <Stack
@@ -42,7 +67,7 @@ export function TranslationHintRow({
       spacing={0.75}
       sx={{ alignItems: 'flex-start' }}
     >
-      {primaryHint && (
+      {currentPrimaryHint && (
         <Stack
           data-test={`${hintPartDataTest}__primary_row`}
           direction="row"
@@ -59,10 +84,31 @@ export function TranslationHintRow({
               data-test={`${hintPartDataTest}__primary_language_code`}
               sx={languageCodeStyles}
             >
-              {formatHintLanguageCode(primaryHint.language)}:
+              {formatHintLanguageCode(currentPrimaryHint.language)}:
             </Box>{' '}
-            {primaryHint.value}
+            {currentPrimaryHint.value}
           </Box>
+          {orderedHints.length > 1 && (
+            <IconButton
+              data-test={`${hintPartDataTest}__switcher`}
+              onClick={handleSwitchHint}
+              size="small"
+              sx={{
+                color: '#5b6b47',
+                height: 26,
+                minHeight: 26,
+                minWidth: 26,
+                mr: '10px',
+                p: 0.3,
+                width: 26,
+                '&:hover': {
+                  bgcolor: 'rgba(91, 107, 71, 0.08)',
+                },
+              }}
+            >
+              <SwapHorizIcon sx={{ fontSize: 17 }} />
+            </IconButton>
+          )}
           {trailingAction}
         </Stack>
       )}

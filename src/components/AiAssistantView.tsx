@@ -48,6 +48,11 @@ import {
   stageBlockedAiPreviewMessage,
   stageAiOperationMessage,
 } from '../store/aiAssistantSlice';
+import {
+  loadServerCredentials,
+  loadChatMessages,
+  saveChatMessages,
+} from '../services/serverSyncClient';
 import { AppDispatch, RootState } from '../store/store';
 import { AiChatPanel } from './ai/AiChatPanel';
 import { AiConnectionPanel } from './ai/AiConnectionPanel';
@@ -93,8 +98,64 @@ export function AiAssistantView({
   const [isChatExpanded, setIsChatExpanded] = useState(true);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [rollbackConflict, setRollbackConflict] = useState<AiRollbackConflict | null>(null);
+  const [isChatSynced, setIsChatSynced] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const keyInputRef = useRef<HTMLInputElement>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const serverCredentials = useMemo(() => {
+    try {
+      return loadServerCredentials();
+    } catch {
+      return { apiKey: '', endpoint: '' };
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!serverCredentials.apiKey || isChatSynced) {
+      return;
+    }
+
+    setIsChatSynced(true);
+    loadChatMessages(serverCredentials).then((loadedMessages) => {
+      if (loadedMessages.length === 0) {
+        return;
+      }
+
+      dispatch(clearAiChat());
+      for (const message of loadedMessages) {
+        dispatch(appendAiMessage(message));
+      }
+    }).catch(() => {
+      // Silently ignore server errors on chat load
+    });
+  }, [serverCredentials, dispatch, isChatSynced]);
+
+  useEffect(() => {
+    if (!serverCredentials.apiKey || messages.length === 0) {
+      return;
+    }
+
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+
+    saveTimerRef.current = setTimeout(() => {
+      saveChatMessages({
+        apiKey: serverCredentials.apiKey,
+        endpoint: serverCredentials.endpoint,
+        messages,
+      }).catch(() => {
+        // Silently ignore server errors on chat save
+      });
+    }, 2000);
+
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, [messages, serverCredentials]);
 
   useEffect(
     () => () => {
@@ -255,6 +316,13 @@ export function AiAssistantView({
     abortControllerRef.current = null;
     setIsThinking(false);
     dispatch(clearAiChat());
+    if (serverCredentials.apiKey) {
+      saveChatMessages({
+        apiKey: serverCredentials.apiKey,
+        endpoint: serverCredentials.endpoint,
+        messages: [],
+      }).catch(() => {});
+    }
   };
 
   const handleConfirmClearChat = () => {
