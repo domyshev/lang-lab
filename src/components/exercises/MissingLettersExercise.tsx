@@ -34,12 +34,16 @@ import { TranslationHintRow } from './TranslationHintRow';
 type SubmissionOutcome = 'correct' | 'incorrect' | 'memorize';
 
 export function MissingLettersExercise({
+  activeHintLanguage,
+  activeDefinitionLanguage,
   interfaceLanguage,
   isRepeatedPrompt = false,
   complementaryLanguage,
   complementaryLanguages,
   definitions,
   disableAdditionalHints,
+  onHintLanguageChange,
+  onDefinitionLanguageChange,
   onNext,
   onMemorizeResult,
   progressCompletedCount,
@@ -57,10 +61,14 @@ export function MissingLettersExercise({
 }: {
   interfaceLanguage: SupportedLanguage;
   isRepeatedPrompt?: boolean;
+  activeHintLanguage?: SupportedLanguage;
+  activeDefinitionLanguage?: SupportedLanguage;
   complementaryLanguage?: SupportedLanguage;
   complementaryLanguages?: SupportedLanguage[];
   definitions?: Partial<Record<SupportedLanguage, string>>;
   disableAdditionalHints?: boolean;
+  onHintLanguageChange?: (language: SupportedLanguage) => void;
+  onDefinitionLanguageChange?: (language: SupportedLanguage) => void;
   prompt: MissingLettersPrompt;
   repeatProgress?: { current: number; total: number };
   onAnswer: (answer: string) => void;

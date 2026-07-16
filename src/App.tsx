@@ -1579,13 +1579,13 @@ export function App() {
           disableAdditionalHints={disableAdditionalHints}
           activeHintLanguage={activeHintLanguages[exercisePreview.prompt.cardId]}
           activeDefinitionLanguage={activeDefinitionLanguages[exercisePreview.prompt.cardId]}
-          onHintLanguageChange={(language) =>
+          onHintLanguageChange={(language: SupportedLanguage) =>
             setActiveHintLanguages((prev) => ({
               ...prev,
               [exercisePreview.prompt.cardId]: language,
             }))
           }
-          onDefinitionLanguageChange={(language) =>
+          onDefinitionLanguageChange={(language: SupportedLanguage) =>
             setActiveDefinitionLanguages((prev) => ({
               ...prev,
               [exercisePreview.prompt.cardId]: language,
@@ -1672,13 +1672,13 @@ export function App() {
           disableAdditionalHints={disableAdditionalHints}
           activeHintLanguage={activeHintLanguages[missingLettersPrompt.cardId]}
           activeDefinitionLanguage={activeDefinitionLanguages[missingLettersPrompt.cardId]}
-          onHintLanguageChange={(language) =>
+          onHintLanguageChange={(language: SupportedLanguage) =>
             setActiveHintLanguages((prev) => ({
               ...prev,
               [missingLettersPrompt.cardId]: language,
             }))
           }
-          onDefinitionLanguageChange={(language) =>
+          onDefinitionLanguageChange={(language: SupportedLanguage) =>
             setActiveDefinitionLanguages((prev) => ({
               ...prev,
               [missingLettersPrompt.cardId]: language,
@@ -1773,13 +1773,13 @@ export function App() {
         disableAdditionalHints={disableAdditionalHints}
         activeHintLanguage={activeHintLanguages[missingWordPrompt.cardId]}
         activeDefinitionLanguage={activeDefinitionLanguages[missingWordPrompt.cardId]}
-        onHintLanguageChange={(language) =>
+        onHintLanguageChange={(language: SupportedLanguage) =>
           setActiveHintLanguages((prev) => ({
             ...prev,
             [missingWordPrompt.cardId]: language,
           }))
         }
-        onDefinitionLanguageChange={(language) =>
+        onDefinitionLanguageChange={(language: SupportedLanguage) =>
           setActiveDefinitionLanguages((prev) => ({
             ...prev,
             [missingWordPrompt.cardId]: language,

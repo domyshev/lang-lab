@@ -38,6 +38,8 @@ import { TranslationHintRow } from './TranslationHintRow';
 type SubmissionOutcome = 'correct' | 'incorrect' | 'memorize';
 
 export function MissingWordExercise({
+  activeHintLanguage,
+  activeDefinitionLanguage,
   complementaryLanguage,
   complementaryLanguages,
   definitions,
@@ -49,6 +51,8 @@ export function MissingWordExercise({
   onAnswer,
   isKnown = false,
   onKnownChange,
+  onHintLanguageChange,
+  onDefinitionLanguageChange,
   onMemorizeResult,
   onNext,
   progressCompletedCount,
@@ -60,8 +64,12 @@ export function MissingWordExercise({
 }: {
   complementaryLanguage?: SupportedLanguage;
   complementaryLanguages?: SupportedLanguage[];
+  activeHintLanguage?: SupportedLanguage;
+  activeDefinitionLanguage?: SupportedLanguage;
   definitions?: Partial<Record<SupportedLanguage, string>>;
   disableAdditionalHints?: boolean;
+  onHintLanguageChange?: (language: SupportedLanguage) => void;
+  onDefinitionLanguageChange?: (language: SupportedLanguage) => void;
   isRepeatedPrompt?: boolean;
   prompt: MissingWordPrompt;
   repeatProgress?: { current: number; total: number };

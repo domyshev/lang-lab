@@ -55,6 +55,8 @@ export function MultipleChoiceExercise({
   resultColors?: WorldResultColors;
   isKnown?: boolean;
   onAnswer: (answer: string) => void;
+  onHintLanguageChange?: (language: SupportedLanguage) => void;
+  onDefinitionLanguageChange?: (language: SupportedLanguage) => void;
   onKnownChange?: (isKnown: boolean) => void;
   onNext: () => void;
   promptStatsAction?: ReactNode;
