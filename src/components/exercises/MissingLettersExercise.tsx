@@ -271,11 +271,18 @@ export function MissingLettersExercise({
             complementaryLanguage={complementaryLanguage}
             complementaryLanguages={complementaryLanguages}
             dataTest={`missing_letters_exercise__prompt__${prompt.cardId}`}
+            activeHintLanguage={activeHintLanguage}
+            activeDefinitionLanguage={activeDefinitionLanguage}
+            complementaryLanguage={complementaryLanguage}
+            complementaryLanguages={complementaryLanguages}
+            dataTest={`missing_letters_exercise__prompt__${prompt.cardId}`}
             definitions={definitions}
             definitionHint={prompt.definitionHint}
             disableAdditionalHints={disableAdditionalHints}
             fallbackPrompt={prompt.prompt}
             hints={prompt.translationHints}
+            onHintLanguageChange={onHintLanguageChange}
+            onDefinitionLanguageChange={onDefinitionLanguageChange}
             trailingAction={promptActions}
           />
           {isRepeatedPrompt && (

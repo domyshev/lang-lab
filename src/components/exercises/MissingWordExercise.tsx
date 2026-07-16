@@ -278,6 +278,8 @@ export function MissingWordExercise({
           sx={{ alignItems: 'center', flexWrap: 'wrap' }}
         >
           <TranslationHintRow
+            activeHintLanguage={activeHintLanguage}
+            activeDefinitionLanguage={activeDefinitionLanguage}
             complementaryLanguage={complementaryLanguage}
             complementaryLanguages={complementaryLanguages}
             dataTest={`missing_word_exercise__prompt__${prompt.cardId}`}
@@ -286,6 +288,8 @@ export function MissingWordExercise({
             disableAdditionalHints={disableAdditionalHints}
             fallbackPrompt={prompt.prompt}
             hints={prompt.translationHints}
+            onHintLanguageChange={onHintLanguageChange}
+            onDefinitionLanguageChange={onDefinitionLanguageChange}
             trailingAction={promptActions}
           />
           {isRepeatedPrompt && (

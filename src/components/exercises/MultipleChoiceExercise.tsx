@@ -22,6 +22,8 @@ import {
 import { TranslationHintRow } from './TranslationHintRow';
 
 export function MultipleChoiceExercise({
+  activeHintLanguage,
+  activeDefinitionLanguage,
   complementaryLanguage,
   complementaryLanguages,
   definitions,
@@ -33,6 +35,8 @@ export function MultipleChoiceExercise({
   resultColors = footballResultColors,
   isKnown = false,
   onAnswer,
+  onHintLanguageChange,
+  onDefinitionLanguageChange,
   onKnownChange,
   onNext,
   promptStatsAction,
@@ -40,6 +44,8 @@ export function MultipleChoiceExercise({
   finishAction,
   targetLanguage = 'en',
 }: {
+  activeHintLanguage?: SupportedLanguage;
+  activeDefinitionLanguage?: SupportedLanguage;
   complementaryLanguage?: SupportedLanguage;
   complementaryLanguages?: SupportedLanguage[];
   definitions?: Partial<Record<SupportedLanguage, string>>;
@@ -148,6 +154,8 @@ export function MultipleChoiceExercise({
           {finishAction}
         </Stack>
         <TranslationHintRow
+          activeHintLanguage={activeHintLanguage}
+          activeDefinitionLanguage={activeDefinitionLanguage}
           complementaryLanguage={complementaryLanguage}
           complementaryLanguages={complementaryLanguages}
           dataTest={`multiple_choice_exercise__prompt__${prompt.cardId}`}
@@ -156,6 +164,8 @@ export function MultipleChoiceExercise({
           disableAdditionalHints={disableAdditionalHints}
           fallbackPrompt={prompt.prompt}
           hints={prompt.translationHints}
+          onHintLanguageChange={onHintLanguageChange}
+          onDefinitionLanguageChange={onDefinitionLanguageChange}
           trailingAction={promptActions}
         />
         {prompt.definitionHint && !definitions && (

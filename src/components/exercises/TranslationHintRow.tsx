@@ -6,6 +6,8 @@ import { orderTranslationHints, type TranslationHint } from '../../domain/cards'
 import { type SupportedLanguage } from '../../domain/languages';
 
 export function TranslationHintRow({
+  activeHintLanguage,
+  activeDefinitionLanguage,
   complementaryLanguage,
   complementaryLanguages,
   dataTest,
@@ -14,8 +16,12 @@ export function TranslationHintRow({
   disableAdditionalHints,
   fallbackPrompt,
   hints,
+  onHintLanguageChange,
+  onDefinitionLanguageChange,
   trailingAction,
 }: {
+  activeHintLanguage?: SupportedLanguage;
+  activeDefinitionLanguage?: SupportedLanguage;
   complementaryLanguage?: SupportedLanguage;
   complementaryLanguages?: SupportedLanguage[];
   dataTest: string;
@@ -24,6 +30,8 @@ export function TranslationHintRow({
   disableAdditionalHints?: boolean;
   fallbackPrompt: string;
   hints: TranslationHint[];
+  onHintLanguageChange?: (language: SupportedLanguage) => void;
+  onDefinitionLanguageChange?: (language: SupportedLanguage) => void;
   trailingAction?: ReactNode;
 }) {
   if (hints.length === 0) {
@@ -50,9 +58,16 @@ export function TranslationHintRow({
   useEffect(() => {
     if (hintsKey !== hintsKeyRef.current) {
       hintsKeyRef.current = hintsKey;
-      setActiveHintIndex(0);
+      if (activeHintLanguage) {
+        const langIndex = orderedHints.findIndex(
+          (h) => h.language === activeHintLanguage,
+        );
+        setActiveHintIndex(langIndex >= 0 ? langIndex : 0);
+      } else {
+        setActiveHintIndex(0);
+      }
     }
-  }, [hintsKey]);
+  }, [hintsKey, activeHintLanguage, orderedHints]);
 
   const currentPrimaryHint =
     orderedHints.length > 0
@@ -60,8 +75,10 @@ export function TranslationHintRow({
       : undefined;
 
   const handleSwitchHint = useCallback(() => {
-    setActiveHintIndex((prev) => (prev + 1) % orderedHints.length);
-  }, [orderedHints.length]);
+    const nextIndex = (activeHintIndex + 1) % orderedHints.length;
+    setActiveHintIndex(nextIndex);
+    onHintLanguageChange?.(orderedHints[nextIndex].language);
+  }, [activeHintIndex, onHintLanguageChange, orderedHints]);
 
   const secondaryHints = orderedHints.filter(
     (_, i) => i !== activeHintIndex % orderedHints.length,
@@ -82,9 +99,14 @@ export function TranslationHintRow({
   useEffect(() => {
     if (defsKey !== defsKeyRef.current) {
       defsKeyRef.current = defsKey;
-      setActiveDefinitionIndex(0);
+      if (activeDefinitionLanguage) {
+        const langIndex = definitionLanguages.indexOf(activeDefinitionLanguage);
+        setActiveDefinitionIndex(langIndex >= 0 ? langIndex : 0);
+      } else {
+        setActiveDefinitionIndex(0);
+      }
     }
-  }, [defsKey]);
+  }, [defsKey, activeDefinitionLanguage, definitionLanguages]);
 
   const currentDefinition =
     definitionLanguages.length > 0
@@ -92,8 +114,10 @@ export function TranslationHintRow({
       : undefined;
 
   const handleSwitchDefinition = useCallback(() => {
-    setActiveDefinitionIndex((prev) => (prev + 1) % definitionLanguages.length);
-  }, [definitionLanguages.length]);
+    const nextIndex = (activeDefinitionIndex + 1) % definitionLanguages.length;
+    setActiveDefinitionIndex(nextIndex);
+    onDefinitionLanguageChange?.(definitionLanguages[nextIndex]);
+  }, [activeDefinitionIndex, definitionLanguages, onDefinitionLanguageChange]);
 
   return (
     <Stack

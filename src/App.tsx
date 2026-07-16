@@ -219,6 +219,12 @@ export function App() {
   const [activeExerciseCardIds, setActiveExerciseCardIds] = useState<string[]>(
     [],
   );
+  const [activeHintLanguages, setActiveHintLanguages] = useState<
+    Record<string, SupportedLanguage>
+  >({});
+  const [activeDefinitionLanguages, setActiveDefinitionLanguages] = useState<
+    Record<string, SupportedLanguage>
+  >({});
   const [crosswordDraftState, setCrosswordDraftState] =
     useState<CrosswordDraftState>(emptyCrosswordDraftState);
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
@@ -568,6 +574,8 @@ export function App() {
     setCompletedExerciseSummary(null);
     setCrosswordDraftState(emptyCrosswordDraftState);
     setActiveExerciseCardIds([]);
+    setActiveHintLanguages({});
+    setActiveDefinitionLanguages({});
     setCurrentExerciseAnsweredCount(0);
     setHasCurrentExerciseResult(false);
     setCurrentExerciseSessionId(createId('exercise-session'));
@@ -1316,6 +1324,8 @@ export function App() {
               onClick={() => {
                 setIsExerciseStarted(true);
                 setActiveExerciseCardIds(setupEligibleCards.map((card) => card.id));
+                setActiveHintLanguages({});
+                setActiveDefinitionLanguages({});
                 setAnsweredMissingLettersPromptKeys([]);
                 setAnsweredMissingWordPromptKeys([]);
                 setAnsweredMultipleChoiceCardIds([]);
@@ -1567,6 +1577,20 @@ export function App() {
           complementaryLanguages={complementaryLanguagesForTarget}
           definitions={cardById.get(exercisePreview.prompt.cardId)?.definitions}
           disableAdditionalHints={disableAdditionalHints}
+          activeHintLanguage={activeHintLanguages[exercisePreview.prompt.cardId]}
+          activeDefinitionLanguage={activeDefinitionLanguages[exercisePreview.prompt.cardId]}
+          onHintLanguageChange={(language) =>
+            setActiveHintLanguages((prev) => ({
+              ...prev,
+              [exercisePreview.prompt.cardId]: language,
+            }))
+          }
+          onDefinitionLanguageChange={(language) =>
+            setActiveDefinitionLanguages((prev) => ({
+              ...prev,
+              [exercisePreview.prompt.cardId]: language,
+            }))
+          }
           interfaceLanguage={interfaceLanguage}
           prompt={exercisePreview.prompt}
           promptStatsAction={renderCurrentPromptStatsAction(
@@ -1646,6 +1670,20 @@ export function App() {
           complementaryLanguages={complementaryLanguagesForTarget}
           definitions={cardById.get(missingLettersPrompt.cardId)?.definitions}
           disableAdditionalHints={disableAdditionalHints}
+          activeHintLanguage={activeHintLanguages[missingLettersPrompt.cardId]}
+          activeDefinitionLanguage={activeDefinitionLanguages[missingLettersPrompt.cardId]}
+          onHintLanguageChange={(language) =>
+            setActiveHintLanguages((prev) => ({
+              ...prev,
+              [missingLettersPrompt.cardId]: language,
+            }))
+          }
+          onDefinitionLanguageChange={(language) =>
+            setActiveDefinitionLanguages((prev) => ({
+              ...prev,
+              [missingLettersPrompt.cardId]: language,
+            }))
+          }
           interfaceLanguage={interfaceLanguage}
           isRepeatedPrompt={completedMissingLettersCardIds.includes(
             missingLettersPrompt.cardId,
@@ -1733,6 +1771,20 @@ export function App() {
         complementaryLanguages={complementaryLanguagesForTarget}
         definitions={cardById.get(missingWordPrompt.cardId)?.definitions}
         disableAdditionalHints={disableAdditionalHints}
+        activeHintLanguage={activeHintLanguages[missingWordPrompt.cardId]}
+        activeDefinitionLanguage={activeDefinitionLanguages[missingWordPrompt.cardId]}
+        onHintLanguageChange={(language) =>
+          setActiveHintLanguages((prev) => ({
+            ...prev,
+            [missingWordPrompt.cardId]: language,
+          }))
+        }
+        onDefinitionLanguageChange={(language) =>
+          setActiveDefinitionLanguages((prev) => ({
+            ...prev,
+            [missingWordPrompt.cardId]: language,
+          }))
+        }
         finishAction={renderFinishExerciseAction(
           buildMissingWordJumpSelector(missingWordPrompt),
           {
