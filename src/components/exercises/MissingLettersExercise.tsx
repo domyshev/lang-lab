@@ -38,6 +38,8 @@ export function MissingLettersExercise({
   isRepeatedPrompt = false,
   complementaryLanguage,
   complementaryLanguages,
+  definitions,
+  disableAdditionalHints,
   onNext,
   onMemorizeResult,
   progressCompletedCount,
@@ -57,6 +59,8 @@ export function MissingLettersExercise({
   isRepeatedPrompt?: boolean;
   complementaryLanguage?: SupportedLanguage;
   complementaryLanguages?: SupportedLanguage[];
+  definitions?: Partial<Record<SupportedLanguage, string>>;
+  disableAdditionalHints?: boolean;
   prompt: MissingLettersPrompt;
   repeatProgress?: { current: number; total: number };
   onAnswer: (answer: string) => void;
@@ -267,6 +271,9 @@ export function MissingLettersExercise({
             complementaryLanguage={complementaryLanguage}
             complementaryLanguages={complementaryLanguages}
             dataTest={`missing_letters_exercise__prompt__${prompt.cardId}`}
+            definitions={definitions}
+            definitionHint={prompt.definitionHint}
+            disableAdditionalHints={disableAdditionalHints}
             fallbackPrompt={prompt.prompt}
             hints={prompt.translationHints}
             trailingAction={promptActions}
@@ -279,7 +286,7 @@ export function MissingLettersExercise({
             />
           )}
         </Stack>
-        {prompt.definitionHint && (
+        {prompt.definitionHint && !definitions && (
           <Typography data-test={`missing_letters_exercise__definition_hint__${prompt.cardId}`}>
             {prompt.definitionHint}
           </Typography>

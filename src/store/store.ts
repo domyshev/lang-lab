@@ -189,6 +189,7 @@ export function stripSessionOnlyAppStateForPersist(appState: AppState): AppState
   return {
     ...initialAppState,
     assistantId: appState.assistantId,
+    disableAdditionalHints: appState.disableAdditionalHints ?? false,
     hasAgentsIntroCoachmarkBeenShown: false,
     worldId: appState.worldId,
   };

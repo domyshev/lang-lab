@@ -16,6 +16,7 @@ import { WorldId, defaultWorldId, resolveWorldId } from '../domain/worlds';
 export interface AppState {
   assistantId: AssistantId;
   complementaryLanguages: ComplementaryLanguages;
+  disableAdditionalHints?: boolean;
   hasFinishExerciseLampBeenShown?: boolean;
   hasAgentsIntroCoachmarkBeenShown?: boolean;
   hasGameHelpCoachmarkBeenShown?: boolean;
@@ -49,6 +50,7 @@ export const defaultComplementaryLanguages: ComplementaryLanguages = {
 export const initialAppState: AppState = {
   assistantId: defaultAssistantId,
   complementaryLanguages: defaultComplementaryLanguages,
+  disableAdditionalHints: false,
   hasFinishExerciseLampBeenShown: false,
   hasAgentsIntroCoachmarkBeenShown: false,
   hasGameHelpCoachmarkBeenShown: false,
@@ -158,6 +160,9 @@ const appSlice = createSlice({
         },
       );
     },
+    setDisableAdditionalHints(state, action: PayloadAction<boolean>) {
+      state.disableAdditionalHints = action.payload;
+    },
     setWorldId(state, action: PayloadAction<WorldId>) {
       state.worldId = resolveWorldId(action.payload);
     },
@@ -226,6 +231,7 @@ export const {
   setComplementaryLanguageForTarget,
   setComplementaryLanguagesForTarget,
   setCorrectStreakCooldownMonths,
+  setDisableAdditionalHints,
   setInterfaceLanguage,
   setNewCardMixFrequencyPercent,
   setPlayerProfile,

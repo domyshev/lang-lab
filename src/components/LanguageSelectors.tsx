@@ -38,6 +38,7 @@ import {
   setCorrectStreakCooldownMonths,
   setAssistantId,
   setComplementaryLanguagesForTarget,
+  setDisableAdditionalHints,
   setInterfaceLanguage,
   setNewCardMixFrequencyPercent,
   setRecentMistakeRepeatFrequencyPercent,
@@ -75,6 +76,9 @@ export function LanguageSelectors() {
   );
   const storedPracticeSettings = useSelector(
     (state: RootState) => state.app.practiceSettings,
+  );
+  const disableAdditionalHints = useSelector(
+    (state: RootState) => state.app.disableAdditionalHints ?? false,
   );
   const storedComplementaryLanguages = useSelector(
     (state: RootState) => state.app.complementaryLanguages,
@@ -602,6 +606,26 @@ export function LanguageSelectors() {
               helperText={t(interfaceLanguage, 'frequencyPercent')}
             />
           </SettingsFieldRow>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={disableAdditionalHints}
+                data-test="language_selectors__disable_additional_hints_checkbox"
+                onChange={(_, checked) => dispatch(setDisableAdditionalHints(checked))}
+                size="small"
+              />
+            }
+            data-test="language_selectors__disable_additional_hints_label"
+            label={
+              <Typography
+                data-test="language_selectors__disable_additional_hints_text"
+                sx={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3 }}
+              >
+                {t(interfaceLanguage, 'disableAdditionalHints')}
+              </Typography>
+            }
+            sx={{ mt: '15px' }}
+          />
         </Stack>
       </Menu>
     </Stack>

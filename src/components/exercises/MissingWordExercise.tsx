@@ -40,6 +40,8 @@ type SubmissionOutcome = 'correct' | 'incorrect' | 'memorize';
 export function MissingWordExercise({
   complementaryLanguage,
   complementaryLanguages,
+  definitions,
+  disableAdditionalHints,
   isRepeatedPrompt = false,
   prompt,
   repeatProgress,
@@ -58,6 +60,8 @@ export function MissingWordExercise({
 }: {
   complementaryLanguage?: SupportedLanguage;
   complementaryLanguages?: SupportedLanguage[];
+  definitions?: Partial<Record<SupportedLanguage, string>>;
+  disableAdditionalHints?: boolean;
   isRepeatedPrompt?: boolean;
   prompt: MissingWordPrompt;
   repeatProgress?: { current: number; total: number };
@@ -277,6 +281,9 @@ export function MissingWordExercise({
             complementaryLanguage={complementaryLanguage}
             complementaryLanguages={complementaryLanguages}
             dataTest={`missing_word_exercise__prompt__${prompt.cardId}`}
+            definitions={definitions}
+            definitionHint={prompt.definitionHint}
+            disableAdditionalHints={disableAdditionalHints}
             fallbackPrompt={prompt.prompt}
             hints={prompt.translationHints}
             trailingAction={promptActions}
@@ -289,7 +296,7 @@ export function MissingWordExercise({
             />
           )}
         </Stack>
-        {prompt.definitionHint && (
+        {prompt.definitionHint && !definitions && (
           <Typography data-test={`missing_word_exercise__definition_hint__${prompt.cardId}`}>
             {prompt.definitionHint}
           </Typography>

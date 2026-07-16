@@ -1562,6 +1562,8 @@ export function App() {
         <MultipleChoiceExercise
           key={`${exercisePreview.prompt.cardId}:${generationSeed}`}
           complementaryLanguages={complementaryLanguagesForTarget}
+          definitions={cardById.get(exercisePreview.prompt.cardId)?.definitions}
+          disableAdditionalHints={disableAdditionalHints}
           interfaceLanguage={interfaceLanguage}
           prompt={exercisePreview.prompt}
           promptStatsAction={renderCurrentPromptStatsAction(
@@ -1639,6 +1641,8 @@ export function App() {
         <MissingLettersExercise
           key={missingLettersPrompt.practiceKey}
           complementaryLanguages={complementaryLanguagesForTarget}
+          definitions={cardById.get(missingLettersPrompt.cardId)?.definitions}
+          disableAdditionalHints={disableAdditionalHints}
           interfaceLanguage={interfaceLanguage}
           isRepeatedPrompt={completedMissingLettersCardIds.includes(
             missingLettersPrompt.cardId,
@@ -1724,6 +1728,8 @@ export function App() {
       <MissingWordExercise
         key={missingWordPrompt.practiceKey}
         complementaryLanguages={complementaryLanguagesForTarget}
+        definitions={cardById.get(missingWordPrompt.cardId)?.definitions}
+        disableAdditionalHints={disableAdditionalHints}
         finishAction={renderFinishExerciseAction(
           buildMissingWordJumpSelector(missingWordPrompt),
           {

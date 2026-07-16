@@ -24,6 +24,8 @@ import { TranslationHintRow } from './TranslationHintRow';
 export function MultipleChoiceExercise({
   complementaryLanguage,
   complementaryLanguages,
+  definitions,
+  disableAdditionalHints,
   interfaceLanguage,
   progressCompletedCount,
   progressTotalCount,
@@ -40,6 +42,8 @@ export function MultipleChoiceExercise({
 }: {
   complementaryLanguage?: SupportedLanguage;
   complementaryLanguages?: SupportedLanguage[];
+  definitions?: Partial<Record<SupportedLanguage, string>>;
+  disableAdditionalHints?: boolean;
   interfaceLanguage: SupportedLanguage;
   prompt: MultipleChoicePrompt;
   resultColors?: WorldResultColors;
@@ -147,11 +151,14 @@ export function MultipleChoiceExercise({
           complementaryLanguage={complementaryLanguage}
           complementaryLanguages={complementaryLanguages}
           dataTest={`multiple_choice_exercise__prompt__${prompt.cardId}`}
+          definitions={definitions}
+          definitionHint={prompt.definitionHint}
+          disableAdditionalHints={disableAdditionalHints}
           fallbackPrompt={prompt.prompt}
           hints={prompt.translationHints}
           trailingAction={promptActions}
         />
-        {prompt.definitionHint && (
+        {prompt.definitionHint && !definitions && (
           <Typography data-test={`multiple_choice_exercise__definition_hint__${prompt.cardId}`}>
             {prompt.definitionHint}
           </Typography>

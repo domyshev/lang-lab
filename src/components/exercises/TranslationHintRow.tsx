@@ -1,6 +1,6 @@
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import SyncAltOutlinedIcon from '@mui/icons-material/SyncAltOutlined';
 import { Box, IconButton, Stack, Typography } from '@mui/material';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { orderTranslationHints, type TranslationHint } from '../../domain/cards';
 import { type SupportedLanguage } from '../../domain/languages';
@@ -9,6 +9,9 @@ export function TranslationHintRow({
   complementaryLanguage,
   complementaryLanguages,
   dataTest,
+  definitions,
+  definitionHint,
+  disableAdditionalHints,
   fallbackPrompt,
   hints,
   trailingAction,
@@ -16,6 +19,9 @@ export function TranslationHintRow({
   complementaryLanguage?: SupportedLanguage;
   complementaryLanguages?: SupportedLanguage[];
   dataTest: string;
+  definitions?: Partial<Record<SupportedLanguage, string>>;
+  definitionHint?: string;
+  disableAdditionalHints?: boolean;
   fallbackPrompt: string;
   hints: TranslationHint[];
   trailingAction?: ReactNode;
@@ -61,6 +67,34 @@ export function TranslationHintRow({
     (_, i) => i !== activeHintIndex % orderedHints.length,
   );
 
+  const definitionLanguages = useMemo(() => {
+    if (!definitions) {
+      return [];
+    }
+    return (Object.keys(definitions) as SupportedLanguage[]).filter(
+      (lang) => definitions[lang],
+    );
+  }, [definitions]);
+  const [activeDefinitionIndex, setActiveDefinitionIndex] = useState(0);
+  const defsKeyRef = useRef('');
+  const defsKey = definitionLanguages.join('|');
+
+  useEffect(() => {
+    if (defsKey !== defsKeyRef.current) {
+      defsKeyRef.current = defsKey;
+      setActiveDefinitionIndex(0);
+    }
+  }, [defsKey]);
+
+  const currentDefinition =
+    definitionLanguages.length > 0
+      ? definitions?.[definitionLanguages[activeDefinitionIndex % definitionLanguages.length]]
+      : undefined;
+
+  const handleSwitchDefinition = useCallback(() => {
+    setActiveDefinitionIndex((prev) => (prev + 1) % definitionLanguages.length);
+  }, [definitionLanguages.length]);
+
   return (
     <Stack
       data-test={dataTest}
@@ -88,7 +122,7 @@ export function TranslationHintRow({
             </Box>{' '}
             {currentPrimaryHint.value}
           </Box>
-          {orderedHints.length > 1 && (
+          {orderedHints.length > 1 && !disableAdditionalHints && (
             <IconButton
               data-test={`${hintPartDataTest}__switcher`}
               onClick={handleSwitchHint}
@@ -98,6 +132,7 @@ export function TranslationHintRow({
                 height: 26,
                 minHeight: 26,
                 minWidth: 26,
+                ml: '10px',
                 mr: '10px',
                 p: 0.3,
                 width: 26,
@@ -106,13 +141,13 @@ export function TranslationHintRow({
                 },
               }}
             >
-              <SwapHorizIcon sx={{ fontSize: 17 }} />
+              <SyncAltOutlinedIcon sx={{ fontSize: 17 }} />
             </IconButton>
           )}
           {trailingAction}
         </Stack>
       )}
-      {secondaryHints.length > 0 && (
+      {secondaryHints.length > 0 && !disableAdditionalHints && (
         <Stack
           data-test={`${hintPartDataTest}__secondary_row`}
           direction="row"
@@ -137,6 +172,43 @@ export function TranslationHintRow({
               {hint.value}
             </Box>
           ))}
+        </Stack>
+      )}
+      {currentDefinition && (
+        <Stack
+          data-test={`${hintPartDataTest}__definition_row`}
+          direction="row"
+          spacing={0.75}
+          sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+          useFlexGap
+        >
+          <Typography
+            data-test={`${hintPartDataTest}__definition`}
+            sx={definitionHintStyles}
+          >
+            {currentDefinition}
+          </Typography>
+          {definitionLanguages.length > 1 && (
+            <IconButton
+              data-test={`${hintPartDataTest}__definition_switcher`}
+              onClick={handleSwitchDefinition}
+              size="small"
+              sx={{
+                color: '#5b6b47',
+                height: 26,
+                minHeight: 26,
+                minWidth: 26,
+                mr: '20px',
+                p: 0.3,
+                width: 26,
+                '&:hover': {
+                  bgcolor: 'rgba(91, 107, 71, 0.08)',
+                },
+              }}
+            >
+              <SyncAltOutlinedIcon sx={{ fontSize: 17 }} />
+            </IconButton>
+          )}
         </Stack>
       )}
     </Stack>
@@ -186,4 +258,11 @@ const secondaryLanguageCodeStyles = {
   color: '#6b7468',
   fontWeight: 800,
   mr: 0.5,
+};
+
+const definitionHintStyles = {
+  color: '#4f5a49',
+  fontSize: { xs: 17, sm: 18 },
+  fontWeight: 650,
+  lineHeight: 1.3,
 };

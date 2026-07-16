@@ -299,7 +299,8 @@ type I18nKey =
   | 'cardSetChipPrefix'
   | 'crosswordCardSetCardsTooltip'
   | 'crosswordSubmitNeedsCompletedWord'
-  | 'submitCrossword';
+  | 'submitCrossword'
+  | 'disableAdditionalHints';
 
 const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
   en: {
@@ -652,6 +653,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     crosswordSubmitNeedsCompletedWord:
       'Enter at least one complete word to check the results.',
     submitCrossword: 'Submit crossword',
+    disableAdditionalHints: 'Disable additional translation hints',
   },
   ru: {
     appName: 'Language Lab',
@@ -1005,6 +1007,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     crosswordSubmitNeedsCompletedWord:
       'Введите хотя бы одно слово, чтобы проверить результаты.',
     submitCrossword: 'Отправить кроссворд',
+    disableAdditionalHints: 'Отключить дополнительные подсказки переводов',
   },
   es: {
     appName: 'Language Lab',
@@ -1358,6 +1361,7 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     crosswordSubmitNeedsCompletedWord:
       'Introduce al menos una palabra completa para comprobar resultados.',
     submitCrossword: 'Enviar crucigrama',
+    disableAdditionalHints: 'Desactivar pistas de traducción adicionales',
   },
 };
 
@@ -1441,6 +1445,7 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   targetLearningLanguages: 'Мови - ціль вивчення',
   targetAnswerLabel: 'Цільова мова',
   world: 'Світ',
+  disableAdditionalHints: 'Вимкнути додаткові підказки перекладів',
 };
 
 const languageNames: Record<
