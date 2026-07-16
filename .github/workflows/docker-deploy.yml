@@ -36,8 +36,8 @@ jobs:
 
       - name: Ensure data directory exists
         run: |
-          sudo mkdir -p ${{ env.DEPLOY_DATA_DIR }}
-          sudo chown -R 1000:1000 ${{ env.DEPLOY_DATA_DIR }}
+          mkdir -p ${{ env.DEPLOY_DATA_DIR }}
+          chown -R 1000:1000 ${{ env.DEPLOY_DATA_DIR }}
 
       - name: Stop and remove old container
         run: |
