@@ -8,7 +8,6 @@ WORKDIR /app
 # Copy dependency manifests and install
 COPY package.json package-lock.json ./
 RUN npm install -g npm@11
-RUN npm config set fetch-retries 5 && npm config set fetch-retry-mintimeout 20000 && npm config set fetch-retry-maxtimeout 120000
 RUN npm ci --no-optional --no-fund --no-audit
 
 # Copy source files and build
