@@ -263,6 +263,9 @@ export function App() {
     interfaceLanguage,
   );
   const complementaryLanguage = complementaryLanguagesForTarget[0];
+  const disableAdditionalHints = useSelector(
+    (state: RootState) => state.app.disableAdditionalHints ?? false,
+  );
   const cardById = useMemo(() => createCardById(cards), [cards]);
   const practiceOrderingAttempts = useMemo(
     () =>
