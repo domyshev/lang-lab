@@ -128,6 +128,8 @@ export function TranslationHintRow({
               onClick={handleSwitchHint}
               size="small"
               sx={{
+                border: '1px solid rgba(91, 107, 71, 0.30)',
+                borderRadius: '50%',
                 color: '#5b6b47',
                 height: 26,
                 minHeight: 26,
@@ -137,7 +139,8 @@ export function TranslationHintRow({
                 p: 0.3,
                 width: 26,
                 '&:hover': {
-                  bgcolor: 'rgba(91, 107, 71, 0.08)',
+                  bgcolor: 'rgba(91, 107, 71, 0.10)',
+                  borderColor: 'rgba(91, 107, 71, 0.56)',
                 },
               }}
             >
@@ -194,6 +197,8 @@ export function TranslationHintRow({
               onClick={handleSwitchDefinition}
               size="small"
               sx={{
+                border: '1px solid rgba(91, 107, 71, 0.30)',
+                borderRadius: '50%',
                 color: '#5b6b47',
                 height: 26,
                 minHeight: 26,
@@ -202,7 +207,8 @@ export function TranslationHintRow({
                 p: 0.3,
                 width: 26,
                 '&:hover': {
-                  bgcolor: 'rgba(91, 107, 71, 0.08)',
+                  bgcolor: 'rgba(91, 107, 71, 0.10)',
+                  borderColor: 'rgba(91, 107, 71, 0.56)',
                 },
               }}
             >
