@@ -34,11 +34,6 @@ jobs:
           docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} .
           docker tag ${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.IMAGE_NAME }}:latest
 
-      - name: Ensure data directory exists
-        run: |
-          mkdir -p ${{ env.DEPLOY_DATA_DIR }}
-          chown -R 1000:1000 ${{ env.DEPLOY_DATA_DIR }}
-
       - name: Stop and remove old container
         run: |
           docker stop ${{ env.CONTAINER_NAME }} || true
