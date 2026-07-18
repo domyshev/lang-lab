@@ -322,9 +322,12 @@ export function MissingWordExercise({
             gap: 0.75,
           }}
         >
-          <SentenceText dataTest={`missing_word_exercise__sentence_before__${prompt.cardId}`}>
-            {sentenceParts.before}
-          </SentenceText>
+          {renderSentenceCells({
+            characters: sentenceParts.before.split(''),
+            dataTestPrefix: `missing_word_exercise__sentence_before__${prompt.cardId}`,
+            resultColors,
+            resultTone,
+          })}
           {renderAnswerCells({
             characters: answerCharacters,
             dataTestPrefix: `missing_word_exercise__answer_cells__${prompt.cardId}`,
@@ -337,9 +340,12 @@ export function MissingWordExercise({
             onCellKeyDown: handleCellKeyDown,
             setLetters,
           })}
-          <SentenceText dataTest={`missing_word_exercise__sentence_after__${prompt.cardId}`}>
-            {sentenceParts.after}
-          </SentenceText>
+          {renderSentenceCells({
+            characters: sentenceParts.after.split(''),
+            dataTestPrefix: `missing_word_exercise__sentence_after__${prompt.cardId}`,
+            resultColors,
+            resultTone,
+          })}
         </Box>
         {isSubmitted && !isCorrect && (
           <Stack
@@ -464,28 +470,6 @@ export function MissingWordExercise({
   );
 }
 
-function SentenceText({
-  children,
-  dataTest,
-}: {
-  children: string;
-  dataTest: string;
-}) {
-  if (!children.trim()) {
-    return null;
-  }
-
-  return (
-    <Typography
-      component="span"
-      data-test={dataTest}
-      sx={{ fontSize: 22, lineHeight: '38px', whiteSpace: 'pre-wrap' }}
-    >
-      {children.trim()}
-    </Typography>
-  );
-}
-
 function renderAnswerCells({
   characters,
   dataTestPrefix,
@@ -583,6 +567,41 @@ function AnswerSpace({ dataTest }: { dataTest: string }) {
       sx={{ display: 'inline-flex', height: 38, width: 38 }}
     />
   );
+}
+
+function renderSentenceCells({
+  characters,
+  dataTestPrefix,
+  resultColors,
+  resultTone,
+}: {
+  characters: string[];
+  dataTestPrefix: string;
+  resultColors: WorldResultColors;
+  resultTone: SubmissionOutcome | null;
+}) {
+  return characters.map((character, index) => {
+    if (character.trim() === '') {
+      return (
+        <AnswerSpace
+          dataTest={`${dataTestPrefix}__space__${index}`}
+          key={`sentence-space-${index}`}
+        />
+      );
+    }
+
+    return (
+      <Box
+        key={`sentence-${character}-${index}`}
+        component="span"
+        data-test={`${dataTestPrefix}__cell__${index}`}
+        style={getLetterCellInlineStyle(resultTone, resultColors)}
+        sx={letterCellStyles}
+      >
+        {character}
+      </Box>
+    );
+  });
 }
 
 function splitSentenceWithGap(sentenceWithGap: string): {
