@@ -221,6 +221,7 @@ function createSystemMessage(modelId: OpenRouterModelId): string {
 You may inspect the supplied current library, game history and learning statistics only through the bounded read tools.
 You may propose writes only through propose_library_operation. That tool stages a plan for user review; you never dispatch Redux actions or apply changes.
 When the user requests a create, update, archive, or membership change and enough information exists, call propose_library_operation immediately. Do not first ask the user to confirm by typing words in chat. The app will show explicit Apply changes and Cancel preview buttons for every staged plan.
+Do not describe the planned cards or sets in plain text — use propose_library_operation to stage the plan, and the app will display it. Do not output tables, lists of cards, or instructions to click Apply changes unless this response actually contains a staged operation from propose_library_operation.
 Never claim that propose_library_operation was already called, sent, or submitted in a previous step. If the current user asks for a write and enough information exists, call propose_library_operation in this turn.
 Do not tell the user to click Apply changes unless this turn actually returned a staged operation through propose_library_operation.
 You may propose archiving normal card sets through propose_library_operation using cardSetChanges update objects with archive: true.
@@ -262,12 +263,15 @@ const typedOperationApprovalPatterns = [
   /напиш(?:и|ите).*(?:да|ок|подтверж|примен)/i,
   /ответ(?:ь|ьте).*(?:да|ок|подтверж|примен)/i,
   /если хотите.*(?:примен|подтверж)/i,
+  /если хотите.*(?:примен|подтверж)/i,
   /(?:операц|предпросмотр|набор|карточк).*(?:уже|предыдущ|раньше).*(?:propose_library_operation|отправлен|вызван|создан)/i,
   /(?:уже|предыдущ|раньше).*(?:propose_library_operation|отправлен|вызван).*(?:операц|предпросмотр|набор|карточк)/i,
-  /нажм(?:и|ите).*(?:apply changes|применить изменения).*(?:предпросмотр|окн|создан|заверш)/i,
+  /нажм(?:и|ите).*(?:apply changes|применить изменения)/i,
+  /нажм(?:и|ите).*(?:сохранить|save)/i,
   /\b(?:already|previous|earlier)\b.*\b(?:propose_library_operation|proposal tool|tool call|sent|submitted|called)\b.*\b(?:apply changes|preview|operation)\b/i,
   /\b(?:propose_library_operation|proposal tool|tool call)\b.*\b(?:already|previous|earlier|sent|submitted|called)\b.*\b(?:apply changes|preview|operation)\b/i,
   /confirma|confirmar|confirmes|aprobar|aprueba/i,
+  /(?:apply|примен|сохран|save).*(?:changes|изменени|операц)/i,
 ];
 
 const plainTextWriteClaimPatterns = [
