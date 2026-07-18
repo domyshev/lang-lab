@@ -276,7 +276,6 @@ export function MissingLettersExercise({
           sx={{ alignItems: 'center', flexWrap: 'wrap' }}
         >
           <TranslationHintRow
-            complementaryLanguage={complementaryLanguage}
             activeHintLanguage={activeHintLanguage}
             activeDefinitionLanguage={activeDefinitionLanguage}
             complementaryLanguage={complementaryLanguage}
