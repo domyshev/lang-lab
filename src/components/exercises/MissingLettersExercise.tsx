@@ -277,8 +277,6 @@ export function MissingLettersExercise({
         >
           <TranslationHintRow
             complementaryLanguage={complementaryLanguage}
-            complementaryLanguages={complementaryLanguages}
-            dataTest={`missing_letters_exercise__prompt__${prompt.cardId}`}
             activeHintLanguage={activeHintLanguage}
             activeDefinitionLanguage={activeDefinitionLanguage}
             complementaryLanguage={complementaryLanguage}
