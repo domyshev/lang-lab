@@ -17,11 +17,14 @@ export function applyServerState(
 ) {
   dispatch(
     replaceBackendAppSettings({
+      assistantId: payload.settings.assistantId,
       complementaryLanguages: payload.settings.complementaryLanguages,
       interfaceLanguage: payload.settings.interfaceLanguage,
+      openRouterApiKey: payload.settings.openRouterApiKey,
       playerProfile: payload.settings.playerProfile,
       practiceSettings: payload.settings.practiceSettings,
       targetLanguage: payload.settings.targetLanguage,
+      worldId: payload.settings.worldId,
     }),
   );
   dispatch(
