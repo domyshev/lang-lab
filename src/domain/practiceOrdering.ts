@@ -155,6 +155,7 @@ function summarizePracticeEvents(input: {
 export function orderCardsForMissingLettersPractice(input: {
   attempts: ExerciseAttempt[];
   cards: LanguageCard[];
+  includeCoolingDown?: boolean;
   now: string;
   seed: number;
   settings: PracticeSettings | undefined;
@@ -177,7 +178,9 @@ export function orderCardsForMissingLettersPractice(input: {
         settings: input.settings,
       }),
   }));
-  const dueCards = summaries.filter((item) => !item.summary.isCoolingDown);
+  const dueCards = input.includeCoolingDown
+    ? summaries
+    : summaries.filter((item) => !item.summary.isCoolingDown);
   const recentMistakeCards = dueCards
     .filter(
       (item) =>

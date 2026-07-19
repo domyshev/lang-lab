@@ -88,6 +88,37 @@ describe('orderCardsForMissingLettersPractice', () => {
     expect(ids.slice(1, 3).some((id) => id.startsWith('card-new'))).toBe(true);
     expect(hasConsecutiveDuplicate(ids)).toBe(false);
   });
+
+  it('can include cooling cards when cooldown is intentionally ignored', () => {
+    const attempts = [
+      createAttempt('card-cooling', true, '2026-06-29T10:00:00.000Z'),
+      createAttempt('card-cooling', true, '2026-06-30T10:00:00.000Z'),
+      createAttempt('card-cooling', true, '2026-07-01T10:00:00.000Z'),
+    ];
+
+    expect(
+      orderCardsForMissingLettersPractice({
+        attempts,
+        cards: [createCard('card-cooling', 'meditation')],
+        now,
+        seed: 12,
+        settings: defaultPracticeSettings,
+        targetLanguage: 'en',
+      }),
+    ).toEqual([]);
+
+    expect(
+      orderCardsForMissingLettersPractice({
+        attempts,
+        cards: [createCard('card-cooling', 'meditation')],
+        includeCoolingDown: true,
+        now,
+        seed: 12,
+        settings: defaultPracticeSettings,
+        targetLanguage: 'en',
+      }).map((card) => card.id),
+    ).toEqual(['card-cooling']);
+  });
 });
 
 function createCard(id: string, answer: string): LanguageCard {

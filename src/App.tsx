@@ -84,6 +84,7 @@ import { SupportedLanguage, languageFlags } from './domain/languages';
 import {
   getPracticeSettings,
   orderCardsForMissingLettersPractice,
+  summarizePracticeByCardId,
 } from './domain/practiceOrdering';
 import {
   ALL_CARDS_CARD_SET_ID,
@@ -219,6 +220,10 @@ export function App() {
   const [activeExerciseCardIds, setActiveExerciseCardIds] = useState<string[]>(
     [],
   );
+  const [
+    isMissingLettersCooldownIgnored,
+    setIsMissingLettersCooldownIgnored,
+  ] = useState(false);
   const [activeHintLanguages, setActiveHintLanguages] = useState<
     Record<string, SupportedLanguage>
   >({});
@@ -364,6 +369,7 @@ export function App() {
     return orderCardsForMissingLettersPractice({
       attempts: practiceOrderingAttempts,
       cards: missingLettersEligibleCards,
+      includeCoolingDown: isMissingLettersCooldownIgnored,
       now: new Date().toISOString(),
       seed: generationSeed,
       settings: getPracticeSettings(practiceSettings),
@@ -371,6 +377,7 @@ export function App() {
     });
   }, [
     generationSeed,
+    isMissingLettersCooldownIgnored,
     missingLettersEligibleCards,
     practiceOrderingAttempts,
     practiceSettings,
@@ -427,6 +434,50 @@ export function App() {
           Boolean(prompt),
       );
   }, [missingLettersOrderedCards, targetLanguage]);
+  const missingLettersCooldownDetails = useMemo(() => {
+    if (
+      selectedExerciseType !== 'missingLetters' ||
+      isMissingLettersCooldownIgnored ||
+      missingLettersEligibleCards.length === 0 ||
+      missingLettersOrderedCards.length > 0
+    ) {
+      return null;
+    }
+
+    const summariesByCardId = summarizePracticeByCardId({
+      attempts: practiceOrderingAttempts,
+      now: new Date().toISOString(),
+      settings: getPracticeSettings(practiceSettings),
+      targetLanguage,
+    });
+    const coolingCards = missingLettersEligibleCards
+      .map((card) => summariesByCardId.get(card.id))
+      .filter(
+        (
+          summary,
+        ): summary is NonNullable<ReturnType<typeof summariesByCardId.get>> =>
+          Boolean(summary?.isCoolingDown && summary.nextReviewAt),
+      );
+    const nextReviewAt = coolingCards
+      .map((summary) => summary.nextReviewAt!)
+      .sort((left, right) => left.localeCompare(right))[0];
+
+    return nextReviewAt && coolingCards.length === missingLettersEligibleCards.length
+      ? {
+          coolingCount: coolingCards.length,
+          nextReviewAt,
+          totalCount: missingLettersEligibleCards.length,
+        }
+      : null;
+  }, [
+    isMissingLettersCooldownIgnored,
+    missingLettersEligibleCards,
+    missingLettersOrderedCards.length,
+    practiceOrderingAttempts,
+    practiceSettings,
+    selectedExerciseType,
+    targetLanguage,
+  ]);
   const missingWordPracticePrompts = useMemo(() => {
     const occurrenceCounts = new Map<string, number>();
     return missingWordOrderedCards
@@ -574,6 +625,7 @@ export function App() {
     setCompletedExerciseSummary(null);
     setCrosswordDraftState(emptyCrosswordDraftState);
     setActiveExerciseCardIds([]);
+    setIsMissingLettersCooldownIgnored(false);
     setActiveHintLanguages({});
     setActiveDefinitionLanguages({});
     setCurrentExerciseAnsweredCount(0);
@@ -1338,6 +1390,7 @@ export function App() {
                 setCurrentExerciseAnsweredCount(0);
                 setHasCurrentExerciseResult(false);
                 setLastSavedAttemptId(null);
+                setIsMissingLettersCooldownIgnored(false);
                 setCurrentExerciseSessionId(createId('exercise-session'));
                 setGenerationSeed((seed) => seed + 1);
               }}
@@ -1658,7 +1711,37 @@ export function App() {
       if (!exercisePreview.prompt) {
         return (
           <Alert data-test="exercise_area__missing_letters_needs_words_alert" severity="info">
-            {t(interfaceLanguage, 'missingLettersNeedsWords')}
+            {missingLettersCooldownDetails ? (
+              <Stack spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+                <Typography sx={{ fontWeight: 750 }}>
+                  {t(interfaceLanguage, 'missingLettersNeedsWords')}
+                </Typography>
+                <Typography sx={{ fontSize: 14 }}>
+                  {getMissingLettersCooldownDetailsText({
+                    coolingCount: missingLettersCooldownDetails.coolingCount,
+                    interfaceLanguage,
+                    nextReviewAt: missingLettersCooldownDetails.nextReviewAt,
+                    totalCount: missingLettersCooldownDetails.totalCount,
+                  })}
+                </Typography>
+                <Button
+                  data-test="exercise_area__missing_letters_ignore_cooldown_button"
+                  onClick={() => {
+                    setIsMissingLettersCooldownIgnored(true);
+                    setAnsweredMissingLettersPromptKeys([]);
+                    setCompletedMissingLettersCardIds([]);
+                    setResultPromptHold(null);
+                    setGenerationSeed((seed) => seed + 1);
+                  }}
+                  size="small"
+                  variant="outlined"
+                >
+                  {getIgnoreCooldownButtonLabel(interfaceLanguage)}
+                </Button>
+              </Stack>
+            ) : (
+              t(interfaceLanguage, 'missingLettersNeedsWords')
+            )}
           </Alert>
         );
       }
@@ -3908,6 +3991,77 @@ function getRecentResultsByCardId({
     });
 
   return resultsByCardId;
+}
+
+function getMissingLettersCooldownDetailsText({
+  coolingCount,
+  interfaceLanguage,
+  nextReviewAt,
+  totalCount,
+}: {
+  coolingCount: number;
+  interfaceLanguage: SupportedLanguage;
+  nextReviewAt: string;
+  totalCount: number;
+}): string {
+  const availableAt = formatCooldownDate(nextReviewAt, interfaceLanguage);
+
+  if (interfaceLanguage === 'es') {
+    return `Todas las palabras disponibles estan en pausa por estadisticas. La primera volvera el ${availableAt}. En pausa: ${coolingCount} de ${totalCount}.`;
+  }
+
+  if (interfaceLanguage === 'uk') {
+    return `Усі доступні слова тимчасово на паузі за статистикою. Перше слово повернеться ${availableAt}. На паузі: ${coolingCount} з ${totalCount}.`;
+  }
+
+  if (interfaceLanguage === 'ru') {
+    return `Все доступные слова временно на паузе по статистике. Первое слово вернется ${availableAt}. На паузе: ${coolingCount} из ${totalCount}.`;
+  }
+
+  return `All available words are temporarily paused by practice statistics. The first word returns on ${availableAt}. Cooling down: ${coolingCount} of ${totalCount}.`;
+}
+
+function getIgnoreCooldownButtonLabel(interfaceLanguage: SupportedLanguage): string {
+  if (interfaceLanguage === 'es') {
+    return 'Quiero jugar de todos modos';
+  }
+
+  if (interfaceLanguage === 'uk') {
+    return 'Все одно хочу зіграти';
+  }
+
+  if (interfaceLanguage === 'ru') {
+    return 'Все равно хочу сыграть';
+  }
+
+  return 'Play anyway';
+}
+
+function formatCooldownDate(value: string, language: SupportedLanguage): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat(getDateLocale(language), {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
+}
+
+function getDateLocale(language: SupportedLanguage): string {
+  switch (language) {
+    case 'es':
+      return 'es-ES';
+    case 'uk':
+      return 'uk-UA';
+    case 'ru':
+      return 'ru-RU';
+    case 'en':
+    default:
+      return 'en-US';
+  }
 }
 
 function formatAttemptDate(value: string): string {
