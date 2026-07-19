@@ -148,16 +148,16 @@ export function AiConnectionPanel({
                   <Typography sx={{ fontSize: '0.88rem', fontWeight: 800 }}>
                     {option.label}
                   </Typography>
-                  <Typography
-                    sx={{
-                      color: 'text.secondary',
-                      fontFamily: 'monospace',
-                      fontSize: '0.72rem',
-                      lineHeight: 1.25,
-                    }}
-                  >
-                    {formatModelRatings(option, language)}
-                  </Typography>
+                  <Stack spacing={0.25}>
+                    <ModelRatingRow
+                      label={getSpeedLabel(language)}
+                      value={option.speedRating}
+                    />
+                    <ModelRatingRow
+                      label={getCostLabel(language)}
+                      value={option.costRating}
+                    />
+                  </Stack>
                 </Stack>
               </MenuItem>
             ))}
@@ -245,12 +245,34 @@ export function AiConnectionPanel({
                     >
                       {selectedModel.label}
                     </Typography>
-                    <Typography
+                    <Stack
                       data-test="ai_connection__selected_model_body"
+                      spacing={0.7}
                       sx={{ fontSize: '13px', fontWeight: 500, lineHeight: 1.35 }}
                     >
-                      {formatSelectedModelDetails(selectedModel, language)}
-                    </Typography>
+                      <Typography
+                        data-test="ai_connection__selected_model_description"
+                        sx={{ fontSize: '13px', fontWeight: 500, lineHeight: 1.35 }}
+                      >
+                        {selectedModel.descriptions[language]}
+                      </Typography>
+                      <Typography sx={{ fontSize: '13px', fontWeight: 500, lineHeight: 1.35 }}>
+                        {formatPriceLine(selectedModel, language)}
+                      </Typography>
+                      <Typography sx={{ fontSize: '13px', fontWeight: 500, lineHeight: 1.35 }}>
+                        {formatContextLine(selectedModel, language)}
+                      </Typography>
+                      <Stack spacing={0.35} sx={{ pt: 0.2 }}>
+                        <ModelRatingRow
+                          label={getSpeedLabel(language)}
+                          value={selectedModel.speedRating}
+                        />
+                        <ModelRatingRow
+                          label={getCostLabel(language)}
+                          value={selectedModel.costRating}
+                        />
+                      </Stack>
+                    </Stack>
                   </Stack>
                 ) : null}
                 <Typography
@@ -418,13 +440,86 @@ export function AiConnectionPanel({
   );
 }
 
-function formatModelRatings(
-  model: OpenRouterModelOption,
-  language: SupportedLanguage,
-): string {
-  return `${getSpeedLabel(language)} ${formatRating(model.speedRating)}  ${getCostLabel(
-    language,
-  )} ${formatRating(model.costRating)}`;
+const RATING_SEGMENTS = 10;
+
+function ModelRatingRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: number | undefined;
+}) {
+  return (
+    <Stack
+      alignItems="center"
+      data-test="ai_connection__model_rating_row"
+      direction="row"
+      spacing={0.65}
+      sx={{ minHeight: 14 }}
+    >
+      <Typography
+        component="span"
+        sx={{
+          color: 'text.secondary',
+          fontSize: '0.72rem',
+          fontWeight: 700,
+          lineHeight: 1,
+          minWidth: 42,
+        }}
+      >
+        {label}
+      </Typography>
+      <RatingGauge value={value} />
+      <Typography
+        component="span"
+        sx={{
+          color: 'text.secondary',
+          fontFamily: 'monospace',
+          fontSize: '0.7rem',
+          fontWeight: 700,
+          lineHeight: 1,
+          minWidth: 34,
+        }}
+      >
+        {formatRating(value)}
+      </Typography>
+    </Stack>
+  );
+}
+
+function RatingGauge({ value }: { value: number | undefined }) {
+  const filled = value === undefined ? 0 : Math.max(0, Math.min(10, Math.round(value)));
+
+  return (
+    <Box
+      aria-hidden="true"
+      data-test="ai_connection__model_rating_gauge"
+      sx={{
+        display: 'flex',
+        flexShrink: 0,
+        gap: '1px',
+        height: 13,
+        width: 29,
+      }}
+    >
+      {Array.from({ length: RATING_SEGMENTS }, (_, index) => (
+        <Box
+          component="span"
+          key={index}
+          sx={{
+            bgcolor:
+              index < filled
+                ? 'rgba(40, 73, 44, 0.9)'
+                : 'rgba(40, 73, 44, 0.18)',
+            borderRadius: '1px',
+            display: 'block',
+            height: '100%',
+            width: 2,
+          }}
+        />
+      ))}
+    </Box>
+  );
 }
 
 function formatRating(value: number | undefined): string {
@@ -432,21 +527,7 @@ function formatRating(value: number | undefined): string {
     return 'n/a';
   }
   const bounded = Math.max(0, Math.min(10, Math.round(value)));
-  return `${'|'.repeat(bounded)}${'-'.repeat(10 - bounded)} ${bounded}/10`;
-}
-
-function formatSelectedModelDetails(
-  model: OpenRouterModelOption,
-  language: SupportedLanguage,
-): string {
-  return [
-    model.description,
-    formatPriceLine(model, language),
-    formatContextLine(model, language),
-    formatModelRatings(model, language),
-  ]
-    .filter(Boolean)
-    .join(' ');
+  return `${bounded}/10`;
 }
 
 function formatPriceLine(

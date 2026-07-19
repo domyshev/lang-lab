@@ -279,6 +279,28 @@ describe('AiAssistantView connection', () => {
     expect(screen.getByTestId('ai_connection__openrouter_info_tooltip')).toBeInTheDocument();
   });
 
+  it('localizes selected model details and shows graphical rating gauges', async () => {
+    const user = userEvent.setup();
+    renderView({ language: 'ru' });
+
+    await user.hover(screen.getByTestId('ai_connection__openrouter_info_button'));
+
+    const tooltip = await screen.findByTestId('ai_connection__openrouter_info_tooltip');
+    const modelBody = within(tooltip).getByTestId('ai_connection__selected_model_body');
+    expect(within(tooltip).getByTestId('ai_connection__selected_model_description')).toHaveTextContent(
+      'Самая экономичная модель по умолчанию',
+    );
+    expect(modelBody).not.toHaveTextContent('Lowest-cost default model');
+    expect(modelBody).toHaveTextContent('Цена: $0.098 input / $0.196 output за 1M токенов.');
+    expect(modelBody).toHaveTextContent('Контекст: 1.05M токенов.');
+    expect(within(tooltip).getAllByTestId('ai_connection__model_rating_gauge')).toHaveLength(2);
+    expect(modelBody).toHaveTextContent('Скор');
+    expect(modelBody).toHaveTextContent('6/10');
+    expect(modelBody).toHaveTextContent('Эконом');
+    expect(modelBody).toHaveTextContent('10/10');
+    expect(modelBody).not.toHaveTextContent('||||||');
+  });
+
   it('allows selecting GPT without a built-in-key lock', async () => {
     const user = userEvent.setup();
     renderView({ language: 'ru' });

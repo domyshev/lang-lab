@@ -8,7 +8,7 @@ export const OPENROUTER_DEEPSEEK_MODEL_ID = 'deepseek/deepseek-v4-flash';
 export interface OpenRouterModelOption {
   contextTokens?: number;
   costRating?: number;
-  description: string;
+  descriptions: Record<'en' | 'es' | 'ru' | 'uk', string>;
   id: string;
   inputPricePerMillion?: number;
   label: string;
@@ -27,8 +27,12 @@ export const OPENROUTER_AVAILABLE_MODELS = [
     maxOutputTokens: 32768,
     speedRating: 7,
     costRating: 8,
-    description:
-      'Balanced DeepSeek chat model for structured card edits and learning-stat summaries.',
+    descriptions: {
+      en: 'Balanced DeepSeek chat model for structured card edits and learning-stat summaries.',
+      es: 'Modelo de chat DeepSeek equilibrado para editar tarjetas estructuradas y resumir estadisticas de aprendizaje.',
+      ru: 'Сбалансированная чат-модель DeepSeek для структурного редактирования карточек и сводок по учебной статистике.',
+      uk: 'Збалансована чат-модель DeepSeek для структурованого редагування карток і підсумків навчальної статистики.',
+    },
   },
   {
     id: OPENROUTER_DEEPSEEK_MODEL_ID,
@@ -38,8 +42,12 @@ export const OPENROUTER_AVAILABLE_MODELS = [
     contextTokens: 1048576,
     speedRating: 6,
     costRating: 10,
-    description:
-      'Lowest-cost default model with a very large context window; best for budget-sensitive card generation and background work.',
+    descriptions: {
+      en: 'Lowest-cost default model with a very large context window; best for budget-sensitive card generation and background work.',
+      es: 'Modelo predeterminado mas economico con una ventana de contexto muy grande; ideal para generar tarjetas con bajo coste y tareas en segundo plano.',
+      ru: 'Самая экономичная модель по умолчанию с очень большим контекстом; подходит для бюджетной генерации карточек и фоновых задач.',
+      uk: 'Найекономніша модель за замовчуванням з дуже великим контекстом; підходить для бюджетної генерації карток і фонових задач.',
+    },
   },
   {
     id: 'deepseek/deepseek-v4-pro',
@@ -50,8 +58,12 @@ export const OPENROUTER_AVAILABLE_MODELS = [
     maxOutputTokens: 384000,
     speedRating: 6,
     costRating: 8,
-    description:
-      'Higher-capacity DeepSeek model for deeper analysis and large responses when latency is less important.',
+    descriptions: {
+      en: 'Higher-capacity DeepSeek model for deeper analysis and large responses when latency is less important.',
+      es: 'Modelo DeepSeek de mayor capacidad para analisis mas profundo y respuestas grandes cuando la latencia importa menos.',
+      ru: 'Более мощная модель DeepSeek для глубокого анализа и больших ответов, когда задержка менее важна.',
+      uk: 'Потужніша модель DeepSeek для глибшого аналізу й великих відповідей, коли затримка менш важлива.',
+    },
   },
   {
     id: 'z-ai/glm-4.5',
@@ -62,16 +74,24 @@ export const OPENROUTER_AVAILABLE_MODELS = [
     maxOutputTokens: 98304,
     speedRating: 6,
     costRating: 5,
-    description:
-      'General Chinese model with tool support; useful as a secondary comparison model.',
+    descriptions: {
+      en: 'General Chinese model with tool support; useful as a secondary comparison model.',
+      es: 'Modelo chino general con soporte de herramientas; util como modelo secundario para comparar.',
+      ru: 'Универсальная китайская модель с поддержкой инструментов; полезна как запасной вариант для сравнения.',
+      uk: 'Універсальна китайська модель з підтримкою інструментів; корисна як запасний варіант для порівняння.',
+    },
   },
   {
     id: OPENROUTER_GPT_MODEL_ID,
     label: 'GPT-5.5',
     speedRating: undefined,
     costRating: undefined,
-    description:
-      'Existing ChatGPT option kept unchanged; check OpenRouter for live availability, price, and limits.',
+    descriptions: {
+      en: 'Existing ChatGPT option kept unchanged; check OpenRouter for live availability, price, and limits.',
+      es: 'Opcion ChatGPT existente sin cambios; consulta OpenRouter para disponibilidad, precio y limites actuales.',
+      ru: 'Существующая опция ChatGPT оставлена без изменений; актуальные цену, доступность и лимиты смотрите в OpenRouter.',
+      uk: 'Наявну опцію ChatGPT залишено без змін; актуальні ціну, доступність і ліміти дивіться в OpenRouter.',
+    },
   },
   {
     id: 'moonshotai/kimi-k2',
@@ -82,8 +102,12 @@ export const OPENROUTER_AVAILABLE_MODELS = [
     maxOutputTokens: 100352,
     speedRating: 6,
     costRating: 5,
-    description:
-      'Moonshot model with long-output tool workflows; better as a comparison than a default here.',
+    descriptions: {
+      en: 'Moonshot model with long-output tool workflows; better as a comparison than a default here.',
+      es: 'Modelo Moonshot para flujos con herramientas y salidas largas; aqui encaja mejor como comparacion que como predeterminado.',
+      ru: 'Модель Moonshot для tool-workflow и длинных ответов; здесь скорее вариант для сравнения, чем модель по умолчанию.',
+      uk: 'Модель Moonshot для tool-workflow і довгих відповідей; тут радше варіант для порівняння, ніж модель за замовчуванням.',
+    },
   },
   {
     id: 'qwen/qwen3.6-35b-a3b',
@@ -94,8 +118,12 @@ export const OPENROUTER_AVAILABLE_MODELS = [
     maxOutputTokens: 262144,
     speedRating: 9,
     costRating: 8,
-    description:
-      'Fast interactive candidate for card CRUD and topic-set generation with enough context for most libraries.',
+    descriptions: {
+      en: 'Fast interactive candidate for card CRUD and topic-set generation with enough context for most libraries.',
+      es: 'Candidata rapida para CRUD de tarjetas y generacion de conjuntos por tema, con contexto suficiente para la mayoria de bibliotecas.',
+      ru: 'Быстрый интерактивный вариант для CRUD карточек и генерации тематических наборов с контекстом, достаточным для большинства библиотек.',
+      uk: 'Швидкий інтерактивний варіант для CRUD карток і генерації тематичних наборів з контекстом, достатнім для більшості бібліотек.',
+    },
   },
   {
     id: 'qwen/qwen3.6-flash',
@@ -106,8 +134,12 @@ export const OPENROUTER_AVAILABLE_MODELS = [
     maxOutputTokens: 65536,
     speedRating: 8,
     costRating: 8,
-    description:
-      'Fast Qwen option with a 1M context window; good for responsive card generation and larger prompts.',
+    descriptions: {
+      en: 'Fast Qwen option with a 1M context window; good for responsive card generation and larger prompts.',
+      es: 'Opcion Qwen rapida con contexto de 1M; buena para generar tarjetas con respuesta agil y prompts grandes.',
+      ru: 'Быстрый вариант Qwen с контекстом 1M; хорош для отзывчивой генерации карточек и больших промптов.',
+      uk: 'Швидкий варіант Qwen з контекстом 1M; добрий для чуйної генерації карток і великих промптів.',
+    },
   },
   {
     id: 'qwen/qwen3.7-max',
@@ -118,8 +150,12 @@ export const OPENROUTER_AVAILABLE_MODELS = [
     maxOutputTokens: 65536,
     speedRating: 6,
     costRating: 3,
-    description:
-      'Premium Qwen option for quality checks and nuanced language work when cost is secondary.',
+    descriptions: {
+      en: 'Premium Qwen option for quality checks and nuanced language work when cost is secondary.',
+      es: 'Opcion premium de Qwen para revisar calidad y trabajo linguistico fino cuando el coste es secundario.',
+      ru: 'Премиальный вариант Qwen для проверки качества и тонкой языковой работы, когда стоимость не главное.',
+      uk: 'Преміальний варіант Qwen для перевірки якості й тонкої мовної роботи, коли вартість не головна.',
+    },
   },
   {
     id: 'qwen/qwen3.7-plus',
@@ -130,8 +166,12 @@ export const OPENROUTER_AVAILABLE_MODELS = [
     maxOutputTokens: 65536,
     speedRating: 7,
     costRating: 7,
-    description:
-      'Strong balanced Qwen model for high-quality translations, examples, and learning recommendations.',
+    descriptions: {
+      en: 'Strong balanced Qwen model for high-quality translations, examples, and learning recommendations.',
+      es: 'Modelo Qwen potente y equilibrado para traducciones de calidad, ejemplos y recomendaciones de aprendizaje.',
+      ru: 'Сильная сбалансированная модель Qwen для качественных переводов, примеров и учебных рекомендаций.',
+      uk: 'Сильна збалансована модель Qwen для якісних перекладів, прикладів і навчальних рекомендацій.',
+    },
   },
 ] as const satisfies readonly OpenRouterModelOption[];
 export type OpenRouterModelId = (typeof OPENROUTER_AVAILABLE_MODELS)[number]['id'];
