@@ -2,34 +2,59 @@
 #
 # Prerequisites:
 #   1. Add a self-hosted runner on the target server (Settings → Actions → Runners)
-#   2. Create /opt/lang-lab/data on the server for persistent database storage
+#   2. Create /opt/lang-lab/data on the server for production database storage
+#      and /opt/lang-lab-release/data for the release database storage
 #   3. Ensure the runner user has Docker permissions (docker group membership)
 #
 # Environment variables (set as repository secrets or variables):
-#   DEPLOY_DATA_DIR  - path to the data directory on the server (default: /opt/lang-lab/data)
-#   DEPLOY_PORT      - host port to expose (default: 8090)
+#   DEPLOY_DATA_DIR          - production data directory (default: /opt/lang-lab/data)
+#   DEPLOY_PORT              - production host port (default: 8090)
+#   DEPLOY_RELEASE_DATA_DIR  - release data directory (default: /opt/lang-lab-release/data)
+#   DEPLOY_RELEASE_PORT      - release host port (default: 8091)
 #   LANG_LAB_ADMIN_TOKEN - repository secret for the Admin backup UI/API
 
 name: Docker Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, release]
 
 jobs:
   deploy:
     runs-on: self-hosted
 
     env:
-      IMAGE_NAME: lang-lab
-      CONTAINER_NAME: lang-lab
-      DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '8090' }}
-      DEPLOY_DATA_DIR: ${{ vars.DEPLOY_DATA_DIR || '/opt/lang-lab/data' }}
       LANG_LAB_ADMIN_TOKEN: ${{ secrets.LANG_LAB_ADMIN_TOKEN }}
+      MAIN_CONTAINER_NAME: ${{ vars.DEPLOY_CONTAINER_NAME || 'lang-lab' }}
+      MAIN_DATA_DIR: ${{ vars.DEPLOY_DATA_DIR || '/opt/lang-lab/data' }}
+      MAIN_IMAGE_NAME: ${{ vars.DEPLOY_IMAGE_NAME || 'lang-lab' }}
+      MAIN_PORT: ${{ vars.DEPLOY_PORT || '8090' }}
+      RELEASE_CONTAINER_NAME: ${{ vars.DEPLOY_RELEASE_CONTAINER_NAME || 'lang-lab-release' }}
+      RELEASE_DATA_DIR: ${{ vars.DEPLOY_RELEASE_DATA_DIR || '/opt/lang-lab-release/data' }}
+      RELEASE_IMAGE_NAME: ${{ vars.DEPLOY_RELEASE_IMAGE_NAME || 'lang-lab-release' }}
+      RELEASE_PORT: ${{ vars.DEPLOY_RELEASE_PORT || '8091' }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Resolve deploy target
+        run: |
+          if [ "${GITHUB_REF_NAME}" = "release" ]; then
+            {
+              echo "IMAGE_NAME=${RELEASE_IMAGE_NAME}"
+              echo "CONTAINER_NAME=${RELEASE_CONTAINER_NAME}"
+              echo "DEPLOY_PORT=${RELEASE_PORT}"
+              echo "DEPLOY_DATA_DIR=${RELEASE_DATA_DIR}"
+            } >> "$GITHUB_ENV"
+          else
+            {
+              echo "IMAGE_NAME=${MAIN_IMAGE_NAME}"
+              echo "CONTAINER_NAME=${MAIN_CONTAINER_NAME}"
+              echo "DEPLOY_PORT=${MAIN_PORT}"
+              echo "DEPLOY_DATA_DIR=${MAIN_DATA_DIR}"
+            } >> "$GITHUB_ENV"
+          fi
 
       - name: Build Docker image
         run: |

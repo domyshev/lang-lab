@@ -189,12 +189,22 @@ docker run -d -p 8090:8090 \
 
 1. Install and register a [self-hosted GitHub Actions runner](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/adding-self-hosted-runners) on the target server.
 2. Ensure the runner user has Docker permissions (add to the `docker` group).
-3. Create the data directory on the server (default: `/opt/lang-lab/data`).
-4. Push to the `main` branch — the `.github/workflows/docker-deploy.yml` workflow will build and deploy automatically.
+3. Create the data directories on the server:
+   - production: `/opt/lang-lab/data`
+   - release: `/opt/lang-lab-release/data`
+4. Push to the `main` branch to deploy production, or to the `release` branch to deploy the release environment. The `.github/workflows/docker-deploy.yml` workflow will build and deploy automatically.
 
 Optional repository variables for customisation:
 - `DEPLOY_DATA_DIR` — path to the data directory on the server (default: `/opt/lang-lab/data`)
 - `DEPLOY_PORT` — host port to expose (default: `8090`)
+- `DEPLOY_CONTAINER_NAME` — production Docker container name (default: `lang-lab`)
+- `DEPLOY_IMAGE_NAME` — production Docker image name (default: `lang-lab`)
+- `DEPLOY_RELEASE_DATA_DIR` — release data directory on the server (default: `/opt/lang-lab-release/data`)
+- `DEPLOY_RELEASE_PORT` — release host port to expose (default: `8091`)
+- `DEPLOY_RELEASE_CONTAINER_NAME` — release Docker container name (default: `lang-lab-release`)
+- `DEPLOY_RELEASE_IMAGE_NAME` — release Docker image name (default: `lang-lab-release`)
+
+Production and release must use different ports, containers, and data directories so one deployment does not overwrite the other. For example, route `lang.domyshev.com` to `http://localhost:8090` and `lang-release.domyshev.com` to `http://localhost:8091` in the server proxy or Cloudflare Tunnel ingress.
 
 ## Testing
 
