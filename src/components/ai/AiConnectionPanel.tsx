@@ -1,5 +1,4 @@
 import { RefObject, useEffect, useState } from 'react';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -31,7 +30,6 @@ import {
 } from '@mui/material';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
-import { OPENROUTER_GPT_MODEL_ID } from '../../services/openRouterKeyStorage';
 
 interface AiConnectionPanelProps {
   apiKey: string;
@@ -41,13 +39,10 @@ interface AiConnectionPanelProps {
   missingKey: boolean;
   modelId: string;
   modelOptions: ReadonlyArray<{ id: string; label: string }>;
-  isRestoreTrialAvailable: boolean;
   isSaveDisabled: boolean;
-  isTrialKeySelected: boolean;
   onApiKeyChange: (value: string) => void;
   onDelete: () => void;
   onModelChange: (value: string) => void;
-  onRestoreTrial: () => void;
   onSave: () => void;
   onToggleVisibility: () => void;
 }
@@ -62,13 +57,10 @@ export function AiConnectionPanel({
   missingKey,
   modelId,
   modelOptions,
-  isRestoreTrialAvailable,
   isSaveDisabled,
-  isTrialKeySelected,
   onApiKeyChange,
   onDelete,
   onModelChange,
-  onRestoreTrial,
   onSave,
   onToggleVisibility,
 }: AiConnectionPanelProps) {
@@ -135,140 +127,19 @@ export function AiConnectionPanel({
                 setIsSettingsOpen(true);
                 return;
               }
-              if (isTrialKeySelected && value === OPENROUTER_GPT_MODEL_ID) {
-                return;
-              }
               onModelChange(value);
             }}
             value={modelId}
           >
-            {modelOptions.map((option) => {
-              const isLocked = isTrialKeySelected && option.id === OPENROUTER_GPT_MODEL_ID;
-
-              return (
-                <MenuItem
-                  data-test={`ai_connection__model_option__${option.id}`}
-                  disabled={isLocked}
-                  key={option.id}
-                  sx={
-                    isLocked
-                      ? {
-                          cursor: 'not-allowed',
-                          opacity: 0.46,
-                          pointerEvents: 'auto',
-                          '&.Mui-disabled': {
-                            opacity: 0.46,
-                            pointerEvents: 'auto',
-                          },
-                        }
-                      : undefined
-                  }
-                  value={option.id}
-                >
-                  {isLocked ? (
-                    <Tooltip
-                      arrow
-                      placement="left"
-                      slotProps={{
-                        arrow: {
-                          sx: {
-                            color: (theme) =>
-                              theme.palette.mode === 'dark'
-                                ? 'rgba(29, 26, 43, 0.98)'
-                                : 'rgba(255, 255, 255, 0.98)',
-                          },
-                        },
-                        popper: {
-                          ...({
-                            'data-test': 'ai_connection__locked_model_tooltip_popper',
-                          } as Record<string, string>),
-                          modifiers: [
-                            {
-                              name: 'flip',
-                              enabled: false,
-                            },
-                          ],
-                        },
-                        tooltip: {
-                          ...({
-                            'data-test': 'ai_connection__locked_model_tooltip',
-                          } as Record<string, string>),
-                          sx: {
-                            bgcolor: (theme) =>
-                              theme.palette.mode === 'dark'
-                                ? 'rgba(29, 26, 43, 0.98)'
-                                : 'rgba(255, 255, 255, 0.98)',
-                            border: (theme) =>
-                              theme.palette.mode === 'dark'
-                                ? '1px solid rgba(239, 210, 116, 0.34)'
-                                : '1px solid rgba(166, 113, 216, 0.24)',
-                            borderRadius: 2.5,
-                            boxShadow:
-                              '0 18px 38px rgba(67, 45, 103, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.48) inset',
-                            color: (theme) =>
-                              theme.palette.mode === 'dark' ? '#f9f0ff' : '#33402d',
-                            fontSize: '14px',
-                            maxWidth: 280,
-                            px: 1.75,
-                            py: 1.25,
-                          },
-                        },
-                      }}
-                      title={
-                        <Stack spacing={0.75}>
-                          <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
-                            <Box
-                              aria-hidden="true"
-                              data-test="ai_connection__locked_model_tooltip_badge"
-                              sx={{
-                                alignItems: 'center',
-                                background:
-                                  'linear-gradient(135deg, #fff0a8 0%, #f0dcff 100%)',
-                                border: '1px solid rgba(128, 78, 204, 0.22)',
-                                borderRadius: 999,
-                                color: '#6845b8',
-                                display: 'inline-flex',
-                                fontSize: 11,
-                                fontWeight: 850,
-                                gap: 0.35,
-                                letterSpacing: '0.02em',
-                                px: 0.9,
-                                py: 0.25,
-                                textTransform: 'uppercase',
-                              }}
-                            >
-                              <AutoAwesomeIcon sx={{ fontSize: 13 }} />
-                              OpenRouter
-                            </Box>
-                          </Stack>
-                          <Typography
-                            data-test="ai_connection__locked_model_tooltip_body"
-                            sx={{
-                              color: (theme) =>
-                                theme.palette.mode === 'dark' ? '#efe5ff' : '#4b5745',
-                              fontSize: '14px',
-                              fontWeight: 500,
-                              lineHeight: 1.35,
-                            }}
-                          >
-                            {t(language, 'aiModelRequiresOwnKey')}
-                          </Typography>
-                        </Stack>
-                      }
-                    >
-                      <Box
-                        data-test={`ai_connection__model_option__${option.id}__locked_content`}
-                        sx={{ pointerEvents: 'auto', width: '100%' }}
-                      >
-                        {option.label}
-                      </Box>
-                    </Tooltip>
-                  ) : (
-                    option.label
-                  )}
-                </MenuItem>
-              );
-            })}
+            {modelOptions.map((option) => (
+              <MenuItem
+                data-test={`ai_connection__model_option__${option.id}`}
+                key={option.id}
+                value={option.id}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
             <Divider />
             <MenuItem
               data-test="ai_connection__settings_option"
@@ -479,15 +350,6 @@ export function AiConnectionPanel({
                   },
                 }}
               />
-              {isTrialKeySelected && (
-                <Alert
-                  data-test="ai_connection__trial_key_notice"
-                  severity="info"
-                  sx={{ py: 0.5 }}
-                >
-                  {t(language, 'aiBuiltInKeyNotice')}
-                </Alert>
-              )}
               <Alert data-test="ai_connection__storage_warning" severity="warning" sx={{ py: 0.5 }}>
                 {t(language, 'aiLocalKeyWarning')}
               </Alert>
@@ -499,19 +361,11 @@ export function AiConnectionPanel({
               alignItems: 'center',
               flexWrap: 'wrap',
               gap: 1,
-              justifyContent: 'space-between',
+              justifyContent: 'flex-end',
               px: 3,
               pb: 2.5,
             }}
           >
-            <Button
-              data-test="ai_connection__restore_trial_button"
-              disabled={!isRestoreTrialAvailable}
-              onClick={onRestoreTrial}
-              variant="outlined"
-            >
-              {t(language, 'aiRestoreTrialKey')}
-            </Button>
             <Button
               data-test="ai_connection__save_button"
               disabled={isSaveDisabled}
@@ -540,10 +394,10 @@ function getOpenRouterInfoLabel(language: SupportedLanguage): string {
 
 function getOpenRouterInfoText(language: SupportedLanguage): string {
   const texts: Record<SupportedLanguage, string> = {
-    en: 'OpenRouter is the gateway Language Lab uses to send chat requests to the selected model. You can use the built-in limited key or save your own key in the connection settings.',
-    es: 'OpenRouter es la puerta que Language Lab usa para enviar solicitudes del chat al modelo elegido. Puedes usar la clave integrada limitada o guardar tu propia clave en los ajustes.',
-    ru: 'OpenRouter - это шлюз, через который Language Lab отправляет запросы чата в выбранную модель. Можно пользоваться встроенным ключом с лимитом или сохранить свой ключ в настройках подключения.',
-    uk: 'OpenRouter - це шлюз, через який Language Lab надсилає запити чату до вибраної моделі. Можна користуватися вбудованим ключем з лімітом або зберегти власний ключ у налаштуваннях.',
+    en: 'OpenRouter is the gateway Language Lab uses to send chat requests to the selected model. Save your own key in the connection settings before using the assistant.',
+    es: 'OpenRouter es la puerta que Language Lab usa para enviar solicitudes del chat al modelo elegido. Guarda tu propia clave en los ajustes antes de usar el asistente.',
+    ru: 'OpenRouter - это шлюз, через который Language Lab отправляет запросы чата в выбранную модель. Сохраните свой ключ в настройках подключения перед использованием ассистента.',
+    uk: 'OpenRouter - це шлюз, через який Language Lab надсилає запити чату до вибраної моделі. Збережіть власний ключ у налаштуваннях підключення перед використанням асистента.',
   };
 
   return texts[language];

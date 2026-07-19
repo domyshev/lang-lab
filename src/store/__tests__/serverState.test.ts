@@ -17,6 +17,7 @@ describe('server state bridge', () => {
         assistantId: 'greenPower',
         complementaryLanguages: defaultComplementaryLanguages,
         interfaceLanguage: 'ru',
+        openRouterApiKey: 'sk-or-server-user',
         practiceSettings: defaultPracticeSettings,
         targetLanguage: 'es',
         worldId: 'starTrek',
@@ -28,6 +29,7 @@ describe('server state bridge', () => {
 
     expect(store.getState().app.assistantId).toBe('greenPower');
     expect(store.getState().app.worldId).toBe('starTrek');
+    expect(store.getState().app.openRouterApiKey).toBe('sk-or-server-user');
     expect(store.getState().app.interfaceLanguage).toBe('ru');
     expect(store.getState().app.targetLanguage).toBe('es');
   });

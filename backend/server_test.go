@@ -67,6 +67,16 @@ func TestStateRoundTripPersistsNormalizedSQLiteEntities(t *testing.T) {
 	assertTableCount(t, db, "attempt_correctness", 1)
 	assertTableCount(t, db, "attempt_hints_used", 1)
 	assertTableCount(t, db, "card_stats", 1)
+
+	var storedOpenRouterAPIKey string
+	if err := db.QueryRow(
+		`SELECT open_router_api_key FROM app_settings`,
+	).Scan(&storedOpenRouterAPIKey); err != nil {
+		t.Fatalf("load open router api key: %v", err)
+	}
+	if storedOpenRouterAPIKey != "sk-or-server-user" {
+		t.Fatalf("expected stored open router api key, got %q", storedOpenRouterAPIKey)
+	}
 }
 
 func TestStateRequiresApiKey(t *testing.T) {
@@ -415,9 +425,12 @@ func intFromJSONNumber(t *testing.T, value any) int {
 func sampleState() map[string]any {
 	return map[string]any{
 		"settings": map[string]any{
+			"assistantId":       "greenPower",
 			"interfaceLanguage": "ru",
-			"targetLanguage":    "en",
+			"openRouterApiKey":  "sk-or-server-user",
 			"selectedCardSetId": "set-travel",
+			"targetLanguage":    "en",
+			"worldId":           "starTrek",
 			"playerProfile": map[string]any{
 				"displayName": "Ilya",
 				"isAnonymous": false,

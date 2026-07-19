@@ -12,14 +12,13 @@ import {
   DEFAULT_OPENROUTER_MODEL_ID,
   OPENROUTER_KEY_STORAGE_KEY,
   OPENROUTER_MODEL_STORAGE_KEY,
-  OPENROUTER_TRIAL_KEY,
-  OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY,
   saveOpenRouterKey,
 } from '../../services/openRouterKeyStorage';
 import {
   appendAiMessage,
   stageAiOperation,
 } from '../../store/aiAssistantSlice';
+import { setOpenRouterApiKey } from '../../store/appSlice';
 import { saveAttempt } from '../../store/attemptsSlice';
 import { recordAttemptStats } from '../../store/statsSlice';
 import { rootReducer } from '../../store/store';
@@ -224,8 +223,9 @@ describe('AiAssistantView connection', () => {
 
     expect(screen.getByRole('dialog', { name: 'Connection settings' })).toBeInTheDocument();
     expect(screen.getByLabelText('OpenRouter API key')).toHaveAttribute('type', 'password');
-    expect(screen.getByLabelText('OpenRouter API key')).toHaveValue(OPENROUTER_TRIAL_KEY);
-    expect(screen.getByText(/built-in application key/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('OpenRouter API key')).toHaveValue('');
+    expect(screen.queryByText(/built-in application key/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Restore built-in key' })).not.toBeInTheDocument();
     expect(screen.getByText(/unencrypted in this browser/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save key' })).toBeDisabled();
   });
@@ -270,34 +270,17 @@ describe('AiAssistantView connection', () => {
     expect(screen.getByTestId('ai_connection__openrouter_info_tooltip')).toBeInTheDocument();
   });
 
-  it('locks GPT behind a custom key when the built-in key is selected', async () => {
+  it('allows selecting GPT without a built-in-key lock', async () => {
     const user = userEvent.setup();
     renderView({ language: 'ru' });
 
     await user.click(screen.getByLabelText('Модель OpenRouter'));
 
     const gptOption = screen.getByRole('option', { name: 'GPT-5.5' });
-    expect(gptOption).toHaveAttribute('aria-disabled', 'true');
-    expect(gptOption).toHaveStyle({ opacity: '0.46' });
+    expect(gptOption).not.toHaveAttribute('aria-disabled', 'true');
+    await user.click(gptOption);
 
-    await user.hover(
-      screen.getByTestId('ai_connection__model_option__openai/gpt-5.5__locked_content'),
-    );
-
-    const tooltip = await screen.findByTestId('ai_connection__locked_model_tooltip');
-    expect(
-      screen.getByTestId('ai_connection__locked_model_tooltip_popper'),
-    ).toHaveAttribute('data-popper-placement', 'left');
-    expect(
-      screen.getByTestId('ai_connection__locked_model_tooltip_body'),
-    ).toHaveStyle({ fontWeight: '500' });
-    expect(tooltip).toHaveTextContent(
-      'Введите свой ключ OpenRouter, чтобы открыть эту модель.',
-    );
-    expect(tooltip).toHaveStyle({
-      backgroundColor: 'rgba(255, 255, 255, 0.98)',
-      fontSize: '14px',
-    });
+    expect(screen.getByLabelText('Модель OpenRouter')).toHaveTextContent('GPT-5.5');
   });
 
   it('allows GPT when a custom key is selected', async () => {
@@ -317,7 +300,7 @@ describe('AiAssistantView connection', () => {
     );
   });
 
-  it('shows, saves, deletes, restores, and replaces the key through settings', async () => {
+  it('shows, saves, deletes, and replaces the key through settings', async () => {
     const user = userEvent.setup();
     renderView();
     await user.click(screen.getByLabelText('OpenRouter model'));
@@ -334,22 +317,33 @@ describe('AiAssistantView connection', () => {
 
     await user.click(screen.getByRole('button', { name: 'Save key' }));
     expect(window.localStorage.getItem(OPENROUTER_KEY_STORAGE_KEY)).toBe('sk-new-secret');
-    expect(window.localStorage.getItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY)).toBeNull();
 
     await user.click(screen.getByRole('button', { name: 'Delete key' }));
     expect(keyInput).toHaveValue('');
     expect(window.localStorage.getItem(OPENROUTER_KEY_STORAGE_KEY)).toBeNull();
-    expect(window.localStorage.getItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY)).toBe('true');
-
-    await user.click(screen.getByRole('button', { name: 'Restore built-in key' }));
-    expect(keyInput).toHaveValue(OPENROUTER_TRIAL_KEY);
-    expect(window.localStorage.getItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Restore built-in key' })).not.toBeInTheDocument();
 
     await user.clear(keyInput);
     await user.type(keyInput, 'sk-replacement');
     await user.click(screen.getByRole('button', { name: 'Save key' }));
     expect(window.localStorage.getItem(OPENROUTER_KEY_STORAGE_KEY)).toBe('sk-replacement');
-    expect(window.localStorage.getItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY)).toBeNull();
+  });
+
+  it('restores the saved key when backend state updates after render', async () => {
+    const user = userEvent.setup();
+    const store = renderView();
+
+    act(() => {
+      store.dispatch(setOpenRouterApiKey('  sk-backend-user  '));
+    });
+
+    await user.click(screen.getByLabelText('OpenRouter model'));
+    await user.click(screen.getByRole('option', { name: 'Connection settings' }));
+
+    expect(screen.getByLabelText('OpenRouter API key')).toHaveValue(
+      'sk-backend-user',
+    );
+    expect(screen.getByRole('button', { name: 'Save key' })).toBeDisabled();
   });
 
   it('persists the selected model and passes it to the assistant service', async () => {
@@ -376,15 +370,7 @@ describe('AiAssistantView connection', () => {
   it('focuses the key input and skips the service when sending without a key', async () => {
     const user = userEvent.setup();
     renderView();
-    await user.click(screen.getByLabelText('OpenRouter model'));
-    await user.click(screen.getByRole('option', { name: 'Connection settings' }));
-    await user.click(screen.getByRole('button', { name: 'Delete key' }));
-    await user.click(screen.getByRole('button', { name: 'Close' }));
-    await waitFor(() =>
-      expect(
-        screen.queryByRole('dialog', { name: 'Connection settings' }),
-      ).not.toBeInTheDocument(),
-    );
+
     await user.type(screen.getByLabelText('Message the AI assistant'), 'Help me study');
     await user.click(screen.getByRole('button', { name: 'Send message' }));
 

@@ -403,14 +403,6 @@ export function AppShell({
               sx={{ minWidth: '0 !important' }}
             />
             <Tab
-              data-test="app_shell__tab__admin"
-              value="admin"
-              icon={<VpnKeyOutlinedIcon data-test="app_shell__tab_icon__admin" />}
-              iconPosition="start"
-              label={getAdminTabLabel(interfaceLanguage)}
-              sx={{ minWidth: '0 !important' }}
-            />
-            <Tab
               aria-label={t(interfaceLanguage, 'gameHelpTitle')}
               data-test="app_shell__tab__help"
               icon={<HelpOutlineIcon data-test="app_shell__tab_icon__help" />}
@@ -491,7 +483,7 @@ export function AppShell({
               minWidth: 0,
             }}
           >
-            <LanguageSelectors />
+            <LanguageSelectors onAdminOpen={() => onNavigate?.('admin')} />
           </Box>
         </Toolbar>
       </AppBar>
@@ -2940,10 +2932,5 @@ const visibleTabSections: AppShellSection[] = [
   'chat',
   'cards',
   'statistics',
-  'admin',
   'help',
 ];
-
-function getAdminTabLabel(language: SupportedLanguage): string {
-  return language === 'ru' || language === 'uk' ? 'Админ' : 'Admin';
-}

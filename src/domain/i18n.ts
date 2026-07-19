@@ -48,23 +48,19 @@ type I18nKey =
   | 'agentsTitle'
   | 'agentsOpenRouterIntro'
   | 'agentsOpenRouterIntroSuffix'
-  | 'agentsTrialKeyNotice'
   | 'agentsCapabilitiesTitle'
   | 'agentsAnalyzeStatsCapability'
   | 'agentsVocabularyCapability'
   | 'agentsRollbackNotice'
   | 'agentsIntroCoachmarkTitle'
   | 'aiAssistantTitle'
-  | 'aiBuiltInKeyNotice'
   | 'aiConnectionTitle'
   | 'aiConnectionSettings'
   | 'aiApiKeyLabel'
   | 'aiModelLabel'
-  | 'aiModelRequiresOwnKey'
   | 'aiShowKey'
   | 'aiHideKey'
   | 'aiSaveKey'
-  | 'aiRestoreTrialKey'
   | 'aiDeleteKey'
   | 'aiLocalKeyWarning'
   | 'aiChatTitle'
@@ -352,8 +348,6 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
       'You can add your own',
     agentsOpenRouterIntroSuffix:
       ' key to run agent features through your own quota.',
-    agentsTrialKeyNotice:
-      'A default trial Open Router key is available with a limited quota. When the quota is reached, Agents features will be unavailable until you enter your own key.',
     agentsCapabilitiesTitle: 'What agents can help with',
     agentsAnalyzeStatsCapability: 'Analyze statistics and create new card sets.',
     agentsVocabularyCapability: 'Create and add vocabulary.',
@@ -361,17 +355,13 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
       'Everything created by agents will be marked as agent-created, and the agent work history will keep a matching record so changes can be rolled back. No worries, the agent will not spoil your work :)',
     agentsIntroCoachmarkTitle: 'Near plans',
     aiAssistantTitle: 'AI Assistant',
-    aiBuiltInKeyNotice:
-      'The built-in application key is selected with a limited quota of about 5 EUR.',
     aiConnectionTitle: 'Connection',
     aiConnectionSettings: 'Connection settings',
     aiApiKeyLabel: 'OpenRouter API key',
     aiModelLabel: 'OpenRouter model',
-    aiModelRequiresOwnKey: 'Enter your own OpenRouter key to unlock this model.',
     aiShowKey: 'Show API key',
     aiHideKey: 'Hide API key',
     aiSaveKey: 'Save key',
-    aiRestoreTrialKey: 'Restore built-in key',
     aiDeleteKey: 'Delete key',
     aiLocalKeyWarning:
       'Your key is stored locally and unencrypted in this browser. Use a restricted key and do not share this browser profile.',
@@ -704,8 +694,6 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
       'Пользователь может добавить свой ключ',
     agentsOpenRouterIntroSuffix:
       ', чтобы запускать агентские функции через свои лимиты.',
-    agentsTrialKeyNotice:
-      'По умолчанию доступен триальный ключ Open Router с ограниченным лимитом. Когда лимит будет достигнут, функции Агенты станут недоступны до ввода своего ключа.',
     agentsCapabilitiesTitle: 'Что позволяют агенты',
     agentsAnalyzeStatsCapability: 'Анализировать статистику и создавать новые наборы карточек.',
     agentsVocabularyCapability: 'Создавать и добавлять словарный запас.',
@@ -713,17 +701,13 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
       'Все, что создано агентами в приложении, будет помечено как созданное агентами, а в истории работы агента появится соответствующая запись. Это позволит откатить внесенные изменения. Не переживайте, агент не испортит ваши наработки :)',
     agentsIntroCoachmarkTitle: 'Ближайшие планы',
     aiAssistantTitle: 'AI помощник',
-    aiBuiltInKeyNotice:
-      'Выбран встроенный ключ приложения с лимитом примерно 5 евро.',
     aiConnectionTitle: 'Подключение',
     aiConnectionSettings: 'Настройки подключения',
     aiApiKeyLabel: 'API-ключ OpenRouter',
     aiModelLabel: 'Модель OpenRouter',
-    aiModelRequiresOwnKey: 'Введите свой ключ OpenRouter, чтобы открыть эту модель.',
     aiShowKey: 'Показать API-ключ',
     aiHideKey: 'Скрыть API-ключ',
     aiSaveKey: 'Сохранить ключ',
-    aiRestoreTrialKey: 'Восстановить встроенный ключ',
     aiDeleteKey: 'Удалить ключ',
     aiLocalKeyWarning:
       'Ключ хранится локально и без шифрования в этом браузере. Используйте ключ с ограничениями и не делитесь профилем браузера.',
@@ -1058,8 +1042,6 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
       'Puedes anadir tu propia clave de',
     agentsOpenRouterIntroSuffix:
       ' para ejecutar las funciones de agentes con tu propio limite.',
-    agentsTrialKeyNotice:
-      'Hay una clave de prueba de Open Router por defecto con limite reducido. Cuando se alcance el limite, las funciones de Agentes no estaran disponibles hasta que introduzcas tu propia clave.',
     agentsCapabilitiesTitle: 'Que pueden hacer los agentes',
     agentsAnalyzeStatsCapability: 'Analizar estadisticas y crear conjuntos de tarjetas nuevos.',
     agentsVocabularyCapability: 'Crear y anadir vocabulario.',
@@ -1067,18 +1049,13 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
       'Todo lo creado por agentes se marcara como creado por agentes, y el historial de trabajo guardara un registro correspondiente para poder deshacer los cambios. No te preocupes, el agente no estropeara tu trabajo :)',
     agentsIntroCoachmarkTitle: 'Planes cercanos',
     aiAssistantTitle: 'Asistente IA',
-    aiBuiltInKeyNotice:
-      'Esta seleccionada la clave integrada de la aplicacion con un limite aproximado de 5 EUR.',
     aiConnectionTitle: 'Conexion',
     aiConnectionSettings: 'Ajustes de conexion',
     aiApiKeyLabel: 'Clave API de OpenRouter',
     aiModelLabel: 'Modelo de OpenRouter',
-    aiModelRequiresOwnKey:
-      'Introduce tu propia clave de OpenRouter para desbloquear este modelo.',
     aiShowKey: 'Mostrar clave API',
     aiHideKey: 'Ocultar clave API',
     aiSaveKey: 'Guardar clave',
-    aiRestoreTrialKey: 'Restaurar clave integrada',
     aiDeleteKey: 'Eliminar clave',
     aiLocalKeyWarning:
       'Tu clave se guarda localmente y sin cifrar en este navegador. Usa una clave restringida y no compartas este perfil.',

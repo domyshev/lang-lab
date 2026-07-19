@@ -217,6 +217,8 @@ const appSlice = createSlice({
       if (action.payload.assistantId) {
         state.assistantId = action.payload.assistantId as AssistantId;
       }
+      state.openRouterApiKey =
+        action.payload.openRouterApiKey?.trim() || undefined;
       const playerProfile = action.payload.playerProfile ?? {
         displayName: undefined,
         isAnonymous: true,

@@ -30,13 +30,9 @@ import { t } from '../domain/i18n';
 import { AiAgentFailure, runAiAssistant } from '../services/aiAssistantAgent';
 import {
   OPENROUTER_AVAILABLE_MODELS,
-  OPENROUTER_GPT_MODEL_ID,
-  OPENROUTER_TRIAL_MODEL_ID,
-  isOpenRouterTrialKey,
   loadOpenRouterKey,
   loadOpenRouterModel,
   removeOpenRouterKey,
-  restoreOpenRouterTrialKey,
   saveOpenRouterModel,
   saveOpenRouterKey,
 } from '../services/openRouterKeyStorage';
@@ -118,6 +114,19 @@ export function AiAssistantView({
   }, []);
 
   useEffect(() => {
+    if (openRouterApiKey === undefined) {
+      return;
+    }
+
+    const restoredKey = openRouterApiKey.trim();
+    setApiKey(restoredKey);
+    setSavedApiKey(restoredKey);
+    if (restoredKey) {
+      setMissingKey(false);
+    }
+  }, [openRouterApiKey]);
+
+  useEffect(() => {
     if (!serverCredentials.apiKey || isChatSynced) {
       return;
     }
@@ -177,17 +186,6 @@ export function AiAssistantView({
 
     setIsChatExpanded(true);
   }, [openSignal]);
-
-  const isTrialKeySelected = isOpenRouterTrialKey(savedApiKey);
-
-  useEffect(() => {
-    if (!isTrialKeySelected || modelId !== OPENROUTER_GPT_MODEL_ID) {
-      return;
-    }
-
-    saveOpenRouterModel(OPENROUTER_TRIAL_MODEL_ID, keyStorageRef.current);
-    setModelId(OPENROUTER_TRIAL_MODEL_ID);
-  }, [isTrialKeySelected, modelId]);
 
   const sendPrompt = useCallback(
     async (rawPrompt: string) => {
@@ -492,9 +490,7 @@ export function AiAssistantView({
                 apiKey={apiKey}
                 inputRef={keyInputRef}
                 isKeyVisible={isKeyVisible}
-                isRestoreTrialAvailable={!isOpenRouterTrialKey(savedApiKey)}
                 isSaveDisabled={apiKey.trim() === savedApiKey.trim()}
-                isTrialKeySelected={isTrialKeySelected}
                 language={interfaceLanguage}
                 missingKey={missingKey}
                 modelId={modelId}
@@ -511,18 +507,8 @@ export function AiAssistantView({
                   setIsKeyVisible(false);
                 }}
                 onModelChange={(value) => {
-                  if (isTrialKeySelected && value === OPENROUTER_GPT_MODEL_ID) {
-                    return;
-                  }
                   saveOpenRouterModel(value, keyStorageRef.current);
                   setModelId(loadOpenRouterModel(keyStorageRef.current));
-                }}
-                onRestoreTrial={() => {
-                  restoreOpenRouterTrialKey(keyStorageRef.current);
-                  const storedKey = loadOpenRouterKey(keyStorageRef.current);
-                  setApiKey(storedKey);
-                  setSavedApiKey(storedKey);
-                  setMissingKey(false);
                 }}
                 onSave={() => {
                   saveOpenRouterKey(apiKey, keyStorageRef.current);
@@ -670,9 +656,7 @@ export function AiAssistantView({
                   apiKey={apiKey}
                   inputRef={keyInputRef}
                   isKeyVisible={isKeyVisible}
-                  isRestoreTrialAvailable={!isOpenRouterTrialKey(savedApiKey)}
                   isSaveDisabled={apiKey.trim() === savedApiKey.trim()}
-                  isTrialKeySelected={isTrialKeySelected}
                   language={interfaceLanguage}
                   missingKey={missingKey}
                   modelId={modelId}
@@ -689,18 +673,8 @@ export function AiAssistantView({
                     setIsKeyVisible(false);
                   }}
                   onModelChange={(value) => {
-                    if (isTrialKeySelected && value === OPENROUTER_GPT_MODEL_ID) {
-                      return;
-                    }
                     saveOpenRouterModel(value, keyStorageRef.current);
                     setModelId(loadOpenRouterModel(keyStorageRef.current));
-                  }}
-                  onRestoreTrial={() => {
-                    restoreOpenRouterTrialKey(keyStorageRef.current);
-                    const storedKey = loadOpenRouterKey(keyStorageRef.current);
-                    setApiKey(storedKey);
-                    setSavedApiKey(storedKey);
-                    setMissingKey(false);
                   }}
                   onSave={() => {
                     saveOpenRouterKey(apiKey, keyStorageRef.current);

@@ -55,7 +55,11 @@ import {
   worldIds,
 } from '../domain/worlds';
 
-export function LanguageSelectors() {
+export function LanguageSelectors({
+  onAdminOpen,
+}: {
+  onAdminOpen?: () => void;
+}) {
   const dispatch = useDispatch<AppDispatch>();
   const companionLabelId = useId();
   const interfaceLabelId = useId();
@@ -627,6 +631,33 @@ export function LanguageSelectors() {
             }
             sx={{ mt: '15px' }}
           />
+          {onAdminOpen && (
+            <Box
+              data-test="language_selectors__admin_menu_section"
+              sx={{
+                borderTop: '1px solid rgba(32, 48, 21, 0.14)',
+                mt: 1,
+                pt: 1,
+              }}
+            >
+              <MenuItem
+                data-test="language_selectors__admin_menu_item"
+                onClick={() => {
+                  setSettingsAnchor(null);
+                  onAdminOpen();
+                }}
+                sx={{
+                  borderRadius: 1,
+                  color: '#203015',
+                  fontWeight: 850,
+                  px: 1,
+                  py: 1,
+                }}
+              >
+                {getAdminMenuLabel(interfaceLanguage)}
+              </MenuItem>
+            </Box>
+          )}
         </Stack>
       </Menu>
     </Stack>
@@ -1399,4 +1430,8 @@ function WorldIcon({
       }}
     />
   );
+}
+
+function getAdminMenuLabel(language: SupportedLanguage): string {
+  return language === 'ru' || language === 'uk' ? 'Админ' : 'Admin';
 }

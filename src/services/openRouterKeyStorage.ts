@@ -1,11 +1,7 @@
 export const OPENROUTER_KEY_STORAGE_KEY =
   'language-crossword-lab:openrouter-api-key:v1';
-export const OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY =
-  'language-crossword-lab:openrouter-trial-key-disabled:v1';
 export const OPENROUTER_MODEL_STORAGE_KEY =
   'language-crossword-lab:openrouter-model:v1';
-export const OPENROUTER_TRIAL_KEY =
-  '***API_KEY_REMOVED***';
 export const OPENROUTER_GPT_MODEL_ID = 'openai/gpt-5.5';
 export const OPENROUTER_DEEPSEEK_MODEL_ID = 'deepseek/deepseek-v4-flash';
 export const OPENROUTER_AVAILABLE_MODELS = [
@@ -13,20 +9,11 @@ export const OPENROUTER_AVAILABLE_MODELS = [
   { id: OPENROUTER_DEEPSEEK_MODEL_ID, label: 'DeepSeek V4 Flash' },
 ] as const;
 export type OpenRouterModelId = (typeof OPENROUTER_AVAILABLE_MODELS)[number]['id'];
-export const OPENROUTER_TRIAL_MODEL_ID: OpenRouterModelId =
-  OPENROUTER_DEEPSEEK_MODEL_ID;
 export const DEFAULT_OPENROUTER_MODEL_ID: OpenRouterModelId =
   OPENROUTER_DEEPSEEK_MODEL_ID;
 
 export function loadOpenRouterKey(storage: Storage = window.localStorage): string {
-  const storedKey = storage.getItem(OPENROUTER_KEY_STORAGE_KEY)?.trim();
-  if (storedKey) {
-    return storedKey;
-  }
-  if (storage.getItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY) === 'true') {
-    return '';
-  }
-  return OPENROUTER_TRIAL_KEY;
+  return storage.getItem(OPENROUTER_KEY_STORAGE_KEY)?.trim() ?? '';
 }
 
 export function saveOpenRouterKey(
@@ -40,17 +27,10 @@ export function saveOpenRouterKey(
   }
 
   storage.setItem(OPENROUTER_KEY_STORAGE_KEY, trimmedValue);
-  storage.removeItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY);
 }
 
 export function removeOpenRouterKey(storage: Storage = window.localStorage) {
   storage.removeItem(OPENROUTER_KEY_STORAGE_KEY);
-  storage.setItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY, 'true');
-}
-
-export function restoreOpenRouterTrialKey(storage: Storage = window.localStorage) {
-  storage.removeItem(OPENROUTER_KEY_STORAGE_KEY);
-  storage.removeItem(OPENROUTER_TRIAL_KEY_DISABLED_STORAGE_KEY);
 }
 
 export function loadOpenRouterModel(
@@ -73,8 +53,4 @@ export function saveOpenRouterModel(
 
 export function isOpenRouterModelId(value: unknown): value is OpenRouterModelId {
   return OPENROUTER_AVAILABLE_MODELS.some(({ id }) => id === value);
-}
-
-export function isOpenRouterTrialKey(value: string): boolean {
-  return value.trim() === OPENROUTER_TRIAL_KEY;
 }
