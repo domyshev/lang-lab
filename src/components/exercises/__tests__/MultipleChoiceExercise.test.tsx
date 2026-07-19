@@ -75,6 +75,40 @@ describe('MultipleChoiceExercise', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('shows definition hints in companion language priority order', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MultipleChoiceExercise
+        complementaryLanguages={['es', 'ru']}
+        definitions={{
+          ru: 'Русское пояснение',
+          es: 'Descripcion en espanol',
+          uk: 'Українське пояснення',
+        }}
+        interfaceLanguage="ru"
+        prompt={prompt}
+        onAnswer={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    const definition = screen.getByTestId(
+      'multiple_choice_exercise__prompt_hint__airport__definition',
+    );
+    const switcher = screen.getByTestId(
+      'multiple_choice_exercise__prompt_hint__airport__definition_switcher',
+    );
+
+    expect(definition).toHaveTextContent('Descripcion en espanol');
+
+    await user.click(switcher);
+    expect(definition).toHaveTextContent('Русское пояснение');
+
+    await user.click(switcher);
+    expect(definition).toHaveTextContent('Українське пояснення');
+  });
+
   it('renders Ukrainian hints as ukr in games', () => {
     render(
       <MultipleChoiceExercise

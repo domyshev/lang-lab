@@ -88,10 +88,18 @@ export function TranslationHintRow({
     if (!definitions) {
       return [];
     }
-    return (Object.keys(definitions) as SupportedLanguage[]).filter(
+    const availableLanguages = (Object.keys(definitions) as SupportedLanguage[]).filter(
       (lang) => definitions[lang],
     );
-  }, [definitions]);
+    return [
+      ...preferredLanguages.filter((language) =>
+        availableLanguages.includes(language),
+      ),
+      ...availableLanguages.filter(
+        (language) => !preferredLanguages.includes(language),
+      ),
+    ];
+  }, [definitions, preferredLanguages]);
   const [activeDefinitionIndex, setActiveDefinitionIndex] = useState(0);
   const defsKeyRef = useRef('');
   const defsKey = definitionLanguages.join('|');
