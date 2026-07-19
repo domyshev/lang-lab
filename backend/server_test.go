@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	_ "modernc.org/sqlite"
 )
@@ -264,6 +265,105 @@ func TestAdminBackupsRequireAdminToken(t *testing.T) {
 	requestAdminJSON(t, protected, http.MethodGet, "/api/admin/backups", "wrong", nil, http.StatusUnauthorized)
 }
 
+func TestOpenRouterModelsRefreshesAndCachesLiveData(t *testing.T) {
+	upstreamCalls := 0
+	upstream := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/models" {
+			t.Fatalf("unexpected upstream path %q", request.URL.Path)
+		}
+		upstreamCalls++
+		writeJSON(response, http.StatusOK, map[string]any{
+			"data": []any{
+				map[string]any{
+					"id":             "deepseek/deepseek-v4-flash",
+					"context_length": 2048,
+					"pricing": map[string]any{
+						"prompt":     "0.000000111",
+						"completion": "0.000000222",
+					},
+					"top_provider": map[string]any{
+						"max_completion_tokens": 512,
+					},
+				},
+			},
+		})
+	}))
+	defer upstream.Close()
+
+	dbPath := filepath.Join(t.TempDir(), "language-lab.sqlite")
+	handler, err := NewHandler(Config{
+		DBPath:              dbPath,
+		OpenRouterModelsURL: upstream.URL + "/models",
+	})
+	if err != nil {
+		t.Fatalf("create handler: %v", err)
+	}
+	server := httptest.NewServer(handler)
+	defer server.Close()
+
+	first := requestJSON(t, server, http.MethodGet, "/api/openrouter/models", "", nil, http.StatusOK)
+	second := requestJSON(t, server, http.MethodGet, "/api/openrouter/models", "", nil, http.StatusOK)
+
+	if upstreamCalls != 1 {
+		t.Fatalf("expected one upstream request due to cache, got %d", upstreamCalls)
+	}
+	if first["source"] != "openrouter" || second["source"] != "openrouter" {
+		t.Fatalf("expected openrouter source, got first=%v second=%v", first["source"], second["source"])
+	}
+	cachedAt, err := time.Parse(time.RFC3339, first["cachedAt"].(string))
+	if err != nil {
+		t.Fatalf("parse cachedAt: %v", err)
+	}
+	expiresAt, err := time.Parse(time.RFC3339, first["expiresAt"].(string))
+	if err != nil {
+		t.Fatalf("parse expiresAt: %v", err)
+	}
+	if expiresAt.Sub(cachedAt) != openRouterModelsCacheTTL {
+		t.Fatalf("expected cache ttl %s, got %s", openRouterModelsCacheTTL, expiresAt.Sub(cachedAt))
+	}
+
+	model := findModelByID(t, first, "deepseek/deepseek-v4-flash")
+	if model["contextTokens"] != float64(2048) {
+		t.Fatalf("expected live context tokens, got %v", model["contextTokens"])
+	}
+	if model["maxOutputTokens"] != float64(512) {
+		t.Fatalf("expected live max output tokens, got %v", model["maxOutputTokens"])
+	}
+	if model["inputPricePerMillion"] != 0.111 {
+		t.Fatalf("expected live input price, got %v", model["inputPricePerMillion"])
+	}
+	if model["outputPricePerMillion"] != 0.222 {
+		t.Fatalf("expected live output price, got %v", model["outputPricePerMillion"])
+	}
+}
+
+func TestOpenRouterModelsFallbackWhenUpstreamFails(t *testing.T) {
+	upstream := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, _ *http.Request) {
+		writeJSON(response, http.StatusBadGateway, map[string]any{"error": "upstream unavailable"})
+	}))
+	defer upstream.Close()
+
+	dbPath := filepath.Join(t.TempDir(), "language-lab.sqlite")
+	handler, err := NewHandler(Config{
+		DBPath:              dbPath,
+		OpenRouterModelsURL: upstream.URL,
+	})
+	if err != nil {
+		t.Fatalf("create handler: %v", err)
+	}
+	server := httptest.NewServer(handler)
+	defer server.Close()
+
+	result := requestJSON(t, server, http.MethodGet, "/api/openrouter/models", "", nil, http.StatusOK)
+	if result["source"] != "fallback" {
+		t.Fatalf("expected fallback source, got %v", result["source"])
+	}
+	model := findModelByID(t, result, "deepseek/deepseek-v4-flash")
+	if model["contextTokens"] != float64(1048576) {
+		t.Fatalf("expected fallback context tokens, got %v", model["contextTokens"])
+	}
+}
+
 func newTestHTTPServer(t *testing.T) (*httptest.Server, string) {
 	t.Helper()
 
@@ -410,6 +510,26 @@ func assertJSONEqual(t *testing.T, actual any, expected any) {
 	if !bytes.Equal(actualJSON, expectedJSON) {
 		t.Fatalf("JSON mismatch\nactual:   %s\nexpected: %s", actualJSON, expectedJSON)
 	}
+}
+
+func findModelByID(t *testing.T, response map[string]any, id string) map[string]any {
+	t.Helper()
+
+	models, ok := response["models"].([]any)
+	if !ok {
+		t.Fatalf("expected models array, got %v", response["models"])
+	}
+	for _, item := range models {
+		model, ok := item.(map[string]any)
+		if !ok {
+			t.Fatalf("expected model object, got %T", item)
+		}
+		if model["id"] == id {
+			return model
+		}
+	}
+	t.Fatalf("model %q not found in %v", id, response["models"])
+	return nil
 }
 
 func intFromJSONNumber(t *testing.T, value any) int {

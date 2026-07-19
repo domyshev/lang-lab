@@ -31,6 +31,38 @@ vi.mock('../../services/aiAssistantAgent', async (importOriginal) => {
 
 const mockedRunAiAssistant = vi.mocked(runAiAssistant);
 const now = '2026-07-11T20:00:00.000Z';
+const openRouterModelsResponse = {
+  cachedAt: '2026-07-19T10:00:00Z',
+  expiresAt: '2026-07-19T14:00:00Z',
+  source: 'openrouter',
+  models: [
+    {
+      id: 'deepseek/deepseek-v4-flash',
+      label: 'DeepSeek V4 Flash',
+      inputPricePerMillion: 0.098,
+      outputPricePerMillion: 0.196,
+      contextTokens: 1048576,
+      speedRating: 6,
+      costRating: 10,
+      descriptions: {
+        en: 'Lowest-cost default model with a very large context window; best for budget-sensitive card generation and background work.',
+        es: 'Modelo predeterminado mas economico con una ventana de contexto muy grande; ideal para generar tarjetas con bajo coste y tareas en segundo plano.',
+        ru: 'Самая экономичная модель по умолчанию с очень большим контекстом; подходит для бюджетной генерации карточек и фоновых задач.',
+        uk: 'Найекономніша модель за замовчуванням з дуже великим контекстом; підходить для бюджетної генерації карток і фонових задач.',
+      },
+    },
+    {
+      id: 'openai/gpt-5.5',
+      label: 'GPT-5.5',
+      descriptions: {
+        en: 'Existing ChatGPT option kept unchanged; check OpenRouter for live availability, price, and limits.',
+        es: 'Opcion ChatGPT existente sin cambios; consulta OpenRouter para disponibilidad, precio y limites actuales.',
+        ru: 'Существующая опция ChatGPT оставлена без изменений; актуальные цену, доступность и лимиты смотрите в OpenRouter.',
+        uk: 'Наявну опцію ChatGPT залишено без змін; актуальні ціну, доступність і ліміти дивіться в OpenRouter.',
+      },
+    },
+  ],
+};
 
 function createOperation(id = 'operation-1'): PlannedAiOperation {
   return {
@@ -169,6 +201,15 @@ beforeEach(() => {
     configurable: true,
     value: createMemoryStorage(),
   });
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(openRouterModelsResponse), {
+        headers: { 'Content-Type': 'application/json' },
+        status: 200,
+      }),
+    ),
+  );
   window.localStorage.clear();
   mockedRunAiAssistant.mockReset();
 });
@@ -219,6 +260,12 @@ describe('AiAssistantView connection', () => {
     });
     expect(DEFAULT_OPENROUTER_MODEL_ID).toBe('deepseek/deepseek-v4-flash');
     await user.click(within(chatSummary).getByLabelText('OpenRouter model'));
+    expect(screen.getByRole('option', { name: /DeepSeek V4 Flash/ })).toHaveTextContent(
+      'Context: 1.05M',
+    );
+    expect(screen.getByRole('option', { name: /DeepSeek V4 Flash/ })).toHaveTextContent(
+      'Cost: $0.098/$0.196 per 1M',
+    );
     await user.click(screen.getByRole('option', { name: 'Connection settings' }));
 
     expect(screen.getByRole('dialog', { name: 'Connection settings' })).toBeInTheDocument();
@@ -294,9 +341,9 @@ describe('AiAssistantView connection', () => {
     expect(modelBody).toHaveTextContent('Цена: $0.098 input / $0.196 output за 1M токенов.');
     expect(modelBody).toHaveTextContent('Контекст: 1.05M токенов.');
     expect(within(tooltip).getAllByTestId('ai_connection__model_rating_gauge')).toHaveLength(2);
-    expect(modelBody).toHaveTextContent('Скор');
+    expect(modelBody).toHaveTextContent('Скорость');
     expect(modelBody).toHaveTextContent('6/10');
-    expect(modelBody).toHaveTextContent('Эконом');
+    expect(modelBody).toHaveTextContent('Экономичность');
     expect(modelBody).toHaveTextContent('10/10');
     expect(modelBody).not.toHaveTextContent('||||||');
   });
@@ -307,7 +354,7 @@ describe('AiAssistantView connection', () => {
 
     await user.click(screen.getByLabelText('Модель OpenRouter'));
 
-    const gptOption = screen.getByRole('option', { name: /GPT-5\.5/ });
+    const gptOption = await screen.findByRole('option', { name: /GPT-5\.5/ });
     expect(gptOption).not.toHaveAttribute('aria-disabled', 'true');
     await user.click(gptOption);
 
@@ -321,7 +368,7 @@ describe('AiAssistantView connection', () => {
 
     await user.click(screen.getByLabelText('OpenRouter model'));
 
-    const gptOption = screen.getByRole('option', { name: /GPT-5\.5/ });
+    const gptOption = await screen.findByRole('option', { name: /GPT-5\.5/ });
     expect(gptOption).not.toHaveAttribute('aria-disabled', 'true');
     await user.click(gptOption);
 
@@ -384,7 +431,7 @@ describe('AiAssistantView connection', () => {
     renderView();
 
     await user.click(screen.getByLabelText('OpenRouter model'));
-    await user.click(screen.getByRole('option', { name: /GPT-5\.5/ }));
+    await user.click(await screen.findByRole('option', { name: /GPT-5\.5/ }));
     expect(window.localStorage.getItem(OPENROUTER_MODEL_STORAGE_KEY)).toBe(
       'openai/gpt-5.5',
     );

@@ -6,6 +6,7 @@ import type { PracticeSettings } from '../domain/practiceOrdering';
 import type { CardStats } from '../domain/stats';
 import type { ComplementaryLanguages } from '../store/appSlice';
 import type { AiAssistantMessage } from '../store/aiAssistantSlice';
+import type { OpenRouterModelOption } from './openRouterKeyStorage';
 
 export const SERVER_API_KEY_STORAGE_KEY = 'language-crossword-lab:server-api-key';
 export const ADMIN_API_TOKEN_STORAGE_KEY =
@@ -77,6 +78,13 @@ export interface BackupFilePayload {
 export interface BackupListResponse {
   backups: BackupFilePayload[];
   settings: BackupSettingsPayload;
+}
+
+export interface OpenRouterModelsResponse {
+  cachedAt: string;
+  expiresAt: string;
+  models: OpenRouterModelOption[];
+  source: 'openrouter' | 'fallback';
 }
 
 export class ServerSyncError extends Error {
@@ -166,6 +174,18 @@ export async function saveChatMessages(input: {
     method: 'PUT',
   });
   await decodeResponse<{ ok: boolean }>(response);
+}
+
+export async function loadOpenRouterModels(input: {
+  endpoint: string;
+}): Promise<OpenRouterModelsResponse> {
+  const response = await fetch(
+    `${normalizeEndpoint(input.endpoint)}/api/openrouter/models`,
+    {
+      method: 'GET',
+    },
+  );
+  return decodeResponse<OpenRouterModelsResponse>(response);
 }
 
 export async function createServerUser(input: {

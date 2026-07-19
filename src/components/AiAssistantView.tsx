@@ -29,12 +29,13 @@ import {
 import { t } from '../domain/i18n';
 import { AiAgentFailure, runAiAssistant } from '../services/aiAssistantAgent';
 import {
-  OPENROUTER_AVAILABLE_MODELS,
+  OPENROUTER_FALLBACK_MODELS,
   loadOpenRouterKey,
   loadOpenRouterModel,
   removeOpenRouterKey,
   saveOpenRouterModel,
   saveOpenRouterKey,
+  type OpenRouterModelOption,
 } from '../services/openRouterKeyStorage';
 import { applyAiOperation, revertAiOperation } from '../store/aiAssistantActions';
 import {
@@ -48,6 +49,7 @@ import { setOpenRouterApiKey } from '../store/appSlice';
 import {
   loadServerCredentials,
   loadChatMessages,
+  loadOpenRouterModels,
   saveChatMessages,
 } from '../services/serverSyncClient';
 import { AppDispatch, RootState } from '../store/store';
@@ -92,6 +94,9 @@ export function AiAssistantView({
     openRouterApiKey ?? loadOpenRouterKey(keyStorageRef.current),
   );
   const [modelId, setModelId] = useState(() => loadOpenRouterModel(keyStorageRef.current));
+  const [modelOptions, setModelOptions] = useState<ReadonlyArray<OpenRouterModelOption>>(
+    OPENROUTER_FALLBACK_MODELS,
+  );
   const [draft, setDraft] = useState('');
   const [isKeyVisible, setIsKeyVisible] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
@@ -145,6 +150,24 @@ export function AiAssistantView({
       // Silently ignore server errors on chat load
     });
   }, [serverCredentials, dispatch, isChatSynced]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    loadOpenRouterModels({ endpoint: serverCredentials.endpoint })
+      .then((response) => {
+        if (!isCancelled && response.models.length > 0) {
+          setModelOptions(response.models);
+        }
+      })
+      .catch(() => {
+        // Keep the local fallback model list if the backend is unavailable.
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [serverCredentials.endpoint]);
 
   useEffect(() => {
     if (!serverCredentials.apiKey || messages.length === 0) {
@@ -391,6 +414,11 @@ export function AiAssistantView({
     return result;
   }, [blockedPreview, messages, stagedOperation]);
 
+  const selectableModelOptions = useMemo(
+    () => ensureSelectedModelOption(modelOptions, modelId),
+    [modelId, modelOptions],
+  );
+
   const handleRollback = (operation: AppliedAiOperation) => {
     const operationIndex = operations.findIndex(
       (candidate) => candidate.id === operation.id,
@@ -494,7 +522,7 @@ export function AiAssistantView({
                 language={interfaceLanguage}
                 missingKey={missingKey}
                 modelId={modelId}
-                modelOptions={OPENROUTER_AVAILABLE_MODELS}
+                modelOptions={selectableModelOptions}
                 onApiKeyChange={(value) => {
                   setApiKey(value);
                   if (value.trim()) setMissingKey(false);
@@ -660,7 +688,7 @@ export function AiAssistantView({
                   language={interfaceLanguage}
                   missingKey={missingKey}
                   modelId={modelId}
-                  modelOptions={OPENROUTER_AVAILABLE_MODELS}
+                  modelOptions={selectableModelOptions}
                   onApiKeyChange={(value) => {
                     setApiKey(value);
                     if (value.trim()) setMissingKey(false);
@@ -956,6 +984,29 @@ function hasNeighborText(lines: string[], index: number): boolean {
 
 function createUiId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function ensureSelectedModelOption(
+  options: ReadonlyArray<OpenRouterModelOption>,
+  modelId: string,
+): ReadonlyArray<OpenRouterModelOption> {
+  if (options.some((option) => option.id === modelId)) {
+    return options;
+  }
+
+  return [
+    ...options,
+    {
+      id: modelId,
+      label: modelId,
+      descriptions: {
+        en: 'Selected model. Live metadata is loading from the backend.',
+        es: 'Modelo seleccionado. Los metadatos se estan cargando desde el backend.',
+        ru: 'Выбранная модель. Метаданные загружаются с backend.',
+        uk: 'Вибрана модель. Метадані завантажуються з backend.',
+      },
+    },
+  ];
 }
 
 const unavailableStorage: Storage = {

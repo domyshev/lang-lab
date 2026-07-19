@@ -157,6 +157,26 @@ export function AiConnectionPanel({
                       label={getCostLabel(language)}
                       value={option.costRating}
                     />
+                    <Typography
+                      sx={{
+                        color: 'text.secondary',
+                        fontSize: '0.72rem',
+                        fontWeight: 650,
+                        lineHeight: 1.25,
+                      }}
+                    >
+                      {formatCompactContextLine(option, language)}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: 'text.secondary',
+                        fontSize: '0.72rem',
+                        fontWeight: 650,
+                        lineHeight: 1.25,
+                      }}
+                    >
+                      {formatCompactPriceLine(option, language)}
+                    </Typography>
                   </Stack>
                 </Stack>
               </MenuItem>
@@ -548,6 +568,24 @@ function formatPriceLine(
   );
 }
 
+function formatCompactPriceLine(
+  model: OpenRouterModelOption,
+  language: SupportedLanguage,
+): string {
+  if (
+    model.inputPricePerMillion === undefined ||
+    model.outputPricePerMillion === undefined
+  ) {
+    return getUnknownPriceText(language);
+  }
+
+  return getCompactPriceText(
+    language,
+    formatUsd(model.inputPricePerMillion),
+    formatUsd(model.outputPricePerMillion),
+  );
+}
+
 function formatContextLine(
   model: OpenRouterModelOption,
   language: SupportedLanguage,
@@ -562,6 +600,17 @@ function formatContextLine(
     : '';
 
   return `${getContextText(language, context)}${output}`;
+}
+
+function formatCompactContextLine(
+  model: OpenRouterModelOption,
+  language: SupportedLanguage,
+): string {
+  if (model.contextTokens === undefined) {
+    return getUnknownContextText(language);
+  }
+
+  return getCompactContextText(language, formatTokenCount(model.contextTokens));
 }
 
 function formatUsd(value: number): string {
@@ -585,8 +634,8 @@ function getSpeedLabel(language: SupportedLanguage): string {
   const labels: Record<SupportedLanguage, string> = {
     en: 'Speed',
     es: 'Vel',
-    ru: 'Скор',
-    uk: 'Швид',
+    ru: 'Скорость',
+    uk: 'Швидкість',
   };
 
   return labels[language];
@@ -594,10 +643,10 @@ function getSpeedLabel(language: SupportedLanguage): string {
 
 function getCostLabel(language: SupportedLanguage): string {
   const labels: Record<SupportedLanguage, string> = {
-    en: 'Value',
-    es: 'Ahorro',
-    ru: 'Эконом',
-    uk: 'Екон',
+    en: 'Cost efficiency',
+    es: 'Eficiencia',
+    ru: 'Экономичность',
+    uk: 'Економічність',
   };
 
   return labels[language];
@@ -613,6 +662,21 @@ function getPriceText(
     es: `Precio: ${inputPrice} entrada / ${outputPrice} salida por 1M tokens.`,
     ru: `Цена: ${inputPrice} input / ${outputPrice} output за 1M токенов.`,
     uk: `Ціна: ${inputPrice} input / ${outputPrice} output за 1M токенів.`,
+  };
+
+  return texts[language];
+}
+
+function getCompactPriceText(
+  language: SupportedLanguage,
+  inputPrice: string,
+  outputPrice: string,
+): string {
+  const texts: Record<SupportedLanguage, string> = {
+    en: `Cost: ${inputPrice}/${outputPrice} per 1M`,
+    es: `Coste: ${inputPrice}/${outputPrice} por 1M`,
+    ru: `Стоимость: ${inputPrice}/${outputPrice} за 1M`,
+    uk: `Вартість: ${inputPrice}/${outputPrice} за 1M`,
   };
 
   return texts[language];
@@ -635,6 +699,17 @@ function getContextText(language: SupportedLanguage, context: string): string {
     es: `Contexto: ${context} tokens.`,
     ru: `Контекст: ${context} токенов.`,
     uk: `Контекст: ${context} токенів.`,
+  };
+
+  return texts[language];
+}
+
+function getCompactContextText(language: SupportedLanguage, context: string): string {
+  const texts: Record<SupportedLanguage, string> = {
+    en: `Context: ${context}`,
+    es: `Contexto: ${context}`,
+    ru: `Контекст: ${context}`,
+    uk: `Контекст: ${context}`,
   };
 
   return texts[language];

@@ -22,19 +22,24 @@ import (
 )
 
 type Config struct {
-	Addr        string
-	AdminToken  string
-	BackupDir   string
-	DBPath      string
-	FrontendDir string
+	Addr                string
+	AdminToken          string
+	BackupDir           string
+	DBPath              string
+	FrontendDir         string
+	OpenRouterModelsURL string
 }
 
 type Server struct {
-	adminToken string
-	backupDir  string
-	db         *sql.DB
-	dbPath     string
-	backupMu   sync.Mutex
+	adminToken                 string
+	backupDir                  string
+	db                         *sql.DB
+	dbPath                     string
+	openRouterModelsURL        string
+	backupMu                   sync.Mutex
+	openRouterModelsMu         sync.Mutex
+	openRouterModelsCache      *OpenRouterModelsResponse
+	openRouterModelsCacheError string
 }
 
 type UserRecord struct {
@@ -199,6 +204,56 @@ type BackupListResponse struct {
 	Settings BackupSettingsPayload `json:"settings"`
 }
 
+type LocalizedModelDescriptions struct {
+	EN string `json:"en"`
+	ES string `json:"es"`
+	RU string `json:"ru"`
+	UK string `json:"uk"`
+}
+
+type OpenRouterModelPayload struct {
+	ContextTokens         int64                      `json:"contextTokens,omitempty"`
+	CostRating            *int                       `json:"costRating,omitempty"`
+	Descriptions          LocalizedModelDescriptions `json:"descriptions"`
+	ID                    string                     `json:"id"`
+	InputPricePerMillion  *float64                   `json:"inputPricePerMillion,omitempty"`
+	Label                 string                     `json:"label"`
+	MaxOutputTokens       int64                      `json:"maxOutputTokens,omitempty"`
+	OutputPricePerMillion *float64                   `json:"outputPricePerMillion,omitempty"`
+	SpeedRating           *int                       `json:"speedRating,omitempty"`
+}
+
+type OpenRouterModelsResponse struct {
+	CachedAt  string                   `json:"cachedAt"`
+	ExpiresAt string                   `json:"expiresAt"`
+	Models    []OpenRouterModelPayload `json:"models"`
+	Source    string                   `json:"source"`
+}
+
+type openRouterModelMetadata struct {
+	ContextTokens         int64
+	CostRating            *int
+	Descriptions          LocalizedModelDescriptions
+	ID                    string
+	InputPricePerMillion  *float64
+	Label                 string
+	MaxOutputTokens       int64
+	OutputPricePerMillion *float64
+	SpeedRating           *int
+}
+
+type openRouterModelLiveData struct {
+	ContextTokens         int64
+	MaxOutputTokens       int64
+	InputPricePerMillion  *float64
+	OutputPricePerMillion *float64
+}
+
+const (
+	defaultOpenRouterModelsURL = "https://openrouter.ai/api/v1/models"
+	openRouterModelsCacheTTL   = 4 * time.Hour
+)
+
 type SaveBackupSettingsRequest struct {
 	Enabled       bool `json:"enabled"`
 	IntervalHours int  `json:"intervalHours"`
@@ -243,6 +298,162 @@ var defaultState = AppStatePayload{
 	Stats: []CardStatsPayload{},
 }
 
+var openRouterModelCatalog = []openRouterModelMetadata{
+	{
+		ID:                    "deepseek/deepseek-chat-v3.1",
+		Label:                 "DeepSeek V3.1",
+		InputPricePerMillion:  floatPointer(0.25),
+		OutputPricePerMillion: floatPointer(0.95),
+		ContextTokens:         163840,
+		MaxOutputTokens:       32768,
+		SpeedRating:           intPointer(7),
+		CostRating:            intPointer(8),
+		Descriptions: LocalizedModelDescriptions{
+			EN: "Balanced DeepSeek chat model for structured card edits and learning-stat summaries.",
+			ES: "Modelo de chat DeepSeek equilibrado para editar tarjetas estructuradas y resumir estadisticas de aprendizaje.",
+			RU: "Сбалансированная чат-модель DeepSeek для структурного редактирования карточек и сводок по учебной статистике.",
+			UK: "Збалансована чат-модель DeepSeek для структурованого редагування карток і підсумків навчальної статистики.",
+		},
+	},
+	{
+		ID:                    "deepseek/deepseek-v4-flash",
+		Label:                 "DeepSeek V4 Flash",
+		InputPricePerMillion:  floatPointer(0.098),
+		OutputPricePerMillion: floatPointer(0.196),
+		ContextTokens:         1048576,
+		SpeedRating:           intPointer(6),
+		CostRating:            intPointer(10),
+		Descriptions: LocalizedModelDescriptions{
+			EN: "Lowest-cost default model with a very large context window; best for budget-sensitive card generation and background work.",
+			ES: "Modelo predeterminado mas economico con una ventana de contexto muy grande; ideal para generar tarjetas con bajo coste y tareas en segundo plano.",
+			RU: "Самая экономичная модель по умолчанию с очень большим контекстом; подходит для бюджетной генерации карточек и фоновых задач.",
+			UK: "Найекономніша модель за замовчуванням з дуже великим контекстом; підходить для бюджетної генерації карток і фонових задач.",
+		},
+	},
+	{
+		ID:                    "deepseek/deepseek-v4-pro",
+		Label:                 "DeepSeek V4 Pro",
+		InputPricePerMillion:  floatPointer(0.435),
+		OutputPricePerMillion: floatPointer(0.87),
+		ContextTokens:         1048576,
+		MaxOutputTokens:       384000,
+		SpeedRating:           intPointer(6),
+		CostRating:            intPointer(8),
+		Descriptions: LocalizedModelDescriptions{
+			EN: "Higher-capacity DeepSeek model for deeper analysis and large responses when latency is less important.",
+			ES: "Modelo DeepSeek de mayor capacidad para analisis mas profundo y respuestas grandes cuando la latencia importa menos.",
+			RU: "Более мощная модель DeepSeek для глубокого анализа и больших ответов, когда задержка менее важна.",
+			UK: "Потужніша модель DeepSeek для глибшого аналізу й великих відповідей, коли затримка менш важлива.",
+		},
+	},
+	{
+		ID:                    "z-ai/glm-4.5",
+		Label:                 "GLM 4.5",
+		InputPricePerMillion:  floatPointer(0.6),
+		OutputPricePerMillion: floatPointer(2.2),
+		ContextTokens:         131072,
+		MaxOutputTokens:       98304,
+		SpeedRating:           intPointer(6),
+		CostRating:            intPointer(5),
+		Descriptions: LocalizedModelDescriptions{
+			EN: "General Chinese model with tool support; useful as a secondary comparison model.",
+			ES: "Modelo chino general con soporte de herramientas; util como modelo secundario para comparar.",
+			RU: "Универсальная китайская модель с поддержкой инструментов; полезна как запасной вариант для сравнения.",
+			UK: "Універсальна китайська модель з підтримкою інструментів; корисна як запасний варіант для порівняння.",
+		},
+	},
+	{
+		ID:    "openai/gpt-5.5",
+		Label: "GPT-5.5",
+		Descriptions: LocalizedModelDescriptions{
+			EN: "Existing ChatGPT option kept unchanged; check OpenRouter for live availability, price, and limits.",
+			ES: "Opcion ChatGPT existente sin cambios; consulta OpenRouter para disponibilidad, precio y limites actuales.",
+			RU: "Существующая опция ChatGPT оставлена без изменений; актуальные цену, доступность и лимиты смотрите в OpenRouter.",
+			UK: "Наявну опцію ChatGPT залишено без змін; актуальні ціну, доступність і ліміти дивіться в OpenRouter.",
+		},
+	},
+	{
+		ID:                    "moonshotai/kimi-k2",
+		Label:                 "Kimi K2",
+		InputPricePerMillion:  floatPointer(0.57),
+		OutputPricePerMillion: floatPointer(2.3),
+		ContextTokens:         131072,
+		MaxOutputTokens:       100352,
+		SpeedRating:           intPointer(6),
+		CostRating:            intPointer(5),
+		Descriptions: LocalizedModelDescriptions{
+			EN: "Moonshot model with long-output tool workflows; better as a comparison than a default here.",
+			ES: "Modelo Moonshot para flujos con herramientas y salidas largas; aqui encaja mejor como comparacion que como predeterminado.",
+			RU: "Модель Moonshot для tool-workflow и длинных ответов; здесь скорее вариант для сравнения, чем модель по умолчанию.",
+			UK: "Модель Moonshot для tool-workflow і довгих відповідей; тут радше варіант для порівняння, ніж модель за замовчуванням.",
+		},
+	},
+	{
+		ID:                    "qwen/qwen3.6-35b-a3b",
+		Label:                 "Qwen3.6 35B A3B",
+		InputPricePerMillion:  floatPointer(0.14),
+		OutputPricePerMillion: floatPointer(1),
+		ContextTokens:         262144,
+		MaxOutputTokens:       262144,
+		SpeedRating:           intPointer(9),
+		CostRating:            intPointer(8),
+		Descriptions: LocalizedModelDescriptions{
+			EN: "Fast interactive candidate for card CRUD and topic-set generation with enough context for most libraries.",
+			ES: "Candidata rapida para CRUD de tarjetas y generacion de conjuntos por tema, con contexto suficiente para la mayoria de bibliotecas.",
+			RU: "Быстрый интерактивный вариант для CRUD карточек и генерации тематических наборов с контекстом, достаточным для большинства библиотек.",
+			UK: "Швидкий інтерактивний варіант для CRUD карток і генерації тематичних наборів з контекстом, достатнім для більшості бібліотек.",
+		},
+	},
+	{
+		ID:                    "qwen/qwen3.6-flash",
+		Label:                 "Qwen3.6 Flash",
+		InputPricePerMillion:  floatPointer(0.1875),
+		OutputPricePerMillion: floatPointer(1.125),
+		ContextTokens:         1000000,
+		MaxOutputTokens:       65536,
+		SpeedRating:           intPointer(8),
+		CostRating:            intPointer(8),
+		Descriptions: LocalizedModelDescriptions{
+			EN: "Fast Qwen option with a 1M context window; good for responsive card generation and larger prompts.",
+			ES: "Opcion Qwen rapida con contexto de 1M; buena para generar tarjetas con respuesta agil y prompts grandes.",
+			RU: "Быстрый вариант Qwen с контекстом 1M; хорош для отзывчивой генерации карточек и больших промптов.",
+			UK: "Швидкий варіант Qwen з контекстом 1M; добрий для чуйної генерації карток і великих промптів.",
+		},
+	},
+	{
+		ID:                    "qwen/qwen3.7-max",
+		Label:                 "Qwen3.7 Max",
+		InputPricePerMillion:  floatPointer(1.475),
+		OutputPricePerMillion: floatPointer(4.425),
+		ContextTokens:         1000000,
+		MaxOutputTokens:       65536,
+		SpeedRating:           intPointer(6),
+		CostRating:            intPointer(3),
+		Descriptions: LocalizedModelDescriptions{
+			EN: "Premium Qwen option for quality checks and nuanced language work when cost is secondary.",
+			ES: "Opcion premium de Qwen para revisar calidad y trabajo linguistico fino cuando el coste es secundario.",
+			RU: "Премиальный вариант Qwen для проверки качества и тонкой языковой работы, когда стоимость не главное.",
+			UK: "Преміальний варіант Qwen для перевірки якості й тонкої мовної роботи, коли вартість не головна.",
+		},
+	},
+	{
+		ID:                    "qwen/qwen3.7-plus",
+		Label:                 "Qwen3.7 Plus",
+		InputPricePerMillion:  floatPointer(0.32),
+		OutputPricePerMillion: floatPointer(1.28),
+		ContextTokens:         1000000,
+		MaxOutputTokens:       65536,
+		SpeedRating:           intPointer(7),
+		CostRating:            intPointer(7),
+		Descriptions: LocalizedModelDescriptions{
+			EN: "Strong balanced Qwen model for high-quality translations, examples, and learning recommendations.",
+			ES: "Modelo Qwen potente y equilibrado para traducciones de calidad, ejemplos y recomendaciones de aprendizaje.",
+			RU: "Сильная сбалансированная модель Qwen для качественных переводов, примеров и учебных рекомендаций.",
+			UK: "Сильна збалансована модель Qwen для якісних перекладів, прикладів і навчальних рекомендацій.",
+		},
+	},
+}
+
 func NewHandler(config Config) (http.Handler, error) {
 	dbPath := config.DBPath
 	if dbPath == "" {
@@ -269,10 +480,14 @@ func NewHandler(config Config) (http.Handler, error) {
 	}
 
 	server := &Server{
-		adminToken: config.AdminToken,
-		backupDir:  backupDir,
-		db:         db,
-		dbPath:     dbPath,
+		adminToken:          config.AdminToken,
+		backupDir:           backupDir,
+		db:                  db,
+		dbPath:              dbPath,
+		openRouterModelsURL: strings.TrimSpace(config.OpenRouterModelsURL),
+	}
+	if server.openRouterModelsURL == "" {
+		server.openRouterModelsURL = defaultOpenRouterModelsURL
 	}
 	if err := server.migrate(); err != nil {
 		db.Close()
@@ -288,6 +503,7 @@ func NewHandler(config Config) (http.Handler, error) {
 	mux.HandleFunc("/api/state", server.handleState)
 	mux.HandleFunc("/api/users", server.handleUsers)
 	mux.HandleFunc("/api/chat", server.handleChat)
+	mux.HandleFunc("/api/openrouter/models", server.handleOpenRouterModels)
 	mux.HandleFunc("/api/admin/backups", server.handleAdminBackups)
 	mux.HandleFunc("/api/admin/backups/settings", server.handleAdminBackupSettings)
 
@@ -304,11 +520,12 @@ func NewHandler(config Config) (http.Handler, error) {
 
 func main() {
 	config := Config{
-		Addr:        getenv("LANG_LAB_ADDR", "127.0.0.1:8090"),
-		AdminToken:  getenv("LANG_LAB_ADMIN_TOKEN", ""),
-		BackupDir:   getenv("LANG_LAB_BACKUP_DIR", ""),
-		DBPath:      getenv("LANG_LAB_DB_PATH", filepath.Join("data", "language-lab.sqlite")),
-		FrontendDir: getenv("LANG_LAB_FRONTEND_DIR", ""),
+		Addr:                getenv("LANG_LAB_ADDR", "127.0.0.1:8090"),
+		AdminToken:          getenv("LANG_LAB_ADMIN_TOKEN", ""),
+		BackupDir:           getenv("LANG_LAB_BACKUP_DIR", ""),
+		DBPath:              getenv("LANG_LAB_DB_PATH", filepath.Join("data", "language-lab.sqlite")),
+		FrontendDir:         getenv("LANG_LAB_FRONTEND_DIR", ""),
+		OpenRouterModelsURL: getenv("LANG_LAB_OPENROUTER_MODELS_URL", ""),
 	}
 	handler, err := NewHandler(config)
 	if err != nil {
@@ -472,6 +689,170 @@ func (server *Server) handleChat(response http.ResponseWriter, request *http.Req
 	default:
 		writeJSON(response, http.StatusMethodNotAllowed, map[string]any{"error": "method not allowed"})
 	}
+}
+
+func (server *Server) handleOpenRouterModels(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		writeJSON(response, http.StatusMethodNotAllowed, map[string]any{"error": "method not allowed"})
+		return
+	}
+
+	models, err := server.loadOpenRouterModels()
+	if err != nil {
+		writeJSON(response, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
+	}
+	writeJSON(response, http.StatusOK, models)
+}
+
+func (server *Server) loadOpenRouterModels() (OpenRouterModelsResponse, error) {
+	server.openRouterModelsMu.Lock()
+	defer server.openRouterModelsMu.Unlock()
+
+	now := time.Now().UTC()
+	if server.openRouterModelsCache != nil {
+		expiresAt, err := time.Parse(time.RFC3339, server.openRouterModelsCache.ExpiresAt)
+		if err == nil && now.Before(expiresAt) {
+			return *server.openRouterModelsCache, nil
+		}
+	}
+
+	liveData, err := server.fetchOpenRouterModelLiveData()
+	if err != nil {
+		server.openRouterModelsCacheError = err.Error()
+		if server.openRouterModelsCache != nil {
+			return *server.openRouterModelsCache, nil
+		}
+		return buildOpenRouterModelsResponse(nil, now, "fallback"), nil
+	}
+
+	result := buildOpenRouterModelsResponse(liveData, now, "openrouter")
+	server.openRouterModelsCache = &result
+	server.openRouterModelsCacheError = ""
+	return result, nil
+}
+
+func (server *Server) fetchOpenRouterModelLiveData() (map[string]openRouterModelLiveData, error) {
+	request, err := http.NewRequest(http.MethodGet, server.openRouterModelsURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create OpenRouter models request: %w", err)
+	}
+	request.Header.Set("Accept", "application/json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	response, err := client.Do(request)
+	if err != nil {
+		return nil, fmt.Errorf("fetch OpenRouter models: %w", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return nil, fmt.Errorf("OpenRouter models request failed with status %d", response.StatusCode)
+	}
+
+	var payload struct {
+		Data []struct {
+			ID            string `json:"id"`
+			ContextLength int64  `json:"context_length"`
+			Pricing       struct {
+				Prompt     string `json:"prompt"`
+				Completion string `json:"completion"`
+			} `json:"pricing"`
+			TopProvider struct {
+				ContextLength       int64 `json:"context_length"`
+				MaxCompletionTokens int64 `json:"max_completion_tokens"`
+			} `json:"top_provider"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
+		return nil, fmt.Errorf("decode OpenRouter models: %w", err)
+	}
+
+	wanted := map[string]struct{}{}
+	for _, model := range openRouterModelCatalog {
+		wanted[model.ID] = struct{}{}
+	}
+
+	result := map[string]openRouterModelLiveData{}
+	for _, model := range payload.Data {
+		if _, ok := wanted[model.ID]; !ok {
+			continue
+		}
+		contextTokens := model.ContextLength
+		if contextTokens == 0 {
+			contextTokens = model.TopProvider.ContextLength
+		}
+		result[model.ID] = openRouterModelLiveData{
+			ContextTokens:         contextTokens,
+			MaxOutputTokens:       model.TopProvider.MaxCompletionTokens,
+			InputPricePerMillion:  pricePerMillion(model.Pricing.Prompt),
+			OutputPricePerMillion: pricePerMillion(model.Pricing.Completion),
+		}
+	}
+
+	return result, nil
+}
+
+func buildOpenRouterModelsResponse(
+	liveData map[string]openRouterModelLiveData,
+	now time.Time,
+	source string,
+) OpenRouterModelsResponse {
+	models := make([]OpenRouterModelPayload, 0, len(openRouterModelCatalog))
+	for _, metadata := range openRouterModelCatalog {
+		model := OpenRouterModelPayload{
+			ContextTokens:         metadata.ContextTokens,
+			CostRating:            metadata.CostRating,
+			Descriptions:          metadata.Descriptions,
+			ID:                    metadata.ID,
+			InputPricePerMillion:  metadata.InputPricePerMillion,
+			Label:                 metadata.Label,
+			MaxOutputTokens:       metadata.MaxOutputTokens,
+			OutputPricePerMillion: metadata.OutputPricePerMillion,
+			SpeedRating:           metadata.SpeedRating,
+		}
+		if live, ok := liveData[metadata.ID]; ok {
+			if live.ContextTokens > 0 {
+				model.ContextTokens = live.ContextTokens
+			}
+			if live.MaxOutputTokens > 0 {
+				model.MaxOutputTokens = live.MaxOutputTokens
+			}
+			if live.InputPricePerMillion != nil {
+				model.InputPricePerMillion = live.InputPricePerMillion
+			}
+			if live.OutputPricePerMillion != nil {
+				model.OutputPricePerMillion = live.OutputPricePerMillion
+			}
+		}
+		models = append(models, model)
+	}
+
+	return OpenRouterModelsResponse{
+		CachedAt:  now.Format(time.RFC3339),
+		ExpiresAt: now.Add(openRouterModelsCacheTTL).Format(time.RFC3339),
+		Models:    models,
+		Source:    source,
+	}
+}
+
+func pricePerMillion(raw string) *float64 {
+	if strings.TrimSpace(raw) == "" {
+		return nil
+	}
+	value, err := strconv.ParseFloat(raw, 64)
+	if err != nil {
+		return nil
+	}
+	return floatPointer(value * 1000000)
+}
+
+func floatPointer(value float64) *float64 {
+	return &value
+}
+
+func intPointer(value int) *int {
+	return &value
 }
 
 func (server *Server) handleAdminBackups(response http.ResponseWriter, request *http.Request) {

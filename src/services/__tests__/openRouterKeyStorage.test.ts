@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_OPENROUTER_MODEL_ID,
-  OPENROUTER_AVAILABLE_MODELS,
   loadOpenRouterKey,
   OPENROUTER_KEY_STORAGE_KEY,
   OPENROUTER_MODEL_STORAGE_KEY,
@@ -51,22 +50,10 @@ describe('openRouterKeyStorage', () => {
     expect(loadOpenRouterKey(storage)).toBe('');
   });
 
-  it('loads and stores only supported OpenRouter model ids', () => {
+  it('loads and stores dynamic OpenRouter model ids', () => {
     const storage = createMemoryStorage();
 
     expect(DEFAULT_OPENROUTER_MODEL_ID).toBe('deepseek/deepseek-v4-flash');
-    expect(OPENROUTER_AVAILABLE_MODELS.map(({ id }) => id)).toEqual([
-      'deepseek/deepseek-chat-v3.1',
-      'deepseek/deepseek-v4-flash',
-      'deepseek/deepseek-v4-pro',
-      'z-ai/glm-4.5',
-      'openai/gpt-5.5',
-      'moonshotai/kimi-k2',
-      'qwen/qwen3.6-35b-a3b',
-      'qwen/qwen3.6-flash',
-      'qwen/qwen3.7-max',
-      'qwen/qwen3.7-plus',
-    ]);
     expect(loadOpenRouterModel(storage)).toBe(DEFAULT_OPENROUTER_MODEL_ID);
 
     saveOpenRouterModel('deepseek/deepseek-v4-flash', storage);
@@ -75,7 +62,10 @@ describe('openRouterKeyStorage', () => {
     );
     expect(loadOpenRouterModel(storage)).toBe('deepseek/deepseek-v4-flash');
 
-    saveOpenRouterModel('unknown/model', storage);
+    saveOpenRouterModel('custom/provider-model', storage);
+    expect(loadOpenRouterModel(storage)).toBe('custom/provider-model');
+
+    saveOpenRouterModel('   ', storage);
     expect(loadOpenRouterModel(storage)).toBe(DEFAULT_OPENROUTER_MODEL_ID);
   });
 });
