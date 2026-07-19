@@ -158,12 +158,21 @@ docker compose up -d
 
 Open http://localhost:8090 in a browser.
 The database file `language-lab.sqlite` is created in the `data/` directory.
+Local SQLite backups are written to `data/backups/` when the admin backup tool is used.
+Set `LANG_LAB_ADMIN_TOKEN` before starting Docker Compose to enable the admin backup API and UI:
+
+```bash
+LANG_LAB_ADMIN_TOKEN=replace-with-a-long-secret docker compose up -d
+```
 
 #### Manual Docker run
 
 ```bash
 docker build -t lang-lab .
-docker run -d -p 8090:8090 -v $(pwd)/data:/app/data lang-lab
+docker run -d -p 8090:8090 \
+  -e LANG_LAB_ADMIN_TOKEN=replace-with-a-long-secret \
+  -v $(pwd)/data:/app/data \
+  lang-lab
 ```
 
 #### Environment variables
@@ -171,6 +180,8 @@ docker run -d -p 8090:8090 -v $(pwd)/data:/app/data lang-lab
 | Variable | Default | Description |
 |---|---|---|
 | `LANG_LAB_ADDR` | `0.0.0.0:8090` | Backend listen address |
+| `LANG_LAB_ADMIN_TOKEN` | empty | Enables admin backup API/UI when set; required in the Admin tab |
+| `LANG_LAB_BACKUP_DIR` | `/app/data/backups` | Directory for local SQLite backup files |
 | `LANG_LAB_DB_PATH` | `/app/data/language-lab.sqlite` | Path to the SQLite database file |
 | `LANG_LAB_FRONTEND_DIR` | `/app/dist` | Path to built frontend static files |
 

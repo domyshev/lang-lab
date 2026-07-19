@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -158,6 +159,101 @@ func TestCreateUserReturnsTokenAndStoresInitialState(t *testing.T) {
 	}
 }
 
+func TestAdminBackupsCreateListAndConfigureSchedule(t *testing.T) {
+	dbDir := t.TempDir()
+	dbPath := filepath.Join(dbDir, "language-lab.sqlite")
+	backupDir := filepath.Join(dbDir, "backups")
+	handler, err := NewHandler(Config{
+		AdminToken: "admin-secret",
+		BackupDir:  backupDir,
+		DBPath:     dbPath,
+	})
+	if err != nil {
+		t.Fatalf("create handler: %v", err)
+	}
+	server := httptest.NewServer(handler)
+	defer server.Close()
+
+	createTestUser(t, server)
+
+	created := requestAdminJSON(
+		t,
+		server,
+		http.MethodPost,
+		"/api/admin/backups",
+		"admin-secret",
+		nil,
+		http.StatusCreated,
+	)
+	backupName, ok := created["name"].(string)
+	if !ok || backupName == "" {
+		t.Fatalf("expected backup name, got %v", created["name"])
+	}
+	if _, err := os.Stat(filepath.Join(backupDir, backupName)); err != nil {
+		t.Fatalf("expected backup file to exist: %v", err)
+	}
+
+	listed := requestAdminJSON(
+		t,
+		server,
+		http.MethodGet,
+		"/api/admin/backups",
+		"admin-secret",
+		nil,
+		http.StatusOK,
+	)
+	backups, ok := listed["backups"].([]any)
+	if !ok || len(backups) != 1 {
+		t.Fatalf("expected one listed backup, got %v", listed["backups"])
+	}
+	settings, ok := listed["settings"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected backup settings, got %v", listed["settings"])
+	}
+	if settings["backupDir"] != backupDir {
+		t.Fatalf("expected backup dir %q, got %v", backupDir, settings["backupDir"])
+	}
+
+	updated := requestAdminJSON(
+		t,
+		server,
+		http.MethodPut,
+		"/api/admin/backups/settings",
+		"admin-secret",
+		map[string]any{
+			"enabled":       true,
+			"intervalHours": 6,
+		},
+		http.StatusOK,
+	)
+	if updated["enabled"] != true {
+		t.Fatalf("expected enabled schedule, got %v", updated["enabled"])
+	}
+	if intFromJSONNumber(t, updated["intervalHours"]) != 6 {
+		t.Fatalf("expected 6 hour interval, got %v", updated["intervalHours"])
+	}
+	if updated["nextRunAt"] == "" {
+		t.Fatalf("expected nextRunAt after enabling schedule")
+	}
+}
+
+func TestAdminBackupsRequireAdminToken(t *testing.T) {
+	server, _ := newTestHTTPServer(t)
+	defer server.Close()
+
+	requestJSON(t, server, http.MethodGet, "/api/admin/backups", "", nil, http.StatusServiceUnavailable)
+
+	dbPath := filepath.Join(t.TempDir(), "language-lab.sqlite")
+	handler, err := NewHandler(Config{AdminToken: "admin-secret", DBPath: dbPath})
+	if err != nil {
+		t.Fatalf("create handler: %v", err)
+	}
+	protected := httptest.NewServer(handler)
+	defer protected.Close()
+
+	requestAdminJSON(t, protected, http.MethodGet, "/api/admin/backups", "wrong", nil, http.StatusUnauthorized)
+}
+
 func newTestHTTPServer(t *testing.T) (*httptest.Server, string) {
 	t.Helper()
 
@@ -214,6 +310,51 @@ func requestJSON(
 	}
 	if apiKey != "" {
 		request.Header.Set("X-API-Key", apiKey)
+	}
+
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatalf("send request: %v", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != expectedStatus {
+		t.Fatalf("expected HTTP %d, got %d", expectedStatus, response.StatusCode)
+	}
+
+	var decoded map[string]any
+	if err := json.NewDecoder(response.Body).Decode(&decoded); err != nil {
+		t.Fatalf("decode response body: %v", err)
+	}
+	return decoded
+}
+
+func requestAdminJSON(
+	t *testing.T,
+	server *httptest.Server,
+	method string,
+	path string,
+	adminToken string,
+	payload any,
+	expectedStatus int,
+) map[string]any {
+	t.Helper()
+
+	var body bytes.Buffer
+	if payload != nil {
+		if err := json.NewEncoder(&body).Encode(payload); err != nil {
+			t.Fatalf("encode request body: %v", err)
+		}
+	}
+	request, err := http.NewRequest(method, server.URL+path, &body)
+	if err != nil {
+		t.Fatalf("create request: %v", err)
+	}
+	if payload != nil {
+		request.Header.Set("Content-Type", "application/json")
+	}
+	if adminToken != "" {
+		request.Header.Set("X-Admin-Token", adminToken)
 	}
 
 	response, err := http.DefaultClient.Do(request)

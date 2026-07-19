@@ -28,6 +28,7 @@ import {
 import type { SelectChangeEvent } from '@mui/material/Select';
 import { AppShell, AppShellSection } from './components/AppShell';
 import { AiAssistantView } from './components/AiAssistantView';
+import { AdminBackupView } from './components/AdminBackupView';
 import { AssistantProfileView } from './components/AssistantProfileView';
 import { CardSetLibraryPicker } from './components/CardSetLibraryPicker';
 import { CoachPanel } from './components/CoachPanel';
@@ -1082,6 +1083,14 @@ export function App() {
       );
     }
 
+    if (activeSection === 'admin') {
+      return (
+        <Box data-test="app__admin_section">
+          <AdminBackupView interfaceLanguage={interfaceLanguage} />
+        </Box>
+      );
+    }
+
     if (activeSection === 'help') {
       return (
         <Box data-test="app__help_section">
@@ -1733,8 +1742,9 @@ export function App() {
                     setResultPromptHold(null);
                     setGenerationSeed((seed) => seed + 1);
                   }}
-                  size="small"
-                  variant="outlined"
+                  size="large"
+                  sx={getIgnoreCooldownButtonSx()}
+                  variant="contained"
                 >
                   {getIgnoreCooldownButtonLabel(interfaceLanguage)}
                 </Button>
@@ -4023,18 +4033,44 @@ function getMissingLettersCooldownDetailsText({
 
 function getIgnoreCooldownButtonLabel(interfaceLanguage: SupportedLanguage): string {
   if (interfaceLanguage === 'es') {
-    return 'Quiero jugar de todos modos';
+    return 'Lo se! Quiero jugar!';
   }
 
   if (interfaceLanguage === 'uk') {
-    return 'Все одно хочу зіграти';
+    return 'Знаю! Все одно хочу зіграти!';
   }
 
   if (interfaceLanguage === 'ru') {
-    return 'Все равно хочу сыграть';
+    return 'Знаю! Хочу сыграть!';
   }
 
-  return 'Play anyway';
+  return 'I know! I want to play!';
+}
+
+function getIgnoreCooldownButtonSx() {
+  return {
+    background:
+      'linear-gradient(135deg, #069c8f 0%, #2f6fed 47%, #e85d54 100%)',
+    borderRadius: 2,
+    boxShadow: '0 12px 26px rgba(47, 111, 237, 0.26)',
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 900,
+    lineHeight: 1.15,
+    minHeight: 48,
+    px: 2.75,
+    py: 1.15,
+    textTransform: 'none',
+    '&:hover': {
+      background:
+        'linear-gradient(135deg, #058579 0%, #245bd3 48%, #d84a43 100%)',
+      boxShadow: '0 14px 30px rgba(232, 93, 84, 0.28)',
+      transform: 'translateY(-1px)',
+    },
+    '&:active': {
+      transform: 'translateY(0)',
+    },
+  } as const;
 }
 
 function formatCooldownDate(value: string, language: SupportedLanguage): string {

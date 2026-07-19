@@ -8,6 +8,8 @@ import type { ComplementaryLanguages } from '../store/appSlice';
 import type { AiAssistantMessage } from '../store/aiAssistantSlice';
 
 export const SERVER_API_KEY_STORAGE_KEY = 'language-crossword-lab:server-api-key';
+export const ADMIN_API_TOKEN_STORAGE_KEY =
+  'language-crossword-lab:admin-api-token';
 export const DEFAULT_SERVER_ENDPOINT =
   import.meta.env.VITE_LANG_LAB_API_ENDPOINT ?? 'http://127.0.0.1:8090';
 
@@ -54,6 +56,27 @@ export interface CreateServerUserResponse {
   apiKey: string;
   revision: number;
   user: ServerUserPayload;
+}
+
+export interface BackupSettingsPayload {
+  backupDir: string;
+  enabled: boolean;
+  intervalHours: number;
+  lastError?: string;
+  lastRunAt?: string;
+  nextRunAt?: string;
+}
+
+export interface BackupFilePayload {
+  createdAt: string;
+  name: string;
+  path: string;
+  sizeBytes: number;
+}
+
+export interface BackupListResponse {
+  backups: BackupFilePayload[];
+  settings: BackupSettingsPayload;
 }
 
 export class ServerSyncError extends Error {
@@ -161,8 +184,59 @@ export async function createServerUser(input: {
   return decodeResponse<CreateServerUserResponse>(response);
 }
 
+export async function loadAdminBackups(input: {
+  adminToken: string;
+  endpoint: string;
+}): Promise<BackupListResponse> {
+  const response = await fetch(`${normalizeEndpoint(input.endpoint)}/api/admin/backups`, {
+    headers: adminHeaders(input.adminToken),
+    method: 'GET',
+  });
+  return decodeResponse<BackupListResponse>(response);
+}
+
+export async function createAdminBackup(input: {
+  adminToken: string;
+  endpoint: string;
+}): Promise<BackupFilePayload> {
+  const response = await fetch(`${normalizeEndpoint(input.endpoint)}/api/admin/backups`, {
+    headers: adminHeaders(input.adminToken),
+    method: 'POST',
+  });
+  return decodeResponse<BackupFilePayload>(response);
+}
+
+export async function saveAdminBackupSettings(input: {
+  adminToken: string;
+  enabled: boolean;
+  endpoint: string;
+  intervalHours: number;
+}): Promise<BackupSettingsPayload> {
+  const response = await fetch(
+    `${normalizeEndpoint(input.endpoint)}/api/admin/backups/settings`,
+    {
+      body: JSON.stringify({
+        enabled: input.enabled,
+        intervalHours: input.intervalHours,
+      }),
+      headers: {
+        ...adminHeaders(input.adminToken),
+        'Content-Type': 'application/json',
+      },
+      method: 'PUT',
+    },
+  );
+  return decodeResponse<BackupSettingsPayload>(response);
+}
+
 export function normalizeEndpoint(endpoint: string): string {
   return endpoint.trim().replace(/\/+$/, '');
+}
+
+function adminHeaders(adminToken: string): Record<string, string> {
+  return {
+    'X-Admin-Token': adminToken,
+  };
 }
 
 async function decodeResponse<T>(response: Response): Promise<T> {

@@ -15,19 +15,26 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	_ "modernc.org/sqlite"
 )
 
 type Config struct {
-	Addr         string
-	DBPath       string
-	FrontendDir  string
+	Addr        string
+	AdminToken  string
+	BackupDir   string
+	DBPath      string
+	FrontendDir string
 }
 
 type Server struct {
-	db *sql.DB
+	adminToken string
+	backupDir  string
+	db         *sql.DB
+	dbPath     string
+	backupMu   sync.Mutex
 }
 
 type UserRecord struct {
@@ -171,6 +178,32 @@ type SaveChatMessagesRequest struct {
 	Messages []ChatMessagePayload `json:"messages"`
 }
 
+type BackupSettingsPayload struct {
+	BackupDir     string `json:"backupDir"`
+	Enabled       bool   `json:"enabled"`
+	IntervalHours int    `json:"intervalHours"`
+	LastError     string `json:"lastError,omitempty"`
+	LastRunAt     string `json:"lastRunAt,omitempty"`
+	NextRunAt     string `json:"nextRunAt,omitempty"`
+}
+
+type BackupFilePayload struct {
+	CreatedAt string `json:"createdAt"`
+	Name      string `json:"name"`
+	Path      string `json:"path"`
+	SizeBytes int64  `json:"sizeBytes"`
+}
+
+type BackupListResponse struct {
+	Backups  []BackupFilePayload   `json:"backups"`
+	Settings BackupSettingsPayload `json:"settings"`
+}
+
+type SaveBackupSettingsRequest struct {
+	Enabled       bool `json:"enabled"`
+	IntervalHours int  `json:"intervalHours"`
+}
+
 type CardStatsPayload struct {
 	Accuracy        float64 `json:"accuracy"`
 	Attempts        int     `json:"attempts"`
@@ -218,6 +251,13 @@ func NewHandler(config Config) (http.Handler, error) {
 	if err := os.MkdirAll(filepath.Dir(dbPath), 0o755); err != nil {
 		return nil, fmt.Errorf("create db directory: %w", err)
 	}
+	backupDir := config.BackupDir
+	if backupDir == "" {
+		backupDir = filepath.Join(filepath.Dir(dbPath), "backups")
+	}
+	if err := os.MkdirAll(backupDir, 0o755); err != nil {
+		return nil, fmt.Errorf("create backup directory: %w", err)
+	}
 
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
@@ -228,8 +268,17 @@ func NewHandler(config Config) (http.Handler, error) {
 		return nil, fmt.Errorf("enable sqlite foreign keys: %w", err)
 	}
 
-	server := &Server{db: db}
+	server := &Server{
+		adminToken: config.AdminToken,
+		backupDir:  backupDir,
+		db:         db,
+		dbPath:     dbPath,
+	}
 	if err := server.migrate(); err != nil {
+		db.Close()
+		return nil, err
+	}
+	if err := server.ensureBackupSettings(); err != nil {
 		db.Close()
 		return nil, err
 	}
@@ -239,9 +288,15 @@ func NewHandler(config Config) (http.Handler, error) {
 	mux.HandleFunc("/api/state", server.handleState)
 	mux.HandleFunc("/api/users", server.handleUsers)
 	mux.HandleFunc("/api/chat", server.handleChat)
+	mux.HandleFunc("/api/admin/backups", server.handleAdminBackups)
+	mux.HandleFunc("/api/admin/backups/settings", server.handleAdminBackupSettings)
 
 	if frontendDir := config.FrontendDir; frontendDir != "" {
 		mux.Handle("/", frontendFileServer(frontendDir))
+	}
+
+	if config.AdminToken != "" {
+		go server.runBackupScheduler()
 	}
 
 	return server.withCORS(mux), nil
@@ -250,6 +305,8 @@ func NewHandler(config Config) (http.Handler, error) {
 func main() {
 	config := Config{
 		Addr:        getenv("LANG_LAB_ADDR", "127.0.0.1:8090"),
+		AdminToken:  getenv("LANG_LAB_ADMIN_TOKEN", ""),
+		BackupDir:   getenv("LANG_LAB_BACKUP_DIR", ""),
 		DBPath:      getenv("LANG_LAB_DB_PATH", filepath.Join("data", "language-lab.sqlite")),
 		FrontendDir: getenv("LANG_LAB_FRONTEND_DIR", ""),
 	}
@@ -280,7 +337,7 @@ func frontendFileServer(frontendDir string) http.Handler {
 func (server *Server) withCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		response.Header().Set("Access-Control-Allow-Origin", "*")
-		response.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-API-Key")
+		response.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-API-Key, X-Admin-Token")
 		response.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
 		if request.Method == http.MethodOptions {
 			response.WriteHeader(http.StatusNoContent)
@@ -412,6 +469,70 @@ func (server *Server) handleChat(response http.ResponseWriter, request *http.Req
 			return
 		}
 		writeJSON(response, http.StatusOK, map[string]any{"ok": true})
+	default:
+		writeJSON(response, http.StatusMethodNotAllowed, map[string]any{"error": "method not allowed"})
+	}
+}
+
+func (server *Server) handleAdminBackups(response http.ResponseWriter, request *http.Request) {
+	if !server.authorizeAdmin(response, request) {
+		return
+	}
+
+	switch request.Method {
+	case http.MethodGet:
+		settings, err := server.loadBackupSettings()
+		if err != nil {
+			writeJSON(response, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+			return
+		}
+		backups, err := server.listBackups()
+		if err != nil {
+			writeJSON(response, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+			return
+		}
+		writeJSON(response, http.StatusOK, BackupListResponse{
+			Backups:  backups,
+			Settings: settings,
+		})
+	case http.MethodPost:
+		backup, err := server.createBackup("manual")
+		if err != nil {
+			_ = server.saveBackupRun("", err.Error())
+			writeJSON(response, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+			return
+		}
+		writeJSON(response, http.StatusCreated, backup)
+	default:
+		writeJSON(response, http.StatusMethodNotAllowed, map[string]any{"error": "method not allowed"})
+	}
+}
+
+func (server *Server) handleAdminBackupSettings(response http.ResponseWriter, request *http.Request) {
+	if !server.authorizeAdmin(response, request) {
+		return
+	}
+
+	switch request.Method {
+	case http.MethodGet:
+		settings, err := server.loadBackupSettings()
+		if err != nil {
+			writeJSON(response, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+			return
+		}
+		writeJSON(response, http.StatusOK, settings)
+	case http.MethodPut:
+		var input SaveBackupSettingsRequest
+		if err := json.NewDecoder(request.Body).Decode(&input); err != nil {
+			writeJSON(response, http.StatusBadRequest, map[string]any{"error": "invalid json body"})
+			return
+		}
+		settings, err := server.saveBackupSettings(input)
+		if err != nil {
+			writeJSON(response, http.StatusBadRequest, map[string]any{"error": err.Error()})
+			return
+		}
+		writeJSON(response, http.StatusOK, settings)
 	default:
 		writeJSON(response, http.StatusMethodNotAllowed, map[string]any{"error": "method not allowed"})
 	}
@@ -623,6 +744,15 @@ func (server *Server) migrate() error {
 			created_at TEXT NOT NULL,
 			PRIMARY KEY (user_id, id)
 		)`,
+		`CREATE TABLE IF NOT EXISTS backup_settings (
+			id INTEGER PRIMARY KEY CHECK (id = 1),
+			enabled INTEGER NOT NULL,
+			interval_hours INTEGER NOT NULL,
+			last_run_at TEXT,
+			next_run_at TEXT,
+			last_error TEXT,
+			updated_at TEXT NOT NULL
+		)`,
 	}
 
 	for _, statement := range statements {
@@ -640,6 +770,234 @@ func (server *Server) migrate() error {
 		server.db.Exec(statement)
 	}
 	return nil
+}
+
+func (server *Server) ensureBackupSettings() error {
+	now := time.Now().UTC().Format(time.RFC3339Nano)
+	_, err := server.db.Exec(
+		`INSERT OR IGNORE INTO backup_settings (
+			id, enabled, interval_hours, last_run_at, next_run_at, last_error, updated_at
+		) VALUES (1, 0, 24, NULL, NULL, NULL, ?)`,
+		now,
+	)
+	return err
+}
+
+func (server *Server) authorizeAdmin(response http.ResponseWriter, request *http.Request) bool {
+	if server.adminToken == "" {
+		writeJSON(response, http.StatusServiceUnavailable, map[string]any{
+			"error": "admin backups are disabled; set LANG_LAB_ADMIN_TOKEN on the server",
+		})
+		return false
+	}
+	if adminTokenFromRequest(request) != server.adminToken {
+		writeJSON(response, http.StatusUnauthorized, map[string]any{"error": "admin token is required"})
+		return false
+	}
+	return true
+}
+
+func (server *Server) loadBackupSettings() (BackupSettingsPayload, error) {
+	var enabled int
+	var intervalHours int
+	var lastRunAt, nextRunAt, lastError sql.NullString
+	err := server.db.QueryRow(
+		`SELECT enabled, interval_hours, last_run_at, next_run_at, last_error
+		 FROM backup_settings WHERE id = 1`,
+	).Scan(&enabled, &intervalHours, &lastRunAt, &nextRunAt, &lastError)
+	if errors.Is(err, sql.ErrNoRows) {
+		if err := server.ensureBackupSettings(); err != nil {
+			return BackupSettingsPayload{}, err
+		}
+		return server.loadBackupSettings()
+	}
+	if err != nil {
+		return BackupSettingsPayload{}, err
+	}
+	return BackupSettingsPayload{
+		BackupDir:     server.backupDir,
+		Enabled:       enabled != 0,
+		IntervalHours: intervalHours,
+		LastError:     lastError.String,
+		LastRunAt:     lastRunAt.String,
+		NextRunAt:     nextRunAt.String,
+	}, nil
+}
+
+func (server *Server) saveBackupSettings(input SaveBackupSettingsRequest) (BackupSettingsPayload, error) {
+	intervalHours := input.IntervalHours
+	if intervalHours < 1 || intervalHours > 24*365 {
+		return BackupSettingsPayload{}, fmt.Errorf("intervalHours must be between 1 and 8760")
+	}
+
+	now := time.Now().UTC()
+	nextRunAt := any(nil)
+	if input.Enabled {
+		nextRunAt = now.Add(time.Duration(intervalHours) * time.Hour).Format(time.RFC3339Nano)
+	}
+	if _, err := server.db.Exec(
+		`UPDATE backup_settings
+		 SET enabled = ?, interval_hours = ?, next_run_at = ?, last_error = NULL, updated_at = ?
+		 WHERE id = 1`,
+		boolToInt(input.Enabled),
+		intervalHours,
+		nextRunAt,
+		now.Format(time.RFC3339Nano),
+	); err != nil {
+		return BackupSettingsPayload{}, err
+	}
+	return server.loadBackupSettings()
+}
+
+func (server *Server) listBackups() ([]BackupFilePayload, error) {
+	entries, err := os.ReadDir(server.backupDir)
+	if err != nil {
+		return nil, err
+	}
+
+	backups := []BackupFilePayload{}
+	for _, entry := range entries {
+		if entry.IsDir() || !isBackupFileName(entry.Name()) {
+			continue
+		}
+		info, err := entry.Info()
+		if err != nil {
+			return nil, err
+		}
+		backups = append(backups, BackupFilePayload{
+			CreatedAt: info.ModTime().UTC().Format(time.RFC3339Nano),
+			Name:      entry.Name(),
+			Path:      filepath.Join(server.backupDir, entry.Name()),
+			SizeBytes: info.Size(),
+		})
+	}
+	sort.Slice(backups, func(left, right int) bool {
+		return backups[left].CreatedAt > backups[right].CreatedAt
+	})
+	return backups, nil
+}
+
+func (server *Server) createBackup(_ string) (BackupFilePayload, error) {
+	server.backupMu.Lock()
+	defer server.backupMu.Unlock()
+
+	if err := os.MkdirAll(server.backupDir, 0o755); err != nil {
+		return BackupFilePayload{}, err
+	}
+	if _, err := os.Stat(server.dbPath); err != nil {
+		return BackupFilePayload{}, fmt.Errorf("database is not available for backup: %w", err)
+	}
+
+	_ = server.db.QueryRow(`PRAGMA wal_checkpoint(FULL)`).Err()
+	backupPath := server.nextBackupPath()
+	if _, err := server.db.Exec(`VACUUM INTO ?`, backupPath); err != nil {
+		return BackupFilePayload{}, fmt.Errorf("create sqlite backup: %w", err)
+	}
+	info, err := os.Stat(backupPath)
+	if err != nil {
+		return BackupFilePayload{}, err
+	}
+	createdAt := time.Now().UTC().Format(time.RFC3339Nano)
+	if err := server.saveBackupRun(createdAt, ""); err != nil {
+		return BackupFilePayload{}, err
+	}
+	return BackupFilePayload{
+		CreatedAt: createdAt,
+		Name:      filepath.Base(backupPath),
+		Path:      backupPath,
+		SizeBytes: info.Size(),
+	}, nil
+}
+
+func (server *Server) saveBackupRun(lastRunAt string, lastError string) error {
+	settings, err := server.loadBackupSettings()
+	if err != nil {
+		return err
+	}
+	nextRunAt := any(nil)
+	if settings.Enabled {
+		nextRunAt = time.Now().UTC().Add(time.Duration(settings.IntervalHours) * time.Hour).Format(time.RFC3339Nano)
+	}
+	lastRunValue := any(nil)
+	if lastRunAt != "" {
+		lastRunValue = lastRunAt
+	} else if settings.LastRunAt != "" {
+		lastRunValue = settings.LastRunAt
+	}
+	lastErrorValue := any(nil)
+	if lastError != "" {
+		lastErrorValue = lastError
+	}
+	_, err = server.db.Exec(
+		`UPDATE backup_settings
+		 SET last_run_at = ?, next_run_at = ?, last_error = ?, updated_at = ?
+		 WHERE id = 1`,
+		lastRunValue,
+		nextRunAt,
+		lastErrorValue,
+		time.Now().UTC().Format(time.RFC3339Nano),
+	)
+	return err
+}
+
+func (server *Server) nextBackupPath() string {
+	now := time.Now().UTC()
+	baseName := "language-lab-" + now.Format("20060102T150405Z")
+	for index := 0; ; index++ {
+		name := baseName + ".sqlite"
+		if index > 0 {
+			name = fmt.Sprintf("%s-%02d.sqlite", baseName, index)
+		}
+		path := filepath.Join(server.backupDir, name)
+		if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+			return path
+		}
+	}
+}
+
+func (server *Server) runBackupScheduler() {
+	timer := time.NewTimer(10 * time.Second)
+	defer timer.Stop()
+	for {
+		<-timer.C
+		if err := server.runScheduledBackupIfDue(); err != nil {
+			log.Printf("scheduled backup failed: %v", err)
+		}
+		timer.Reset(time.Minute)
+	}
+}
+
+func (server *Server) runScheduledBackupIfDue() error {
+	settings, err := server.loadBackupSettings()
+	if err != nil {
+		return err
+	}
+	if !settings.Enabled {
+		return nil
+	}
+	if settings.NextRunAt == "" {
+		_, err := server.saveBackupSettings(SaveBackupSettingsRequest{
+			Enabled:       true,
+			IntervalHours: settings.IntervalHours,
+		})
+		return err
+	}
+	nextRunAt, err := time.Parse(time.RFC3339Nano, settings.NextRunAt)
+	if err != nil {
+		return server.saveBackupRun("", fmt.Sprintf("invalid next run time: %v", err))
+	}
+	if time.Now().UTC().Before(nextRunAt) {
+		return nil
+	}
+	if _, err := server.createBackup("scheduled"); err != nil {
+		_ = server.saveBackupRun("", err.Error())
+		return err
+	}
+	return nil
+}
+
+func isBackupFileName(name string) bool {
+	return strings.HasPrefix(name, "language-lab-") && strings.HasSuffix(name, ".sqlite")
 }
 
 func (server *Server) findUser(apiKey string) (UserRecord, error) {
@@ -1704,6 +2062,17 @@ func writeJSON(response http.ResponseWriter, status int, value any) {
 
 func apiKeyFromRequest(request *http.Request) string {
 	if value := strings.TrimSpace(request.Header.Get("X-API-Key")); value != "" {
+		return value
+	}
+	const bearerPrefix = "Bearer "
+	if value := strings.TrimSpace(request.Header.Get("Authorization")); strings.HasPrefix(value, bearerPrefix) {
+		return strings.TrimSpace(strings.TrimPrefix(value, bearerPrefix))
+	}
+	return ""
+}
+
+func adminTokenFromRequest(request *http.Request) string {
+	if value := strings.TrimSpace(request.Header.Get("X-Admin-Token")); value != "" {
 		return value
 	}
 	const bearerPrefix = "Bearer "

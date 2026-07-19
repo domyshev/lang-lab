@@ -69,6 +69,7 @@ USER appuser
 
 # Environment variables
 ENV LANG_LAB_ADDR=0.0.0.0:8090
+ENV LANG_LAB_BACKUP_DIR=/app/data/backups
 ENV LANG_LAB_DB_PATH=/app/data/language-lab.sqlite
 ENV LANG_LAB_FRONTEND_DIR=/app/dist
 

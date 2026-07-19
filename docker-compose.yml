@@ -14,6 +14,8 @@ services:
       - ./data:/app/data
     environment:
       - LANG_LAB_ADDR=0.0.0.0:8090
+      - LANG_LAB_ADMIN_TOKEN=${LANG_LAB_ADMIN_TOKEN:-}
+      - LANG_LAB_BACKUP_DIR=/app/data/backups
       - LANG_LAB_DB_PATH=/app/data/language-lab.sqlite
       - LANG_LAB_FRONTEND_DIR=/app/dist
     restart: unless-stopped
