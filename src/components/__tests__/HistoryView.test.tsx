@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
 import { HistoryView } from '../HistoryView';
 import type { ExerciseAttempt, MultipleChoicePrompt } from '../../domain/exercises';
+import type { CardSet } from '../../domain/cardSets';
 import { appReducer } from '../../store/appSlice';
 import { attemptsReducer } from '../../store/attemptsSlice';
 import { cardsReducer } from '../../store/cardsSlice';
@@ -236,6 +237,48 @@ describe('HistoryView', () => {
         'history_view__detail_answer__attempt-choice-1%3Acard-vehicle__recent_tooltip',
       ),
     ).toBeInTheDocument();
+  });
+
+  it('shows the played card set as a chip under the game title', () => {
+    const attempt: ExerciseAttempt = {
+      id: 'attempt-smart-love',
+      exerciseSessionId: 'session-smart-love',
+      exerciseType: 'multipleChoice',
+      cardSetId: 'set-smart-love',
+      targetLanguage: 'en',
+      createdAt: '2026-07-05T12:00:00.000Z',
+      completedAt: '2026-07-05T12:00:00.000Z',
+      cardSnapshots: [],
+      prompts: [
+        {
+          cardId: 'card-love',
+          prompt: 'ru: любовь',
+          expectedAnswer: 'love',
+          translationHints: [{ language: 'ru' as const, value: 'любовь' }],
+        },
+      ],
+      answers: { 'card-love': 'love' },
+      correctness: { 'card-love': true },
+      hintsUsed: { 'card-love': 0 },
+    };
+
+    renderHistoryView([attempt], {
+      cardSets: [
+        {
+          cardIds: ['card-love'],
+          createdAt: '2026-07-05T10:00:00.000Z',
+          id: 'set-smart-love',
+          name: 'smart love',
+          updatedAt: '2026-07-05T10:00:00.000Z',
+        },
+      ],
+    });
+
+    const chip = screen.getByTestId(
+      'history_view__attempt_card_set_chip__session-smart-love',
+    );
+    expect(chip).toHaveTextContent('Набор карточек: smart love');
+    expect(chip).toHaveStyle({ height: '30px' });
   });
 
   it('scopes concurrent crossword replays while preserving legacy crossword rows', async () => {
@@ -612,7 +655,10 @@ describe('HistoryView', () => {
   });
 });
 
-function renderHistoryView(customAttempts?: ExerciseAttempt[]) {
+function renderHistoryView(
+  customAttempts?: ExerciseAttempt[],
+  options: { cardSets?: CardSet[] } = {},
+) {
   const now = '2026-07-05T10:00:00.000Z';
   const multipleChoicePrompt: MultipleChoicePrompt = {
     cardId: 'card-vehicle',
@@ -700,6 +746,10 @@ function renderHistoryView(customAttempts?: ExerciseAttempt[]) {
       },
       attempts: {
         attempts,
+      },
+      cardSets: {
+        cardSets: options.cardSets ?? [],
+        selectedCardSetId: 'all-cards',
       },
     },
   });
