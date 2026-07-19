@@ -1725,14 +1725,18 @@ export function App() {
                 <Typography sx={{ fontWeight: 750 }}>
                   {t(interfaceLanguage, 'missingLettersNeedsWords')}
                 </Typography>
-                <Typography sx={{ fontSize: 14 }}>
-                  {getMissingLettersCooldownDetailsText({
+                <Stack spacing={0.25}>
+                  {getMissingLettersCooldownDetailsLines({
                     coolingCount: missingLettersCooldownDetails.coolingCount,
                     interfaceLanguage,
                     nextReviewAt: missingLettersCooldownDetails.nextReviewAt,
                     totalCount: missingLettersCooldownDetails.totalCount,
-                  })}
-                </Typography>
+                  }).map((line) => (
+                    <Typography key={line} sx={{ fontSize: 14 }}>
+                      {line}
+                    </Typography>
+                  ))}
+                </Stack>
                 <Button
                   data-test="exercise_area__missing_letters_ignore_cooldown_button"
                   onClick={() => {
@@ -4003,7 +4007,7 @@ function getRecentResultsByCardId({
   return resultsByCardId;
 }
 
-function getMissingLettersCooldownDetailsText({
+function getMissingLettersCooldownDetailsLines({
   coolingCount,
   interfaceLanguage,
   nextReviewAt,
@@ -4013,22 +4017,38 @@ function getMissingLettersCooldownDetailsText({
   interfaceLanguage: SupportedLanguage;
   nextReviewAt: string;
   totalCount: number;
-}): string {
+}): string[] {
   const availableAt = formatCooldownDate(nextReviewAt, interfaceLanguage);
 
   if (interfaceLanguage === 'es') {
-    return `Todas las palabras disponibles estan en pausa por estadisticas. La primera volvera el ${availableAt}. En pausa: ${coolingCount} de ${totalCount}.`;
+    return [
+      'Todas las palabras disponibles estan en pausa por estadisticas.',
+      `La primera volvera el ${availableAt}.`,
+      `En pausa: ${coolingCount} de ${totalCount}.`,
+    ];
   }
 
   if (interfaceLanguage === 'uk') {
-    return `Усі доступні слова тимчасово на паузі за статистикою. Перше слово повернеться ${availableAt}. На паузі: ${coolingCount} з ${totalCount}.`;
+    return [
+      'Усі доступні слова тимчасово на паузі за статистикою.',
+      `Перше слово повернеться ${availableAt}.`,
+      `На паузі: ${coolingCount} з ${totalCount}.`,
+    ];
   }
 
   if (interfaceLanguage === 'ru') {
-    return `Все доступные слова временно на паузе по статистике. Первое слово вернется ${availableAt}. На паузе: ${coolingCount} из ${totalCount}.`;
+    return [
+      'Все доступные слова временно на паузе по статистике.',
+      `Первое слово вернется ${availableAt}.`,
+      `На паузе: ${coolingCount} из ${totalCount}.`,
+    ];
   }
 
-  return `All available words are temporarily paused by practice statistics. The first word returns on ${availableAt}. Cooling down: ${coolingCount} of ${totalCount}.`;
+  return [
+    'All available words are temporarily paused by practice statistics.',
+    `The first word returns on ${availableAt}.`,
+    `Cooling down: ${coolingCount} of ${totalCount}.`,
+  ];
 }
 
 function getIgnoreCooldownButtonLabel(interfaceLanguage: SupportedLanguage): string {
@@ -4052,7 +4072,7 @@ function getIgnoreCooldownButtonSx() {
     background:
       'linear-gradient(135deg, #069c8f 0%, #2f6fed 47%, #e85d54 100%)',
     borderRadius: 2,
-    boxShadow: '0 12px 26px rgba(47, 111, 237, 0.26)',
+    boxShadow: '0 3px 7px rgba(47, 111, 237, 0.24)',
     color: '#ffffff',
     fontSize: 16,
     fontWeight: 900,
@@ -4064,7 +4084,7 @@ function getIgnoreCooldownButtonSx() {
     '&:hover': {
       background:
         'linear-gradient(135deg, #058579 0%, #245bd3 48%, #d84a43 100%)',
-      boxShadow: '0 14px 30px rgba(232, 93, 84, 0.28)',
+      boxShadow: '0 3px 8px rgba(232, 93, 84, 0.26)',
       transform: 'translateY(-1px)',
     },
     '&:active': {
