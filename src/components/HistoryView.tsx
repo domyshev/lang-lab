@@ -165,32 +165,38 @@ function AttemptHistoryCard({
           sx={{ width: '100%', pr: 1 }}
         >
           <Stack
-            data-test={`history_view__attempt_title_row__${attemptDomKey}`}
-            direction="row"
-            spacing={1}
-            sx={{ alignItems: 'center' }}
+            data-test={`history_view__attempt_heading_group__${attemptDomKey}`}
+            spacing={0.5}
+            sx={{ alignItems: 'flex-start' }}
           >
-            <Typography
-              data-test={`history_view__attempt_type__${attemptDomKey}`}
-              variant="h6"
+            <Stack
+              data-test={`history_view__attempt_title_row__${attemptDomKey}`}
+              direction="row"
+              spacing={1}
+              sx={{ alignItems: 'center' }}
             >
-              {t(interfaceLanguage, attempt.exerciseType)}
-            </Typography>
-            {attempt.isExerciseCompleted && attempt.exerciseCompletedAt && (
-              <CompletedExerciseTrophy
-                completedAt={attempt.exerciseCompletedAt}
-                dataTest={`history_view__completed_trophy__${attemptDomKey}`}
-                interfaceLanguage={interfaceLanguage}
-              />
-            )}
+              <Typography
+                data-test={`history_view__attempt_type__${attemptDomKey}`}
+                variant="h6"
+              >
+                {t(interfaceLanguage, attempt.exerciseType)}
+              </Typography>
+              {attempt.isExerciseCompleted && attempt.exerciseCompletedAt && (
+                <CompletedExerciseTrophy
+                  completedAt={attempt.exerciseCompletedAt}
+                  dataTest={`history_view__completed_trophy__${attemptDomKey}`}
+                  interfaceLanguage={interfaceLanguage}
+                />
+              )}
+            </Stack>
+            <ExerciseCardSetChip
+              cardSetName={cardSetName}
+              dataTest={`history_view__attempt_card_set_chip__${attemptDomKey}`}
+              interfaceLanguage={interfaceLanguage}
+              size="small"
+              sx={historyCardSetChipStyles}
+            />
           </Stack>
-          <ExerciseCardSetChip
-            cardSetName={cardSetName}
-            dataTest={`history_view__attempt_card_set_chip__${attemptDomKey}`}
-            interfaceLanguage={interfaceLanguage}
-            size="small"
-            sx={historyCardSetChipStyles}
-          />
           <StatsFormula
             correct={attempt.correct}
             dataTestPrefix={`history_view__attempt_formula__${attemptDomKey}`}
