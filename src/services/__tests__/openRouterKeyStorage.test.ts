@@ -56,8 +56,16 @@ describe('openRouterKeyStorage', () => {
 
     expect(DEFAULT_OPENROUTER_MODEL_ID).toBe('deepseek/deepseek-v4-flash');
     expect(OPENROUTER_AVAILABLE_MODELS.map(({ id }) => id)).toEqual([
-      'openai/gpt-5.5',
+      'deepseek/deepseek-chat-v3.1',
       'deepseek/deepseek-v4-flash',
+      'deepseek/deepseek-v4-pro',
+      'z-ai/glm-4.5',
+      'openai/gpt-5.5',
+      'moonshotai/kimi-k2',
+      'qwen/qwen3.6-35b-a3b',
+      'qwen/qwen3.6-flash',
+      'qwen/qwen3.7-max',
+      'qwen/qwen3.7-plus',
     ]);
     expect(loadOpenRouterModel(storage)).toBe(DEFAULT_OPENROUTER_MODEL_ID);
 

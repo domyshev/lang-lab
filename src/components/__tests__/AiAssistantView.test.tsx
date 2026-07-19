@@ -237,6 +237,15 @@ describe('AiAssistantView connection', () => {
     await user.hover(screen.getByTestId('ai_connection__openrouter_info_button'));
 
     const tooltip = await screen.findByTestId('ai_connection__openrouter_info_tooltip');
+    expect(within(tooltip).getByTestId('ai_connection__selected_model_title')).toHaveTextContent(
+      'DeepSeek V4 Flash',
+    );
+    expect(within(tooltip).getByTestId('ai_connection__selected_model_body')).toHaveTextContent(
+      'Price: $0.098 input / $0.196 output per 1M tokens.',
+    );
+    expect(within(tooltip).getByTestId('ai_connection__selected_model_body')).toHaveTextContent(
+      'Context: 1.05M tokens.',
+    );
     expect(within(tooltip).getByTestId('ai_connection__openrouter_info_title')).toHaveTextContent(
       'OpenRouter',
     );
@@ -276,7 +285,7 @@ describe('AiAssistantView connection', () => {
 
     await user.click(screen.getByLabelText('Модель OpenRouter'));
 
-    const gptOption = screen.getByRole('option', { name: 'GPT-5.5' });
+    const gptOption = screen.getByRole('option', { name: /GPT-5\.5/ });
     expect(gptOption).not.toHaveAttribute('aria-disabled', 'true');
     await user.click(gptOption);
 
@@ -290,7 +299,7 @@ describe('AiAssistantView connection', () => {
 
     await user.click(screen.getByLabelText('OpenRouter model'));
 
-    const gptOption = screen.getByRole('option', { name: 'GPT-5.5' });
+    const gptOption = screen.getByRole('option', { name: /GPT-5\.5/ });
     expect(gptOption).not.toHaveAttribute('aria-disabled', 'true');
     await user.click(gptOption);
 
@@ -353,7 +362,7 @@ describe('AiAssistantView connection', () => {
     renderView();
 
     await user.click(screen.getByLabelText('OpenRouter model'));
-    await user.click(screen.getByRole('option', { name: 'GPT-5.5' }));
+    await user.click(screen.getByRole('option', { name: /GPT-5\.5/ }));
     expect(window.localStorage.getItem(OPENROUTER_MODEL_STORAGE_KEY)).toBe(
       'openai/gpt-5.5',
     );

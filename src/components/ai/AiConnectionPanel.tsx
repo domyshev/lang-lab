@@ -30,6 +30,7 @@ import {
 } from '@mui/material';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
+import type { OpenRouterModelOption } from '../../services/openRouterKeyStorage';
 
 interface AiConnectionPanelProps {
   apiKey: string;
@@ -38,7 +39,7 @@ interface AiConnectionPanelProps {
   language: SupportedLanguage;
   missingKey: boolean;
   modelId: string;
-  modelOptions: ReadonlyArray<{ id: string; label: string }>;
+  modelOptions: ReadonlyArray<OpenRouterModelOption>;
   isSaveDisabled: boolean;
   onApiKeyChange: (value: string) => void;
   onDelete: () => void;
@@ -67,6 +68,8 @@ export function AiConnectionPanel({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isOpenRouterInfoOpen, setIsOpenRouterInfoOpen] = useState(false);
   const visibilityLabel = t(language, isKeyVisible ? 'aiHideKey' : 'aiShowKey');
+  const selectedModel =
+    modelOptions.find((option) => option.id === modelId) ?? modelOptions[0];
 
   useEffect(() => {
     if (missingKey) {
@@ -129,6 +132,10 @@ export function AiConnectionPanel({
               }
               onModelChange(value);
             }}
+            renderValue={(selected) =>
+              modelOptions.find((option) => option.id === selected)?.label ??
+              String(selected)
+            }
             value={modelId}
           >
             {modelOptions.map((option) => (
@@ -137,7 +144,21 @@ export function AiConnectionPanel({
                 key={option.id}
                 value={option.id}
               >
-                {option.label}
+                <Stack spacing={0.25} sx={{ minWidth: 230 }}>
+                  <Typography sx={{ fontSize: '0.88rem', fontWeight: 800 }}>
+                    {option.label}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: 'text.secondary',
+                      fontFamily: 'monospace',
+                      fontSize: '0.72rem',
+                      lineHeight: 1.25,
+                    }}
+                  >
+                    {formatModelRatings(option, language)}
+                  </Typography>
+                </Stack>
               </MenuItem>
             ))}
             <Divider />
@@ -216,6 +237,22 @@ export function AiConnectionPanel({
                   userSelect: 'text',
                 }}
               >
+                {selectedModel ? (
+                  <Stack data-test="ai_connection__selected_model_info" spacing={0.45}>
+                    <Typography
+                      data-test="ai_connection__selected_model_title"
+                      sx={{ fontSize: '14px', fontWeight: 900, lineHeight: 1.3 }}
+                    >
+                      {selectedModel.label}
+                    </Typography>
+                    <Typography
+                      data-test="ai_connection__selected_model_body"
+                      sx={{ fontSize: '13px', fontWeight: 500, lineHeight: 1.35 }}
+                    >
+                      {formatSelectedModelDetails(selectedModel, language)}
+                    </Typography>
+                  </Stack>
+                ) : null}
                 <Typography
                   data-test="ai_connection__openrouter_info_title"
                   sx={{ fontSize: '14px', fontWeight: 850, lineHeight: 1.3 }}
@@ -379,6 +416,169 @@ export function AiConnectionPanel({
         </Dialog>
     </Box>
   );
+}
+
+function formatModelRatings(
+  model: OpenRouterModelOption,
+  language: SupportedLanguage,
+): string {
+  return `${getSpeedLabel(language)} ${formatRating(model.speedRating)}  ${getCostLabel(
+    language,
+  )} ${formatRating(model.costRating)}`;
+}
+
+function formatRating(value: number | undefined): string {
+  if (value === undefined) {
+    return 'n/a';
+  }
+  const bounded = Math.max(0, Math.min(10, Math.round(value)));
+  return `${'|'.repeat(bounded)}${'-'.repeat(10 - bounded)} ${bounded}/10`;
+}
+
+function formatSelectedModelDetails(
+  model: OpenRouterModelOption,
+  language: SupportedLanguage,
+): string {
+  return [
+    model.description,
+    formatPriceLine(model, language),
+    formatContextLine(model, language),
+    formatModelRatings(model, language),
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
+function formatPriceLine(
+  model: OpenRouterModelOption,
+  language: SupportedLanguage,
+): string {
+  if (
+    model.inputPricePerMillion === undefined ||
+    model.outputPricePerMillion === undefined
+  ) {
+    return getUnknownPriceText(language);
+  }
+
+  return getPriceText(
+    language,
+    formatUsd(model.inputPricePerMillion),
+    formatUsd(model.outputPricePerMillion),
+  );
+}
+
+function formatContextLine(
+  model: OpenRouterModelOption,
+  language: SupportedLanguage,
+): string {
+  if (model.contextTokens === undefined) {
+    return getUnknownContextText(language);
+  }
+
+  const context = formatTokenCount(model.contextTokens);
+  const output = model.maxOutputTokens
+    ? ` ${getMaxOutputText(language, formatTokenCount(model.maxOutputTokens))}`
+    : '';
+
+  return `${getContextText(language, context)}${output}`;
+}
+
+function formatUsd(value: number): string {
+  return `$${value.toLocaleString('en-US', {
+    maximumFractionDigits: 4,
+    minimumFractionDigits: 0,
+  })}`;
+}
+
+function formatTokenCount(value: number): string {
+  if (value >= 1000000) {
+    return `${Number((value / 1000000).toFixed(2))}M`;
+  }
+  if (value >= 1000) {
+    return `${Number((value / 1000).toFixed(1))}k`;
+  }
+  return String(value);
+}
+
+function getSpeedLabel(language: SupportedLanguage): string {
+  const labels: Record<SupportedLanguage, string> = {
+    en: 'Speed',
+    es: 'Vel',
+    ru: 'Скор',
+    uk: 'Швид',
+  };
+
+  return labels[language];
+}
+
+function getCostLabel(language: SupportedLanguage): string {
+  const labels: Record<SupportedLanguage, string> = {
+    en: 'Value',
+    es: 'Ahorro',
+    ru: 'Эконом',
+    uk: 'Екон',
+  };
+
+  return labels[language];
+}
+
+function getPriceText(
+  language: SupportedLanguage,
+  inputPrice: string,
+  outputPrice: string,
+): string {
+  const texts: Record<SupportedLanguage, string> = {
+    en: `Price: ${inputPrice} input / ${outputPrice} output per 1M tokens.`,
+    es: `Precio: ${inputPrice} entrada / ${outputPrice} salida por 1M tokens.`,
+    ru: `Цена: ${inputPrice} input / ${outputPrice} output за 1M токенов.`,
+    uk: `Ціна: ${inputPrice} input / ${outputPrice} output за 1M токенів.`,
+  };
+
+  return texts[language];
+}
+
+function getUnknownPriceText(language: SupportedLanguage): string {
+  const texts: Record<SupportedLanguage, string> = {
+    en: 'Price: check live OpenRouter data.',
+    es: 'Precio: comprueba los datos actuales en OpenRouter.',
+    ru: 'Цена: проверьте актуальные данные OpenRouter.',
+    uk: 'Ціна: перевірте актуальні дані OpenRouter.',
+  };
+
+  return texts[language];
+}
+
+function getContextText(language: SupportedLanguage, context: string): string {
+  const texts: Record<SupportedLanguage, string> = {
+    en: `Context: ${context} tokens.`,
+    es: `Contexto: ${context} tokens.`,
+    ru: `Контекст: ${context} токенов.`,
+    uk: `Контекст: ${context} токенів.`,
+  };
+
+  return texts[language];
+}
+
+function getUnknownContextText(language: SupportedLanguage): string {
+  const texts: Record<SupportedLanguage, string> = {
+    en: 'Context: check live OpenRouter data.',
+    es: 'Contexto: comprueba los datos actuales en OpenRouter.',
+    ru: 'Контекст: проверьте актуальные данные OpenRouter.',
+    uk: 'Контекст: перевірте актуальні дані OpenRouter.',
+  };
+
+  return texts[language];
+}
+
+function getMaxOutputText(language: SupportedLanguage, output: string): string {
+  const texts: Record<SupportedLanguage, string> = {
+    en: `Max output: ${output}.`,
+    es: `Salida max.: ${output}.`,
+    ru: `Макс. output: ${output}.`,
+    uk: `Макс. output: ${output}.`,
+  };
+
+  return texts[language];
 }
 
 function getOpenRouterInfoLabel(language: SupportedLanguage): string {
