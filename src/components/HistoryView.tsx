@@ -14,6 +14,11 @@ import { useSelector } from 'react-redux';
 import { isMissingAnswerCharacter } from '../domain/answerPlaceholders';
 import { ExercisePrompt } from '../domain/exercises';
 import {
+  ALL_CARDS_CARD_SET_ID,
+  getCardSetName,
+  type CardSet,
+} from '../domain/cardSets';
+import {
   ExerciseHistorySummary,
   summarizeExerciseHistory,
 } from '../domain/exerciseHistory';
@@ -26,6 +31,7 @@ import {
 import { RootState } from '../store/store';
 import { CursorAnchoredTooltip, TooltipContent } from './CursorAnchoredTooltip';
 import { StatsFormula } from './StatsFormula';
+import { ExerciseCardSetChip } from './exercises/ExerciseCardSetChip';
 import { CrosswordHistoryReplay } from './history/CrosswordHistoryReplay';
 import {
   formatAttemptDate,
@@ -43,6 +49,7 @@ export function HistoryView() {
   const allAttempts = useSelector(
     (state: RootState) => state.attempts.attempts,
   );
+  const cardSets = useSelector((state: RootState) => state.cardSets.cardSets);
   const worldId = useSelector((state: RootState) =>
     resolveWorldId(state.app.worldId),
   );
@@ -67,6 +74,12 @@ export function HistoryView() {
           attempt={attempt}
           allAttempts={allAttempts}
           interfaceLanguage={interfaceLanguage}
+          cardSetName={getHistoryCardSetName({
+            cardSetId: attempt.cardSetId,
+            cardSets,
+            interfaceLanguage,
+            targetLanguage,
+          })}
           resultColors={resultColors}
         />
       ))}
@@ -84,11 +97,13 @@ export function HistoryView() {
 function AttemptHistoryCard({
   allAttempts,
   attempt,
+  cardSetName,
   interfaceLanguage,
   resultColors,
 }: {
   allAttempts: RootState['attempts']['attempts'];
   attempt: ExerciseHistorySummary;
+  cardSetName: string;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   resultColors: WorldResultColors;
 }) {
@@ -150,24 +165,37 @@ function AttemptHistoryCard({
           sx={{ width: '100%', pr: 1 }}
         >
           <Stack
-            data-test={`history_view__attempt_title_row__${attemptDomKey}`}
-            direction="row"
-            spacing={1}
-            sx={{ alignItems: 'center' }}
+            data-test={`history_view__attempt_heading_group__${attemptDomKey}`}
+            spacing={0.5}
+            sx={{ alignItems: 'flex-start' }}
           >
-            <Typography
-              data-test={`history_view__attempt_type__${attemptDomKey}`}
-              variant="h6"
+            <Stack
+              data-test={`history_view__attempt_title_row__${attemptDomKey}`}
+              direction="row"
+              spacing={1}
+              sx={{ alignItems: 'center' }}
             >
-              {t(interfaceLanguage, attempt.exerciseType)}
-            </Typography>
-            {attempt.isExerciseCompleted && attempt.exerciseCompletedAt && (
-              <CompletedExerciseTrophy
-                completedAt={attempt.exerciseCompletedAt}
-                dataTest={`history_view__completed_trophy__${attemptDomKey}`}
-                interfaceLanguage={interfaceLanguage}
-              />
-            )}
+              <Typography
+                data-test={`history_view__attempt_type__${attemptDomKey}`}
+                variant="h6"
+              >
+                {t(interfaceLanguage, attempt.exerciseType)}
+              </Typography>
+              {attempt.isExerciseCompleted && attempt.exerciseCompletedAt && (
+                <CompletedExerciseTrophy
+                  completedAt={attempt.exerciseCompletedAt}
+                  dataTest={`history_view__completed_trophy__${attemptDomKey}`}
+                  interfaceLanguage={interfaceLanguage}
+                />
+              )}
+            </Stack>
+            <ExerciseCardSetChip
+              cardSetName={cardSetName}
+              dataTest={`history_view__attempt_card_set_chip__${attemptDomKey}`}
+              interfaceLanguage={interfaceLanguage}
+              size="small"
+              sx={historyCardSetChipStyles}
+            />
           </Stack>
           <StatsFormula
             correct={attempt.correct}
@@ -271,6 +299,25 @@ function AttemptHistoryCard({
       </AccordionDetails>
     </Accordion>
   );
+}
+
+function getHistoryCardSetName({
+  cardSetId,
+  cardSets,
+  interfaceLanguage,
+  targetLanguage,
+}: {
+  cardSetId: string;
+  cardSets: CardSet[];
+  interfaceLanguage: RootState['app']['interfaceLanguage'];
+  targetLanguage: RootState['app']['targetLanguage'];
+}): string {
+  if (cardSetId === ALL_CARDS_CARD_SET_ID) {
+    return t(interfaceLanguage, 'allCards');
+  }
+
+  const cardSet = cardSets.find((item) => item.id === cardSetId);
+  return cardSet ? getCardSetName(cardSet, targetLanguage) : cardSetId;
 }
 
 function CompletedExerciseTrophy({
@@ -540,6 +587,15 @@ const completedTrophyTooltipContentStyles = {
   fontSize: 14,
   fontWeight: 800,
   lineHeight: 1.35,
+};
+
+const historyCardSetChipStyles = {
+  alignSelf: 'flex-start',
+  bgcolor: '#f2f3f1',
+  border: '1px solid rgba(32, 48, 21, 0.18)',
+  color: '#203015',
+  fontWeight: 850,
+  height: 30,
 };
 
 function getPromptOptions(prompt: ExercisePrompt): string[] {

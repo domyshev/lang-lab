@@ -14,6 +14,7 @@ import { attemptsReducer } from '../../store/attemptsSlice';
 import { cardSetsReducer } from '../../store/cardSetsSlice';
 import { cardsReducer } from '../../store/cardsSlice';
 import { statsReducer } from '../../store/statsSlice';
+import { defaultPracticeSettings } from '../../domain/practiceOrdering';
 
 function createMemoryStorage(): Storage {
   const values = new Map<string, string>();
@@ -270,6 +271,7 @@ describe('ServerDataGate', () => {
                   isAnonymous: false,
                 },
                 practiceSettings: {
+                  ...defaultPracticeSettings,
                   correctStreakCooldownMonths: {
                     fivePlus: 2,
                     four: 1,

@@ -24,6 +24,7 @@ import { MissingWordPrompt } from '../../domain/exercises';
 import { footballResultColors } from '../../domain/footballTheme';
 import { t } from '../../domain/i18n';
 import { SupportedLanguage } from '../../domain/languages';
+import { getEditableAnswerIndexesByVisibleLetterPercent } from '../../domain/missingAnswerVisibility';
 import type { WorldResultColors } from '../../domain/worlds';
 import { RootState } from '../../store/store';
 import { KnownCardToggleButton } from '../KnownCardToggleButton';
@@ -61,6 +62,7 @@ export function MissingWordExercise({
   cardSetName,
   finishAction,
   targetLanguage = 'en',
+  visibleLetterPercent = 50,
 }: {
   complementaryLanguage?: SupportedLanguage;
   complementaryLanguages?: SupportedLanguage[];
@@ -85,6 +87,7 @@ export function MissingWordExercise({
   cardSetName?: string;
   finishAction?: ReactNode;
   targetLanguage?: SupportedLanguage;
+  visibleLetterPercent?: number;
 }) {
   const [letters, setLetters] = useState<Record<number, string>>({});
   const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
@@ -95,7 +98,10 @@ export function MissingWordExercise({
     (state: RootState) => state.app.interfaceLanguage,
   );
   const answerCharacters = prompt.expectedAnswer.split('');
-  const editableIndexes = getEditableAnswerIndexes(answerCharacters);
+  const editableIndexes = getEditableAnswerIndexesByVisibleLetterPercent(
+    answerCharacters,
+    visibleLetterPercent,
+  );
   const answer = answerCharacters
     .map((character, index) =>
       character.trim() === ''
@@ -708,33 +714,6 @@ function getSubmittedInputCellStyle({
 
 function normalizeAnswer(value: string): string {
   return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
-}
-
-function getEditableAnswerIndexes(characters: string[]): number[] {
-  const editableIndexes: number[] = [];
-  let indexInWord = 0;
-
-  characters.forEach((character, index) => {
-    if (character.trim() === '') {
-      indexInWord = 0;
-      return;
-    }
-
-    if (!isLetter(character)) {
-      return;
-    }
-
-    if (indexInWord % 2 === 1) {
-      editableIndexes.push(index);
-    }
-    indexInWord += 1;
-  });
-
-  return editableIndexes;
-}
-
-function isLetter(character: string): boolean {
-  return /^\p{L}$/u.test(character);
 }
 
 function focusNextEditableInput({

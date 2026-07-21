@@ -2327,6 +2327,60 @@ describe('App navigation', () => {
     expect(screen.getAllByLabelText(/Missing word letter/).length).toBeGreaterThan(0);
   });
 
+  it('configures missing answer difficulty from the active game controls', async () => {
+    const user = userEvent.setup();
+    const store = renderApp();
+
+    await startExercise(user, 'Пропущенное слово');
+
+    const shortcutControls = screen.getByTestId(
+      'exercise_finish_action__shortcut_controls',
+    );
+    const difficultyButton = within(shortcutControls).getByTestId(
+      'exercise_finish_action__difficulty_button__missingWord',
+    );
+    const hotkeyButton = within(shortcutControls).getByTestId(
+      'exercise_finish_action__hotkeys_anchor',
+    );
+
+    expect(difficultyButton.compareDocumentPosition(hotkeyButton)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+
+    await user.click(difficultyButton);
+    const panel = await screen.findByTestId(
+      'exercise_finish_action__difficulty_panel__missingWord',
+    );
+    await user.click(
+      within(panel).getByTestId(
+        'exercise_finish_action__difficulty_option__missingWord__hard',
+      ),
+    );
+    const visiblePercentInput = within(panel).getByLabelText(
+      'Предзаполненные буквы',
+    );
+
+    expect(visiblePercentInput).toHaveValue(0);
+
+    await user.clear(visiblePercentInput);
+    await user.type(visiblePercentInput, '10');
+
+    expect(
+      store.getState().app.practiceSettings!.missingAnswerSettings.missingWord,
+    ).toEqual({
+      difficulty: 'hard',
+      visibleLetterPercentByDifficulty: {
+        easy: 60,
+        medium: 50,
+        hard: 10,
+      },
+    });
+    expect(
+      store.getState().app.practiceSettings!.missingAnswerSettings.missingLetters
+        .difficulty,
+    ).toBe('medium');
+  });
+
   it('shows zebra hypersonic jumps for missing word phrases', async () => {
     const user = userEvent.setup();
     renderApp();
@@ -2537,21 +2591,24 @@ describe('App navigation', () => {
 
   it('shows a completed game summary when available missing word prompts are exhausted by cooldowns', async () => {
     const user = userEvent.setup();
+    const cooldownAttemptDates = [2, 1, 0].map((daysAgo) =>
+      new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString(),
+    );
     renderApp({
       attempts: [
         createStoredAttempt({
           cardId: 'card-look-forward',
-          completedAt: '2026-07-01T10:00:00.000Z',
+          completedAt: cooldownAttemptDates[0],
           isCorrect: true,
         }),
         createStoredAttempt({
           cardId: 'card-look-forward',
-          completedAt: '2026-07-02T10:00:00.000Z',
+          completedAt: cooldownAttemptDates[1],
           isCorrect: true,
         }),
         createStoredAttempt({
           cardId: 'card-look-forward',
-          completedAt: '2026-07-03T10:00:00.000Z',
+          completedAt: cooldownAttemptDates[2],
           isCorrect: true,
         }),
       ],
@@ -2938,15 +2995,17 @@ async function answerMissingLettersCorrectWithEnter(
 }
 
 function getVisibleMissingWordSentence(): string {
-  if (screen.queryByText('It is')) {
+  const cardId = getVisibleMissingWordCardId();
+
+  if (cardId === 'card-worth-it') {
     return 'It is worth it today.';
   }
 
-  if (screen.queryByText('I')) {
+  if (cardId === 'card-look-forward') {
     return 'I look forward to tomorrow.';
   }
 
-  throw new Error('Missing word sentence is not visible.');
+  throw new Error(`Unknown missing word sentence card id: ${cardId}`);
 }
 
 async function answerMissingWordWrong(user: ReturnType<typeof userEvent.setup>) {

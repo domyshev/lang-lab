@@ -101,13 +101,31 @@ describe('MissingWordExercise', () => {
       </Provider>,
     );
 
-    expect(screen.getByText('It is')).toBeInTheDocument();
-    expect(screen.getByText('today.')).toBeInTheDocument();
+    expect(
+      screen.getByTestId('missing_word_exercise__sentence_before__worth-it__cell__0'),
+    ).toHaveTextContent('I');
+    expect(
+      screen.getByTestId('missing_word_exercise__sentence_before__worth-it__cell__1'),
+    ).toHaveTextContent('t');
+    expect(
+      screen.getByTestId('missing_word_exercise__sentence_after__worth-it__cell__1'),
+    ).toHaveTextContent('t');
+    expect(
+      screen.getByTestId('missing_word_exercise__sentence_after__worth-it__cell__6'),
+    ).toHaveTextContent('.');
     expect(screen.getAllByLabelText(/Missing word letter/)).toHaveLength(3);
-    expect(screen.getByText('w')).toBeInTheDocument();
-    expect(screen.getByText('r')).toBeInTheDocument();
-    expect(screen.getByText('h')).toBeInTheDocument();
-    expect(screen.getByText('i')).toBeInTheDocument();
+    expect(
+      screen.getByTestId('missing_word_exercise__answer_cells__worth-it__fixed_cell__0'),
+    ).toHaveTextContent('w');
+    expect(
+      screen.getByTestId('missing_word_exercise__answer_cells__worth-it__fixed_cell__2'),
+    ).toHaveTextContent('r');
+    expect(
+      screen.getByTestId('missing_word_exercise__answer_cells__worth-it__fixed_cell__4'),
+    ).toHaveTextContent('h');
+    expect(
+      screen.getByTestId('missing_word_exercise__answer_cells__worth-it__fixed_cell__6'),
+    ).toHaveTextContent('i');
     expect(screen.getByTestId('missing_word_exercise__answer_cells__worth-it__space__5')).toHaveStyle({
       width: '38px',
     });
@@ -148,6 +166,32 @@ describe('MissingWordExercise', () => {
 
     await user.click(screen.getByRole('button', { name: 'Неверно' }));
     expect(onNext).toHaveBeenCalledOnce();
+  });
+
+  it('asks for every answer letter when the visible percent is zero', () => {
+    render(
+      <Provider store={createStore()}>
+        <MissingWordExercise
+          prompt={{
+            cardId: 'worth-it',
+            prompt: 'ru: оно того стоит',
+            expectedAnswer: 'worth it',
+            sentenceWithGap: 'It is _____ today.',
+            translationHints: [{ language: 'ru', value: 'оно того стоит' }],
+          }}
+          visibleLetterPercent={0}
+          onAnswer={vi.fn()}
+          onNext={vi.fn()}
+        />
+      </Provider>,
+    );
+
+    expect(screen.getAllByLabelText(/Missing word letter/)).toHaveLength(7);
+    expect(
+      screen.queryByTestId(
+        'missing_word_exercise__answer_cells__worth-it__fixed_cell__0',
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it('keeps punctuation in a fixed cell instead of asking the user to type it', async () => {

@@ -44,6 +44,13 @@ type I18nKey =
   | 'newCardMixFrequency'
   | 'recentMistakeRepeatFrequency'
   | 'frequencyPercent'
+  | 'missingAnswerDifficulty'
+  | 'missingAnswerDifficultyTitle'
+  | 'easyDifficulty'
+  | 'mediumDifficulty'
+  | 'hardDifficulty'
+  | 'visibleLetterPercent'
+  | 'visibleLetterPercentHelper'
   | 'agentsSection'
   | 'agentsTitle'
   | 'agentsOpenRouterIntro'
@@ -342,6 +349,13 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     recentMistakeRepeatFrequency: 'Mistake repeat frequency',
     newCardMixFrequency: 'New word mix-in',
     frequencyPercent: 'Frequency percent',
+    missingAnswerDifficulty: 'Difficulty',
+    missingAnswerDifficultyTitle: 'Missing answer difficulty',
+    easyDifficulty: 'Easy',
+    mediumDifficulty: 'Medium',
+    hardDifficulty: 'Hard',
+    visibleLetterPercent: 'Prefilled letters',
+    visibleLetterPercentHelper: 'Percent of answer letters shown before typing',
     agentsSection: 'AI Assistant',
     agentsTitle: 'AI Assistant',
     agentsOpenRouterIntro:
@@ -688,6 +702,13 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     recentMistakeRepeatFrequency: 'Частота повторов ошибок',
     newCardMixFrequency: 'Примешивание новых слов',
     frequencyPercent: 'Процент появления',
+    missingAnswerDifficulty: 'Сложность',
+    missingAnswerDifficultyTitle: 'Сложность пропущенных ответов',
+    easyDifficulty: 'Легко',
+    mediumDifficulty: 'Средне',
+    hardDifficulty: 'Сложно',
+    visibleLetterPercent: 'Предзаполненные буквы',
+    visibleLetterPercentHelper: 'Процент букв ответа, показанных до ввода',
     agentsSection: 'AI помощник',
     agentsTitle: 'AI помощник',
     agentsOpenRouterIntro:
@@ -1036,6 +1057,13 @@ const messages: Record<MessageLanguage, Record<I18nKey, string>> = {
     recentMistakeRepeatFrequency: 'Frecuencia de repeticion de errores',
     newCardMixFrequency: 'Mezcla de palabras nuevas',
     frequencyPercent: 'Porcentaje de frecuencia',
+    missingAnswerDifficulty: 'Dificultad',
+    missingAnswerDifficultyTitle: 'Dificultad de respuestas incompletas',
+    easyDifficulty: 'Facil',
+    mediumDifficulty: 'Medio',
+    hardDifficulty: 'Dificil',
+    visibleLetterPercent: 'Letras rellenadas',
+    visibleLetterPercentHelper: 'Porcentaje de letras visibles antes de escribir',
     agentsSection: 'Asistente IA',
     agentsTitle: 'Asistente IA',
     agentsOpenRouterIntro:
@@ -1393,6 +1421,13 @@ const ukrainianMessages: Partial<Record<I18nKey, string>> = {
   interfaceLanguage: 'Мова інтерфейсу',
   missingLetters: 'Пропущені літери',
   missingWord: 'Пропущене слово',
+  missingAnswerDifficulty: 'Складність',
+  missingAnswerDifficultyTitle: 'Складність пропущених відповідей',
+  easyDifficulty: 'Легко',
+  mediumDifficulty: 'Середньо',
+  hardDifficulty: 'Складно',
+  visibleLetterPercent: 'Попередньо заповнені літери',
+  visibleLetterPercentHelper: 'Відсоток літер відповіді, показаних до введення',
   multipleChoice: 'Питання з 3 варіантами',
   next: 'Далі',
   openAiAssistant: 'Відкрити AI помічника',

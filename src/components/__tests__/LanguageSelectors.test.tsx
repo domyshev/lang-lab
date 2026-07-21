@@ -404,6 +404,11 @@ describe('LanguageSelectors', () => {
 
     await user.click(screen.getByRole('button', { name: 'Настройки игр' }));
 
+    expect(
+      screen.queryByTestId(
+        'language_selectors__missing_answer_settings__missingLetters',
+      ),
+    ).not.toBeInTheDocument();
     expect(screen.queryByTestId('language_selectors__world_info_button')).not.toBeInTheDocument();
 
     const expectedTooltips = [
