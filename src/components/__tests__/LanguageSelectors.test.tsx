@@ -194,56 +194,6 @@ describe('LanguageSelectors', () => {
     ).toBe(35);
   });
 
-  it('configures missing answer difficulty per game from the top-right menu', async () => {
-    const user = userEvent.setup();
-    const store = createStore();
-
-    render(
-      <Provider store={store}>
-        <LanguageSelectors />
-      </Provider>,
-    );
-
-    await user.click(screen.getByRole('button', { name: 'Настройки игр' }));
-    await user.click(
-      screen.getByTestId(
-        'language_selectors__missing_answer_difficulty__missingLetters__hard',
-      ),
-    );
-    const missingLettersPercent = within(
-      screen.getByTestId(
-        'language_selectors__missing_answer_settings__missingLetters',
-      ),
-    ).getByLabelText(
-      'Предзаполненные буквы',
-    );
-
-    expect(missingLettersPercent).toHaveValue(0);
-
-    await user.clear(missingLettersPercent);
-    await user.type(missingLettersPercent, '10');
-    await user.click(
-      screen.getByTestId(
-        'language_selectors__missing_answer_difficulty__missingWord__easy',
-      ),
-    );
-
-    expect(
-      store.getState().app.practiceSettings!.missingAnswerSettings.missingLetters,
-    ).toEqual({
-      difficulty: 'hard',
-      visibleLetterPercentByDifficulty: {
-        easy: 60,
-        medium: 50,
-        hard: 10,
-      },
-    });
-    expect(
-      store.getState().app.practiceSettings!.missingAnswerSettings.missingWord
-        .difficulty,
-    ).toBe('easy');
-  });
-
   it('configures ordered companion languages in the header independently from the interface language', async () => {
     const user = userEvent.setup();
     const store = createStore();
@@ -454,6 +404,11 @@ describe('LanguageSelectors', () => {
 
     await user.click(screen.getByRole('button', { name: 'Настройки игр' }));
 
+    expect(
+      screen.queryByTestId(
+        'language_selectors__missing_answer_settings__missingLetters',
+      ),
+    ).not.toBeInTheDocument();
     expect(screen.queryByTestId('language_selectors__world_info_button')).not.toBeInTheDocument();
 
     const expectedTooltips = [

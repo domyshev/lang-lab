@@ -2327,6 +2327,60 @@ describe('App navigation', () => {
     expect(screen.getAllByLabelText(/Missing word letter/).length).toBeGreaterThan(0);
   });
 
+  it('configures missing answer difficulty from the active game controls', async () => {
+    const user = userEvent.setup();
+    const store = renderApp();
+
+    await startExercise(user, 'Пропущенное слово');
+
+    const shortcutControls = screen.getByTestId(
+      'exercise_finish_action__shortcut_controls',
+    );
+    const difficultyButton = within(shortcutControls).getByTestId(
+      'exercise_finish_action__difficulty_button__missingWord',
+    );
+    const hotkeyButton = within(shortcutControls).getByTestId(
+      'exercise_finish_action__hotkeys_anchor',
+    );
+
+    expect(difficultyButton.compareDocumentPosition(hotkeyButton)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+
+    await user.click(difficultyButton);
+    const panel = await screen.findByTestId(
+      'exercise_finish_action__difficulty_panel__missingWord',
+    );
+    await user.click(
+      within(panel).getByTestId(
+        'exercise_finish_action__difficulty_option__missingWord__hard',
+      ),
+    );
+    const visiblePercentInput = within(panel).getByLabelText(
+      'Предзаполненные буквы',
+    );
+
+    expect(visiblePercentInput).toHaveValue(0);
+
+    await user.clear(visiblePercentInput);
+    await user.type(visiblePercentInput, '10');
+
+    expect(
+      store.getState().app.practiceSettings!.missingAnswerSettings.missingWord,
+    ).toEqual({
+      difficulty: 'hard',
+      visibleLetterPercentByDifficulty: {
+        easy: 60,
+        medium: 50,
+        hard: 10,
+      },
+    });
+    expect(
+      store.getState().app.practiceSettings!.missingAnswerSettings.missingLetters
+        .difficulty,
+    ).toBe('medium');
+  });
+
   it('shows zebra hypersonic jumps for missing word phrases', async () => {
     const user = userEvent.setup();
     renderApp();

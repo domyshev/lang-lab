@@ -4,6 +4,7 @@ import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import QueryStatsOutlinedIcon from '@mui/icons-material/QueryStatsOutlined';
+import SpeedOutlinedIcon from '@mui/icons-material/SpeedOutlined';
 import TipsAndUpdatesOutlinedIcon from '@mui/icons-material/TipsAndUpdatesOutlined';
 import {
   Alert,
@@ -18,11 +19,15 @@ import {
   FormControl,
   IconButton,
   InputLabel,
+  Menu,
   MenuItem,
   Paper,
   Select,
   Stack,
+  TextField,
   Tooltip,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
@@ -83,6 +88,8 @@ import { summarizeExerciseHistory } from './domain/exerciseHistory';
 import { getLanguageDisplayName, t } from './domain/i18n';
 import { SupportedLanguage, languageFlags } from './domain/languages';
 import {
+  MissingAnswerDifficulty,
+  MissingAnswerExerciseType,
   getMissingAnswerVisibleLetterPercent,
   getPracticeSettings,
   orderCardsForMissingLettersPractice,
@@ -100,6 +107,8 @@ import {
   getComplementaryLanguagesForTarget,
   markFinishExerciseLampShown,
   markHypersonicJumpLampShown,
+  setMissingAnswerDifficulty,
+  setMissingAnswerVisibleLetterPercent,
 } from './store/appSlice';
 import { seedDefaultCards, setCardKnown } from './store/cardsSlice';
 import { rebuildStatsFromAttempts, recordAttemptStats } from './store/statsSlice';
@@ -1562,12 +1571,17 @@ export function App() {
 
   function renderFinishExerciseAction(
     jumpSelector?: FinishExerciseJumpSelector,
-    options?: { progressChip?: ReactNode; showHypersonicJumpGuide?: boolean },
+    options?: {
+      missingAnswerExerciseType?: MissingAnswerExerciseType;
+      progressChip?: ReactNode;
+      showHypersonicJumpGuide?: boolean;
+    },
   ) {
     return (
       <FinishExerciseAction
         interfaceLanguage={interfaceLanguage}
         jumpSelector={jumpSelector}
+        missingAnswerExerciseType={options?.missingAnswerExerciseType}
         onClick={() => openFinishDialog('finish')}
         progressChip={options?.progressChip}
         showHypersonicJumpGuide={options?.showHypersonicJumpGuide}
@@ -1821,6 +1835,7 @@ export function App() {
           finishAction={renderFinishExerciseAction(
             buildMissingLettersJumpSelector(missingLettersPrompt),
             {
+              missingAnswerExerciseType: 'missingLetters',
               progressChip: (
                 <ExerciseProgressChip
                   completed={completedMissingLettersCardIds.length}
@@ -1900,6 +1915,7 @@ export function App() {
         finishAction={renderFinishExerciseAction(
           buildMissingWordJumpSelector(missingWordPrompt),
           {
+            missingAnswerExerciseType: 'missingWord',
             progressChip: (
               <ExerciseProgressChip
                 completed={completedMissingWordCardIds.length}
@@ -2607,6 +2623,7 @@ function CurrentPromptStatsButton({
 function FinishExerciseAction({
   interfaceLanguage,
   jumpSelector,
+  missingAnswerExerciseType,
   onClick,
   progressChip,
   showHypersonicJumpGuide = true,
@@ -2614,6 +2631,7 @@ function FinishExerciseAction({
 }: {
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   jumpSelector?: FinishExerciseJumpSelector;
+  missingAnswerExerciseType?: MissingAnswerExerciseType;
   onClick: () => void;
   progressChip?: ReactNode;
   showHypersonicJumpGuide?: boolean;
@@ -2704,10 +2722,28 @@ function FinishExerciseAction({
           }}
         >
           {jumpSelector && (
-            <HotkeyShortcutTooltip
-              interfaceLanguage={interfaceLanguage}
-              worldId={worldId}
-            />
+            <Stack
+              data-test="exercise_finish_action__shortcut_controls"
+              direction="row"
+              spacing={2.5}
+              sx={{
+                alignItems: 'center',
+                flex: '0 0 auto',
+                justifyContent: 'center',
+              }}
+            >
+              {missingAnswerExerciseType && (
+                <MissingAnswerDifficultyMenuButton
+                  exerciseType={missingAnswerExerciseType}
+                  interfaceLanguage={interfaceLanguage}
+                  worldId={worldId}
+                />
+              )}
+              <HotkeyShortcutTooltip
+                interfaceLanguage={interfaceLanguage}
+                worldId={worldId}
+              />
+            </Stack>
           )}
           <Box
             data-test="exercise_finish_action__thought_bubble"
@@ -2999,6 +3035,184 @@ function FinishExerciseAction({
   );
 }
 
+function MissingAnswerDifficultyMenuButton({
+  exerciseType,
+  interfaceLanguage,
+  worldId,
+}: {
+  exerciseType: MissingAnswerExerciseType;
+  interfaceLanguage: RootState['app']['interfaceLanguage'];
+  worldId: WorldId;
+}) {
+  const dispatch = useDispatch<AppDispatch>();
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const practiceSettings = getPracticeSettings(
+    useSelector((state: RootState) => state.app.practiceSettings),
+  );
+  const exerciseSettings = practiceSettings.missingAnswerSettings[exerciseType];
+  const selectedDifficulty = exerciseSettings.difficulty;
+  const jumpVisualTheme = getJumpVisualTheme(worldId);
+  const isOpen = Boolean(anchorEl);
+
+  return (
+    <>
+      <IconButton
+        aria-label={`${t(interfaceLanguage, 'missingAnswerDifficulty')}: ${t(
+          interfaceLanguage,
+          exerciseType,
+        )}`}
+        data-test={`exercise_finish_action__difficulty_button__${exerciseType}`}
+        onClick={(event) => setAnchorEl(event.currentTarget)}
+        sx={{
+          alignItems: 'center',
+          background: getDifficultyButtonGradient(worldId),
+          border: `1px solid ${jumpVisualTheme.hotkeyBorder}`,
+          borderRadius: '14px',
+          boxShadow:
+            'inset 0 2px 0 rgba(255,255,255,0.86), inset 0 -4px 0 rgba(32, 48, 21, 0.13), 0 3px 0 rgba(32, 48, 21, 0.13)',
+          color: jumpVisualTheme.hotkeyText,
+          display: 'inline-flex',
+          flex: '0 0 auto',
+          height: { xs: 40, sm: 44 },
+          justifyContent: 'center',
+          overflow: 'hidden',
+          position: 'relative',
+          transition:
+            'background 160ms ease, box-shadow 160ms ease, transform 160ms ease',
+          width: { xs: 42, sm: 46 },
+          '&::before': {
+            background:
+              'linear-gradient(90deg, rgba(255,255,255,0.72), rgba(255,255,255,0.08))',
+            borderRadius: '10px 10px 7px 7px',
+            content: '""',
+            height: '34%',
+            left: 5,
+            position: 'absolute',
+            right: 5,
+            top: 4,
+          },
+          '&:hover': {
+            background: getDifficultyButtonHoverGradient(worldId),
+            boxShadow:
+              'inset 0 2px 0 rgba(255,255,255,0.92), inset 0 -4px 0 rgba(32, 48, 21, 0.16), 0 3px 0 rgba(32, 48, 21, 0.16)',
+            transform: 'translateY(-1px)',
+          },
+        }}
+      >
+        <SpeedOutlinedIcon
+          data-test={`exercise_finish_action__difficulty_icon__${exerciseType}`}
+          sx={{
+            fontSize: { xs: 24, sm: 27 },
+            position: 'relative',
+            zIndex: 1,
+          }}
+        />
+      </IconButton>
+      <Menu
+        anchorEl={anchorEl}
+        data-test={`exercise_finish_action__difficulty_menu__${exerciseType}`}
+        open={isOpen}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
+        transformOrigin={{ horizontal: 'left', vertical: 'top' }}
+        PaperProps={{
+          sx: {
+            border: `1px solid ${jumpVisualTheme.bubbleBorder}`,
+            borderRadius: 2,
+            boxShadow: '0 8px 20px rgba(32, 48, 21, 0.14)',
+            mt: 1,
+            overflow: 'hidden',
+          },
+        }}
+      >
+        <Stack
+          data-test={`exercise_finish_action__difficulty_panel__${exerciseType}`}
+          spacing={1.25}
+          sx={{
+            background:
+              worldId === 'forest'
+                ? 'linear-gradient(135deg, #fbfff6 0%, #eefadd 100%)'
+                : 'linear-gradient(135deg, #fffaf0 0%, #fff0c8 100%)',
+            minWidth: 286,
+            p: 1.5,
+          }}
+        >
+          <Typography sx={{ color: jumpVisualTheme.text, fontWeight: 900 }}>
+            {t(interfaceLanguage, 'missingAnswerDifficultyTitle')}
+          </Typography>
+          <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 700 }}>
+            {t(interfaceLanguage, exerciseType)}
+          </Typography>
+          <ToggleButtonGroup
+            aria-label={`${t(interfaceLanguage, exerciseType)} ${t(
+              interfaceLanguage,
+              'missingAnswerDifficulty',
+            )}`}
+            color="primary"
+            exclusive
+            fullWidth
+            size="small"
+            value={selectedDifficulty}
+            onChange={(_, value: MissingAnswerDifficulty | null) => {
+              if (!value) {
+                return;
+              }
+              dispatch(
+                setMissingAnswerDifficulty({
+                  difficulty: value,
+                  exerciseType,
+                }),
+              );
+            }}
+          >
+            {missingAnswerDifficulties.map((difficulty) => (
+              <ToggleButton
+                data-test={`exercise_finish_action__difficulty_option__${exerciseType}__${difficulty}`}
+                key={difficulty}
+                sx={{
+                  fontSize: 13,
+                  fontWeight: 850,
+                  textTransform: 'none',
+                }}
+                value={difficulty}
+              >
+                {t(interfaceLanguage, missingAnswerDifficultyLabelKeys[difficulty])}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+          <TextField
+            data-test={`exercise_finish_action__difficulty_visible_percent__${exerciseType}`}
+            fullWidth
+            label={t(interfaceLanguage, 'visibleLetterPercent')}
+            size="small"
+            type="number"
+            value={
+              exerciseSettings.visibleLetterPercentByDifficulty[
+                selectedDifficulty
+              ]
+            }
+            onChange={(event) =>
+              dispatch(
+                setMissingAnswerVisibleLetterPercent({
+                  difficulty: selectedDifficulty,
+                  exerciseType,
+                  percent: Number(event.target.value),
+                }),
+              )
+            }
+            inputProps={{
+              max: 100,
+              min: 0,
+              step: 5,
+            }}
+            helperText={t(interfaceLanguage, 'visibleLetterPercentHelper')}
+          />
+        </Stack>
+      </Menu>
+    </>
+  );
+}
+
 function HotkeyShortcutTooltip({
   interfaceLanguage,
   worldId,
@@ -3140,6 +3354,37 @@ function JumpInfoTooltip({
       </IconButton>
     </CursorAnchoredTooltip>
   );
+}
+
+const missingAnswerDifficulties: MissingAnswerDifficulty[] = [
+  'easy',
+  'medium',
+  'hard',
+];
+
+const missingAnswerDifficultyLabelKeys: Record<
+  MissingAnswerDifficulty,
+  'easyDifficulty' | 'hardDifficulty' | 'mediumDifficulty'
+> = {
+  easy: 'easyDifficulty',
+  hard: 'hardDifficulty',
+  medium: 'mediumDifficulty',
+};
+
+function getDifficultyButtonGradient(worldId: WorldId): string {
+  if (worldId === 'forest') {
+    return 'linear-gradient(145deg, #ffffff 0%, #f3ffe8 34%, #d7f2a5 68%, #74bd72 100%)';
+  }
+
+  return 'linear-gradient(145deg, #ffffff 0%, #fff5c5 34%, #ffcf62 68%, #d96536 100%)';
+}
+
+function getDifficultyButtonHoverGradient(worldId: WorldId): string {
+  if (worldId === 'forest') {
+    return 'linear-gradient(145deg, #ffffff 0%, #f8ffef 30%, #c8ef91 66%, #5daa65 100%)';
+  }
+
+  return 'linear-gradient(145deg, #ffffff 0%, #fff8d8 30%, #ffc447 66%, #c64d2f 100%)';
 }
 
 function getJumpVisualTheme(worldId: WorldId) {
