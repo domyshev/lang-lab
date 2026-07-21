@@ -7,6 +7,8 @@ import {
 } from '../domain/languages';
 import {
   CorrectStreakCooldownKey,
+  MissingAnswerDifficulty,
+  MissingAnswerExerciseType,
   PracticeSettings,
   defaultPracticeSettings,
   getPracticeSettings,
@@ -186,6 +188,33 @@ const appSlice = createSlice({
         sanitizeMonths(action.payload.months);
       state.practiceSettings = settings;
     },
+    setMissingAnswerDifficulty(
+      state,
+      action: PayloadAction<{
+        difficulty: MissingAnswerDifficulty;
+        exerciseType: MissingAnswerExerciseType;
+      }>,
+    ) {
+      const settings = getPracticeSettings(state.practiceSettings);
+      settings.missingAnswerSettings[action.payload.exerciseType].difficulty =
+        action.payload.difficulty;
+      state.practiceSettings = settings;
+    },
+    setMissingAnswerVisibleLetterPercent(
+      state,
+      action: PayloadAction<{
+        difficulty: MissingAnswerDifficulty;
+        exerciseType: MissingAnswerExerciseType;
+        percent: number;
+      }>,
+    ) {
+      const settings = getPracticeSettings(state.practiceSettings);
+      settings.missingAnswerSettings[
+        action.payload.exerciseType
+      ].visibleLetterPercentByDifficulty[action.payload.difficulty] =
+        sanitizePercent(action.payload.percent);
+      state.practiceSettings = settings;
+    },
     setNewCardMixFrequencyPercent(state, action: PayloadAction<number>) {
       const settings = getPracticeSettings(state.practiceSettings);
       settings.newCardMixFrequencyPercent = sanitizePercent(action.payload);
@@ -247,6 +276,8 @@ export const {
   setCorrectStreakCooldownMonths,
   setDisableAdditionalHints,
   setInterfaceLanguage,
+  setMissingAnswerDifficulty,
+  setMissingAnswerVisibleLetterPercent,
   setNewCardMixFrequencyPercent,
   setOpenRouterApiKey,
   setPlayerProfile,

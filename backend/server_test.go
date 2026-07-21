@@ -563,6 +563,24 @@ func sampleState() map[string]any {
 				},
 				"newCardMixFrequencyPercent":          25,
 				"recentMistakeRepeatFrequencyPercent": 45,
+				"missingAnswerSettings": map[string]any{
+					"missingLetters": map[string]any{
+						"difficulty": "hard",
+						"visibleLetterPercentByDifficulty": map[string]any{
+							"easy":   70,
+							"medium": 40,
+							"hard":   0,
+						},
+					},
+					"missingWord": map[string]any{
+						"difficulty": "easy",
+						"visibleLetterPercentByDifficulty": map[string]any{
+							"easy":   65,
+							"medium": 30,
+							"hard":   5,
+						},
+					},
+				},
 			},
 			"complementaryLanguages": map[string]any{
 				"en": []any{"ru", "es"},

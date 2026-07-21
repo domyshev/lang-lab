@@ -83,6 +83,7 @@ import { summarizeExerciseHistory } from './domain/exerciseHistory';
 import { getLanguageDisplayName, t } from './domain/i18n';
 import { SupportedLanguage, languageFlags } from './domain/languages';
 import {
+  getMissingAnswerVisibleLetterPercent,
   getPracticeSettings,
   orderCardsForMissingLettersPractice,
   summarizePracticeByCardId,
@@ -362,6 +363,12 @@ export function App() {
       }),
     [eligibleCards, targetLanguage],
   );
+  const missingLettersVisibleLetterPercent =
+    getMissingAnswerVisibleLetterPercent(practiceSettings, 'missingLetters');
+  const missingWordVisibleLetterPercent = getMissingAnswerVisibleLetterPercent(
+    practiceSettings,
+    'missingWord',
+  );
   const missingLettersOrderedCards = useMemo(() => {
     if (selectedExerciseType !== 'missingLetters') {
       return [];
@@ -418,7 +425,11 @@ export function App() {
     const occurrenceCounts = new Map<string, number>();
     return missingLettersOrderedCards
       .map((card) => {
-        const prompt = createMissingLettersPrompt({ card, targetLanguage });
+        const prompt = createMissingLettersPrompt({
+          card,
+          targetLanguage,
+          visibleLetterPercent: missingLettersVisibleLetterPercent,
+        });
         const occurrence = getNextOccurrence(card.id, occurrenceCounts);
         return prompt
           ? {
@@ -434,7 +445,11 @@ export function App() {
         ): prompt is PracticePrompt<ExercisePrompt & { maskedAnswer: string }> =>
           Boolean(prompt),
       );
-  }, [missingLettersOrderedCards, targetLanguage]);
+  }, [
+    missingLettersOrderedCards,
+    missingLettersVisibleLetterPercent,
+    targetLanguage,
+  ]);
   const missingLettersCooldownDetails = useMemo(() => {
     if (
       selectedExerciseType !== 'missingLetters' ||
@@ -1905,6 +1920,7 @@ export function App() {
         prompt={missingWordPrompt}
         resultColors={worldResultColors}
         targetLanguage={targetLanguage}
+        visibleLetterPercent={missingWordVisibleLetterPercent}
         isKnown={isCardKnownForTarget(
           cardById.get(missingWordPrompt.cardId) ?? {
             knownTargetLanguages: [],

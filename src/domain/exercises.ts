@@ -9,6 +9,7 @@ import {
 } from './cards';
 import type { CrosswordPuzzle } from './crossword';
 import { SupportedLanguage } from './languages';
+import { maskAnswerByVisibleLetterPercent } from './missingAnswerVisibility';
 
 export type ExerciseType =
   | 'crossword'
@@ -109,6 +110,7 @@ export function createMultipleChoicePrompt(input: {
 export function createMissingLettersPrompt(input: {
   card: LanguageCard;
   targetLanguage: SupportedLanguage;
+  visibleLetterPercent?: number;
 }): MissingLettersPrompt | undefined {
   const base = createBasePrompt(input.card, input.targetLanguage);
   if (isPhraseValue(base.expectedAnswer)) {
@@ -117,7 +119,10 @@ export function createMissingLettersPrompt(input: {
 
   return {
     ...base,
-    maskedAnswer: maskAnswer(base.expectedAnswer),
+    maskedAnswer: maskAnswerByVisibleLetterPercent(
+      base.expectedAnswer,
+      input.visibleLetterPercent ?? 50,
+    ),
   };
 }
 
@@ -141,20 +146,6 @@ export function createMissingWordPrompt(input: {
       : '_____',
     expectedAnswer: example?.answer ?? base.expectedAnswer,
   };
-}
-
-function maskAnswer(answer: string): string {
-  let shouldMask = true;
-  return answer
-    .split('')
-    .map((char) => {
-      if (!/[A-Za-zА-Яа-яЁёÁÉÍÓÚÜÑáéíóúüñ]/.test(char)) {
-        return char;
-      }
-      shouldMask = !shouldMask;
-      return shouldMask ? '_' : char;
-    })
-    .join('');
 }
 
 function shuffleStable(values: string[]): string[] {

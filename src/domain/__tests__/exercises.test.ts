@@ -69,6 +69,16 @@ describe('exercise generators', () => {
     expect(phrasePrompt).toBeUndefined();
   });
 
+  it('applies visible letter percent to missing letters prompts', () => {
+    const prompt = createMissingLettersPrompt({
+      card: baseCard,
+      targetLanguage: 'en',
+      visibleLetterPercent: 0,
+    });
+
+    expect(prompt?.maskedAnswer).toBe('_______');
+  });
+
   it('creates missing word prompt from phrase examples', () => {
     const wordPrompt = createMissingWordPrompt({
       card: baseCard,

@@ -3,9 +3,20 @@ import { ExerciseAttempt } from './exercises';
 import { SupportedLanguage } from './languages';
 
 export type CorrectStreakCooldownKey = 'three' | 'four' | 'fivePlus';
+export type MissingAnswerDifficulty = 'easy' | 'medium' | 'hard';
+export type MissingAnswerExerciseType = 'missingLetters' | 'missingWord';
+
+export interface MissingAnswerDifficultySettings {
+  difficulty: MissingAnswerDifficulty;
+  visibleLetterPercentByDifficulty: Record<MissingAnswerDifficulty, number>;
+}
 
 export interface PracticeSettings {
   correctStreakCooldownMonths: Record<CorrectStreakCooldownKey, number>;
+  missingAnswerSettings: Record<
+    MissingAnswerExerciseType,
+    MissingAnswerDifficultySettings
+  >;
   newCardMixFrequencyPercent: number;
   recentMistakeRepeatFrequencyPercent: number;
 }
@@ -28,6 +39,24 @@ export const defaultPracticeSettings: PracticeSettings = {
     four: 1,
     fivePlus: 2,
   },
+  missingAnswerSettings: {
+    missingLetters: {
+      difficulty: 'medium',
+      visibleLetterPercentByDifficulty: {
+        easy: 60,
+        medium: 50,
+        hard: 0,
+      },
+    },
+    missingWord: {
+      difficulty: 'medium',
+      visibleLetterPercentByDifficulty: {
+        easy: 60,
+        medium: 50,
+        hard: 0,
+      },
+    },
+  },
   newCardMixFrequencyPercent: 25,
   recentMistakeRepeatFrequencyPercent: 25,
 };
@@ -47,6 +76,16 @@ export function getPracticeSettings(
       ...defaultPracticeSettings.correctStreakCooldownMonths,
       ...(settings?.correctStreakCooldownMonths ?? {}),
     },
+    missingAnswerSettings: {
+      missingLetters: getMissingAnswerDifficultySettings(
+        settings?.missingAnswerSettings?.missingLetters,
+        defaultPracticeSettings.missingAnswerSettings.missingLetters,
+      ),
+      missingWord: getMissingAnswerDifficultySettings(
+        settings?.missingAnswerSettings?.missingWord,
+        defaultPracticeSettings.missingAnswerSettings.missingWord,
+      ),
+    },
     newCardMixFrequencyPercent:
       settings?.newCardMixFrequencyPercent ??
       defaultPracticeSettings.newCardMixFrequencyPercent,
@@ -54,6 +93,60 @@ export function getPracticeSettings(
       settings?.recentMistakeRepeatFrequencyPercent ??
       defaultPracticeSettings.recentMistakeRepeatFrequencyPercent,
   };
+}
+
+export function getMissingAnswerVisibleLetterPercent(
+  settings: PracticeSettings | undefined,
+  exerciseType: MissingAnswerExerciseType,
+): number {
+  const exerciseSettings = getPracticeSettings(settings).missingAnswerSettings[
+    exerciseType
+  ];
+
+  return exerciseSettings.visibleLetterPercentByDifficulty[
+    exerciseSettings.difficulty
+  ];
+}
+
+function getMissingAnswerDifficultySettings(
+  settings: MissingAnswerDifficultySettings | undefined,
+  fallback: MissingAnswerDifficultySettings,
+): MissingAnswerDifficultySettings {
+  const difficulty = isMissingAnswerDifficulty(settings?.difficulty)
+    ? settings.difficulty
+    : fallback.difficulty;
+
+  return {
+    difficulty,
+    visibleLetterPercentByDifficulty: {
+      easy: sanitizePercent(
+        settings?.visibleLetterPercentByDifficulty?.easy ??
+          fallback.visibleLetterPercentByDifficulty.easy,
+      ),
+      medium: sanitizePercent(
+        settings?.visibleLetterPercentByDifficulty?.medium ??
+          fallback.visibleLetterPercentByDifficulty.medium,
+      ),
+      hard: sanitizePercent(
+        settings?.visibleLetterPercentByDifficulty?.hard ??
+          fallback.visibleLetterPercentByDifficulty.hard,
+      ),
+    },
+  };
+}
+
+function isMissingAnswerDifficulty(
+  value: string | undefined,
+): value is MissingAnswerDifficulty {
+  return value === 'easy' || value === 'medium' || value === 'hard';
+}
+
+function sanitizePercent(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.min(100, Math.max(0, Math.round(value)));
 }
 
 export function summarizeCardPractice(input: {

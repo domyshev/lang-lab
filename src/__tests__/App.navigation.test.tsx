@@ -2537,21 +2537,24 @@ describe('App navigation', () => {
 
   it('shows a completed game summary when available missing word prompts are exhausted by cooldowns', async () => {
     const user = userEvent.setup();
+    const cooldownAttemptDates = [2, 1, 0].map((daysAgo) =>
+      new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString(),
+    );
     renderApp({
       attempts: [
         createStoredAttempt({
           cardId: 'card-look-forward',
-          completedAt: '2026-07-01T10:00:00.000Z',
+          completedAt: cooldownAttemptDates[0],
           isCorrect: true,
         }),
         createStoredAttempt({
           cardId: 'card-look-forward',
-          completedAt: '2026-07-02T10:00:00.000Z',
+          completedAt: cooldownAttemptDates[1],
           isCorrect: true,
         }),
         createStoredAttempt({
           cardId: 'card-look-forward',
-          completedAt: '2026-07-03T10:00:00.000Z',
+          completedAt: cooldownAttemptDates[2],
           isCorrect: true,
         }),
       ],
@@ -2938,15 +2941,17 @@ async function answerMissingLettersCorrectWithEnter(
 }
 
 function getVisibleMissingWordSentence(): string {
-  if (screen.queryByText('It is')) {
+  const cardId = getVisibleMissingWordCardId();
+
+  if (cardId === 'card-worth-it') {
     return 'It is worth it today.';
   }
 
-  if (screen.queryByText('I')) {
+  if (cardId === 'card-look-forward') {
     return 'I look forward to tomorrow.';
   }
 
-  throw new Error('Missing word sentence is not visible.');
+  throw new Error(`Unknown missing word sentence card id: ${cardId}`);
 }
 
 async function answerMissingWordWrong(user: ReturnType<typeof userEvent.setup>) {

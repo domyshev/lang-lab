@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { stripSessionOnlyPersistedState } from '../store';
 import { appReducer } from '../appSlice';
 import { aiAssistantReducer } from '../aiAssistantSlice';
+import { defaultPracticeSettings } from '../../domain/practiceOrdering';
 
 describe('store persistence helpers', () => {
   it('does not persist the agents intro coachmark dismissal flag', () => {
@@ -34,6 +35,7 @@ describe('store persistence helpers', () => {
           isAnonymous: false,
         },
         practiceSettings: {
+          ...defaultPracticeSettings,
           correctStreakCooldownMonths: {
             fivePlus: 10,
             four: 8,

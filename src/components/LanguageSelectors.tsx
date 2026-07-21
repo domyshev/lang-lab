@@ -18,6 +18,8 @@ import {
   Stack,
   TextField,
   Tooltip,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
   useMediaQuery,
 } from '@mui/material';
@@ -32,6 +34,8 @@ import {
 import { t } from '../domain/i18n';
 import {
   CorrectStreakCooldownKey,
+  MissingAnswerDifficulty,
+  MissingAnswerExerciseType,
   getPracticeSettings,
 } from '../domain/practiceOrdering';
 import {
@@ -41,6 +45,8 @@ import {
   setComplementaryLanguagesForTarget,
   setDisableAdditionalHints,
   setInterfaceLanguage,
+  setMissingAnswerDifficulty,
+  setMissingAnswerVisibleLetterPercent,
   setNewCardMixFrequencyPercent,
   setRecentMistakeRepeatFrequencyPercent,
   setTargetLanguage,
@@ -527,6 +533,99 @@ export function LanguageSelectors({
           >
             {t(interfaceLanguage, 'repeatManagementTitle')}
           </Typography>
+          <Typography
+            data-test="language_selectors__missing_answer_difficulty_title"
+            sx={{
+              color: '#5c6f4a',
+              fontSize: '0.88rem',
+              fontWeight: 850,
+              lineHeight: 1.2,
+              mt: '8px',
+            }}
+          >
+            {t(interfaceLanguage, 'missingAnswerDifficultyTitle')}
+          </Typography>
+          {missingAnswerExerciseFields.map((field) => {
+            const exerciseSettings =
+              practiceSettings.missingAnswerSettings[field.exerciseType];
+            const selectedDifficulty = exerciseSettings.difficulty;
+
+            return (
+              <Stack
+                data-test={`language_selectors__missing_answer_settings__${field.exerciseType}`}
+                key={field.exerciseType}
+                spacing={1}
+                sx={{
+                  border: '1px solid rgba(32, 48, 21, 0.12)',
+                  borderRadius: 1,
+                  p: 1.25,
+                }}
+              >
+                <Typography sx={{ fontSize: 14, fontWeight: 850 }}>
+                  {t(interfaceLanguage, field.labelKey)}
+                </Typography>
+                <ToggleButtonGroup
+                  aria-label={`${t(interfaceLanguage, field.labelKey)} ${t(
+                    interfaceLanguage,
+                    'missingAnswerDifficulty',
+                  )}`}
+                  color="primary"
+                  exclusive
+                  fullWidth
+                  size="small"
+                  value={selectedDifficulty}
+                  onChange={(_, value: MissingAnswerDifficulty | null) => {
+                    if (!value) {
+                      return;
+                    }
+                    dispatch(
+                      setMissingAnswerDifficulty({
+                        difficulty: value,
+                        exerciseType: field.exerciseType,
+                      }),
+                    );
+                  }}
+                >
+                  {missingAnswerDifficulties.map((difficulty) => (
+                    <ToggleButton
+                      data-test={`language_selectors__missing_answer_difficulty__${field.exerciseType}__${difficulty}`}
+                      key={difficulty}
+                      value={difficulty}
+                    >
+                      {t(interfaceLanguage, missingAnswerDifficultyLabelKeys[difficulty])}
+                    </ToggleButton>
+                  ))}
+                </ToggleButtonGroup>
+                <TextField
+                  data-test={`language_selectors__missing_answer_visible_percent__${field.exerciseType}`}
+                  fullWidth
+                  label={t(interfaceLanguage, 'visibleLetterPercent')}
+                  size="small"
+                  type="number"
+                  value={
+                    exerciseSettings.visibleLetterPercentByDifficulty[
+                      selectedDifficulty
+                    ]
+                  }
+                  onChange={(event) =>
+                    dispatch(
+                      setMissingAnswerVisibleLetterPercent({
+                        difficulty: selectedDifficulty,
+                        exerciseType: field.exerciseType,
+                        percent: Number(event.target.value),
+                      }),
+                    )
+                  }
+                  inputProps={{
+                    max: 100,
+                    min: 0,
+                    step: 5,
+                  }}
+                  helperText={t(interfaceLanguage, 'visibleLetterPercentHelper')}
+                />
+              </Stack>
+            );
+          })}
           {cooldownFields.map((field) => (
             <SettingsFieldRow
               infoKey={field.key}
@@ -767,6 +866,29 @@ const cooldownFields: Array<{
   { key: 'fivePlus', labelKey: 'correctStreakCooldownFivePlus' },
   { key: 'four', labelKey: 'correctStreakCooldownFour' },
   { key: 'three', labelKey: 'correctStreakCooldownThree' },
+];
+
+const missingAnswerDifficulties: MissingAnswerDifficulty[] = [
+  'easy',
+  'medium',
+  'hard',
+];
+
+const missingAnswerDifficultyLabelKeys: Record<
+  MissingAnswerDifficulty,
+  'easyDifficulty' | 'hardDifficulty' | 'mediumDifficulty'
+> = {
+  easy: 'easyDifficulty',
+  hard: 'hardDifficulty',
+  medium: 'mediumDifficulty',
+};
+
+const missingAnswerExerciseFields: Array<{
+  exerciseType: MissingAnswerExerciseType;
+  labelKey: 'missingLetters' | 'missingWord';
+}> = [
+  { exerciseType: 'missingLetters', labelKey: 'missingLetters' },
+  { exerciseType: 'missingWord', labelKey: 'missingWord' },
 ];
 
 const compactSelectSx = {

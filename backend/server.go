@@ -96,9 +96,20 @@ type PlayerProfilePayload struct {
 }
 
 type PracticeSettingsPayload struct {
-	CorrectStreakCooldownMonths         map[string]float64 `json:"correctStreakCooldownMonths"`
-	NewCardMixFrequencyPercent          int                `json:"newCardMixFrequencyPercent"`
-	RecentMistakeRepeatFrequencyPercent int                `json:"recentMistakeRepeatFrequencyPercent"`
+	CorrectStreakCooldownMonths         map[string]float64           `json:"correctStreakCooldownMonths"`
+	MissingAnswerSettings               MissingAnswerSettingsPayload `json:"missingAnswerSettings"`
+	NewCardMixFrequencyPercent          int                          `json:"newCardMixFrequencyPercent"`
+	RecentMistakeRepeatFrequencyPercent int                          `json:"recentMistakeRepeatFrequencyPercent"`
+}
+
+type MissingAnswerSettingsPayload struct {
+	MissingLetters MissingAnswerDifficultySettingsPayload `json:"missingLetters"`
+	MissingWord    MissingAnswerDifficultySettingsPayload `json:"missingWord"`
+}
+
+type MissingAnswerDifficultySettingsPayload struct {
+	Difficulty                       string         `json:"difficulty"`
+	VisibleLetterPercentByDifficulty map[string]int `json:"visibleLetterPercentByDifficulty"`
 }
 
 type LanguageExamplePayload struct {
@@ -289,6 +300,24 @@ var defaultState = AppStatePayload{
 				"three":    0.5,
 				"four":     1,
 				"fivePlus": 2,
+			},
+			MissingAnswerSettings: MissingAnswerSettingsPayload{
+				MissingLetters: MissingAnswerDifficultySettingsPayload{
+					Difficulty: "medium",
+					VisibleLetterPercentByDifficulty: map[string]int{
+						"easy":   60,
+						"medium": 50,
+						"hard":   0,
+					},
+				},
+				MissingWord: MissingAnswerDifficultySettingsPayload{
+					Difficulty: "medium",
+					VisibleLetterPercentByDifficulty: map[string]int{
+						"easy":   60,
+						"medium": 50,
+						"hard":   0,
+					},
+				},
 			},
 			NewCardMixFrequencyPercent:          25,
 			RecentMistakeRepeatFrequencyPercent: 25,
@@ -942,6 +971,14 @@ func (server *Server) migrate() error {
 			cooldown_three REAL NOT NULL,
 			cooldown_four REAL NOT NULL,
 			cooldown_five_plus REAL NOT NULL,
+			missing_letters_difficulty TEXT NOT NULL DEFAULT 'medium',
+			missing_letters_easy_visible_percent INTEGER NOT NULL DEFAULT 60,
+			missing_letters_medium_visible_percent INTEGER NOT NULL DEFAULT 50,
+			missing_letters_hard_visible_percent INTEGER NOT NULL DEFAULT 0,
+			missing_word_difficulty TEXT NOT NULL DEFAULT 'medium',
+			missing_word_easy_visible_percent INTEGER NOT NULL DEFAULT 60,
+			missing_word_medium_visible_percent INTEGER NOT NULL DEFAULT 50,
+			missing_word_hard_visible_percent INTEGER NOT NULL DEFAULT 0,
 			new_card_mix_frequency_percent INTEGER NOT NULL,
 			recent_mistake_repeat_frequency_percent INTEGER NOT NULL
 		)`,
@@ -1146,6 +1183,14 @@ func (server *Server) migrate() error {
 		`ALTER TABLE app_settings ADD COLUMN assistant_id TEXT DEFAULT ''`,
 		`ALTER TABLE app_settings ADD COLUMN open_router_api_key TEXT DEFAULT ''`,
 		`ALTER TABLE app_settings ADD COLUMN world_id TEXT DEFAULT ''`,
+		`ALTER TABLE app_settings ADD COLUMN missing_letters_difficulty TEXT NOT NULL DEFAULT 'medium'`,
+		`ALTER TABLE app_settings ADD COLUMN missing_letters_easy_visible_percent INTEGER NOT NULL DEFAULT 60`,
+		`ALTER TABLE app_settings ADD COLUMN missing_letters_medium_visible_percent INTEGER NOT NULL DEFAULT 50`,
+		`ALTER TABLE app_settings ADD COLUMN missing_letters_hard_visible_percent INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE app_settings ADD COLUMN missing_word_difficulty TEXT NOT NULL DEFAULT 'medium'`,
+		`ALTER TABLE app_settings ADD COLUMN missing_word_easy_visible_percent INTEGER NOT NULL DEFAULT 60`,
+		`ALTER TABLE app_settings ADD COLUMN missing_word_medium_visible_percent INTEGER NOT NULL DEFAULT 50`,
+		`ALTER TABLE app_settings ADD COLUMN missing_word_hard_visible_percent INTEGER NOT NULL DEFAULT 0`,
 	}
 	for _, statement := range migrationStatements {
 		server.db.Exec(statement)
@@ -1570,6 +1615,9 @@ func insertSettings(runner dbRunner, userID int64, settings SettingsPayload) err
 	if settings.PracticeSettings.CorrectStreakCooldownMonths == nil {
 		settings.PracticeSettings = defaultState.Settings.PracticeSettings
 	}
+	settings.PracticeSettings.MissingAnswerSettings = normalizeMissingAnswerSettings(
+		settings.PracticeSettings.MissingAnswerSettings,
+	)
 
 	displayName := ""
 	isAnonymous := 1
@@ -1583,9 +1631,13 @@ func insertSettings(runner dbRunner, userID int64, settings SettingsPayload) err
 		`INSERT INTO app_settings (
 			user_id, interface_language, target_language, selected_card_set_id,
 			display_name, is_anonymous, cooldown_three, cooldown_four, cooldown_five_plus,
+			missing_letters_difficulty, missing_letters_easy_visible_percent,
+			missing_letters_medium_visible_percent, missing_letters_hard_visible_percent,
+			missing_word_difficulty, missing_word_easy_visible_percent,
+			missing_word_medium_visible_percent, missing_word_hard_visible_percent,
 			new_card_mix_frequency_percent, recent_mistake_repeat_frequency_percent,
 			assistant_id, open_router_api_key, world_id
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		userID,
 		settings.InterfaceLanguage,
 		settings.TargetLanguage,
@@ -1595,6 +1647,14 @@ func insertSettings(runner dbRunner, userID int64, settings SettingsPayload) err
 		settings.PracticeSettings.CorrectStreakCooldownMonths["three"],
 		settings.PracticeSettings.CorrectStreakCooldownMonths["four"],
 		settings.PracticeSettings.CorrectStreakCooldownMonths["fivePlus"],
+		settings.PracticeSettings.MissingAnswerSettings.MissingLetters.Difficulty,
+		settings.PracticeSettings.MissingAnswerSettings.MissingLetters.VisibleLetterPercentByDifficulty["easy"],
+		settings.PracticeSettings.MissingAnswerSettings.MissingLetters.VisibleLetterPercentByDifficulty["medium"],
+		settings.PracticeSettings.MissingAnswerSettings.MissingLetters.VisibleLetterPercentByDifficulty["hard"],
+		settings.PracticeSettings.MissingAnswerSettings.MissingWord.Difficulty,
+		settings.PracticeSettings.MissingAnswerSettings.MissingWord.VisibleLetterPercentByDifficulty["easy"],
+		settings.PracticeSettings.MissingAnswerSettings.MissingWord.VisibleLetterPercentByDifficulty["medium"],
+		settings.PracticeSettings.MissingAnswerSettings.MissingWord.VisibleLetterPercentByDifficulty["hard"],
 		settings.PracticeSettings.NewCardMixFrequencyPercent,
 		settings.PracticeSettings.RecentMistakeRepeatFrequencyPercent,
 		nullString(settings.AssistantID),
@@ -1620,6 +1680,58 @@ func insertSettings(runner dbRunner, userID int64, settings SettingsPayload) err
 		}
 	}
 	return nil
+}
+
+func normalizeMissingAnswerSettings(
+	settings MissingAnswerSettingsPayload,
+) MissingAnswerSettingsPayload {
+	return MissingAnswerSettingsPayload{
+		MissingLetters: normalizeMissingAnswerDifficultySettings(
+			settings.MissingLetters,
+			defaultState.Settings.PracticeSettings.MissingAnswerSettings.MissingLetters,
+		),
+		MissingWord: normalizeMissingAnswerDifficultySettings(
+			settings.MissingWord,
+			defaultState.Settings.PracticeSettings.MissingAnswerSettings.MissingWord,
+		),
+	}
+}
+
+func normalizeMissingAnswerDifficultySettings(
+	settings MissingAnswerDifficultySettingsPayload,
+	defaultSettings MissingAnswerDifficultySettingsPayload,
+) MissingAnswerDifficultySettingsPayload {
+	difficulty := settings.Difficulty
+	if difficulty != "easy" && difficulty != "medium" && difficulty != "hard" {
+		difficulty = defaultSettings.Difficulty
+	}
+	percents := settings.VisibleLetterPercentByDifficulty
+	if percents == nil {
+		percents = map[string]int{}
+	}
+
+	return MissingAnswerDifficultySettingsPayload{
+		Difficulty: difficulty,
+		VisibleLetterPercentByDifficulty: map[string]int{
+			"easy":   sanitizePercentSetting(percents, "easy", defaultSettings.VisibleLetterPercentByDifficulty["easy"]),
+			"medium": sanitizePercentSetting(percents, "medium", defaultSettings.VisibleLetterPercentByDifficulty["medium"]),
+			"hard":   sanitizePercentSetting(percents, "hard", defaultSettings.VisibleLetterPercentByDifficulty["hard"]),
+		},
+	}
+}
+
+func sanitizePercentSetting(percents map[string]int, key string, fallback int) int {
+	value, ok := percents[key]
+	if !ok {
+		value = fallback
+	}
+	if value < 0 {
+		return 0
+	}
+	if value > 100 {
+		return 100
+	}
+	return value
 }
 
 func insertCard(runner dbRunner, userID int64, position int, card LanguageCardPayload) error {
@@ -1924,10 +2036,17 @@ func loadSettings(runner dbRunner, userID int64) (SettingsPayload, error) {
 	var displayName sql.NullString
 	var isAnonymous int
 	var cooldownThree, cooldownFour, cooldownFivePlus float64
+	var missingLettersDifficulty, missingWordDifficulty string
+	var missingLettersEasyPercent, missingLettersMediumPercent, missingLettersHardPercent int
+	var missingWordEasyPercent, missingWordMediumPercent, missingWordHardPercent int
 	var assistantID, openRouterAPIKey, worldID sql.NullString
 	err := runner.QueryRow(
 		`SELECT interface_language, target_language, selected_card_set_id, display_name, is_anonymous,
 			cooldown_three, cooldown_four, cooldown_five_plus,
+			missing_letters_difficulty, missing_letters_easy_visible_percent,
+			missing_letters_medium_visible_percent, missing_letters_hard_visible_percent,
+			missing_word_difficulty, missing_word_easy_visible_percent,
+			missing_word_medium_visible_percent, missing_word_hard_visible_percent,
 			new_card_mix_frequency_percent, recent_mistake_repeat_frequency_percent,
 			assistant_id, open_router_api_key, world_id
 		 FROM app_settings WHERE user_id = ?`,
@@ -1941,6 +2060,14 @@ func loadSettings(runner dbRunner, userID int64) (SettingsPayload, error) {
 		&cooldownThree,
 		&cooldownFour,
 		&cooldownFivePlus,
+		&missingLettersDifficulty,
+		&missingLettersEasyPercent,
+		&missingLettersMediumPercent,
+		&missingLettersHardPercent,
+		&missingWordDifficulty,
+		&missingWordEasyPercent,
+		&missingWordMediumPercent,
+		&missingWordHardPercent,
 		&settings.PracticeSettings.NewCardMixFrequencyPercent,
 		&settings.PracticeSettings.RecentMistakeRepeatFrequencyPercent,
 		&assistantID,
@@ -1962,6 +2089,26 @@ func loadSettings(runner dbRunner, userID int64) (SettingsPayload, error) {
 		"four":     cooldownFour,
 		"fivePlus": cooldownFivePlus,
 	}
+	settings.PracticeSettings.MissingAnswerSettings = normalizeMissingAnswerSettings(
+		MissingAnswerSettingsPayload{
+			MissingLetters: MissingAnswerDifficultySettingsPayload{
+				Difficulty: missingLettersDifficulty,
+				VisibleLetterPercentByDifficulty: map[string]int{
+					"easy":   missingLettersEasyPercent,
+					"medium": missingLettersMediumPercent,
+					"hard":   missingLettersHardPercent,
+				},
+			},
+			MissingWord: MissingAnswerDifficultySettingsPayload{
+				Difficulty: missingWordDifficulty,
+				VisibleLetterPercentByDifficulty: map[string]int{
+					"easy":   missingWordEasyPercent,
+					"medium": missingWordMediumPercent,
+					"hard":   missingWordHardPercent,
+				},
+			},
+		},
+	)
 	if displayName.Valid || isAnonymous == 0 {
 		settings.PlayerProfile = &PlayerProfilePayload{
 			DisplayName: displayName.String,
