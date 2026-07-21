@@ -65,6 +65,7 @@ type CardSetLibraryItem = {
 export function CardSetLibraryPicker({
   cards,
   cardSets,
+  hideAllCards = false,
   interfaceLanguage,
   onOpenAiAssistant,
   onSelect,
@@ -74,6 +75,7 @@ export function CardSetLibraryPicker({
 }: {
   cards: LanguageCard[];
   cardSets: CardSet[];
+  hideAllCards?: boolean;
   interfaceLanguage: RootState['app']['interfaceLanguage'];
   onOpenAiAssistant: () => void;
   onSelect: (cardSetId: string) => void;
@@ -95,7 +97,7 @@ export function CardSetLibraryPicker({
       }, 0);
     const allCardIds = cards.map((card) => card.id);
 
-    return [
+    const allItems: CardSetLibraryItem[] = [
       {
         cardCount: countPlayableCards(allCardIds),
         cardIds: allCardIds,
@@ -110,6 +112,10 @@ export function CardSetLibraryPicker({
         name: getCardSetName(cardSet, targetLanguage),
       })),
     ];
+
+    return hideAllCards
+      ? allItems.filter((item) => !item.isAllCards)
+      : allItems;
   }, [cards, cardSets, targetLanguage]);
   const selectedIndex = items.findIndex((item) => item.id === selectedCardSetId);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);

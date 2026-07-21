@@ -77,9 +77,25 @@ function renderApp({
     },
     ...app,
   };
+  const defaultCardSet = {
+    id: 'default-test-set',
+    name: 'Default',
+    cardIds: (cards ?? []).length > 0
+      ? (cards ?? []).map((card) => card.id)
+      : [
+          'card-worth-it',
+          'card-look-forward',
+          'card-airport',
+          'card-vehicle',
+          'card-impede',
+          'card-meditation',
+        ],
+    createdAt: now,
+    updatedAt: now,
+  };
   const cardSetsState = {
     ...cardSetsReducer(undefined, { type: 'test/init' }),
-    ...(cardSets ? { cardSets } : {}),
+    ...(cardSets ? { cardSets } : { cardSets: [defaultCardSet] }),
     ...(selectedCardSetId !== undefined ? { selectedCardSetId } : {}),
   };
   const appCards = cards ?? [
@@ -345,9 +361,9 @@ describe('App navigation', () => {
         .getAllByRole('button')
         .map((button) => button.getAttribute('data-test')),
     ).toEqual([
-      'card_set_library__chip_select__all-cards',
       'card_set_library__chip_select__word-set',
       'card_set_library__chip_select__phrase-set',
+      'card_set_library__chip_select__extra-set',
     ]);
 
     fireEvent.wheel(chipsRegion, { deltaY: 120 });
@@ -362,9 +378,9 @@ describe('App navigation', () => {
         .getAllByRole('button')
         .map((button) => button.getAttribute('data-test')),
     ).toEqual([
-      'card_set_library__chip_select__word-set',
       'card_set_library__chip_select__phrase-set',
       'card_set_library__chip_select__extra-set',
+      'card_set_library__chip_select__last-set',
     ]);
 
     await user.click(screen.getByTestId('card_set_library__open_button'));
@@ -385,7 +401,7 @@ describe('App navigation', () => {
     await waitFor(() => {
       expect(screen.getByTestId('card_set_library__carousel')).toHaveAttribute(
         'data-featured-start-index',
-        '2',
+        '1',
       );
     });
 
@@ -895,7 +911,7 @@ describe('App navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
     expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
 
-    await selectAllCardsCardSet(user);
+    await selectDefaultCardSet(user);
     await user.click(screen.getByRole('button', { name: 'Играть' }));
 
     expect(screen.getByRole('heading', { name: 'Игра: Пропущенные буквы' })).toBeInTheDocument();
@@ -908,7 +924,7 @@ describe('App navigation', () => {
     expect(metadataRow).not.toContainElement(progressChip);
     expect(thoughtBubble).toContainElement(progressChip);
     expect(cardSetChip).toHaveTextContent(
-      'Набор карточек: All cards',
+      'Набор карточек: Default',
     );
     expect(cardSetChip).toHaveStyle({ backgroundColor: 'rgb(242, 243, 241)' });
     expect(cardSetChip).not.toHaveClass('MuiChip-clickable');
@@ -923,7 +939,7 @@ describe('App navigation', () => {
     renderApp({ app: { worldId: 'forest' } });
 
     await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await selectAllCardsCardSet(user);
+    await selectDefaultCardSet(user);
 
     const startButton = screen.getByTestId('game_setup__start_button');
     expect(startButton).toBeEnabled();
@@ -1124,7 +1140,7 @@ describe('App navigation', () => {
     ).not.toBeInTheDocument();
 
     await user.click(allCardsTopic);
-    expect(screen.getByText('1 набор')).toBeInTheDocument();
+    expect(screen.getByText('2 набора')).toBeInTheDocument();
     expect(screen.getAllByText('6 карточек').length).toBeGreaterThan(0);
     expect(screen.getByText('Целевой язык: 🇬🇧 Английский')).toBeInTheDocument();
     expect(screen.queryByText('Целевой ответ: 🇬🇧 Английский')).not.toBeInTheDocument();
@@ -1665,7 +1681,7 @@ describe('App navigation', () => {
       exerciseSessionId: expect.any(String),
       exerciseType: 'missingLetters',
       isExerciseCompleted: true,
-      cardSetId: 'all-cards',
+      cardSetId: 'default-test-set',
     });
   });
 
@@ -2535,7 +2551,7 @@ describe('App navigation', () => {
     });
 
     await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
-    await selectAllCardsCardSet(user);
+    await selectDefaultCardSet(user);
 
     expect(screen.getByRole('button', { name: 'Пропущенные буквы' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Играть' })).toBeDisabled();
@@ -2767,8 +2783,19 @@ function cardIdByAnswer(answer: string): string {
   return cardId;
 }
 
-async function selectAllCardsCardSet(user: ReturnType<typeof userEvent.setup>) {
-  await selectCardSetByName(user, /All cards/);
+async function selectDefaultCardSet(user: ReturnType<typeof userEvent.setup>) {
+  const cardSetButton = screen.queryByTestId(
+    'card_set_library__chip_select__default-test-set',
+  );
+  if (cardSetButton) {
+    await user.click(cardSetButton);
+    return;
+  }
+
+  await user.click(screen.getByTestId('card_set_library__open_button'));
+  await user.click(
+    await screen.findByTestId('card_set_library_dialog__item__default-test-set'),
+  );
 }
 
 async function selectCardSetByName(
@@ -2790,7 +2817,7 @@ async function startExercise(
   exerciseName: string,
 ) {
   await user.click(screen.getByRole('button', { name: exerciseName }));
-  await selectAllCardsCardSet(user);
+  await selectDefaultCardSet(user);
   await user.click(screen.getByRole('button', { name: 'Играть' }));
 }
 

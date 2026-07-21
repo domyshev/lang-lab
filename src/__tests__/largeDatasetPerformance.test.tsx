@@ -80,12 +80,12 @@ describe('large local datasets', () => {
     ).toBeLessThan(80);
   });
 
-  it('keeps the game start button usable for all cards', async () => {
+  it('keeps the game start button usable with a large dataset', async () => {
     const user = userEvent.setup();
     renderLargeApp(2000);
 
     await user.click(
-      screen.getByRole('button', { name: 'Набор карточек: All cards' }),
+      screen.getByTestId('card_set_library__chip_select__large-test-set'),
     );
     await user.click(screen.getByRole('button', { name: 'Пропущенные буквы' }));
 
@@ -139,7 +139,15 @@ function renderLargeApp(cardCount: number) {
       attempts: { attempts: [] },
       stats: { cardStats: [] },
       cardSets: {
-        cardSets: [],
+        cardSets: [
+          {
+            id: 'large-test-set',
+            name: 'Large Test Set',
+            cardIds: Array.from({ length: cardCount }, (_, i) => `large-card-${i}`),
+            createdAt: now,
+            updatedAt: now,
+          },
+        ],
         selectedCardSetId: 'all-cards',
       },
     },

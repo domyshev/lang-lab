@@ -1404,6 +1404,7 @@ export function App() {
           <CardSetLibraryPicker
             cards={cards}
             cardSets={visibleCardSets}
+            hideAllCards
             interfaceLanguage={interfaceLanguage}
             onOpenAiAssistant={openGameAiAssistant}
             onSelect={handleCardSetChange}
